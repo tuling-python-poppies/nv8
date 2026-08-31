@@ -1,0 +1,54 @@
+{
+  "schema": "nv8.baseline.fixture/v1",
+  "id": "basic-page-replay",
+  "scenario": {
+    "url": "https://example.test/",
+    "htmlSha256": "adda39303acf2280c0075afb27a62deb1cebaa6230212c11d24cab31953d2ef2",
+    "replay": [
+      {
+        "method": "GET",
+        "url": "https://api.example.test/baseline",
+        "status": 200,
+        "body": "{\"ok\":true,\"source\":\"replay\"}"
+      },
+      {
+        "method": "GET",
+        "url": "https://example.test/baseline-worker.js",
+        "status": 200,
+        "body": "self.onmessage = event => self.postMessage(event.data + \"-worker\");"
+      }
+    ]
+  },
+  "expected": {
+    "evaluation": {
+      "title": "Baseline",
+      "text": "baseline",
+      "replay": {
+        "ok": true,
+        "source": "replay"
+      },
+      "mutation": "dynamic",
+      "worker": "baseline-worker",
+      "iframe": {
+        "sameOrigin": true,
+        "url": "https://example.test/",
+        "text": "iframe",
+        "defaultView": true
+      }
+    },
+    "reset": {
+      "legacy": ["written", null],
+      "plugin": [null, null]
+    },
+    "approvedDifferences": [
+      {
+        "path": "reset",
+        "reason": "The current Core Realm recreation does not yet carry localStorage across replacement documents."
+      },
+      {
+        "path": "surface",
+        "reason": "The selected Baseline plugin set does not yet include all legacy browser surfaces."
+      }
+    ]
+  }
+}

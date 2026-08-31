@@ -1,0 +1,122 @@
+// Generated from captured Edge 150 evidence.
+export const DOCUMENT_PROCESSING_SURFACES = Object.freeze({
+  "Sanitizer": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "method",
+        "allowAttribute",
+        1
+      ],
+      [
+        "method",
+        "allowElement",
+        1
+      ],
+      [
+        "method",
+        "get",
+        0
+      ],
+      [
+        "method",
+        "removeAttribute",
+        1
+      ],
+      [
+        "method",
+        "removeElement",
+        1
+      ],
+      [
+        "method",
+        "removeUnsafe",
+        0
+      ],
+      [
+        "method",
+        "replaceElementWithChildren",
+        1
+      ],
+      [
+        "method",
+        "setComments",
+        1
+      ],
+      [
+        "method",
+        "setDataAttributes",
+        1
+      ],
+      [
+        "method",
+        "allowProcessingInstruction",
+        1
+      ],
+      [
+        "method",
+        "removeProcessingInstruction",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "XSLTProcessor": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "method",
+        "clearParameters",
+        0
+      ],
+      [
+        "method",
+        "getParameter",
+        2
+      ],
+      [
+        "method",
+        "importStylesheet",
+        1
+      ],
+      [
+        "method",
+        "removeParameter",
+        2
+      ],
+      [
+        "method",
+        "reset",
+        0
+      ],
+      [
+        "method",
+        "setParameter",
+        3
+      ],
+      [
+        "method",
+        "transformToDocument",
+        1
+      ],
+      [
+        "method",
+        "transformToFragment",
+        2
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  }
+});

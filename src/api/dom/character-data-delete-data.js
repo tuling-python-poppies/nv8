@@ -1,0 +1,16 @@
+import { traceCall } from "../../trace/trace-function.js";
+import { definePrototypeMethod } from "../../webidl/descriptor.js";
+import { registerNativeFunction } from "../../webidl/native-function.js";
+import { deleteDataAlgorithm } from "./character-data-algorithms.js";
+import { CharacterData } from "./character-data-constructor.js";
+
+export const deleteData = {
+  deleteData(offset, count) {
+    deleteDataAlgorithm(this, offset, count);
+    traceCall("window.CharacterData.prototype.deleteData", "CharacterData", [offset, count], undefined);
+  },
+}.deleteData;
+registerNativeFunction(deleteData, "deleteData");
+export function installCharacterDataDeleteData() {
+  definePrototypeMethod(CharacterData.prototype, "deleteData", deleteData);
+}

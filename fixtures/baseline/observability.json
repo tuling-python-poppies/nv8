@@ -1,0 +1,349 @@
+{
+  "schema": "nv8/baseline/observability@1",
+  "trace": {
+    "count": 38,
+    "digest": "c76c256334c59e59",
+    "entries": [
+      {
+        "operation": "construct",
+        "api": "window.Event",
+        "receiver": "window.Event",
+        "argumentTypes": [
+          "string",
+          "string"
+        ],
+        "result": "Event"
+      },
+      {
+        "operation": "get",
+        "api": "window.Node.prototype.nodeType",
+        "receiver": "Node",
+        "argumentTypes": [],
+        "result": 9
+      },
+      {
+        "operation": "call",
+        "api": "window.EventTarget.prototype.dispatchEvent",
+        "receiver": "EventTarget",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": true
+      },
+      {
+        "operation": "construct",
+        "api": "window.Event",
+        "receiver": "window.Event",
+        "argumentTypes": [
+          "string",
+          "undefined"
+        ],
+        "result": "Event"
+      },
+      {
+        "operation": "call",
+        "api": "window.EventTarget.prototype.dispatchEvent",
+        "receiver": "EventTarget",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": true
+      },
+      {
+        "operation": "get",
+        "api": "window.document",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.Element.prototype.localName",
+        "receiver": "Element",
+        "argumentTypes": [],
+        "result": "html"
+      },
+      {
+        "operation": "get",
+        "api": "window.Element.prototype.localName",
+        "receiver": "Element",
+        "argumentTypes": [],
+        "result": "head"
+      },
+      {
+        "operation": "get",
+        "api": "window.Element.prototype.localName",
+        "receiver": "Element",
+        "argumentTypes": [],
+        "result": "title"
+      },
+      {
+        "operation": "get",
+        "api": "window.Node.prototype.textContent",
+        "receiver": "Node",
+        "argumentTypes": [],
+        "result": "Baseline"
+      },
+      {
+        "operation": "get",
+        "api": "window.Document.prototype.title",
+        "receiver": "Document",
+        "argumentTypes": [],
+        "result": "Baseline"
+      },
+      {
+        "operation": "get",
+        "api": "window.document",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": "app"
+      },
+      {
+        "operation": "call",
+        "api": "window.Document.prototype.querySelector",
+        "receiver": "Document",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.document",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": null
+      },
+      {
+        "operation": "call",
+        "api": "window.Element.prototype.getAttribute",
+        "receiver": "Element",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": "app"
+      },
+      {
+        "operation": "call",
+        "api": "window.Document.prototype.querySelector",
+        "receiver": "Document",
+        "argumentTypes": [
+          "string"
+        ],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.Node.prototype.textContent",
+        "receiver": "Node",
+        "argumentTypes": [],
+        "result": "baseline"
+      },
+      {
+        "operation": "get",
+        "api": "window.navigator",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.Navigator.prototype.userAgent",
+        "receiver": "Navigator",
+        "argumentTypes": [],
+        "result": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0"
+      },
+      {
+        "operation": "get",
+        "api": "window.location",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.location.href",
+        "receiver": "Location",
+        "argumentTypes": [],
+        "result": "https://example.test/"
+      },
+      {
+        "operation": "get",
+        "api": "window.location",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.location.href",
+        "receiver": "Location",
+        "argumentTypes": [],
+        "result": "https://example.test/"
+      },
+      {
+        "operation": "get",
+        "api": "window.URL.prototype.href",
+        "receiver": "URL",
+        "argumentTypes": [],
+        "result": "https://api.example.test/baseline"
+      },
+      {
+        "operation": "get",
+        "api": "window.AbortController.prototype.signal",
+        "receiver": "AbortController",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.AbortSignal.prototype.aborted",
+        "receiver": "AbortSignal",
+        "argumentTypes": [],
+        "result": false
+      },
+      {
+        "operation": "call",
+        "api": "window.fetch",
+        "receiver": "Window",
+        "argumentTypes": [
+          "string",
+          "undefined"
+        ],
+        "result": "object"
+      },
+      {
+        "operation": "get",
+        "api": "window.history",
+        "receiver": "Window",
+        "argumentTypes": [],
+        "result": "object"
+      },
+      {
+        "operation": "call",
+        "api": "window.History.prototype.pushState",
+        "receiver": "History",
+        "argumentTypes": [
+          "string",
+          "string",
+          "string"
+        ],
+        "result": null
+      }
+    ]
+  },
+  "requests": {
+    "count": 1,
+    "digest": "53bffd4363cdee7a",
+    "entries": [
+      {
+        "api": "fetch",
+        "method": "GET",
+        "url": "https://api.example.test/baseline",
+        "outcome": "replayed",
+        "contextKind": "window",
+        "contextUrl": "https://example.test/",
+        "topLevel": true,
+        "headerNames": [],
+        "bodyByteLength": 0
+      }
+    ]
+  },
+  "navigation": {
+    "count": 2,
+    "digest": "f0fc82384480ddce",
+    "entries": [
+      {
+        "url": "https://example.test/",
+        "index": 0,
+        "hasState": false
+      },
+      {
+        "url": "https://example.test/baseline/next",
+        "index": 1,
+        "hasState": true
+      }
+    ]
+  }
+}

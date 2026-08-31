@@ -1,0 +1,755 @@
+// Generated from captured Edge 150 evidence.
+export const INPUT_EVENT_SURFACES = Object.freeze({
+  "UIEvent": {
+    "constructorParent": "Event",
+    "prototypeParent": "Event",
+    "members": [
+      [
+        "accessor",
+        "view"
+      ],
+      [
+        "accessor",
+        "detail"
+      ],
+      [
+        "accessor",
+        "sourceCapabilities"
+      ],
+      [
+        "accessor",
+        "which"
+      ],
+      [
+        "method",
+        "initUIEvent",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "accessor",
+        "pseudoTarget"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "MouseEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "screenX"
+      ],
+      [
+        "accessor",
+        "screenY"
+      ],
+      [
+        "accessor",
+        "clientX"
+      ],
+      [
+        "accessor",
+        "clientY"
+      ],
+      [
+        "accessor",
+        "ctrlKey"
+      ],
+      [
+        "accessor",
+        "shiftKey"
+      ],
+      [
+        "accessor",
+        "altKey"
+      ],
+      [
+        "accessor",
+        "metaKey"
+      ],
+      [
+        "accessor",
+        "button"
+      ],
+      [
+        "accessor",
+        "buttons"
+      ],
+      [
+        "accessor",
+        "relatedTarget"
+      ],
+      [
+        "accessor",
+        "pageX"
+      ],
+      [
+        "accessor",
+        "pageY"
+      ],
+      [
+        "accessor",
+        "x"
+      ],
+      [
+        "accessor",
+        "y"
+      ],
+      [
+        "accessor",
+        "offsetX"
+      ],
+      [
+        "accessor",
+        "offsetY"
+      ],
+      [
+        "accessor",
+        "movementX"
+      ],
+      [
+        "accessor",
+        "movementY"
+      ],
+      [
+        "accessor",
+        "fromElement"
+      ],
+      [
+        "accessor",
+        "toElement"
+      ],
+      [
+        "accessor",
+        "layerX"
+      ],
+      [
+        "accessor",
+        "layerY"
+      ],
+      [
+        "method",
+        "getModifierState",
+        1
+      ],
+      [
+        "method",
+        "initMouseEvent",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "PointerEvent": {
+    "constructorParent": "MouseEvent",
+    "prototypeParent": "MouseEvent",
+    "members": [
+      [
+        "accessor",
+        "pointerId"
+      ],
+      [
+        "accessor",
+        "width"
+      ],
+      [
+        "accessor",
+        "height"
+      ],
+      [
+        "accessor",
+        "pressure"
+      ],
+      [
+        "accessor",
+        "tiltX"
+      ],
+      [
+        "accessor",
+        "tiltY"
+      ],
+      [
+        "accessor",
+        "azimuthAngle"
+      ],
+      [
+        "accessor",
+        "altitudeAngle"
+      ],
+      [
+        "accessor",
+        "tangentialPressure"
+      ],
+      [
+        "accessor",
+        "twist"
+      ],
+      [
+        "accessor",
+        "pointerType"
+      ],
+      [
+        "accessor",
+        "isPrimary"
+      ],
+      [
+        "method",
+        "getPredictedEvents",
+        0
+      ],
+      [
+        "accessor",
+        "persistentDeviceId"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "method",
+        "getCoalescedEvents",
+        0
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "WheelEvent": {
+    "constructorParent": "MouseEvent",
+    "prototypeParent": "MouseEvent",
+    "members": [
+      [
+        "accessor",
+        "deltaX"
+      ],
+      [
+        "accessor",
+        "deltaY"
+      ],
+      [
+        "accessor",
+        "deltaZ"
+      ],
+      [
+        "accessor",
+        "deltaMode"
+      ],
+      [
+        "accessor",
+        "wheelDeltaX"
+      ],
+      [
+        "accessor",
+        "wheelDeltaY"
+      ],
+      [
+        "accessor",
+        "wheelDelta"
+      ],
+      [
+        "constant",
+        "DOM_DELTA_PIXEL"
+      ],
+      [
+        "constant",
+        "DOM_DELTA_LINE"
+      ],
+      [
+        "constant",
+        "DOM_DELTA_PAGE"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "KeyboardEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "key"
+      ],
+      [
+        "accessor",
+        "code"
+      ],
+      [
+        "accessor",
+        "location"
+      ],
+      [
+        "accessor",
+        "ctrlKey"
+      ],
+      [
+        "accessor",
+        "shiftKey"
+      ],
+      [
+        "accessor",
+        "altKey"
+      ],
+      [
+        "accessor",
+        "metaKey"
+      ],
+      [
+        "accessor",
+        "repeat"
+      ],
+      [
+        "accessor",
+        "isComposing"
+      ],
+      [
+        "accessor",
+        "charCode"
+      ],
+      [
+        "accessor",
+        "keyCode"
+      ],
+      [
+        "constant",
+        "DOM_KEY_LOCATION_STANDARD"
+      ],
+      [
+        "constant",
+        "DOM_KEY_LOCATION_LEFT"
+      ],
+      [
+        "constant",
+        "DOM_KEY_LOCATION_RIGHT"
+      ],
+      [
+        "constant",
+        "DOM_KEY_LOCATION_NUMPAD"
+      ],
+      [
+        "method",
+        "getModifierState",
+        1
+      ],
+      [
+        "method",
+        "initKeyboardEvent",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "InputEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "data"
+      ],
+      [
+        "accessor",
+        "isComposing"
+      ],
+      [
+        "accessor",
+        "inputType"
+      ],
+      [
+        "accessor",
+        "dataTransfer"
+      ],
+      [
+        "method",
+        "getTargetRanges",
+        0
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "FocusEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "relatedTarget"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "CompositionEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "data"
+      ],
+      [
+        "method",
+        "initCompositionEvent",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "TouchEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "touches"
+      ],
+      [
+        "accessor",
+        "targetTouches"
+      ],
+      [
+        "accessor",
+        "changedTouches"
+      ],
+      [
+        "accessor",
+        "altKey"
+      ],
+      [
+        "accessor",
+        "metaKey"
+      ],
+      [
+        "accessor",
+        "ctrlKey"
+      ],
+      [
+        "accessor",
+        "shiftKey"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "TextEvent": {
+    "constructorParent": "UIEvent",
+    "prototypeParent": "UIEvent",
+    "members": [
+      [
+        "accessor",
+        "data"
+      ],
+      [
+        "method",
+        "initTextEvent",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "DragEvent": {
+    "constructorParent": "MouseEvent",
+    "prototypeParent": "MouseEvent",
+    "members": [
+      [
+        "accessor",
+        "dataTransfer"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "Touch": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "identifier"
+      ],
+      [
+        "accessor",
+        "target"
+      ],
+      [
+        "accessor",
+        "screenX"
+      ],
+      [
+        "accessor",
+        "screenY"
+      ],
+      [
+        "accessor",
+        "clientX"
+      ],
+      [
+        "accessor",
+        "clientY"
+      ],
+      [
+        "accessor",
+        "pageX"
+      ],
+      [
+        "accessor",
+        "pageY"
+      ],
+      [
+        "accessor",
+        "radiusX"
+      ],
+      [
+        "accessor",
+        "radiusY"
+      ],
+      [
+        "accessor",
+        "rotationAngle"
+      ],
+      [
+        "accessor",
+        "force"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "TouchList": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "length"
+      ],
+      [
+        "method",
+        "item",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ],
+      [
+        "iterator",
+        "values",
+        0
+      ]
+    ]
+  },
+  "InputDeviceCapabilities": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "firesTouchEvents"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "DataTransfer": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "dropEffect"
+      ],
+      [
+        "accessor",
+        "effectAllowed"
+      ],
+      [
+        "accessor",
+        "items"
+      ],
+      [
+        "accessor",
+        "types"
+      ],
+      [
+        "accessor",
+        "files"
+      ],
+      [
+        "method",
+        "clearData",
+        0
+      ],
+      [
+        "method",
+        "getData",
+        1
+      ],
+      [
+        "method",
+        "setData",
+        2
+      ],
+      [
+        "method",
+        "setDragImage",
+        3
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "DataTransferItem": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "kind"
+      ],
+      [
+        "accessor",
+        "type"
+      ],
+      [
+        "method",
+        "getAsFile",
+        0
+      ],
+      [
+        "method",
+        "getAsString",
+        1
+      ],
+      [
+        "method",
+        "webkitGetAsEntry",
+        0
+      ],
+      [
+        "method",
+        "getAsFileSystemHandle",
+        0
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "DataTransferItemList": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "length"
+      ],
+      [
+        "method",
+        "add",
+        1
+      ],
+      [
+        "method",
+        "clear",
+        0
+      ],
+      [
+        "method",
+        "remove",
+        1
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ],
+      [
+        "iterator",
+        "values",
+        0
+      ]
+    ]
+  },
+  "ClipboardEvent": {
+    "constructorParent": "Event",
+    "prototypeParent": "Event",
+    "members": [
+      [
+        "accessor",
+        "clipboardData"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  }
+});

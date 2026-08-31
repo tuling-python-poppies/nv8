@@ -1,0 +1,258 @@
+import { onreadystatechange, setOnreadystatechange } from "./document-onreadystatechange-property.js";
+import { onpointerlockchange, setOnpointerlockchange } from "./document-onpointerlockchange-property.js";
+import { onpointerlockerror, setOnpointerlockerror } from "./document-onpointerlockerror-property.js";
+import { onbeforecopy, setOnbeforecopy } from "./document-onbeforecopy-property.js";
+import { onbeforecut, setOnbeforecut } from "./document-onbeforecut-property.js";
+import { onbeforepaste, setOnbeforepaste } from "./document-onbeforepaste-property.js";
+import { onfreeze, setOnfreeze } from "./document-onfreeze-property.js";
+import { onprerenderingchange, setOnprerenderingchange } from "./document-onprerenderingchange-property.js";
+import { onresume, setOnresume } from "./document-onresume-property.js";
+import { onsearch, setOnsearch } from "./document-onsearch-property.js";
+import { onvisibilitychange, setOnvisibilitychange } from "./document-onvisibilitychange-property.js";
+import { onfullscreenchange, setOnfullscreenchange } from "./document-onfullscreenchange-property.js";
+import { onfullscreenerror, setOnfullscreenerror } from "./document-onfullscreenerror-property.js";
+import { onwebkitfullscreenchange, setOnwebkitfullscreenchange } from "./document-onwebkitfullscreenchange-property.js";
+import { onwebkitfullscreenerror, setOnwebkitfullscreenerror } from "./document-onwebkitfullscreenerror-property.js";
+import { onabort, setOnabort } from "./document-onabort-property.js";
+import { onbeforeinput, setOnbeforeinput } from "./document-onbeforeinput-property.js";
+import { onbeforematch, setOnbeforematch } from "./document-onbeforematch-property.js";
+import { onbeforetoggle, setOnbeforetoggle } from "./document-onbeforetoggle-property.js";
+import { onblur, setOnblur } from "./document-onblur-property.js";
+import { oncancel, setOncancel } from "./document-oncancel-property.js";
+import { oncanplay, setOncanplay } from "./document-oncanplay-property.js";
+import { oncanplaythrough, setOncanplaythrough } from "./document-oncanplaythrough-property.js";
+import { onchange, setOnchange } from "./document-onchange-property.js";
+import { onclick, setOnclick } from "./document-onclick-property.js";
+import { onclose, setOnclose } from "./document-onclose-property.js";
+import { oncommand, setOncommand } from "./document-oncommand-property.js";
+import { oncontentvisibilityautostatechange, setOncontentvisibilityautostatechange } from "./document-oncontentvisibilityautostatechange-property.js";
+import { oncontextlost, setOncontextlost } from "./document-oncontextlost-property.js";
+import { oncontextmenu, setOncontextmenu } from "./document-oncontextmenu-property.js";
+import { oncontextrestored, setOncontextrestored } from "./document-oncontextrestored-property.js";
+import { oncuechange, setOncuechange } from "./document-oncuechange-property.js";
+import { ondblclick, setOndblclick } from "./document-ondblclick-property.js";
+import { ondrag, setOndrag } from "./document-ondrag-property.js";
+import { ondragend, setOndragend } from "./document-ondragend-property.js";
+import { ondragenter, setOndragenter } from "./document-ondragenter-property.js";
+import { ondragleave, setOndragleave } from "./document-ondragleave-property.js";
+import { ondragover, setOndragover } from "./document-ondragover-property.js";
+import { ondragstart, setOndragstart } from "./document-ondragstart-property.js";
+import { ondrop, setOndrop } from "./document-ondrop-property.js";
+import { ondurationchange, setOndurationchange } from "./document-ondurationchange-property.js";
+import { onemptied, setOnemptied } from "./document-onemptied-property.js";
+import { onended, setOnended } from "./document-onended-property.js";
+import { onerror, setOnerror } from "./document-onerror-property.js";
+import { onfocus, setOnfocus } from "./document-onfocus-property.js";
+import { onformdata, setOnformdata } from "./document-onformdata-property.js";
+import { oninput, setOninput } from "./document-oninput-property.js";
+import { oninvalid, setOninvalid } from "./document-oninvalid-property.js";
+import { onkeydown, setOnkeydown } from "./document-onkeydown-property.js";
+import { onkeypress, setOnkeypress } from "./document-onkeypress-property.js";
+import { onkeyup, setOnkeyup } from "./document-onkeyup-property.js";
+import { onload, setOnload } from "./document-onload-property.js";
+import { onloadeddata, setOnloadeddata } from "./document-onloadeddata-property.js";
+import { onloadedmetadata, setOnloadedmetadata } from "./document-onloadedmetadata-property.js";
+import { onloadstart, setOnloadstart } from "./document-onloadstart-property.js";
+import { onmousedown, setOnmousedown } from "./document-onmousedown-property.js";
+import { onmouseenter, setOnmouseenter } from "./document-onmouseenter-property.js";
+import { onmouseleave, setOnmouseleave } from "./document-onmouseleave-property.js";
+import { onmousemove, setOnmousemove } from "./document-onmousemove-property.js";
+import { onmouseout, setOnmouseout } from "./document-onmouseout-property.js";
+import { onmouseover, setOnmouseover } from "./document-onmouseover-property.js";
+import { onmouseup, setOnmouseup } from "./document-onmouseup-property.js";
+import { onmousewheel, setOnmousewheel } from "./document-onmousewheel-property.js";
+import { onpause, setOnpause } from "./document-onpause-property.js";
+import { onplay, setOnplay } from "./document-onplay-property.js";
+import { onplaying, setOnplaying } from "./document-onplaying-property.js";
+import { onprogress, setOnprogress } from "./document-onprogress-property.js";
+import { onratechange, setOnratechange } from "./document-onratechange-property.js";
+import { onreset, setOnreset } from "./document-onreset-property.js";
+import { onresize, setOnresize } from "./document-onresize-property.js";
+import { onscroll, setOnscroll } from "./document-onscroll-property.js";
+import { onscrollend, setOnscrollend } from "./document-onscrollend-property.js";
+import { onsecuritypolicyviolation, setOnsecuritypolicyviolation } from "./document-onsecuritypolicyviolation-property.js";
+import { onseeked, setOnseeked } from "./document-onseeked-property.js";
+import { onseeking, setOnseeking } from "./document-onseeking-property.js";
+import { onselect, setOnselect } from "./document-onselect-property.js";
+import { onslotchange, setOnslotchange } from "./document-onslotchange-property.js";
+import { onstalled, setOnstalled } from "./document-onstalled-property.js";
+import { onsubmit, setOnsubmit } from "./document-onsubmit-property.js";
+import { onsuspend, setOnsuspend } from "./document-onsuspend-property.js";
+import { ontimeupdate, setOntimeupdate } from "./document-ontimeupdate-property.js";
+import { ontoggle, setOntoggle } from "./document-ontoggle-property.js";
+import { onvolumechange, setOnvolumechange } from "./document-onvolumechange-property.js";
+import { onwaiting, setOnwaiting } from "./document-onwaiting-property.js";
+import { onwebkitanimationend, setOnwebkitanimationend } from "./document-onwebkitanimationend-property.js";
+import { onwebkitanimationiteration, setOnwebkitanimationiteration } from "./document-onwebkitanimationiteration-property.js";
+import { onwebkitanimationstart, setOnwebkitanimationstart } from "./document-onwebkitanimationstart-property.js";
+import { onwebkittransitionend, setOnwebkittransitionend } from "./document-onwebkittransitionend-property.js";
+import { onwheel, setOnwheel } from "./document-onwheel-property.js";
+import { onauxclick, setOnauxclick } from "./document-onauxclick-property.js";
+import { ongotpointercapture, setOngotpointercapture } from "./document-ongotpointercapture-property.js";
+import { onlostpointercapture, setOnlostpointercapture } from "./document-onlostpointercapture-property.js";
+import { onpointerdown, setOnpointerdown } from "./document-onpointerdown-property.js";
+import { onpointermove, setOnpointermove } from "./document-onpointermove-property.js";
+import { onpointerup, setOnpointerup } from "./document-onpointerup-property.js";
+import { onpointercancel, setOnpointercancel } from "./document-onpointercancel-property.js";
+import { onpointerover, setOnpointerover } from "./document-onpointerover-property.js";
+import { onpointerout, setOnpointerout } from "./document-onpointerout-property.js";
+import { onpointerenter, setOnpointerenter } from "./document-onpointerenter-property.js";
+import { onpointerleave, setOnpointerleave } from "./document-onpointerleave-property.js";
+import { onselectstart, setOnselectstart } from "./document-onselectstart-property.js";
+import { onselectionchange, setOnselectionchange } from "./document-onselectionchange-property.js";
+import { onanimationcancel, setOnanimationcancel } from "./document-onanimationcancel-property.js";
+import { onanimationend, setOnanimationend } from "./document-onanimationend-property.js";
+import { onanimationiteration, setOnanimationiteration } from "./document-onanimationiteration-property.js";
+import { onanimationstart, setOnanimationstart } from "./document-onanimationstart-property.js";
+import { ontransitionrun, setOntransitionrun } from "./document-ontransitionrun-property.js";
+import { ontransitionstart, setOntransitionstart } from "./document-ontransitionstart-property.js";
+import { ontransitionend, setOntransitionend } from "./document-ontransitionend-property.js";
+import { ontransitioncancel, setOntransitioncancel } from "./document-ontransitioncancel-property.js";
+import { onbeforexrselect, setOnbeforexrselect } from "./document-onbeforexrselect-property.js";
+import { oncopy, setOncopy } from "./document-oncopy-property.js";
+import { oncut, setOncut } from "./document-oncut-property.js";
+import { onpaste, setOnpaste } from "./document-onpaste-property.js";
+import { onpointerrawupdate, setOnpointerrawupdate } from "./document-onpointerrawupdate-property.js";
+import { onscrollsnapchange, setOnscrollsnapchange } from "./document-onscrollsnapchange-property.js";
+import { onscrollsnapchanging, setOnscrollsnapchanging } from "./document-onscrollsnapchanging-property.js";
+
+export function installDocumentReadinessEventMembers(accessor) {
+  accessor("onreadystatechange", onreadystatechange, setOnreadystatechange);
+}
+
+export function installDocumentPointerLockEventMembers(accessor) {
+  accessor("onpointerlockchange", onpointerlockchange, setOnpointerlockchange);
+  accessor("onpointerlockerror", onpointerlockerror, setOnpointerlockerror);
+}
+
+export function installDocumentLifecycleEventMembers(accessor) {
+  accessor("onbeforecopy", onbeforecopy, setOnbeforecopy);
+  accessor("onbeforecut", onbeforecut, setOnbeforecut);
+  accessor("onbeforepaste", onbeforepaste, setOnbeforepaste);
+  accessor("onfreeze", onfreeze, setOnfreeze);
+  accessor("onprerenderingchange", onprerenderingchange, setOnprerenderingchange);
+  accessor("onresume", onresume, setOnresume);
+  accessor("onsearch", onsearch, setOnsearch);
+  accessor("onvisibilitychange", onvisibilitychange, setOnvisibilitychange);
+}
+
+export function installDocumentFullscreenEventMembers(accessor) {
+  accessor("onfullscreenchange", onfullscreenchange, setOnfullscreenchange);
+  accessor("onfullscreenerror", onfullscreenerror, setOnfullscreenerror);
+}
+
+export function installDocumentWebkitFullscreenEventMembers(accessor) {
+  accessor("onwebkitfullscreenchange", onwebkitfullscreenchange, setOnwebkitfullscreenchange);
+  accessor("onwebkitfullscreenerror", onwebkitfullscreenerror, setOnwebkitfullscreenerror);
+}
+
+export function installDocumentMainEventMembers(accessor) {
+  accessor("onabort", onabort, setOnabort);
+  accessor("onbeforeinput", onbeforeinput, setOnbeforeinput);
+  accessor("onbeforematch", onbeforematch, setOnbeforematch);
+  accessor("onbeforetoggle", onbeforetoggle, setOnbeforetoggle);
+  accessor("onblur", onblur, setOnblur);
+  accessor("oncancel", oncancel, setOncancel);
+  accessor("oncanplay", oncanplay, setOncanplay);
+  accessor("oncanplaythrough", oncanplaythrough, setOncanplaythrough);
+  accessor("onchange", onchange, setOnchange);
+  accessor("onclick", onclick, setOnclick);
+  accessor("onclose", onclose, setOnclose);
+  accessor("oncommand", oncommand, setOncommand);
+  accessor("oncontentvisibilityautostatechange", oncontentvisibilityautostatechange, setOncontentvisibilityautostatechange);
+  accessor("oncontextlost", oncontextlost, setOncontextlost);
+  accessor("oncontextmenu", oncontextmenu, setOncontextmenu);
+  accessor("oncontextrestored", oncontextrestored, setOncontextrestored);
+  accessor("oncuechange", oncuechange, setOncuechange);
+  accessor("ondblclick", ondblclick, setOndblclick);
+  accessor("ondrag", ondrag, setOndrag);
+  accessor("ondragend", ondragend, setOndragend);
+  accessor("ondragenter", ondragenter, setOndragenter);
+  accessor("ondragleave", ondragleave, setOndragleave);
+  accessor("ondragover", ondragover, setOndragover);
+  accessor("ondragstart", ondragstart, setOndragstart);
+  accessor("ondrop", ondrop, setOndrop);
+  accessor("ondurationchange", ondurationchange, setOndurationchange);
+  accessor("onemptied", onemptied, setOnemptied);
+  accessor("onended", onended, setOnended);
+  accessor("onerror", onerror, setOnerror);
+  accessor("onfocus", onfocus, setOnfocus);
+  accessor("onformdata", onformdata, setOnformdata);
+  accessor("oninput", oninput, setOninput);
+  accessor("oninvalid", oninvalid, setOninvalid);
+  accessor("onkeydown", onkeydown, setOnkeydown);
+  accessor("onkeypress", onkeypress, setOnkeypress);
+  accessor("onkeyup", onkeyup, setOnkeyup);
+  accessor("onload", onload, setOnload);
+  accessor("onloadeddata", onloadeddata, setOnloadeddata);
+  accessor("onloadedmetadata", onloadedmetadata, setOnloadedmetadata);
+  accessor("onloadstart", onloadstart, setOnloadstart);
+  accessor("onmousedown", onmousedown, setOnmousedown);
+  accessor("onmouseenter", onmouseenter, setOnmouseenter);
+  accessor("onmouseleave", onmouseleave, setOnmouseleave);
+  accessor("onmousemove", onmousemove, setOnmousemove);
+  accessor("onmouseout", onmouseout, setOnmouseout);
+  accessor("onmouseover", onmouseover, setOnmouseover);
+  accessor("onmouseup", onmouseup, setOnmouseup);
+  accessor("onmousewheel", onmousewheel, setOnmousewheel);
+  accessor("onpause", onpause, setOnpause);
+  accessor("onplay", onplay, setOnplay);
+  accessor("onplaying", onplaying, setOnplaying);
+  accessor("onprogress", onprogress, setOnprogress);
+  accessor("onratechange", onratechange, setOnratechange);
+  accessor("onreset", onreset, setOnreset);
+  accessor("onresize", onresize, setOnresize);
+  accessor("onscroll", onscroll, setOnscroll);
+  accessor("onscrollend", onscrollend, setOnscrollend);
+  accessor("onsecuritypolicyviolation", onsecuritypolicyviolation, setOnsecuritypolicyviolation);
+  accessor("onseeked", onseeked, setOnseeked);
+  accessor("onseeking", onseeking, setOnseeking);
+  accessor("onselect", onselect, setOnselect);
+  accessor("onslotchange", onslotchange, setOnslotchange);
+  accessor("onstalled", onstalled, setOnstalled);
+  accessor("onsubmit", onsubmit, setOnsubmit);
+  accessor("onsuspend", onsuspend, setOnsuspend);
+  accessor("ontimeupdate", ontimeupdate, setOntimeupdate);
+  accessor("ontoggle", ontoggle, setOntoggle);
+  accessor("onvolumechange", onvolumechange, setOnvolumechange);
+  accessor("onwaiting", onwaiting, setOnwaiting);
+  accessor("onwebkitanimationend", onwebkitanimationend, setOnwebkitanimationend);
+  accessor("onwebkitanimationiteration", onwebkitanimationiteration, setOnwebkitanimationiteration);
+  accessor("onwebkitanimationstart", onwebkitanimationstart, setOnwebkitanimationstart);
+  accessor("onwebkittransitionend", onwebkittransitionend, setOnwebkittransitionend);
+  accessor("onwheel", onwheel, setOnwheel);
+  accessor("onauxclick", onauxclick, setOnauxclick);
+  accessor("ongotpointercapture", ongotpointercapture, setOngotpointercapture);
+  accessor("onlostpointercapture", onlostpointercapture, setOnlostpointercapture);
+  accessor("onpointerdown", onpointerdown, setOnpointerdown);
+  accessor("onpointermove", onpointermove, setOnpointermove);
+  accessor("onpointerup", onpointerup, setOnpointerup);
+  accessor("onpointercancel", onpointercancel, setOnpointercancel);
+  accessor("onpointerover", onpointerover, setOnpointerover);
+  accessor("onpointerout", onpointerout, setOnpointerout);
+  accessor("onpointerenter", onpointerenter, setOnpointerenter);
+  accessor("onpointerleave", onpointerleave, setOnpointerleave);
+  accessor("onselectstart", onselectstart, setOnselectstart);
+  accessor("onselectionchange", onselectionchange, setOnselectionchange);
+  accessor("onanimationcancel", onanimationcancel, setOnanimationcancel);
+  accessor("onanimationend", onanimationend, setOnanimationend);
+  accessor("onanimationiteration", onanimationiteration, setOnanimationiteration);
+  accessor("onanimationstart", onanimationstart, setOnanimationstart);
+  accessor("ontransitionrun", ontransitionrun, setOntransitionrun);
+  accessor("ontransitionstart", ontransitionstart, setOntransitionstart);
+  accessor("ontransitionend", ontransitionend, setOntransitionend);
+  accessor("ontransitioncancel", ontransitioncancel, setOntransitioncancel);
+  accessor("onbeforexrselect", onbeforexrselect, setOnbeforexrselect);
+  accessor("oncopy", oncopy, setOncopy);
+  accessor("oncut", oncut, setOncut);
+  accessor("onpaste", onpaste, setOnpaste);
+}
+
+export function installDocumentPostConstructorEventMembers(accessor) {
+  accessor("onpointerrawupdate", onpointerrawupdate, setOnpointerrawupdate);
+}
+
+export function installDocumentLateEventMembers(accessor) {
+  accessor("onscrollsnapchange", onscrollsnapchange, setOnscrollsnapchange);
+  accessor("onscrollsnapchanging", onscrollsnapchanging, setOnscrollsnapchanging);
+}

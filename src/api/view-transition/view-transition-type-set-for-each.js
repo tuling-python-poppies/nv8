@@ -1,0 +1,1 @@
+import { typeSetMethod } from "./view-transition-type-set-method.js";export const forEach=typeSetMethod("forEach",1,(set,args,self)=>{if(typeof args[0]!=="function")throw new TypeError("callback must be a function");set.forEach(value=>args[0].call(args[1],value,value,self));});

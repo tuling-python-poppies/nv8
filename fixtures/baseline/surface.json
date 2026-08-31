@@ -1,0 +1,17 @@
+{
+  "snapshotSchema": "nv8/surface/snapshot@1",
+  "entries": {
+    "legacy": {
+      "digest": "e33b02753a52886726092d6bae621ee3ee0375ee17e384446d105c95f8a2fddc",
+      "globals": 24,
+      "prototypes": 10,
+      "members": 520
+    },
+    "plugin": {
+      "digest": "25160143807dc5ff90ff6978df12d747d0313475cae2768f19d055d765c8979c",
+      "globals": 24,
+      "prototypes": 10,
+      "members": 509
+    }
+  }
+}

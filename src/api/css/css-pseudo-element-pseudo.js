@@ -1,0 +1,2 @@
+import { traceCall } from "../../trace/trace-function.js";import { registerNativeFunction } from "../../webidl/native-function.js";import { createCSSPseudoElement,requireCSSPseudoElement } from "./css-pseudo-element-state.js";
+export const pseudo={pseudo(type){const state=requireCSSPseudoElement(this);const result=createCSSPseudoElement(state.element,type,this);traceCall("window.CSSPseudoElement.prototype.pseudo","CSSPseudoElement",[type],result);return result;}}.pseudo;registerNativeFunction(pseudo,"pseudo");

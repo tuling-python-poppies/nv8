@@ -1,0 +1,43 @@
+import { installHTMLElement } from './install-html-element.js';
+import { installHTMLUnknownElement } from './install-html-unknown-element.js';
+import { installHTMLDivElement } from './install-html-div-element.js';
+import { installHTMLSpanElement } from './install-html-span-element.js';
+import { installHTMLAnchorElement } from './install-html-anchor-element.js';
+import { installHTMLImageElement } from './install-html-image-element.js';
+import { installHTMLScriptElement } from './install-html-script-element.js';
+import { installHTMLLinkElement } from './install-html-link-element.js';
+import { installHTMLStyleElement } from './install-html-style-element.js';
+import { installHTMLMetaElement } from './install-html-meta-element.js';
+import { installHTMLHeadElement } from './install-html-head-element.js';
+import { installHTMLBodyElement } from './install-html-body-element.js';
+import { installHTMLFormElement } from './install-html-form-element.js';
+import { installHTMLInputElement } from './install-html-input-element.js';
+import { installHTMLButtonElement } from './install-html-button-element.js';
+import { installHTMLTextAreaElement } from './install-html-text-area-element.js';
+import { installHTMLSelectElement } from './install-html-select-element.js';
+import { installHTMLOptionElement } from './install-html-option-element.js';
+import { installHTMLIFrameElement } from './install-html-iframe-element.js';
+import { installHTMLCanvasElement } from './install-html-canvas-element.js';
+
+export function installHTMLElementFamily() {
+  installHTMLElement();
+  installHTMLUnknownElement();
+  installHTMLDivElement();
+  installHTMLSpanElement();
+  installHTMLHeadElement();
+  installHTMLBodyElement();
+  installHTMLAnchorElement();
+  installHTMLFormElement();
+  installHTMLInputElement();
+  installHTMLButtonElement();
+  installHTMLTextAreaElement();
+  installHTMLSelectElement();
+  installHTMLOptionElement();
+  installHTMLImageElement();
+  installHTMLIFrameElement();
+  installHTMLCanvasElement();
+  installHTMLScriptElement();
+  installHTMLLinkElement();
+  installHTMLStyleElement();
+  installHTMLMetaElement();
+}

@@ -1,0 +1,4 @@
+import { ViewTransition } from "./view-transition-constructor.js";import { createViewTransitionTypeSet } from "./view-transition-type-set-state.js";
+const state=new WeakMap();
+export function createViewTransition(root,options){const transition=Object.create(ViewTransition.prototype);const callback=typeof options==="function"?options:options?.update;const updateCallbackDone=Promise.resolve().then(()=>typeof callback==="function"?callback():undefined);const ready=Promise.resolve();const record={finished:Promise.all([ready,updateCallbackDone]).then(()=>undefined),ready,updateCallbackDone,types:createViewTransitionTypeSet(options?.types??[]),transitionRoot:root,skipped:false};state.set(transition,record);return transition;}
+export function requireViewTransition(value){const result=state.get(value);if(result===undefined)throw new TypeError("Illegal invocation");return result;}

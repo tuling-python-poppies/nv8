@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Node 版本矩阵。tier 与 src/core/host-capabilities.js 的
+  # NODE_SUPPORT_MATRIX 保持一致：
+  #   supported   -> 失败即视为 bug，阻断合并
+  #   best-effort -> 允许失败，失败按兼容性改进处理
+  #
+  # 18/20 已在完整测试套件上验证通过，因此列为 supported。
+  # 本地可用 `npm run test:matrix` 复现同一矩阵。
+  test:
+    name: Node ${{ matrix.node }} (${{ matrix.tier }})
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.tier == 'best-effort' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node: '24.x'
+            tier: supported
+          - node: '22.x'
+            tier: supported
+          - node: '20.x'
+            tier: supported
+          - node: '18.18'
+            tier: supported
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Report host capabilities
+        run: npm run capabilities
+
+      - name: Run tests
+        run: npm test
+
+  # 后端矩阵：child-process 与 worker-thread 必须行为一致
+  backends:
+    name: Backend ${{ matrix.backend }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [child-process, worker-thread]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Run tests
+        run: npm test
+        env:
+          NV8_BACKEND: ${{ matrix.backend }}

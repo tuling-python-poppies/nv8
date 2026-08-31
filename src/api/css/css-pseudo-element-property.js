@@ -1,0 +1,2 @@
+import { traceGetter } from "../../trace/trace-accessor.js";import { registerNativeGetter } from "../../webidl/native-function.js";import { requireCSSPseudoElement } from "./css-pseudo-element-state.js";
+export function pseudoGetter(name){const getter=Object.getOwnPropertyDescriptor({get[name](){const result=requireCSSPseudoElement(this)[name];traceGetter(`window.CSSPseudoElement.prototype.${name}`,"CSSPseudoElement",result);return result;}},name).get;registerNativeGetter(getter,name);return getter;}

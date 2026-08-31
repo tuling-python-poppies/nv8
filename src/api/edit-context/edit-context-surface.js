@@ -1,0 +1,114 @@
+// Generated from captured Edge 150 evidence.
+export const EDIT_CONTEXT_SURFACES = Object.freeze({
+  "TextFormat": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "rangeStart"
+      ],
+      [
+        "accessor",
+        "rangeEnd"
+      ],
+      [
+        "accessor",
+        "underlineStyle"
+      ],
+      [
+        "accessor",
+        "underlineThickness"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "EditContext": {
+    "constructorParent": "EventTarget",
+    "prototypeParent": "EventTarget",
+    "members": [
+      [
+        "accessor",
+        "text"
+      ],
+      [
+        "accessor",
+        "selectionStart"
+      ],
+      [
+        "accessor",
+        "selectionEnd"
+      ],
+      [
+        "accessor",
+        "characterBoundsRangeStart"
+      ],
+      [
+        "accessor",
+        "ontextupdate"
+      ],
+      [
+        "accessor",
+        "ontextformatupdate"
+      ],
+      [
+        "accessor",
+        "oncharacterboundsupdate"
+      ],
+      [
+        "accessor",
+        "oncompositionstart"
+      ],
+      [
+        "accessor",
+        "oncompositionend"
+      ],
+      [
+        "method",
+        "attachedElements",
+        0
+      ],
+      [
+        "method",
+        "characterBounds",
+        0
+      ],
+      [
+        "method",
+        "updateCharacterBounds",
+        2
+      ],
+      [
+        "method",
+        "updateControlBounds",
+        1
+      ],
+      [
+        "method",
+        "updateSelection",
+        2
+      ],
+      [
+        "method",
+        "updateSelectionBounds",
+        1
+      ],
+      [
+        "method",
+        "updateText",
+        3
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  }
+});

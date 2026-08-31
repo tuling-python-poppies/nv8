@@ -1,0 +1,4 @@
+import { stringReflection } from "./html-reflection.js";
+const descriptor = stringReflection("HTMLTextAreaElement", "dirName", "dirname");
+export const dirName = descriptor.get;
+export const setDirName = descriptor.set;

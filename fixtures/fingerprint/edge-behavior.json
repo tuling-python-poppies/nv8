@@ -1,0 +1,483 @@
+{
+  "collectedAt": "2026-08-30T07:37:43.895Z",
+  "probeCount": 112,
+  "results": {
+    "toString/addEventListener": {
+      "threw": false,
+      "value": "function addEventListener() { [native code] }"
+    },
+    "toString/documentGetElementById": {
+      "threw": false,
+      "value": "function getElementById() { [native code] }"
+    },
+    "toString/getter-document-readyState": {
+      "threw": false,
+      "value": "function get readyState() { [native code] }"
+    },
+    "toString/Event-constructor": {
+      "threw": false,
+      "value": "function Event() { [native code] }"
+    },
+    "toString/functionToString-itself": {
+      "threw": false,
+      "value": "function toString() { [native code] }"
+    },
+    "toString/name-of-getter": {
+      "threw": false,
+      "value": "get readyState"
+    },
+    "toString/length-of-addEventListener": {
+      "threw": false,
+      "value": "2"
+    },
+    "illegal/document-readyState-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/node-nodeType-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/addEventListener-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/event-type-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/blob-size-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/getElementById-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "args/addEventListener-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 0 present."
+    },
+    "args/addEventListener-one": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 1 present."
+    },
+    "args/getElementById-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'getElementById' on 'Document': 1 argument required, but only 0 present."
+    },
+    "args/createElement-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'createElement' on 'Document': 1 argument required, but only 0 present."
+    },
+    "args/dispatchEvent-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'dispatchEvent' on 'EventTarget': 1 argument required, but only 0 present."
+    },
+    "args/dispatchEvent-wrong-type": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'."
+    },
+    "args/setAttribute-one": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'setAttribute' on 'Element': 2 arguments required, but only 1 present."
+    },
+    "ctor/Event-without-new": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Event': Please use the 'new' operator, this DOM object constructor cannot be called as a function."
+    },
+    "ctor/Event-no-args": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Event': 1 argument required, but only 0 present."
+    },
+    "ctor/Blob-without-new": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Blob': Please use the 'new' operator, this DOM object constructor cannot be called as a function."
+    },
+    "ctor/Node-illegal": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Node': Illegal constructor"
+    },
+    "ctor/Document-allowed": {
+      "threw": false,
+      "value": "true"
+    },
+    "args/querySelector-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present."
+    },
+    "args/appendChild-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'appendChild' on 'Node': 1 argument required, but only 0 present."
+    },
+    "args/insertBefore-one": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'insertBefore' on 'Node': 2 arguments required, but only 1 present."
+    },
+    "args/getAttribute-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'getAttribute' on 'Element': 1 argument required, but only 0 present."
+    },
+    "args/attachShadow-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'attachShadow' on 'Element': 1 argument required, but only 0 present."
+    },
+    "args/urlSearchParams-get-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'get' on 'URLSearchParams': 1 argument required, but only 0 present."
+    },
+    "args/headers-forEach-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'forEach' on 'Headers': 1 argument required, but only 0 present."
+    },
+    "args/domTokenList-forEach-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "undefined is not a function"
+    },
+    "args/atob-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'atob' on 'Window': 1 argument required, but only 0 present."
+    },
+    "args/btoa-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'btoa' on 'Window': 1 argument required, but only 0 present."
+    },
+    "args/structuredClone-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'structuredClone' on 'Window': 1 argument required, but only 0 present."
+    },
+    "args/scrollTo-zero-allowed": {
+      "threw": false,
+      "value": "no-throw"
+    },
+    "arity/addEventListener": {
+      "threw": false,
+      "value": "2"
+    },
+    "arity/insertBefore": {
+      "threw": false,
+      "value": "2"
+    },
+    "arity/querySelector": {
+      "threw": false,
+      "value": "1"
+    },
+    "arity/Event-constructor": {
+      "threw": false,
+      "value": "1"
+    },
+    "arity/Blob-constructor": {
+      "threw": false,
+      "value": "0"
+    },
+    "arity/atob": {
+      "threw": false,
+      "value": "1"
+    },
+    "arity/nonConstructible-PictureInPictureEvent": {
+      "threw": false,
+      "value": "2"
+    },
+    "stack/error-first-line": {
+      "threw": false,
+      "value": "Error: probe"
+    },
+    "stack/typeerror-name": {
+      "threw": false,
+      "value": "TypeError"
+    },
+    "stack/domexception-name": {
+      "threw": false,
+      "value": "no-throw"
+    },
+    "stack/error-toString": {
+      "threw": false,
+      "value": "TypeError: probe"
+    },
+    "iter/nodeList-iterable": {
+      "threw": false,
+      "value": "function"
+    },
+    "iter/nodeList-tag": {
+      "threw": false,
+      "value": "[object NodeList]"
+    },
+    "iter/htmlCollection-not-iterable": {
+      "threw": false,
+      "value": "function"
+    },
+    "iter/classList-tag": {
+      "threw": false,
+      "value": "[object DOMTokenList]"
+    },
+    "iter/nodeList-entries-type": {
+      "threw": false,
+      "value": "function"
+    },
+    "iter/urlSearchParams-toStringTag": {
+      "threw": false,
+      "value": "[object URLSearchParams]"
+    },
+    "cssom/div-display": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/span-display": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/div-position": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/div-visibility": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/computed-tag": {
+      "threw": false,
+      "value": "[object CSSStyleDeclaration]"
+    },
+    "cssom/inline-style-tag": {
+      "threw": false,
+      "value": "[object CSSStyleDeclaration]"
+    },
+    "cssom/inline-style-length-empty": {
+      "threw": false,
+      "value": "0"
+    },
+    "cssom/inline-style-roundtrip": {
+      "threw": false,
+      "value": "color: red;"
+    },
+    "cssom/setProperty-then-item": {
+      "threw": false,
+      "value": "z-index=3"
+    },
+    "cssom/computed-readonly-setter": {
+      "threw": true,
+      "name": "NoModificationAllowedError",
+      "message": "Failed to set a named property 'color' on 'CSSStyleDeclaration': These styles are computed, and therefore the 'color' property is read-only."
+    },
+    "cssom/attached-div-display": {
+      "threw": false,
+      "value": "block"
+    },
+    "cssom/attached-span-display": {
+      "threw": false,
+      "value": "inline"
+    },
+    "cssom/attached-li-display": {
+      "threw": false,
+      "value": "list-item"
+    },
+    "cssom/attached-script-display": {
+      "threw": false,
+      "value": "none"
+    },
+    "cssom/attached-default-color": {
+      "threw": false,
+      "value": "rgb(0, 0, 0)"
+    },
+    "cssom/attached-default-background": {
+      "threw": false,
+      "value": "rgba(0, 0, 0, 0)"
+    },
+    "cssom/attached-button-background": {
+      "threw": false,
+      "value": "rgb(240, 240, 240)"
+    },
+    "cssom/inline-color-serialized": {
+      "threw": false,
+      "value": "rgb(255, 0, 0)"
+    },
+    "cssom/inline-hex-color-serialized": {
+      "threw": false,
+      "value": "rgb(0, 255, 136)"
+    },
+    "cssom/inline-rgba-color-serialized": {
+      "threw": false,
+      "value": "rgba(1, 2, 3, 0.5)"
+    },
+    "cssom/attached-p-margin": {
+      "threw": false,
+      "value": "16px"
+    },
+    "cssom/attached-table-display": {
+      "threw": false,
+      "value": "table|border-box"
+    },
+    "canvas/context-tag": {
+      "threw": false,
+      "value": "[object CanvasRenderingContext2D]"
+    },
+    "canvas/default-size": {
+      "threw": false,
+      "value": "300x150"
+    },
+    "canvas/dataurl-prefix": {
+      "threw": false,
+      "value": "data:image/png;base64,"
+    },
+    "canvas/dataurl-unsupported-type": {
+      "threw": false,
+      "value": "data:image/png;base64,"
+    },
+    "canvas/textmetrics-tag": {
+      "threw": false,
+      "value": "[object TextMetrics]"
+    },
+    "canvas/textmetrics-members": {
+      "threw": false,
+      "value": "actualBoundingBoxAscent,actualBoundingBoxDescent,actualBoundingBoxLeft,actualBoundingBoxRight,alphabeticBaseline,constructor,fontBoundingBoxAscent,fontBoundingBoxDescent,hangingBaseline,ideographicBaseline,width"
+    },
+    "canvas/unknown-context": {
+      "threw": false,
+      "value": "null"
+    },
+    "canvas/default-fillStyle": {
+      "threw": false,
+      "value": "#000000"
+    },
+    "canvas/default-font": {
+      "threw": false,
+      "value": "10px sans-serif"
+    },
+    "event/phase-order": {
+      "threw": false,
+      "value": "capture:1|target:2|bubble:3"
+    },
+    "event/stopPropagation-blocks-bubble": {
+      "threw": false,
+      "value": "child"
+    },
+    "event/stopImmediatePropagation": {
+      "threw": false,
+      "value": "first"
+    },
+    "event/once-runs-once": {
+      "threw": false,
+      "value": "1"
+    },
+    "event/duplicate-listener-ignored": {
+      "threw": false,
+      "value": "1"
+    },
+    "event/phase-after-dispatch": {
+      "threw": false,
+      "value": "0|null|true"
+    },
+    "event/preventDefault-non-cancelable": {
+      "threw": false,
+      "value": "false"
+    },
+    "event/dispatch-returns-false-when-cancelled": {
+      "threw": false,
+      "value": "false"
+    },
+    "event/redispatch-while-dispatching": {
+      "threw": false,
+      "value": "InvalidStateError"
+    },
+    "realm/identity-bundle": {
+      "threw": false,
+      "value": "[object Window] | [object HTMLDocument] | docMatches=true | arrayDiffers=true | instanceofAcross=false | isArrayForeign=true | foreignInstanceofLocal=false | [object HTMLDivElement] | elementInstanceofLocal=false | elementInstanceofForeign=true | errorInstanceofLocal=false | [object Error] | selfRef=true,true | parentIsUs=true | topMatches=true | frameElementMatches=true | href=about:blank"
+    },
+    "realm/foreign-native-toString": {
+      "threw": false,
+      "value": "function addEventListener() { [native code] }"
+    },
+    "url/malformed-percent": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/malformed-bracket": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/empty-host": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/multiple-colons-in-authority": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/space-in-host-encoded": {
+      "threw": false,
+      "value": "https://a%20b/"
+    },
+    "url/unknown-scheme-normalization": {
+      "threw": false,
+      "value": "nv8-unknown://x"
+    },
+    "url/scheme-relative": {
+      "threw": false,
+      "value": "https://x/"
+    },
+    "url/valid-passthrough": {
+      "threw": false,
+      "value": "https://ok.test/p?q=1#h"
+    },
+    "tag/window": {
+      "threw": false,
+      "value": "[object Window]"
+    },
+    "tag/document": {
+      "threw": false,
+      "value": "[object HTMLDocument]"
+    },
+    "tag/div": {
+      "threw": false,
+      "value": "[object HTMLDivElement]"
+    },
+    "tag/unknown-element": {
+      "threw": false,
+      "value": "[object HTMLElement]"
+    },
+    "tag/event": {
+      "threw": false,
+      "value": "[object Event]"
+    },
+    "tag/navigator": {
+      "threw": false,
+      "value": "[object Navigator]"
+    },
+    "tag/location": {
+      "threw": false,
+      "value": "[object Location]"
+    },
+    "tag/documentPrototype": {
+      "threw": false,
+      "value": "[object Document]"
+    }
+  }
+}

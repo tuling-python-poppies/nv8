@@ -1,0 +1,981 @@
+# NV8 架构改造 - 未完成任务清单（修正版）
+
+## 当前状态
+- **完成阶段**: Phase 3 (内置插件和预设配置) ✅
+- **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
+- **测试状态**: 502/502 全部通过 ✅（`npm test`）
+- **项目性质**: 私有框架，无公开发布计划
+
+---
+
+## 一、Baseline 验收（行为基线）
+
+### 已完成 ✅
+- **完整 surface/descriptor 快照** - `src/baseline/full-surface.js`
+  - 枚举全部全局 own key + 各自原型成员（先前只覆盖精选 24 个）
+  - fixture 存分组摘要，每全局压成一行 `type:members:symbols:digest16`（332KB）
+  - 按**每个 Node major 逐档**存储（node18/20/22/24），四档均已录入并校验通过
+  - 采集不触发 getter；Symbol key 只计数不展开，避免引擎顺序抖动
+- **差异清单机制** - `src/baseline/known-differences.js`
+  - 每条差异必须有 owner / severity / reason / expectation
+  - `blocking` / `tracked` / `environmental` 三级
+  - `validateDifferenceRegistry()` 校验清单自洽，防止空壳条目绕过门禁
+  - Node 版本造成的缺失（如 `Iterator` 需 22+）自动豁免且单独登记
+- **工具** - `npm run baseline:surface`（校验 / `--write` / `--full`）
+- **文档** - `docs/baseline.md`
+- **测试** - `tests/baseline-full-surface-test.js`（11 项）
+
+### 关键发现
+完整枚举暴露出先前被掩盖的覆盖差距：
+
+| 路径 | 全局数 | 原型成员数 |
+|------|--------|-----------|
+| legacy | 1234 | 8910 |
+| plugin | 149 | 1671 |
+
+精选 24 全局快照恰好只覆盖两条路径都已实现的部分，差距（一个数量级）被完全
+掩盖。已登记为 `surface-coverage-gap`，severity 为 **blocking**——这是切换默认
+模式的硬门槛。
+
+### Node 版本差异（已固化）
+实测每个 major 的 V8 内建都不同，合并分档会误报：
+
+| 原型 | 18 | 20 | 22 | 24 |
+|------|----|----|----|----|
+| `Array.prototype` | 36 | 40 | 40 | 40 |
+| `ArrayBuffer.prototype` | 3 | 6 | 9 | 9 |
+| `String.prototype` | 50 | 52 | 52 | 52 |
+
+四档 fixture 实测：
+
+| 档 | legacy | plugin |
+|----|--------|--------|
+| node18 | 1233 / 8875 | 144 / 1615 |
+| node20 | 1233 / 8885 | 144 / 1628 |
+| node22 | 1234 / 8907 | 145 / 1650 |
+| node24 | 1234 / 8910 | 149 / 1671 |
+
+### 已完成 ✅（bootstrap 安装顺序）
+- 三个 bootstrap 的**完整调用序列**入 fixture（root 337 / worker 109 / worklet 13 步）
+- `diffBootstrapSequence()` 分 removed / added / reordered 三类报差异
+- `reordered` 仅在集合一致时计算，避免增删导致的位移淹没信号
+- 重复调用按次数比对，不去重
+- `sourceSha256` 与行号降为 `informational`，不参与校验（对注释改动过度敏感）
+- 有测试防止信息性字段被重新拉进校验，并交叉校验摘要与序列一致
+- `npm run baseline:bootstrap`
+- 已自证：互换两个相邻安装调用能被精确定位到位序
+
+### 已完成 ✅（observability golden fixture）
+- `src/baseline/observability.js` 归一化 trace / network / navigation
+- 剔除非确定性字段：`sequence`、trace 参数值、`*Truncated`、body 内容、
+  navigation `key`/`id`；header 名小写排序，`state` 降级为 `hasState`
+- 当前 golden：trace 33 / requests 1 / navigation 2，连续三次采集一致
+- `diffObservability()` 逐条定位差异而非只比 digest
+- 测试断言 fixture 不含非确定性字段，且 `outcome === 'replayed'`
+  （baseline 永不触达真实网络）
+- `npm run baseline` 一次跑完三项验收
+
+**Baseline 章节已全部完成。**
+
+---
+
+## 二、Gate 1 验收 (Core 边界和后端契约)
+
+### 已完成 ✅
+- child process 和 worker thread 后端统一
+- Frame Protocol 和 typed values
+- 超时、输出、payload、frame queue、value depth 限制
+- 资源清理和诊断系统
+
+### 已完成 ✅（本轮新增）
+- **Evidence 抽象接口** - `src/core/evidence-contract.js`（零依赖）
+  - `EvidenceSource` 8 方法契约，资源用不透明 id 标识
+  - duck typing 校验，缺失方法全部列出
+  - `TRUSTED_SCRIPT_POLICY` 归属 Core，含 `registered-only` 历史别名
+  - `resolveTrustedScriptIds()` 统一策略解析，sandbox 与 runtime-pool 共用
+- **适配器层** - `src/evidence/evidence-source.js`
+  - `createEvidenceSource(bundle)` 包装具体 Bundle
+  - `createInMemoryEvidenceSource()` 无磁盘构造
+- **Core 零依赖 Evidence** - 源码扫描测试强制，不靠约定
+- **ScriptInjector 归位** - 迁至 `src/core/`（零 import、与格式无关）
+
+### 未完成项
+- [ ] 所有后端异常的句柄泄漏验证
+
+**状态**: ✅ Evidence 接口解耦完成（21 项测试）
+
+---
+
+## 三、Gate 2 验收 (Plugin SDK 和注册器)
+
+### 已完成 ✅
+- Plugin manifest 校验
+- 能力依赖解析、版本检查、循环依赖检测
+- 拓扑排序和安装顺序
+- Plugin lock plan 生成
+- GlobalSurfaceRegistry、StateRegistry、CapabilityRegistry
+
+**状态**: ✅ 完成
+
+---
+
+## 四、Gate 3 验收 (现有实现适配)
+
+### 已完成 ✅
+- 大部分浏览器 API 已迁移为插件：
+  - WebIDL、Events、DOM、DOM Collections
+  - Storage、Navigation、History、Location
+  - Fetch、XHR、Streams
+  - Messaging、Worker、SharedWorker、ServiceWorker、Worklet
+  - HTML Elements、iframe
+  - Performance、Crypto、WebSocket
+
+### 未完成项（按需实现）
+- [ ] **Canvas/WebGL/WebGPU** - 渲染能力
+- [ ] **Media APIs** - Audio、Video、MediaSource、WebRTC
+- [ ] **Device APIs** - Geolocation、Battery、Sensors
+- [ ] **CSSOM** - 完整 CSS 对象模型
+- [ ] **SVG/MathML** - 非 HTML 命名空间
+- [ ] **高级 DOM** - Range、Selection、Shadow DOM、MutationObserver 完整语义
+- [ ] **Blob/File/FileReader** - 二进制数据完整处理
+- [ ] **Object URLs** - `URL.createObjectURL()` 和生命周期
+- [ ] **IndexedDB** - 完整离线数据库
+- [ ] **Cookie Store API**
+- [ ] **Permissions API**
+- [ ] **Clipboard API**
+- [ ] **Credentials API**
+- [ ] **Web Animations**
+- [ ] **Intersection/Resize/PerformanceObserver** - 完整 Observer 语义
+
+### 模块级状态迁移 ✅ 已完成
+先纠正一处此前的误判：`src/migration-targets/` 下的 90 个目录只是 Rust→JS
+映射存根（`export * from` + 元数据），不含状态、无人引用，不是待迁移代码。
+
+且经 RealmModuleLoader 加载的模块在每个 Realm 都会得到新实例，模块级 `let`
+天然 Realm 隔离。真正跨 Sandbox 泄漏的只有**宿主 ESM 图**。
+
+客观口径：`npm run audit:state`
+
+```
+宿主 ESM 图模块数      : 1813
+待迁移的文件          : 0
+待迁移的模块级状态    : 0
+已审阅的进程级状态    : 4
+```
+
+- 宿主图待迁移状态 **85 → 0**
+- `src/core/state-scope.js` 提供 realm/origin/sandbox 三种作用域槽
+- `tests/state-scope-test.js` 预算断言固定为 0，新增必须先迁移或显式登记豁免
+- 4 处审阅后保留为进程级（扩展点注册表、SHA-512 常量缓存、Realm 上下文注册表、
+  安装期上下文指针），每项在审计脚本中写明理由，并有测试校验理由非空
+- 时钟语义已定案：指纹配置一致性由调用方统一传参保证，运行时游标
+  （timeOrigin / 单调游标 / jitter PRNG）按 Realm 隔离
+- 详见 `docs/state-scope.md`
+
+---
+
+## 五、Gate 4 验收 (Profile 和证据输入)
+
+### 已完成 ✅
+- Profile 工厂系统 (`src/profiles/index.js`)
+- `minimal-fetch`、`dom-replay`、`legacy-full` 预设
+- Profile 继承、覆盖、能力声明
+- Evidence Bundle schema、loader、validator
+- Script Injector (inline、external、defer、async、module)
+- Network Replay (fetch、XHR、WebSocket)
+
+### 未完成项
+- [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
+- [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
+- [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
+- [ ] **完整 Profile Node 支持矩阵** - Node 18/20/22/24 兼容性测试
+- [ ] **Profile 能力降级策略** - 缺失宿主能力时的行为
+- [ ] **受信任脚本策略完整定义** - CSP、module 权限边界
+
+**状态**: 基础实现完成，需要加固安全和兼容性
+
+---
+
+## 六、页面脚本生命周期
+
+### 已完成 ✅（本轮修复三个规范偏差）
+
+**一、`window.addEventListener` 在 inline 脚本执行时不存在（根因）**
+
+`installGlobalEventTargetMethods()` 原先由 `executePageScripts()` 首行安装，
+但 parser 阶段的 inline 脚本在 HTML 解析中就执行了。结果
+`typeof globalThis.addEventListener === 'undefined'`，
+`window.addEventListener('DOMContentLoaded', ...)` 直接抛 TypeError，
+**脚本从那一行整段中断**。已提前到 lifecycle 模块加载后立即安装。
+
+**二、`load` 事件派发在 document 而非 window**
+
+`load` 规范上 `bubbles: false`，只在 document 派发会让
+`window.addEventListener('load')` 永远收不到——而这是最主流的页面就绪钩子。
+已改为在 window 派发。
+
+> **后续修正**：当时为「兼容少数写法」保留的那份 document 派发，后来经真实
+> Edge 151 实测证明是**可检测偏差**——真实浏览器里
+> `document.addEventListener('load')` 从不触发。已移除，见第十二节。
+
+`DOMContentLoaded` 改为带 `bubbles: true` 在 document 派发，靠冒泡到达 window。
+第一版在两处各派发一次导致 window 监听器**触发两次**，已修正为只派发一次。
+
+**三、inline `<script defer>` / `<script async>` 永远不执行**
+
+parser 执行器无条件跳过 `defer`/`async`，而 `executePageScripts` 对 inline
+非 module 脚本直接 `continue`——两头都不管，脚本被丢弃。浏览器只对**外部**
+脚本应用这两个属性。已修正为只跳过外部 defer/async。
+
+**顺带**：`defer` 与 `module` 原先是两个独立队列，规范上两者都在
+DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
+
+修复效果：
+
+```
+修复前: ["module","dom"]
+修复后: ["inline-defer","module","doc:DOMContentLoaded",
+        "win:DOMContentLoaded","win:load"]
+浏览器: 同上（`doc:load` 不出现——见第十二节的实测结论）
+```
+
+测试：`tests/page-lifecycle-events-test.js`（11 项）。这些偏差此前没被抓到，
+是因为现有测试统一用 `document.addEventListener`，而失效的恰好是
+`window.addEventListener` 这条主流写法。
+
+### 未完成项
+- [x] **动态 `import()`** - ADR-0003 定案：离线重放 + 结构化拒绝
+  - 相对 / 根相对 / 绝对 URL / `data:` 均支持，与静态 import 共用解析规则
+  - 未命中给 `ERR_NV8_MODULE_REPLAY_MISS`，含 resolvedUrl 与可用模块列表
+  - per-Realm 缓存，键为解析后绝对 URL；循环依赖不死锁
+  - 任何情况下不触达真实网络
+  - 测试 25 项（`tests/dynamic-import-test.js`）
+- [x] Worker 路径动态 import 重放已接入；`evaluateModule()` 改用共享入口
+- [x] eval 与 Worklet 保持拒绝并说明理由（eval 编译结果跨 Realm 复用，
+  无法绑定 per-Realm 缓存；Worklet 规范不支持）
+- [x] **真实 parser streaming** - 已实现，节点直接插入 document，遇 script 就地执行
+  - 迁移前是 one-shot：整个文档先解析到 fragment、组装进 document，**然后**才
+    批量执行 inline 脚本。脚本因此看到完整 DOM，且 `readyState` 已是 `complete`
+  - 实测偏差三项全错：能看到后续 DOM / `body.children.length` 4 而非 2 /
+    `readyState` `complete` 而非 `loading`
+  - `readyState === 'complete'` 尤其致命——正常页面里 inline 脚本绝不可能
+    在 complete 状态下首次运行，单条即可判定
+  - 核心约束：**不能预建 body**。真实浏览器解析到 `<body>` 前
+    `document.body` 是 `null`，head 里的脚本依赖这一点
+  - `parseFragment` 增加 streaming 模式，与 fragment 模式共用 tokenizer；
+    `innerHTML` 等行为不变
+  - 测试 8 项（`tests/parser-streaming-test.js`）
+- [x] **async 脚本下载竞态** - 确认**非缺陷**，已锁不变量
+  - 原判断有误：规范规定 **DOMContentLoaded 只等 defer，不等 async**，
+    async 在 DCL 之后执行完全合法（对应下载较慢的情形）
+  - 离线重放下调度落在 DCL 之后并保持确定，是建模选择而非偏差
+  - 断言精确位置等于把一次偶然调度当成契约，因此只锁不变量：
+    defer 严格文档顺序 / defer 在 DCL 前且 readyState 仍 `loading` /
+    `load` 等全部 async / 每个 async 只执行一次 / 脚本缺失派发 `error`
+    且不派 `load` / 失败脚本不阻断 defer 队列
+  - 测试 8 项（`tests/async-defer-order-test.js`）
+- [x] **`document.open()`** - 文档重置语义已实现
+  - 此前只改 readyState 和返回值，**不清空文档**——导致
+    `open(); write(); close()` 把新内容追加到旧文档而非替换（最常见用法失效）
+  - 现在移除所有子节点并重建空的 `html/head/body` 骨架（浏览器在 open()
+    返回后立刻就有这三者可用）
+  - 测试 10 项（`tests/document-open-test.js`），含二次 open()、分片 write
+    缓冲、裸 close() 无副作用
+- [x] **根窗口 navigation / 完整文档替换** - 卸载事件派发目标已校正
+  - `pagehide` / `unload` 原先**只在 document 派发**，两侧都与真实浏览器相反
+  - `document.close()` 兜底路径的 DCL 不带 `bubbles`，`load` 派在 document
+  - 详见第十二节（含真实 Edge 实测数据）
+- [x] **iframe `beforeunload` 取消** - 三条异议路径已补齐
+  - `preventDefault()` 原本可用；`returnValue = '非空'` 与
+    `onbeforeunload` 返回字符串两条历史路径原本失效
+  - 真实页面里后两条比 `preventDefault` 更常见
+  - 详见第十二节
+- [x] **navigation error 时序** - 已与真实 Edge 对比并修正
+  - 实测真实 Edge（iframe 导航）：200 / 404 / 500 均派发 `load`（错误页也是
+    文档）；连接被拒与未知 scheme **不派发任何事件**；`src="http://%"`（畸形）
+    派发 `load` 且旧文档被替换
+  - **iframe 在导航失败时从不派发 `error`**——NV8 原先对畸形 URL 与不支持的
+    scheme 都派 `error`，这是可检测偏差
+  - 已修：不支持的 scheme 导航整体中止、不派发事件、不动当前文档；
+    畸形 URL 改派 `load`
+- [ ] **畸形 URL 未替换为错误页文档** - 真实浏览器提交错误页并替换旧文档，
+  NV8 只派发 `load` 而保留旧文档。需要一份错误页 HTML 与新的子 Realm
+- [ ] **`new URL()` 校验与规范化过于宽松**（新发现，6 项探针已登记）
+  - 真实 Edge 对 `http://%` / `http://[` / `http://` / `http://a:b:c/` 均抛
+    TypeError，NV8 全部放过；`https://a b/` 真实编码为 `https://a%20b/`，
+    NV8 原样保留；未知 scheme 真实不补尾斜杠，NV8 补成 `nv8-unknown://x/`
+  - `new URL()` 放 try/catch 做输入校验极常见，`href` 规范化结果也常被直接比较
+  - **不能拿 Node 当基准**：`https://a b/` 浏览器接受并编码，Node 直接抛
+- [ ] **iframe 导航未排成任务** - NV8 对**每次属性变更**立即导航；真实浏览器把
+  导航排成任务，`removeAttribute('srcdoc')` + `setAttribute('src')` 合并为一次。
+  NV8 会先派发一次中间 blank 的 `load`
+
+---
+
+## 七、Worker 和模块加载器
+
+### 已完成 ✅
+- Dedicated Worker、SharedWorker、Worklet 基础实现
+- Worker 脚本从 offline replay 或 `data:` URL 加载
+- module Worker 静态 import
+- Worker 消息传递和生命周期
+- Worker 资源清理
+
+### 未完成项
+- [x] **动态 `import()` 策略** - ADR-0003 定案：离线重放 + 结构化拒绝
+  （实现与测试见第六节，25 项）
+- [ ] **SharedWorker/Worklet graph 指纹** - 版本和缓存
+- [ ] **module cache 作用域和销毁** - 模块缓存生命周期
+- [ ] **pending module evaluation 取消** - 取消未完成的模块加载
+- [ ] **Worker 并发/深度/关闭限制** - 防止资源耗尽
+
+**状态**: 基础实现完成，高级策略待定义
+
+---
+
+## 八、Gate 5 验收 (Protocol 和 Collector 边界)
+
+### 已完成 ✅
+- **Protocol 层接口定义** - `src/request-protocol/`
+  - `RuntimeArtifact` 契约：canonical JSON、schema 版本、摘要、过期语义
+  - `ArtifactSet` 有界集合（数量/单体字节/总字节限制）
+  - `RequestPlan` 归一化（header 小写、多值保序、CRLF 注入防护、摘要稳定）
+  - 12 种声明式 `RequestTransform` + 跨适配器冲突检测
+  - `defineProtocolAdapter()` 窄接口（context 只有 request/artifacts/now）
+  - `ProtocolRegistry` 编排、transform 溯源、plan diff、协议 lock
+- **Collector 层** - `src/collector/`
+  - `NetworkPolicy` 默认拒绝、origin allowlist（含通配子域）、scheme/method 限制
+  - 重定向策略（默认拒绝，跨 origin 需显式开启）
+  - `CredentialStore` origin 精确绑定、脱敏、注入时机在策略检查之后
+  - `RetryPolicy` 策略拒绝永不重试、幂等性判定、确定性退避、`Retry-After`
+  - `CookieJar` 会话 cookie，与 Realm `document.cookie` 完全隔离
+  - `Transport` 抽象（fetch 实现 + 确定性 stub）、超时包装
+  - 有界脱敏审计日志
+- **端到端链路** - `tests/gate5-end-to-end-test.js`
+  - Evidence → Runtime → Artifact → Protocol → RequestPlan → Collector 全链路
+  - 链路摘要可复现
+- **边界断言**（测试化，非仅约定）
+  - 沙箱脚本无法获得真实网络响应
+  - 适配器 context 不含 transport/collector/fs
+  - 被拒绝 origin 不产生任何出网数据包
+- **文档** - `docs/protocol-collector.md`
+
+### 未完成项
+- [ ] **Collector 上层编排** - 分页、批量调度、限流
+- [ ] **数据持久化** - 结果落库、增量更新
+- [x] **代理支持** - `src/collector/proxy.js`，44 项测试（含真实隧道）
+  - **代理故障必须与目标故障分开**（本模块首要理由）：代理不通是我们这一侧的
+    出口坏了。混在一起 → 一个代理挂掉 → 熔断器跳闸所有 origin → 运维看到
+    "所有站点都挂了"，真实原因被完全掩盖。独立错误码 `PROXY_*`，
+    熔断器**硬排除**（即使调用方把它配进 `tripErrors` 也不生效）
+  - **默认 sticky 轮换**：很多站点把会话绑定 IP。中途换出口表现为莫名掉登录态，
+    看起来像"协议实现错了"，会把排查带向完全错误的方向。轮换必须显式选择
+  - **凭据零泄露**：`password` 不可枚举，`toJSON` 只报 `authenticated: bool`，
+    错误消息只带脱敏 label，解析失败的 URL 也先 redact。有断言覆盖
+    `JSON.stringify` / `util.inspect` / 展开 / 模板串四条泄露路径
+  - **健康冷却**：没有冷却的话挂掉的代理会在每轮轮换里反复被选中，把成功率拖到
+    1/N，而每次失败看起来都是随机的。全部冷却时**抛 `PROXY_EXHAUSTED`**，
+    不退回用已知坏的——那会把故障重新伪装成目标故障
+  - **可重试性分级**：407/凭据被拒/规则不允许 → 不可重试（重试永远不会通过）；
+    连不上/502/host unreachable → 可重试
+  - HTTP `CONNECT` + SOCKS5 握手均零依赖（`node:net`/`node:tls`）。
+    分段解析已验证：CONNECT 响应头跨 TCP 段、SOCKS5 每步按需取字节
+  - 半配凭据（只给用户名）是配置错误而非空密码——静默当空密码会让认证在远端
+    失败、报成"代理不通"，把配置问题伪装成网络问题
+- [ ] **代理接入 transport** - 隧道与池已就绪，但全局 `fetch` 没有代理钩子
+  （undici 的 `ProxyAgent` 需要依赖，本项目零依赖）。需要基于 `node:http`
+  在 `connectThroughProxy` 返回的 socket 上自建一个 transport
+- [ ] **WebSocket 采集** - 当前只支持 HTTP
+- [x] **熔断器** - 按 origin 的三态熔断（`src/collector/circuit-breaker.js`，22 项测试）
+  - `CIRCUIT_OPEN` 错误码早就在 `errors.js` 里定义了但没实现——缺口是设计时
+    就意识到的
+  - **按 origin 而不是全局**：采集常同时打主站 + CDN + 验证码服务，
+    全局熔断会让次要服务拖垮整轮
+  - **half-open 只放一个探针**：放多个的话目标未恢复时会一次性收到一批失败
+  - **只计目标侧失败**：超时 / 连接错误 / 5xx / **429** 计入；
+    4xx、**策略违规**、abort、自身的 CIRCUIT_OPEN 都不计。策略违规计进去会让
+    一次配置失误把 origin 熔断掉，反过来掩盖真正的错误
+  - 不计入的失败**也不当成成功**——否则配置错误会清零真实的连续失败计数
+  - 熔断检查排在策略检查**之后**，保证违规请求先被挡掉
+- [x] **限流与并发控制** - 令牌桶 + 并发上限（`src/collector/rate-limiter.js`，18 项测试）
+  - 速率与并发是**两个独立维度**：只限速率，慢响应会堆积出无限并发；
+    只限并发，快响应让速率无上限
+  - **令牌桶而不是固定间隔**：真实浏览器加载页面会并发打十几个请求再安静几秒，
+    固定间隔会把这种自然突发拉平成机械匀速，反而更像机器人
+  - **FIFO 公平**：按到达顺序放行。若按"谁先抢到令牌谁走"，高频调用方会持续
+    插队，分页采集里会表现为"第一页迟迟不返回"
+  - 等待与 abort **竞速**，不是只在轮询点检查——否则长等待期间取消不生效
+  - `release` 幂等：调用方写在 finally 里，异常路径可能重复触发，
+    重复归还会把 inFlight 减成负数、并发上限失效
+  - 限流在每次**尝试**内取许可：放在 send() 外只会限"逻辑请求数"，重试就绕过了
+- [x] **分页调度** - `src/collector/pagination.js`，21 项测试
+  - **拉取式**（async iterator）而不是回调式：调用方 `for await` 天然获得背压
+    （处理完一页才要下一页），也能随时 `break` 提前停止。回调式要额外设计
+    暂停/恢复协议
+  - **游标提取必须由调用方给**：`next_cursor` / `page` / `offset` /
+    `Link: rel=next` / 嵌套字段各站点都不一样，内置猜测猜错的代价是**静默少采
+    数据**。`nextRequest` 是必需回调，报错文案直接说明"cursor shapes are
+    target-specific and cannot be guessed"
+  - **三种上限，只做页数上限是不够的**：
+    - `maxPages` 防游标永不为空
+    - **游标环检测**——游标重复说明目标在绕圈。只靠 maxPages 会在上限内反复采
+      同一页，看起来"采了 N 页"其实全是重复。实测环形游标在**第二次请求**就停，
+      而不是跑满 50 页
+    - `maxEmptyPages` 连续空页说明到底或出错；设 0 可关掉（有些 API 中间会返空页）
+  - 停止原因结构化（`exhausted` / `max-pages` / `cursor-loop` / `empty-pages` /
+    `aborted`），环检测还报出**是哪个游标重复了**——诊断要能直接定位
+  - **不做错误恢复**：collector 失败直接抛。重试是 RetryPolicy 的职责，
+    在这里吞掉会让"少采一页"变成静默数据丢失
+- [x] **采集进度检查点** - `src/collector/checkpoint.js`，20 项测试
+  - **存储是注入的**，不内置数据库：Collector 层不该拥有 DB 驱动，那会把网络
+    出口层变成数据层。只定义 `load/save/clear` 接口，附内存与文件两个实现
+  - **任务指纹防错续**：查询条件变了却接着旧游标走，会产出混合两次查询的数据
+    且**不报错**——这是续采最危险的 bug。指纹用 canonical JSON，
+    `{a,b}` 与 `{b,a}` 必须同指纹，否则续采会莫名失效
+  - **保存在 yield 之后**：yield 之前保存的话，调用方处理这一页时崩溃、
+    检查点已前进，那一页数据永久丢失。代价是续采**一定有重叠**——
+    宁可重复交付也不能跳过，去重是调用方的责任（有专门断言锁住这条语义）
+  - **已见游标一起存**：不存的话续采后环检测从零开始，绕回旧页发现不了
+  - 文件存储**原子写**（临时文件 + rename）：直接覆盖的话进程被杀会留下截断
+    的 JSON，等于丢掉全部进度。有断言检查无 `.tmp` 残留
+  - 损坏的检查点返回 null 而不是抛——应当导致"重新开始"，不该让整个任务起不来
+  - jobId 清洗防目录穿越（`../../escape`），并附摘要防 `a/b` 与 `a_b` 撞名
+- [x] **结果落地与增量去重** - `src/collector/result-sink.js`，23 项测试
+  - 与检查点配套：**续采一定重复交付条目**，落地端必须能幂等吸收
+  - **按 key 去重不按整体相等**：条目常带易变字段（`fetchedAt`、排序分数、
+    A/B 分桶），按整体相等去重等于不去重
+  - **`keyOf` 不给就不去重**：猜不出哪个字段是主键，猜错会把两条不同记录当成
+    同一条、静默丢数据。宁可不去重也不猜
+  - `knownKeys` 可从已有 NDJSON 读回（`readNdjsonKeys`），续采时挡住边界页重复
+  - **NDJSON 而不是 JSON 数组**：进程被杀最多留下一个残缺末行，前面全部有效；
+    JSON 数组写一半就是整个文件不可解析。`readNdjsonKeys` 跳过残缺行并**计数**，
+    让调用方知道发生过
+  - 批量写 + `close()` 必须冲干；`persist` 抛错时**先清空缓冲**，
+    否则下次 flush 会把同一批再写一遍
+  - `stats().duplicates` 直接暴露续采重叠量
+  - `keyByFields` 要求显式列字段——全字段摘要会把易变字段算进去，等于不去重
+- [ ] **真实存储适配** - 内存与 NDJSON 两个实现已就位，Postgres/SQLite 等
+  由调用方按 `write/flush/close` 接口提供（刻意不内置 DB 驱动）
+
+**状态**: ✅ Gate 5 核心边界完成（125 项测试）。剩余为上层编排能力，非边界问题。
+
+---
+
+## 九、实用性改进（非发布要求）
+
+### 已完成 ✅（本轮新增）
+- **能力探测三态** - `available` / `broken` / `reason`
+  - 探针做真实冒烟测试，不只查 typeof
+  - `preflightHostCheck()` 启动前置检查
+  - `npm run capabilities` 输出当前宿主报告
+- **Node 支持矩阵** - `NODE_SUPPORT_MATRIX`（24/22 supported，20/18.18 best-effort）
+- **异步 ModuleLoader** - `src/realm/module-link-strategy.js`
+  - 屏蔽 `moduleRequests`/`linkRequests`/`instantiate`（24+）与 `link()`（18+）差异
+  - `importUrlAsync()` 全版本可用；`importUrl()` 缺能力时抛错而非返回半初始化模块
+  - 测试通过删除原型 API 模拟 Node 18–22，验证降级路径真实可用
+- **宿主回退层** - `src/compat/host-compat.js`
+  - ArrayBuffer.transfer / structuredClone / asyncDispose / AbortSignal.timeout
+  - 无法保证语义的情况显式抛错，不静默降级
+- **CI 矩阵** - `.github/workflows/ci.yml`（Node 4 版本 + 2 后端）
+- **engines 放宽** - `>=18.18.0`（原先锁死 24.11.0）
+- **Node 18/20 真实验证通过** - 四版本全绿（当时各 283/283）
+  - 插件 activate/dispose 迁至异步导入（25 个插件）
+  - 同步回调改用 `preload()` + `importUrlSyncCached()`
+  - 修复 `Iterator` 缺失导致 Node 18/20 bootstrap 崩溃
+  - 修复异步链接的循环依赖与 referrer 解析错误
+  - `npm run test:matrix` 本地复现 CI 矩阵
+- **消除测试时序抖动** - script-injector 固定延时改轮询等待
+- **测试异步等待治理**
+  - 新增 `tests/helpers/async-wait.js`
+  - `waitUntil()` / `waitForValue()` / `drainTasks()`
+  - Evidence 动态脚本、root navigation、iframe teardown、document.write 等测试已迁移
+  - window-client / ServiceWorker client / plugin 测试的单轮 0ms 等待改为多轮让位
+- **固定等待卫生检查** - `tests/test-hygiene-test.js`
+  - 禁止测试中新增超过 2ms 的裸 `setTimeout` 等待
+  - 已验证临时违规能被检查捕获
+- **稳定性验证** - 当前全套 `502/502` 通过
+
+### 未完成项
+- [ ] **Backend 兼容性矩阵实际差异测试** - CI 已配置，缺针对性断言
+- [x] **性能基准** - `npm run benchmark`（中位数 + p90，不报平均值）
+  - 实测 Node 24：冷启动中位数 **487ms**（p90 584ms）、
+    热复用单次 run **0.15ms**、Realm 创建+销毁一轮 **476ms**
+  - 报中位数与 p90 而不是平均值：冷启动的偶发长尾（GC、文件缓存未命中）
+    会把平均值拖得没有参考性
+- [x] **内存泄漏测试** - 判据是「是否随轮次增长」而不是绝对值
+  - 实测句柄数第一轮后稳定在 **6**（5 PipeWrap + 1 ProcessWrap）——那是池子
+    保留的常驻子进程，**不是泄漏**。三组各 4 轮后 total 不再增长，
+    RSS 60.3 → 60.7 → 60.7 MiB
+  - 用 `process.getActiveResourcesInfo()` 而不是堆快照：确定性、不需要
+    `--expose-gc`、不受 GC 时机影响
+  - 另有一条断言证明 close 真的回收（三个沙箱同时开 vs 全部关闭后句柄数）
+- [x] **并发压力测试** - 4 个沙箱并行创建后互不串味
+  - 并行写入各自全局再并行读回、各自 `location.origin` 独立、
+    单沙箱 32 个并发求值全部 resolve
+  - 一条断言覆盖「失败的求值不污染后续」——错误处理不能把连接搞坏
+- [ ] **性能预算的多版本/多后端基线** - 当前预算按 Node 24 + 默认后端实测
+  设定（冷启动 3000ms 上限留了 6 倍余量）。Node 18/20 与 worker-thread
+  后端的实际数字尚未采集
+- [ ] **安全边界文档** - vm.Context、plugin、Evidence、Protocol 的信任边界
+- [ ] **API 文档** - 完整的内部 API 参考
+- [ ] **示例代码** - 常见场景的示例项目
+
+**状态**: 按实际使用需求推进
+
+---
+
+## 十、架构完成定义（按 ADR-0001 修订）
+
+### 路线决策：plugin 不追平 legacy
+
+ADR-0001 已定案：`legacy` 与 `plugin` 是**并存的两个产品形态**，不是新旧替换。
+
+| | legacy | plugin |
+|--|--------|--------|
+| 定位 | 完整兼容入口 | 按需最小组装 |
+| surface | 全量 1234 全局 | 按 Profile 决定（fullPreset 205） |
+| 默认 | 保持默认 | 显式选择 |
+
+因此原门槛「plugin 覆盖追平 legacy」作废。`surface-coverage-gap` 已从
+blocking 降级为 tracked——它记录一个预期的事实，保留登记只为监控差距
+**意外扩大**。
+
+### 新门槛：缺失能力可诊断（ADR-0002）
+
+- [x] 未装载能力取值时给出含能力名和插件名的结构化错误
+- [x] `typeof` / `in` 探测行为不变（不能让特性探测抛错）
+- [x] 未知全局仍是原生 `ReferenceError`，不编造建议
+- [x] 诊断可关闭（`removeCapabilityDiagnostics`）
+- [x] 映射表从插件源码静态解析，不需手写清单
+- [x] **登记缺口已补齐**：映射表 107 → 152 条，未登记 48 → 0
+  - events +18（各类 Event + MutationObserver 系列）
+  - performance +18（各类 Timing / Entry）
+  - streams +8（Controller / Reader / Writer）
+  - dom-core +1（`document` 实例）
+  - `onmessage` / `onmessageerror` / `postMessage` 显式豁免：它们是 Window
+    接口的成员属性/方法，浏览器里未设置时返回 `null` 而非未定义，装诊断会
+    让 `if (self.onmessage)` 这类写法失败
+- [x] 有测试锁定「插件提供的全局必须已登记或显式豁免」，防止再次漂移
+- [x] 已接入 `createRealm()`：默认 `explain` 模式，可选 `strict`，可 `false` 关闭
+- [x] explainer 惰性构建，不影响 Realm 创建时序
+
+### 核心能力
+- [x] Core 能在支持矩阵内创建和销毁基础 Realm
+- [x] App 可以显式注册插件并输出稳定 lock plan
+- [x] Window、iframe、Worker、ServiceWorker、Worklet 使用统一插件契约
+- [x] 现有常用入口通过 legacy 保持兼容（legacy 不再以被取代为目标）
+- [x] Evidence Loader 与 Core 解耦
+- [x] reset、snapshot、dispose、超时、关闭不泄漏资源
+- [ ] 目标脚本、插件、Core、Protocol、Collector 信任边界可测试
+
+### 质量保证
+- [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
+- [x] Node 18–24 矩阵
+- [ ] 冷启动、reset、内存、并发指标
+
+---
+
+## 十一、ADR 待决策清单（可延后）
+
+按照 `docs/架构改造计划.md` 第 29 节，以下决策可在实际使用中逐步形成：
+
+### 已完成 ✅（本轮补写）
+- **ADR-0004** 动态 iframe 的 `contentWindow` 时序（待决策，已列选项与实测）
+- **ADR-0005** 机器相关值不进浏览器身份
+  - 记录三次踩坑：WebGL renderer、hardwareConcurrency、CSS `fontFamily`
+  - 推论：**每次扩大采集范围都要重新过一遍这个检查**，不能假设上次查过了
+- **ADR-0006** 对等性检查分三层，各层职责不重叠
+  - 含「登记表机制」与四条已知方法论陷阱
+
+### Phase 1 (Core)
+- [ ] SDK `apiVersion` 格式和兼容性检查
+- [ ] Core SemVer 策略（私有项目可简化）
+- [ ] Plugin lock 格式和签名（可选）
+- [ ] Evidence Bundle canonical JSON
+- [ ] Frame Protocol 表示格式（已隐式决策）
+
+### Phase 2 (Plugin SDK)
+- [ ] Node 18 ModuleLoader 实现策略（当前 Node 24）
+- [ ] StateRegistry 容量和回收策略
+
+### Phase 3-5 (插件和 Evidence)
+- [ ] Protocol schema 和版本策略
+- [ ] Collector credential/retry 边界
+- [ ] `legacy-full` 维护策略
+
+**状态**: 大部分已通过实现隐式决策，文档化可延后
+
+---
+
+## 十二、与真实 Edge 的对等性（新增）
+
+Baseline 保证「NV8 自己前后一致」，抓不到「NV8 从一开始就和真实浏览器不一样」。
+这一节是后者，全部结论来自**真实 Edge 151 实测**，不靠规范推断。
+
+采集工具（headless Edge + `--dump-dom`，**不依赖 Puppeteer/CDP**）：
+
+```
+npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL）
+npm run fingerprint:globals   # 全局名 1236 项
+npm run fingerprint:members   # 原型成员 8941 项
+```
+
+涉及 iframe 或跨页面的测量需要真实 origin —— `file://` 下每个文件是独立的
+opaque origin，拿不到 `parent`。这类探针走临时本地 HTTP 服务器（仅绑
+127.0.0.1，用完即关）。
+
+### 已完成 ✅
+
+**三层对等性检查**
+
+| 层级 | 现状 |
+|---|---|
+| 全局名存在性 | 覆盖真实 Edge 的 99.68%，**多出为 0** |
+| 原型成员明细 | 966 原型中 949 个成员集完全一致，**多出为 0** |
+| 行为 | **尚未建立** |
+
+**修掉的宿主特征泄漏（多出的东西比缺少更危险）**
+- `AsyncIterator` —— Node 24 的 V8 特性，Edge 151 没有
+- `webkitAudioContext` —— Edge 151 已移除的旧别名
+- `NetworkInformation.prototype.type` —— Chromium 只在 Android 暴露
+- `Event.prototype.isTrusted` —— `[LegacyUnforgeable]`，真实浏览器定义在
+  **实例**上且 `configurable: false`，不在原型上
+
+**指纹字段**
+- UA 缺 `Edg/` 后缀、brands 顺序与名称错误、build 号编造（Edge 与 Chromium
+  build 必须不同）、`edge-runtime-options.js` 校验与 profile 自相矛盾
+- WebGL **masked/unmasked 混淆**：`gl.VENDOR`/`gl.RENDERER` 是 Chromium
+  固定值 `"WebKit"`/`"WebKit WebGL"`，GPU 信息只走
+  `WEBGL_debug_renderer_info`。原实现把 GPU 串放在 masked 参数上
+- GPU 身份组合库（`src/fingerprint/gpu-profiles.js`）：5 套真实桌面 GPU，
+  字段由「厂商+型号+驱动」推导而非手写，`validateGpuIdentity()` 挡住
+  「WebGL 说 NVIDIA、WebGPU 说 Intel」这类矛盾
+
+**事件处理器**
+- `el.onclick = fn` / `document.onclick = fn` **完全不参与派发**（只是存储）。
+  window 的早已接好，element 和 document 漏了
+- `<div onclick="...">` 内容属性不编译成函数
+- 按规范实现为「注册一个稳定的代理监听器」，重新赋值**不改变位置**
+
+**生命周期事件派发目标**（真实 Edge 实测）
+```
+页面加载:      ["document:DCL", "window:DCL", "window:load"]
+iframe 内导航:  ["window:beforeunload", "window:pagehide", "window:unload"]
+```
+- `load` 曾额外补派到 document —— 真实浏览器里 document 监听器从不触发
+- `pagehide`/`unload` 曾**只**在 document 派发 —— 两侧都反了
+- `document.close()` 兜底路径：DCL 缺 `bubbles`，`load` 派在 document
+
+**beforeunload 三条异议路径**
+
+实测（真实导航的处理器内）：
+```json
+{ "before": false, "afterAssign": false, "afterPreventDefault": true, "returnValue": "stay" }
+```
+赋值 `returnValue` **不会**置 canceled 标志 —— 浏览器在派发结束后单独检查。
+因此判定放在决策点 `dispatchBeforeUnload()`，塞进 setter 会让
+`defaultPrevented` 说谎。`onbeforeunload` 返回的字符串要写进 `returnValue`。
+
+**事件构造器可构造性**
+
+逐个 `new` 测 25 个 longtail 事件构造器，真实 Edge 有 8 个抛
+`TypeError: Illegal constructor`。已封锁 7 个。
+
+### 行为层对等性 ✅ 首轮已建立
+
+方法论：探针定义放在 `src/baseline/behavior-probes.js`，采集脚本与测试
+**共用同一份**（各写一份必然漂移）。准入条件三条：跨运行确定、与机器无关、
+可序列化。因此只取引擎固定产出的「结构性事实」——报错类型与文案、
+`toString` 形态、类型标签、非法接收者行为，不取 CPU 核数/屏幕/时区。
+
+采集：`npm run fingerprint:behavior`（跑两轮并要求逐字一致，探针本身在抖
+就直接失败，不等到比较阶段）。
+
+首轮 33 个探针 → **15 项不一致**，已全部修完（现 33/33 一致）：
+
+**一、legacy 模式完全没有原生函数伪装**（5 项，最严重）
+
+`setNativeFunctionContext` 只有 webidl 插件会调用，legacy（默认模式）
+从未建过上下文。后果是所有 `registerNativeFunction` 永久滞留在队列里、
+`Function.prototype.toString` 从未被接管：
+
+```
+Function.prototype.toString.call(document.addEventListener)
+  真实: "function addEventListener() { [native code] }"
+  修复前: "call(...args) { return invoke(this, args); }"
+```
+
+这是最经典的检测手法。同一个根因还让访问器的 `name` 是 `get value`
+而非 `get readyState`。修法：legacy bootstrap 最先调用
+`establishNativeFunctionContext()`，冲刷模块求值期排入的注册队列。
+
+**二、WebIDL 实参个数完全不检查**（6 项）
+
+`document.addEventListener()` 静默返回 undefined，真实浏览器抛
+`Failed to execute 'addEventListener' on 'EventTarget': 2 arguments
+required, but only 0 present.`。新增 `requireArguments()` 助手，文案按实测
+模板（注意单复数：1 个是 `argument`）。
+
+**三、构造器报错文案**（4 项）
+
+- `Please use the 'new' operator` 缺后半句
+  `, this DOM object constructor cannot be called as a function.`（38 处）
+- `Illegal constructor` 缺 `Failed to construct 'X': ` 前缀（244 处单行构造器）
+- **`new Document()` 在真实浏览器里允许**，NV8 抛 Illegal constructor。
+  实测它构造一个空 XML 文档：`contentType: "application/xml"`、
+  `URL: "about:blank"`、`readyState: "complete"`、无 documentElement、
+  原型是 `Document.prototype` 而非 `HTMLDocument.prototype`
+
+测试 14 项（`tests/edge-behavior-parity-test.js`），按分类切分断言，
+一类整体退化时报错能指出是哪类行为坏了。已用「撤掉原生函数上下文」自验：
+3 项按预期失败。
+
+### 未完成项
+- [x] **实参个数检查已成体系** - 下沉到 `definePrototypeMethod` /
+  `defineGlobalFunction` 两个唯一入口
+  - 关键是找到可靠的必需参数信息源：WebIDL 里方法的 `length` **就等于**必需
+    参数个数。采集真实 Edge 全部 3496 个方法的 length 与 NV8 对比，
+    **3476 项全部一致**，所以不需要在 757 个调用点手写个数
+  - 抽样 12 接口 / 119 方法逐字对比报错文案：**119/119 一致**
+  - 两个错误假设被实测纠正：(1) 按裸方法名排除 `forEach` 是错的——只有
+    `DOMTokenList.forEach` 是 JS 风格报错，`URLSearchParams.forEach` /
+    `Headers.forEach` 反而走 WebIDL 模板；(2) 返回 Promise 的操作
+    （`hasPrivateToken` 等）参数错误转为 rejected promise，不同步抛
+  - 全局函数另有 `on 'Window'` 后缀；`atob`/`btoa`/`structuredClone`
+    原本各自手写截断文案
+  - `npm run fingerprint:lengths` 采集 length 基准
+- [x] **13 个缺失原型成员已补齐** - 151 profile 下 **963/966 原型完全一致，
+  缺失 0，多出 0**
+  - 其中 4 项**本来就实现了**，只是被 `edge151Surface` 门控，而当时的对比用的是
+    150 profile：`AnimationEvent.animation` / `TransitionEvent.animation` /
+    `PerformanceEntry.navigationId` / `WheelEvent.momentum`。
+    把对比基准改成 151 profile 后，「陈旧条目」检查立刻把这 4 条揪了出来——
+    这正是登记表机制该有的作用
+  - 其余 9 项按真实 Edge 实测的 descriptor 形状补齐：
+    `Blob/Request/Response.textStream`（**方法**而非访问器，产出字符串块的
+    ReadableStream）、`Element/ElementInternals.ariaActionsElements`、
+    `SpeechRecognition.unspokenPunctuation`、
+    `WebTransportDatagramDuplexStream.incoming/outgoingMaxBufferedDatagrams`
+  - 顺带修掉一条**影响全部 7 个 `aria*Elements`** 的偏差：属性不存在时真实
+    Edge 返回 `null`，NV8 返回空数组。实测四种情形：属性不存在 → null，
+    属性存在但解析不到 → array(0)，可解析 → array(1)，空字符串 → array(0)
+- [x] **`BeforeUnloadEvent` 已封锁** - 8 个不可构造事件接口全部到位
+  - 之前判断「封锁会让 beforeunload 取消整体失效」是基于一次失败尝试。
+    正解不是找内部构造通道，而是**用本 Realm 的 `Event` 造实例**（肯定能被
+    dispatch 认出），再把原型改成 `BeforeUnloadEvent.prototype`
+  - 各接口的 `length` **逐个不同**（4 个是 2，4 个是 0），一刀切会改错一半
+- [x] **legacy 模式导航已接 beforeunload 钩子** - 三条异议路径端到端可用
+  - 迁移前 `bootstrap-root.js` 传空 options，`beforeNavigateHook` 为 null，
+    `location.assign()` 只更新 URL 记录：既不派发 `beforeunload`，也不给页面
+    取消导航的机会。真实浏览器里 `location.assign` 一定先派发 beforeunload
+  - 钩子完全在 Realm 内完成，不需要宿主往返
+  - 顺带修了 `configureNavigation` 无条件把钩子写成 null 的问题——调用顺序是
+    realm-factory 先装、legacy bootstrap 后调无参版本，把钩子抹掉了
+  - 取消时不派发卸载事件；继续时按序派发 `pagehide` → `unload`（都在 window）
+- [x] **beforeunload 三条异议路径端到端验证** - 在 legacy 模式完成
+  - `preventDefault()` / `returnValue = '非空'` / `onbeforeunload` 返回字符串
+    均取消；`returnValue = ''` / 返回 undefined / 无处理器均继续
+  - 只能在 legacy 跑：plugin 模式（含 `fullPreset`）不提供
+    `BeforeUnloadEvent` 与 `onbeforeunload`，降级到普通 `Event` 后
+    `returnValue` 是旧 IE 的**布尔**语义（赋 falsy 值 = preventDefault），
+    与 beforeunload 的字符串语义正好相反
+- [ ] **legacy 模式的整文档替换** - `beforeunload` 与卸载事件已就位，但导航
+  通过后仍不替换文档（`location.href` 更新、DOM 不变）。需要让 legacy 子 Realm
+  回调宿主替换文档，是独立的架构工作
+- [x] **行为探针扩到 11 类 102 项** - 全部一致
+  - 新增 `cssom`(22) / `canvas`(9) / `eventTiming`(9)。Canvas 与事件时序**本来就全对**；
+    CSSOM 挖出 6 项不一致，已修
+  - 刻意不测 `measureText` 字形宽度——取决于已安装字体，是机器指纹而非行为契约
+- [x] **CSSOM 实现补齐** - 结构与原先的猜测完全不同
+  - 实测：`CSSStyleDeclaration.prototype` 只有 **10** 个成员，
+    745 个 CSS 属性是 **style 对象的自有属性**。装到原型上会让
+    `edge-member-parity` 报 745 个多余成员。形状层看不到这个洞，
+    正是行为层存在的意义（member parity 之前报 0 差异是**对的**）
+  - 修掉 4 项：未设置属性读作 `""` 而非 `undefined`
+    （`typeof el.style.display` 从 `'undefined'` 变 `'string'`，
+    脚本里 `el.style.display === 'none'` 这类判断到处都是）、
+    赋值同步 `cssText` 与 `style` 属性、computed style 赋值抛
+    `NoModificationAllowedError`
+  - 报错文案里属性名**出现两次**（`...therefore the 'color' property is
+    read-only.`），不实测必漏
+  - 745 个访问器按需安装，单个 style 对象实测 0.26ms
+- [x] **计算值解析（UA 默认样式表）** - 40 个与布局无关的属性
+  - 采集真实 Edge 94 标签 × 40 属性（`npm run fingerprint:ua-defaults`），
+    生成「初始值 + 按标签差异」的数据模块
+  - 基线取**未知标签**而不是众数：`unicodeBidi` 众数是 `normal`（50 次）但
+    `isolate` 有 44 次，按众数会让 overrides 从 82 膨胀到 93 个标签
+  - 颜色按浏览器语法序列化：`color: red` → `rgb(255, 0, 0)`、
+    `#0f8` → `rgb(0, 255, 136)`、`rgba(1,2,3,0.5)` 原样保留 alpha
+  - 游离元素所有计算值仍为空串（实测真实 Edge 如此），挂载后才解析
+- [x] **计算值建模从 40 扩到 693 个属性** - 745 个中 **692 个**有值
+  - 排除哪些属性靠**差分实测**而不是手写名单：同页面在 800×600 与 1400×900
+    下采集（7 项随视口变化）+ 同视口下空 div 与填充内容对比（7 项随内容变化），
+    并集 10 项。只做第一组会漏掉 `height` / `blockSize`——空 div 在两种视口下
+    都是 0px
+  - 剩余 53 个空值多数在真实 Edge 里也是空的（`@font-face` / `@counter-style`
+    描述符没有计算值）
+  - **差点烙进一个机器指纹**：首次采集把 `fontFamily` 记成
+    `"Noto Sans SC"`——那是采集机器的中文系统语言决定的。实测
+    `--lang=en-US` 给 `"Times New Roman"`，而 NV8 的 profile 声明
+    languages 为 en-US，两边必须一致。采集脚本现在锁定 locale
+- [ ] **布局相关计算值** - `width` / `height` / `blockSize` / `inlineSize` /
+  `transformOrigin` / `perspectiveOrigin` 及其 webkit 版共 10 项需要布局引擎，
+  刻意不建模（清单在 `css-ua-defaults.js` 的 `LAYOUT_DEPENDENT_PROPERTIES`）
+- [x] **跨 Realm 对象身份探针** - 14 项，全部指向同一个根因
+- [ ] **动态 iframe 的 contentWindow 同步为 null**（高优先级，ADR-0004；
+      **选项 A 已实现并回滚**）
+  - 池功能上成立：`contentWindow` 同步可用、intrinsics 独立、原生 toString
+    正确，跨 Realm 探针 17 个子项里 12 项转为一致
+  - **回滚原因**：池位与普通子 Realm 在账目上无法区分——池位进 `childRealms`、
+    占 realm 额度、计入资源统计，导致所有断言 Realm 数量与清理的测试失败，
+    全量套件 **59 项红**。要落地必须先设计独立的池位账目（不算业务 Realm、
+    不占额度、但参与关闭清理），跨 `runtime-pool` / `create-realm` / 资源统计
+    三处
+- [x] **子进程 SIGABRT 根因定位并修复** - `src/controller/runtime-heap-floor.js`，
+  6 项测试
+  - 起因是那条被放过三次的偶发失败 `realm guard returns a structured error on
+    child-process`。前几次归因"资源竞争"，这次**十路并发复现**（4/10 红），
+    抓到真实错误 `SandboxChildExitError (signal=SIGABRT)`，
+    再打开子进程 stderr 看到 `FATAL ERROR: Reached heap limit`
+  - 根因：`limits.maxHeapBytes` 被同时用于**两件互不相干的事**——算 Realm 容量
+    守卫，和设 V8 老生代上限。测试用 64MB 是为了触发守卫，但 64MB 老生代
+    **不够引导一个完整 Realm**（337 个 install）
+  - **V8 OOM 进程内拦不住**：abort 之后没有 JS 能再运行，所以永远不可能变成
+    结构化错误。只能保证配置不会低到崩
+  - 实测地板（Node 24，各 6 次并发）：32MB **0/6**、48MB **0/6**、
+    64MB **5/6**（悬崖边，"偶发"的真身）、80MB 6/6、96MB 6/6、128MB 6/6。
+    原地板 `Math.max(32, ...)` **保证崩溃**
+  - 取 128MB（实测可用 80MB 的 1.6 倍）：贴着可用值取会把"必崩"换成"偶崩"，
+    偶崩更难查
+  - **抬高 V8 上限不削弱守卫**：两个用途走不同路径——`heapSafeRealmLimit` 用
+    配置值算（`floor(64/36)=1`），V8 上限用钳制后的值。`LIMIT_HEAP_BYTES`
+    照旧返回，只是子进程不会在返回它之前先崩掉
+  - 三个后端入口（`child-process` / `worker-thread` / `worker-thread-pool`）
+    统一走同一地板
+  - 验证：修复前十路并发 4/10 红，修复后 **10/10 绿**
+- [ ] **iframe Realm 绕过堆容量守卫**（原记录为"第 8 个 iframe SIGABRT"，
+  本轮重测后重新定性）
+  - 重测数据（`n` 个 iframe，`maxHeapBytes` 变量，Node 24）：
+
+    | heap | n=8 结果 | close |
+    |---|---|---|
+    | 128MB | 建成 8/8，**无结构化错误** | `FATAL ERROR: Ineffective mark-compacts` → SIGABRT |
+    | 256MB | 建成 8/8，**无结构化错误** | 同上 |
+    | 512MB（默认）| 建成 8/8 | 正常 |
+
+  - 默认 512MB 下 8/12/20 个 iframe 全部正常，close 干净。原"第 8 个必崩"
+    在当前代码上**不复现**
+  - 真正的缺陷是：`heapSafeRealmLimit = floor(maxHeapBytes/36MB)`
+    在 128MB 时为 3，`createChildRealm` 也确实调了 `reserveRealmCapacity()`，
+    但 8 个 iframe **全部建成且没有任何结构化错误**——守卫没拦住。
+    随后 V8 OOM
+  - 机制推测（未证实）：iframe 的 Realm 创建是异步的（正是 ADR-0004 里
+    `contentWindow` 同步为 null 的原因），容量拒绝发生在没人观察的异步路径上，
+    而在飞的创建已经把内存吃掉了
+  - 与 ADR-0004 的池位账目是同一片区域，应一并设计
+  - 行为探针因此从"每项各建一个 iframe"改为**全部共用一个**（14 项合并为 2 项），
+    这也更贴近真实脚本行为
+- [ ] **iframe 父子链与 URL 四处不符**（先行缺陷，静态 iframe 也一样）
+  - `contentWindow.parent === window` 为 false、`top` 同样
+  - `frameElement` 恒为 `null`（`window-state-globals-runtime.js` 硬编码）
+  - 空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`
+  - 说明"接上池"只是第一步：即使 `contentWindow` 可用，父子链仍对不上
+  - 反爬脚本最常用的「从干净 iframe 取原生函数」写法是**同步**的：
+    `const f = document.createElement('iframe'); document.body.appendChild(f);
+    f.contentWindow.Function.prototype.toString`
+  - 实测 NV8 时序：同步 `null` → 微任务后 `null` → 一个宏任务后仍 `null`
+    → 约 30ms 后才可用。真实浏览器在 `appendChild` 返回时就有初始 about:blank
+    文档
+  - **静态**写在页面 HTML 里的 iframe 没有这个问题（页面构建时已 await），
+    已用专项断言把差距范围钉死在动态创建上，避免误记成「iframe Realm 不支持」
+  - 另有一条断言证明这是**时序**差距而非功能缺失（轮询等到 Realm 建好）
+  - 修它需要同步创建子 Realm，依赖同步 vm module 链接——Node 18–22 不支持
+    （见 `docs/node-compatibility.md`），是独立的架构工作
+- [ ] **行为探针仍未覆盖** - 字体度量、Intl/时区格式化、
+  Performance/时间精度
+
+**测试**：`tests/edge-surface-parity-test.js`(8)、
+`tests/edge-member-parity-test.js`(9)、`tests/webgl-parity-test.js`(8)、
+`tests/gpu-profiles-test.js`(13)、`tests/fingerprint-calibration-test.js`(12)、
+`tests/event-handler-attribute-test.js`(14)、
+`tests/lifecycle-event-targets-test.js`(13)
+
+**文档**：`docs/edge-parity.md`
+
+---
+
+## 总结
+
+### 🔴 高优先级（核心架构）
+
+1. **Protocol/Collector 边界** (Gate 5)
+   - 定义 Protocol 工件接口
+   - 实现 Collector 真实网络层
+   - 端到端示例
+
+2. **Evidence Loader 解耦** (Gate 1/4)
+   - Core 依赖抽象接口
+
+3. **默认模式切换**
+   - 从 `legacy` 切换到 `plugin`
+
+---
+
+### 🟡 中优先级（功能完整性，按需）
+
+4. **动态模块导入** - 页面和 Worker 的 `import()`
+5. **完整 Parser/Navigation** - `document.write()`、根导航
+6. **高级浏览器 API** - Canvas/Media/Device（按目标站点需求）
+7. **模块级状态清理** - native-function.js 等
+8. **性能和稳定性测试** - 基准、泄漏检测
+
+---
+
+### 🟢 低优先级（可延后）
+
+9. **非核心浏览器 API** - IndexedDB/CSSOM/SVG 等
+10. **安全加固** - Bundle 签名、版本兼容
+11. **Baseline 完整覆盖** - 完整快照和差异追踪
+12. **Node 兼容性矩阵** - 多版本 CI
+13. **文档和示例** - 内部使用指南
+
+---
+
+## 🎯 建议行动路线（私有项目）
+
+```
+1️⃣ 完成 Protocol/Collector 架构设计
+   ↓
+2️⃣ 实现端到端 Evidence → Protocol → Collector
+   ↓
+3️⃣ Evidence Loader 接口解耦
+   ↓
+4️⃣ 默认切换到 plugin 模式
+   ↓
+5️⃣ 按实际目标站点需求添加高级浏览器 API
+   ↓
+6️⃣ 性能优化和稳定性改进（按需）
+```
+
+---
+
+## 📊 完成度估算
+
+| 类别 | 进度 |
+|------|------|
+| Core 运行时 | ████████░░ 85% |
+| Plugin SDK | ██████████ 100% |
+| 浏览器 API（核心） | █████████░ 90% |
+| 浏览器 API（高级） | ███░░░░░░░ 30% |
+| Evidence/Script | ████████░░ 80% |
+| Protocol/Collector | ░░░░░░░░░░ 0% |
+| **总体（核心架构）** | **███████░░░ 70%** |
+
+---
+
+## 📁 相关文档
+
+- **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
+- **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
+- **测试**: `npm test` (当前 98/98 通过)
+- **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

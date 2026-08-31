@@ -1,0 +1,15 @@
+import { currentUrlRecord } from "../../navigation/navigation-state.js";
+import { traceGetter } from "../../trace/trace-accessor.js";
+import { registerNativeGetter } from "../../webidl/native-function.js";
+import { requireLocation } from "./location-state.js";
+
+export const locationHash = Object.getOwnPropertyDescriptor({
+  get hash() {
+    requireLocation(this);
+    const value = currentUrlRecord().hash;
+    traceGetter("window.location.hash", "Location", value);
+    return value;
+  },
+}, "hash").get;
+
+registerNativeGetter(locationHash, "hash");

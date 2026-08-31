@@ -1,0 +1,1 @@
+import { isNode } from "./node-state.js";import { registryMethod } from "./custom-element-registry-method.js";export const upgrade=registryMethod("upgrade",1,(state,args)=>{if(!isNode(args[0]))throw new TypeError("upgrade requires a Node");});

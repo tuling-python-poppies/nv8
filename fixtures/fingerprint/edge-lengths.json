@@ -1,0 +1,8331 @@
+{
+ "collectedAt": "2026-08-28T11:57:39.749Z",
+ "interfaces": {
+  "Object": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "__defineGetter__": 2,
+    "__defineSetter__": 2,
+    "hasOwnProperty": 1,
+    "__lookupGetter__": 1,
+    "__lookupSetter__": 1,
+    "isPrototypeOf": 1,
+    "propertyIsEnumerable": 1,
+    "toString": 0,
+    "valueOf": 0,
+    "toLocaleString": 0
+   }
+  },
+  "Function": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "apply": 2,
+    "bind": 1,
+    "call": 1,
+    "toString": 0
+   }
+  },
+  "Array": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "at": 1,
+    "concat": 1,
+    "copyWithin": 2,
+    "fill": 1,
+    "find": 1,
+    "findIndex": 1,
+    "findLast": 1,
+    "findLastIndex": 1,
+    "lastIndexOf": 1,
+    "pop": 0,
+    "push": 1,
+    "reverse": 0,
+    "shift": 0,
+    "unshift": 1,
+    "slice": 2,
+    "sort": 1,
+    "splice": 2,
+    "includes": 1,
+    "indexOf": 1,
+    "join": 1,
+    "keys": 0,
+    "entries": 0,
+    "values": 0,
+    "forEach": 1,
+    "filter": 1,
+    "flat": 0,
+    "flatMap": 1,
+    "map": 1,
+    "every": 1,
+    "some": 1,
+    "reduce": 1,
+    "reduceRight": 1,
+    "toReversed": 0,
+    "toSorted": 1,
+    "toSpliced": 2,
+    "with": 2,
+    "toLocaleString": 0,
+    "toString": 0
+   }
+  },
+  "Number": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "toExponential": 1,
+    "toFixed": 1,
+    "toPrecision": 1,
+    "toString": 1,
+    "valueOf": 0,
+    "toLocaleString": 0
+   }
+  },
+  "Boolean": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "toString": 0,
+    "valueOf": 0
+   }
+  },
+  "String": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "anchor": 1,
+    "at": 1,
+    "big": 0,
+    "blink": 0,
+    "bold": 0,
+    "charAt": 1,
+    "charCodeAt": 1,
+    "codePointAt": 1,
+    "concat": 1,
+    "endsWith": 1,
+    "fontcolor": 1,
+    "fontsize": 1,
+    "fixed": 0,
+    "includes": 1,
+    "indexOf": 1,
+    "isWellFormed": 0,
+    "italics": 0,
+    "lastIndexOf": 1,
+    "link": 1,
+    "localeCompare": 1,
+    "match": 1,
+    "matchAll": 1,
+    "normalize": 0,
+    "padEnd": 1,
+    "padStart": 1,
+    "repeat": 1,
+    "replace": 2,
+    "replaceAll": 2,
+    "search": 1,
+    "slice": 2,
+    "small": 0,
+    "split": 2,
+    "strike": 0,
+    "sub": 0,
+    "substr": 2,
+    "substring": 2,
+    "sup": 0,
+    "startsWith": 1,
+    "toString": 0,
+    "toWellFormed": 0,
+    "trim": 0,
+    "trimStart": 0,
+    "trimLeft": 0,
+    "trimEnd": 0,
+    "trimRight": 0,
+    "toLocaleLowerCase": 0,
+    "toLocaleUpperCase": 0,
+    "toLowerCase": 0,
+    "toUpperCase": 0,
+    "valueOf": 0
+   }
+  },
+  "Symbol": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "toString": 0,
+    "valueOf": 0
+   }
+  },
+  "Date": {
+   "ctorLength": 7,
+   "methods": {
+    "constructor": 7,
+    "toString": 0,
+    "toDateString": 0,
+    "toTimeString": 0,
+    "toISOString": 0,
+    "toUTCString": 0,
+    "toGMTString": 0,
+    "getDate": 0,
+    "setDate": 1,
+    "getDay": 0,
+    "getFullYear": 0,
+    "setFullYear": 3,
+    "getHours": 0,
+    "setHours": 4,
+    "getMilliseconds": 0,
+    "setMilliseconds": 1,
+    "getMinutes": 0,
+    "setMinutes": 3,
+    "getMonth": 0,
+    "setMonth": 2,
+    "getSeconds": 0,
+    "setSeconds": 2,
+    "getTime": 0,
+    "setTime": 1,
+    "getTimezoneOffset": 0,
+    "getUTCDate": 0,
+    "setUTCDate": 1,
+    "getUTCDay": 0,
+    "getUTCFullYear": 0,
+    "setUTCFullYear": 3,
+    "getUTCHours": 0,
+    "setUTCHours": 4,
+    "getUTCMilliseconds": 0,
+    "setUTCMilliseconds": 1,
+    "getUTCMinutes": 0,
+    "setUTCMinutes": 3,
+    "getUTCMonth": 0,
+    "setUTCMonth": 2,
+    "getUTCSeconds": 0,
+    "setUTCSeconds": 2,
+    "valueOf": 0,
+    "getYear": 0,
+    "setYear": 1,
+    "toJSON": 1,
+    "toLocaleString": 0,
+    "toLocaleDateString": 0,
+    "toLocaleTimeString": 0,
+    "toTemporalInstant": 0
+   }
+  },
+  "Promise": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "then": 2,
+    "catch": 1,
+    "finally": 1
+   }
+  },
+  "RegExp": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2,
+    "exec": 1,
+    "compile": 2,
+    "toString": 0,
+    "test": 1
+   }
+  },
+  "Error": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "toString": 0
+   }
+  },
+  "AggregateError": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "EvalError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "RangeError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ReferenceError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "SyntaxError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "TypeError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "URIError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ArrayBuffer": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "slice": 2,
+    "resize": 1,
+    "transfer": 0,
+    "transferToFixedLength": 0
+   }
+  },
+  "Uint8Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3,
+    "toBase64": 0,
+    "setFromBase64": 1,
+    "toHex": 0,
+    "setFromHex": 1
+   }
+  },
+  "Int8Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Uint16Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Int16Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Uint32Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Int32Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "BigUint64Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "BigInt64Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Uint8ClampedArray": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Float32Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "Float64Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "DataView": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "getInt8": 1,
+    "setInt8": 2,
+    "getUint8": 1,
+    "setUint8": 2,
+    "getInt16": 1,
+    "setInt16": 2,
+    "getUint16": 1,
+    "setUint16": 2,
+    "getInt32": 1,
+    "setInt32": 2,
+    "getUint32": 1,
+    "setUint32": 2,
+    "getFloat32": 1,
+    "setFloat32": 2,
+    "getFloat64": 1,
+    "setFloat64": 2,
+    "getBigInt64": 1,
+    "setBigInt64": 2,
+    "getBigUint64": 1,
+    "setBigUint64": 2,
+    "getFloat16": 1,
+    "setFloat16": 2
+   }
+  },
+  "Map": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "get": 1,
+    "set": 2,
+    "has": 1,
+    "delete": 1,
+    "clear": 0,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "getOrInsert": 2,
+    "getOrInsertComputed": 2
+   }
+  },
+  "BigInt": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "toLocaleString": 0,
+    "toString": 0,
+    "valueOf": 0
+   }
+  },
+  "Set": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "has": 1,
+    "add": 1,
+    "delete": 1,
+    "difference": 1,
+    "clear": 0,
+    "entries": 0,
+    "forEach": 1,
+    "intersection": 1,
+    "isSubsetOf": 1,
+    "isSupersetOf": 1,
+    "isDisjointFrom": 1,
+    "symmetricDifference": 1,
+    "union": 1,
+    "values": 0,
+    "keys": 0
+   }
+  },
+  "Iterator": {
+   "ctorLength": 0,
+   "methods": {
+    "reduce": 1,
+    "toArray": 0,
+    "forEach": 1,
+    "some": 1,
+    "every": 1,
+    "find": 1,
+    "map": 1,
+    "filter": 1,
+    "take": 1,
+    "drop": 1,
+    "flatMap": 1
+   }
+  },
+  "WeakMap": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "delete": 1,
+    "get": 1,
+    "set": 2,
+    "has": 1,
+    "getOrInsert": 2,
+    "getOrInsertComputed": 2
+   }
+  },
+  "WeakSet": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "delete": 1,
+    "has": 1,
+    "add": 1
+   }
+  },
+  "FinalizationRegistry": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "register": 2,
+    "unregister": 1
+   }
+  },
+  "WeakRef": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1,
+    "deref": 0
+   }
+  },
+  "Option": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Image": {
+   "ctorLength": 0,
+   "methods": {
+    "decode": 0,
+    "constructor": 0
+   }
+  },
+  "Audio": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "webkitURL": {
+   "ctorLength": 1,
+   "methods": {
+    "toJSON": 0,
+    "toString": 0,
+    "constructor": 1
+   }
+  },
+  "webkitRTCPeerConnection": {
+   "ctorLength": 0,
+   "methods": {
+    "addIceCandidate": 0,
+    "addStream": 1,
+    "addTrack": 1,
+    "addTransceiver": 1,
+    "close": 0,
+    "createAnswer": 0,
+    "createDTMFSender": 1,
+    "createDataChannel": 1,
+    "createOffer": 0,
+    "getConfiguration": 0,
+    "getLocalStreams": 0,
+    "getReceivers": 0,
+    "getRemoteStreams": 0,
+    "getSenders": 0,
+    "getStats": 0,
+    "getTransceivers": 0,
+    "removeStream": 1,
+    "removeTrack": 1,
+    "restartIce": 0,
+    "setConfiguration": 0,
+    "setLocalDescription": 0,
+    "setRemoteDescription": 1,
+    "constructor": 0
+   }
+  },
+  "webkitMediaStream": {
+   "ctorLength": 0,
+   "methods": {
+    "addTrack": 1,
+    "clone": 0,
+    "getAudioTracks": 0,
+    "getTrackById": 1,
+    "getTracks": 0,
+    "getVideoTracks": 0,
+    "removeTrack": 1,
+    "constructor": 0
+   }
+  },
+  "WebKitMutationObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 1,
+    "takeRecords": 0,
+    "constructor": 1
+   }
+  },
+  "WebKitCSSMatrix": {
+   "ctorLength": 0,
+   "methods": {
+    "invertSelf": 0,
+    "multiplySelf": 0,
+    "preMultiplySelf": 0,
+    "rotateAxisAngleSelf": 0,
+    "rotateFromVectorSelf": 0,
+    "rotateSelf": 0,
+    "scale3dSelf": 0,
+    "scaleSelf": 0,
+    "skewXSelf": 0,
+    "skewYSelf": 0,
+    "translateSelf": 0,
+    "constructor": 0,
+    "setMatrixValue": 1
+   }
+  },
+  "XPathResult": {
+   "ctorLength": 0,
+   "methods": {
+    "iterateNext": 0,
+    "snapshotItem": 1,
+    "constructor": 0
+   }
+  },
+  "XPathExpression": {
+   "ctorLength": 0,
+   "methods": {
+    "evaluate": 1,
+    "constructor": 0
+   }
+  },
+  "XPathEvaluator": {
+   "ctorLength": 0,
+   "methods": {
+    "createExpression": 1,
+    "createNSResolver": 1,
+    "evaluate": 2,
+    "constructor": 0
+   }
+  },
+  "XMLSerializer": {
+   "ctorLength": 0,
+   "methods": {
+    "serializeToString": 1,
+    "constructor": 0
+   }
+  },
+  "XMLHttpRequestUpload": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XMLHttpRequestEventTarget": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XMLHttpRequest": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "getAllResponseHeaders": 0,
+    "getResponseHeader": 1,
+    "open": 2,
+    "overrideMimeType": 1,
+    "send": 0,
+    "setRequestHeader": 2,
+    "constructor": 0,
+    "setAttributionReporting": 1,
+    "setPrivateToken": 1
+   }
+  },
+  "XMLDocument": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WritableStreamDefaultWriter": {
+   "ctorLength": 1,
+   "methods": {
+    "abort": 0,
+    "close": 0,
+    "releaseLock": 0,
+    "write": 0,
+    "constructor": 1
+   }
+  },
+  "WritableStreamDefaultController": {
+   "ctorLength": 0,
+   "methods": {
+    "error": 0,
+    "constructor": 0
+   }
+  },
+  "WritableStream": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "close": 0,
+    "getWriter": 0,
+    "constructor": 0
+   }
+  },
+  "Worker": {
+   "ctorLength": 1,
+   "methods": {
+    "postMessage": 1,
+    "terminate": 0,
+    "constructor": 1
+   }
+  },
+  "WindowControlsOverlayGeometryChangeEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "WindowControlsOverlay": {
+   "ctorLength": 0,
+   "methods": {
+    "getTitlebarAreaRect": 0,
+    "constructor": 0
+   }
+  },
+  "Window": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WheelEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "WebSocket": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "send": 1,
+    "constructor": 1
+   }
+  },
+  "WebGLVertexArrayObject": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLUniformLocation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLTransformFeedback": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLTexture": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLSync": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLShaderPrecisionFormat": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLShader": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLSampler": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLRenderingContext": {
+   "ctorLength": 0,
+   "methods": {
+    "activeTexture": 1,
+    "attachShader": 2,
+    "bindAttribLocation": 3,
+    "bindRenderbuffer": 2,
+    "blendColor": 4,
+    "blendEquation": 1,
+    "blendEquationSeparate": 2,
+    "blendFunc": 2,
+    "blendFuncSeparate": 4,
+    "bufferData": 3,
+    "bufferSubData": 3,
+    "checkFramebufferStatus": 1,
+    "compileShader": 1,
+    "compressedTexImage2D": 7,
+    "compressedTexSubImage2D": 8,
+    "copyTexImage2D": 8,
+    "copyTexSubImage2D": 8,
+    "createBuffer": 0,
+    "createFramebuffer": 0,
+    "createProgram": 0,
+    "createRenderbuffer": 0,
+    "createShader": 1,
+    "createTexture": 0,
+    "cullFace": 1,
+    "deleteBuffer": 1,
+    "deleteFramebuffer": 1,
+    "deleteProgram": 1,
+    "deleteRenderbuffer": 1,
+    "deleteShader": 1,
+    "deleteTexture": 1,
+    "depthFunc": 1,
+    "depthMask": 1,
+    "depthRange": 2,
+    "detachShader": 2,
+    "disable": 1,
+    "enable": 1,
+    "finish": 0,
+    "flush": 0,
+    "framebufferRenderbuffer": 4,
+    "framebufferTexture2D": 5,
+    "frontFace": 1,
+    "generateMipmap": 1,
+    "getActiveAttrib": 2,
+    "getActiveUniform": 2,
+    "getAttachedShaders": 1,
+    "getAttribLocation": 2,
+    "getBufferParameter": 2,
+    "getContextAttributes": 0,
+    "getError": 0,
+    "getExtension": 1,
+    "getFramebufferAttachmentParameter": 3,
+    "getParameter": 1,
+    "getProgramInfoLog": 1,
+    "getProgramParameter": 2,
+    "getRenderbufferParameter": 2,
+    "getShaderInfoLog": 1,
+    "getShaderParameter": 2,
+    "getShaderPrecisionFormat": 2,
+    "getShaderSource": 1,
+    "getSupportedExtensions": 0,
+    "getTexParameter": 2,
+    "getUniform": 2,
+    "getUniformLocation": 2,
+    "getVertexAttrib": 2,
+    "getVertexAttribOffset": 2,
+    "hint": 2,
+    "isBuffer": 1,
+    "isContextLost": 0,
+    "isEnabled": 1,
+    "isFramebuffer": 1,
+    "isProgram": 1,
+    "isRenderbuffer": 1,
+    "isShader": 1,
+    "isTexture": 1,
+    "lineWidth": 1,
+    "linkProgram": 1,
+    "pixelStorei": 2,
+    "polygonOffset": 2,
+    "readPixels": 7,
+    "renderbufferStorage": 4,
+    "sampleCoverage": 2,
+    "shaderSource": 2,
+    "stencilFunc": 3,
+    "stencilFuncSeparate": 4,
+    "stencilMask": 1,
+    "stencilMaskSeparate": 2,
+    "stencilOp": 3,
+    "stencilOpSeparate": 4,
+    "texImage2D": 6,
+    "texParameterf": 3,
+    "texParameteri": 3,
+    "texSubImage2D": 7,
+    "useProgram": 1,
+    "validateProgram": 1,
+    "bindBuffer": 2,
+    "bindFramebuffer": 2,
+    "bindTexture": 2,
+    "clear": 1,
+    "clearColor": 4,
+    "clearDepth": 1,
+    "clearStencil": 1,
+    "colorMask": 4,
+    "disableVertexAttribArray": 1,
+    "drawArrays": 3,
+    "drawElements": 4,
+    "enableVertexAttribArray": 1,
+    "scissor": 4,
+    "uniform1f": 2,
+    "uniform1fv": 2,
+    "uniform1i": 2,
+    "uniform1iv": 2,
+    "uniform2f": 3,
+    "uniform2fv": 2,
+    "uniform2i": 3,
+    "uniform2iv": 2,
+    "uniform3f": 4,
+    "uniform3fv": 2,
+    "uniform3i": 4,
+    "uniform3iv": 2,
+    "uniform4f": 5,
+    "uniform4fv": 2,
+    "uniform4i": 5,
+    "uniform4iv": 2,
+    "uniformMatrix2fv": 3,
+    "uniformMatrix3fv": 3,
+    "uniformMatrix4fv": 3,
+    "vertexAttrib1f": 2,
+    "vertexAttrib1fv": 2,
+    "vertexAttrib2f": 3,
+    "vertexAttrib2fv": 2,
+    "vertexAttrib3f": 4,
+    "vertexAttrib3fv": 2,
+    "vertexAttrib4f": 5,
+    "vertexAttrib4fv": 2,
+    "vertexAttribPointer": 6,
+    "viewport": 4,
+    "drawingBufferStorage": 3,
+    "constructor": 0,
+    "makeXRCompatible": 0
+   }
+  },
+  "WebGLRenderbuffer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLQuery": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLProgram": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLObject": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLFramebuffer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLContextEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "WebGLBuffer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGLActiveInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebGL2RenderingContext": {
+   "ctorLength": 0,
+   "methods": {
+    "activeTexture": 1,
+    "attachShader": 2,
+    "beginQuery": 2,
+    "beginTransformFeedback": 1,
+    "bindAttribLocation": 3,
+    "bindBufferBase": 3,
+    "bindBufferRange": 5,
+    "bindRenderbuffer": 2,
+    "bindSampler": 2,
+    "bindTransformFeedback": 2,
+    "bindVertexArray": 1,
+    "blendColor": 4,
+    "blendEquation": 1,
+    "blendEquationSeparate": 2,
+    "blendFunc": 2,
+    "blendFuncSeparate": 4,
+    "blitFramebuffer": 10,
+    "bufferData": 3,
+    "bufferSubData": 3,
+    "checkFramebufferStatus": 1,
+    "clientWaitSync": 3,
+    "compileShader": 1,
+    "compressedTexImage2D": 7,
+    "compressedTexImage3D": 8,
+    "compressedTexSubImage2D": 8,
+    "compressedTexSubImage3D": 10,
+    "copyBufferSubData": 5,
+    "copyTexImage2D": 8,
+    "copyTexSubImage2D": 8,
+    "copyTexSubImage3D": 9,
+    "createBuffer": 0,
+    "createFramebuffer": 0,
+    "createProgram": 0,
+    "createQuery": 0,
+    "createRenderbuffer": 0,
+    "createSampler": 0,
+    "createShader": 1,
+    "createTexture": 0,
+    "createTransformFeedback": 0,
+    "createVertexArray": 0,
+    "cullFace": 1,
+    "deleteBuffer": 1,
+    "deleteFramebuffer": 1,
+    "deleteProgram": 1,
+    "deleteQuery": 1,
+    "deleteRenderbuffer": 1,
+    "deleteSampler": 1,
+    "deleteShader": 1,
+    "deleteSync": 1,
+    "deleteTexture": 1,
+    "deleteTransformFeedback": 1,
+    "deleteVertexArray": 1,
+    "depthFunc": 1,
+    "depthMask": 1,
+    "depthRange": 2,
+    "detachShader": 2,
+    "disable": 1,
+    "drawArraysInstanced": 4,
+    "drawElementsInstanced": 5,
+    "drawRangeElements": 6,
+    "enable": 1,
+    "endQuery": 1,
+    "endTransformFeedback": 0,
+    "fenceSync": 2,
+    "finish": 0,
+    "flush": 0,
+    "framebufferRenderbuffer": 4,
+    "framebufferTexture2D": 5,
+    "framebufferTextureLayer": 5,
+    "frontFace": 1,
+    "generateMipmap": 1,
+    "getActiveAttrib": 2,
+    "getActiveUniform": 2,
+    "getActiveUniformBlockName": 2,
+    "getActiveUniformBlockParameter": 3,
+    "getActiveUniforms": 3,
+    "getAttachedShaders": 1,
+    "getAttribLocation": 2,
+    "getBufferParameter": 2,
+    "getBufferSubData": 3,
+    "getContextAttributes": 0,
+    "getError": 0,
+    "getExtension": 1,
+    "getFragDataLocation": 2,
+    "getFramebufferAttachmentParameter": 3,
+    "getIndexedParameter": 2,
+    "getInternalformatParameter": 3,
+    "getParameter": 1,
+    "getProgramInfoLog": 1,
+    "getProgramParameter": 2,
+    "getQuery": 2,
+    "getQueryParameter": 2,
+    "getRenderbufferParameter": 2,
+    "getSamplerParameter": 2,
+    "getShaderInfoLog": 1,
+    "getShaderParameter": 2,
+    "getShaderPrecisionFormat": 2,
+    "getShaderSource": 1,
+    "getSupportedExtensions": 0,
+    "getSyncParameter": 2,
+    "getTexParameter": 2,
+    "getTransformFeedbackVarying": 2,
+    "getUniform": 2,
+    "getUniformBlockIndex": 2,
+    "getUniformIndices": 2,
+    "getUniformLocation": 2,
+    "getVertexAttrib": 2,
+    "getVertexAttribOffset": 2,
+    "hint": 2,
+    "invalidateFramebuffer": 2,
+    "invalidateSubFramebuffer": 6,
+    "isBuffer": 1,
+    "isContextLost": 0,
+    "isEnabled": 1,
+    "isFramebuffer": 1,
+    "isProgram": 1,
+    "isQuery": 1,
+    "isRenderbuffer": 1,
+    "isSampler": 1,
+    "isShader": 1,
+    "isSync": 1,
+    "isTexture": 1,
+    "isTransformFeedback": 1,
+    "isVertexArray": 1,
+    "lineWidth": 1,
+    "linkProgram": 1,
+    "pauseTransformFeedback": 0,
+    "pixelStorei": 2,
+    "polygonOffset": 2,
+    "readBuffer": 1,
+    "readPixels": 7,
+    "renderbufferStorage": 4,
+    "renderbufferStorageMultisample": 5,
+    "resumeTransformFeedback": 0,
+    "sampleCoverage": 2,
+    "samplerParameterf": 3,
+    "samplerParameteri": 3,
+    "shaderSource": 2,
+    "stencilFunc": 3,
+    "stencilFuncSeparate": 4,
+    "stencilMask": 1,
+    "stencilMaskSeparate": 2,
+    "stencilOp": 3,
+    "stencilOpSeparate": 4,
+    "texImage2D": 6,
+    "texImage3D": 10,
+    "texParameterf": 3,
+    "texParameteri": 3,
+    "texStorage2D": 5,
+    "texStorage3D": 6,
+    "texSubImage2D": 7,
+    "texSubImage3D": 11,
+    "transformFeedbackVaryings": 3,
+    "uniform1ui": 2,
+    "uniform2ui": 3,
+    "uniform3ui": 4,
+    "uniform4ui": 5,
+    "uniformBlockBinding": 3,
+    "useProgram": 1,
+    "validateProgram": 1,
+    "vertexAttribDivisor": 2,
+    "vertexAttribI4i": 5,
+    "vertexAttribI4ui": 5,
+    "vertexAttribIPointer": 5,
+    "waitSync": 3,
+    "bindBuffer": 2,
+    "bindFramebuffer": 2,
+    "bindTexture": 2,
+    "clear": 1,
+    "clearBufferfi": 4,
+    "clearBufferfv": 3,
+    "clearBufferiv": 3,
+    "clearBufferuiv": 3,
+    "clearColor": 4,
+    "clearDepth": 1,
+    "clearStencil": 1,
+    "colorMask": 4,
+    "disableVertexAttribArray": 1,
+    "drawArrays": 3,
+    "drawBuffers": 1,
+    "drawElements": 4,
+    "enableVertexAttribArray": 1,
+    "scissor": 4,
+    "uniform1f": 2,
+    "uniform1fv": 2,
+    "uniform1i": 2,
+    "uniform1iv": 2,
+    "uniform1uiv": 2,
+    "uniform2f": 3,
+    "uniform2fv": 2,
+    "uniform2i": 3,
+    "uniform2iv": 2,
+    "uniform2uiv": 2,
+    "uniform3f": 4,
+    "uniform3fv": 2,
+    "uniform3i": 4,
+    "uniform3iv": 2,
+    "uniform3uiv": 2,
+    "uniform4f": 5,
+    "uniform4fv": 2,
+    "uniform4i": 5,
+    "uniform4iv": 2,
+    "uniform4uiv": 2,
+    "uniformMatrix2fv": 3,
+    "uniformMatrix2x3fv": 3,
+    "uniformMatrix2x4fv": 3,
+    "uniformMatrix3fv": 3,
+    "uniformMatrix3x2fv": 3,
+    "uniformMatrix3x4fv": 3,
+    "uniformMatrix4fv": 3,
+    "uniformMatrix4x2fv": 3,
+    "uniformMatrix4x3fv": 3,
+    "vertexAttrib1f": 2,
+    "vertexAttrib1fv": 2,
+    "vertexAttrib2f": 3,
+    "vertexAttrib2fv": 2,
+    "vertexAttrib3f": 4,
+    "vertexAttrib3fv": 2,
+    "vertexAttrib4f": 5,
+    "vertexAttrib4fv": 2,
+    "vertexAttribI4iv": 2,
+    "vertexAttribI4uiv": 2,
+    "vertexAttribPointer": 6,
+    "viewport": 4,
+    "drawingBufferStorage": 3,
+    "constructor": 0,
+    "makeXRCompatible": 0
+   }
+  },
+  "WaveShaperNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "VisualViewport": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "VisibilityStateEntry": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "VirtualKeyboardGeometryChangeEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ViewTransitionTypeSet": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "clear": 0,
+    "delete": 1,
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "ViewTransition": {
+   "ctorLength": 0,
+   "methods": {
+    "skipTransition": 0,
+    "waitUntil": 1,
+    "constructor": 0
+   }
+  },
+  "ViewTimeline": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "VideoPlaybackQuality": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "VideoFrame": {
+   "ctorLength": 1,
+   "methods": {
+    "allocationSize": 0,
+    "clone": 0,
+    "close": 0,
+    "copyTo": 1,
+    "metadata": 0,
+    "constructor": 1
+   }
+  },
+  "VideoColorSpace": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "ValidityState": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "VTTCue": {
+   "ctorLength": 3,
+   "methods": {
+    "getCueAsHTML": 0,
+    "constructor": 3
+   }
+  },
+  "UserActivation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "URLSearchParams": {
+   "ctorLength": 0,
+   "methods": {
+    "append": 2,
+    "delete": 1,
+    "get": 1,
+    "getAll": 1,
+    "has": 1,
+    "set": 2,
+    "sort": 0,
+    "toString": 0,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "URLPattern": {
+   "ctorLength": 0,
+   "methods": {
+    "exec": 0,
+    "test": 0,
+    "constructor": 0
+   }
+  },
+  "URL": {
+   "ctorLength": 1,
+   "methods": {
+    "toJSON": 0,
+    "toString": 0,
+    "constructor": 1
+   }
+  },
+  "UIEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "initUIEvent": 1,
+    "constructor": 1
+   }
+  },
+  "TrustedTypePolicyFactory": {
+   "ctorLength": 0,
+   "methods": {
+    "createPolicy": 1,
+    "getAttributeType": 2,
+    "getPropertyType": 2,
+    "getTypeMapping": 0,
+    "isHTML": 1,
+    "isScript": 1,
+    "isScriptURL": 1,
+    "constructor": 0
+   }
+  },
+  "TrustedTypePolicy": {
+   "ctorLength": 0,
+   "methods": {
+    "createHTML": 1,
+    "createScript": 1,
+    "createScriptURL": 1,
+    "constructor": 0
+   }
+  },
+  "TrustedScriptURL": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "TrustedScript": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "TrustedHTML": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "TreeWalker": {
+   "ctorLength": 0,
+   "methods": {
+    "firstChild": 0,
+    "lastChild": 0,
+    "nextNode": 0,
+    "nextSibling": 0,
+    "parentNode": 0,
+    "previousNode": 0,
+    "previousSibling": 0,
+    "constructor": 0
+   }
+  },
+  "TransitionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "TransformStreamDefaultController": {
+   "ctorLength": 0,
+   "methods": {
+    "enqueue": 0,
+    "error": 0,
+    "terminate": 0,
+    "constructor": 0
+   }
+  },
+  "TransformStream": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TrackEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "TouchList": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "TouchEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "Touch": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ToggleEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "TimeRanges": {
+   "ctorLength": 0,
+   "methods": {
+    "end": 1,
+    "start": 1,
+    "constructor": 0
+   }
+  },
+  "TextUpdateEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "TextTrackList": {
+   "ctorLength": 0,
+   "methods": {
+    "getTrackById": 1,
+    "constructor": 0
+   }
+  },
+  "TextTrackCueList": {
+   "ctorLength": 0,
+   "methods": {
+    "getCueById": 1,
+    "constructor": 0
+   }
+  },
+  "TextTrackCue": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TextTrack": {
+   "ctorLength": 0,
+   "methods": {
+    "addCue": 1,
+    "removeCue": 1,
+    "constructor": 0
+   }
+  },
+  "TextMetrics": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TextFormatUpdateEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "getTextFormats": 0,
+    "constructor": 1
+   }
+  },
+  "TextFormat": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TextEvent": {
+   "ctorLength": 0,
+   "methods": {
+    "initTextEvent": 1,
+    "constructor": 0
+   }
+  },
+  "TextEncoderStream": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TextEncoder": {
+   "ctorLength": 0,
+   "methods": {
+    "encode": 0,
+    "encodeInto": 2,
+    "constructor": 0
+   }
+  },
+  "TextDecoderStream": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TextDecoder": {
+   "ctorLength": 0,
+   "methods": {
+    "decode": 0,
+    "constructor": 0
+   }
+  },
+  "Text": {
+   "ctorLength": 0,
+   "methods": {
+    "splitText": 1,
+    "constructor": 0
+   }
+  },
+  "TaskSignal": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TaskPriorityChangeEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "TaskController": {
+   "ctorLength": 0,
+   "methods": {
+    "setPriority": 1,
+    "constructor": 0
+   }
+  },
+  "TaskAttributionTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "SyncManager": {
+   "ctorLength": 0,
+   "methods": {
+    "getTags": 0,
+    "register": 1,
+    "constructor": 0
+   }
+  },
+  "Subscriber": {
+   "ctorLength": 0,
+   "methods": {
+    "addTeardown": 1,
+    "complete": 0,
+    "error": 1,
+    "next": 1,
+    "constructor": 0
+   }
+  },
+  "SubmitEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "StyleSheetList": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "StyleSheet": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "StylePropertyMapReadOnly": {
+   "ctorLength": 0,
+   "methods": {
+    "get": 1,
+    "getAll": 1,
+    "has": 1,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "StylePropertyMap": {
+   "ctorLength": 0,
+   "methods": {
+    "append": 1,
+    "clear": 0,
+    "delete": 1,
+    "set": 1,
+    "constructor": 0
+   }
+  },
+  "StorageEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "initStorageEvent": 1,
+    "constructor": 1
+   }
+  },
+  "Storage": {
+   "ctorLength": 0,
+   "methods": {
+    "clear": 0,
+    "getItem": 1,
+    "key": 1,
+    "removeItem": 1,
+    "setItem": 2,
+    "constructor": 0
+   }
+  },
+  "StereoPannerNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "StaticRange": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "SourceBufferList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SourceBuffer": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "appendBuffer": 1,
+    "changeType": 1,
+    "remove": 2,
+    "constructor": 0
+   }
+  },
+  "ShadowRoot": {
+   "ctorLength": 0,
+   "methods": {
+    "elementFromPoint": 2,
+    "elementsFromPoint": 2,
+    "getAnimations": 0,
+    "getHTML": 0,
+    "getSelection": 0,
+    "setHTMLUnsafe": 1,
+    "setHTML": 1,
+    "constructor": 0
+   }
+  },
+  "Selection": {
+   "ctorLength": 0,
+   "methods": {
+    "addRange": 1,
+    "collapse": 1,
+    "collapseToEnd": 0,
+    "collapseToStart": 0,
+    "containsNode": 1,
+    "deleteFromDocument": 0,
+    "empty": 0,
+    "extend": 1,
+    "getComposedRanges": 0,
+    "getRangeAt": 1,
+    "modify": 0,
+    "removeAllRanges": 0,
+    "removeRange": 1,
+    "selectAllChildren": 1,
+    "setBaseAndExtent": 4,
+    "setPosition": 1,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "SecurityPolicyViolationEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ScrollTimeline": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ScriptProcessorNode": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ScreenOrientation": {
+   "ctorLength": 0,
+   "methods": {
+    "lock": 1,
+    "unlock": 0,
+    "constructor": 0
+   }
+  },
+  "Screen": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Scheduling": {
+   "ctorLength": 0,
+   "methods": {
+    "isInputPending": 0,
+    "constructor": 0
+   }
+  },
+  "Scheduler": {
+   "ctorLength": 0,
+   "methods": {
+    "postTask": 1,
+    "yield": 0,
+    "constructor": 0
+   }
+  },
+  "SVGViewElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGUseElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGUnitTypes": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGTransformList": {
+   "ctorLength": 0,
+   "methods": {
+    "appendItem": 1,
+    "clear": 0,
+    "consolidate": 0,
+    "createSVGTransformFromMatrix": 1,
+    "getItem": 1,
+    "initialize": 1,
+    "insertItemBefore": 2,
+    "removeItem": 1,
+    "replaceItem": 2,
+    "constructor": 0
+   }
+  },
+  "SVGTransform": {
+   "ctorLength": 0,
+   "methods": {
+    "setMatrix": 1,
+    "setRotate": 3,
+    "setScale": 2,
+    "setSkewX": 1,
+    "setSkewY": 1,
+    "setTranslate": 2,
+    "constructor": 0
+   }
+  },
+  "SVGTitleElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGTextPositioningElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGTextPathElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGTextElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGTextContentElement": {
+   "ctorLength": 0,
+   "methods": {
+    "getCharNumAtPosition": 0,
+    "getComputedTextLength": 0,
+    "getEndPositionOfChar": 1,
+    "getExtentOfChar": 1,
+    "getNumberOfChars": 0,
+    "getRotationOfChar": 1,
+    "getStartPositionOfChar": 1,
+    "getSubStringLength": 2,
+    "selectSubString": 2,
+    "constructor": 0
+   }
+  },
+  "SVGTSpanElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGSymbolElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGSwitchElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGStyleElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGStringList": {
+   "ctorLength": 0,
+   "methods": {
+    "appendItem": 1,
+    "clear": 0,
+    "getItem": 1,
+    "initialize": 1,
+    "insertItemBefore": 2,
+    "removeItem": 1,
+    "replaceItem": 2,
+    "constructor": 0
+   }
+  },
+  "SVGStopElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGSetElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGScriptElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGSVGElement": {
+   "ctorLength": 0,
+   "methods": {
+    "animationsPaused": 0,
+    "checkEnclosure": 2,
+    "checkIntersection": 2,
+    "createSVGAngle": 0,
+    "createSVGLength": 0,
+    "createSVGMatrix": 0,
+    "createSVGNumber": 0,
+    "createSVGPoint": 0,
+    "createSVGRect": 0,
+    "createSVGTransform": 0,
+    "createSVGTransformFromMatrix": 1,
+    "deselectAll": 0,
+    "forceRedraw": 0,
+    "getCurrentTime": 0,
+    "getElementById": 1,
+    "getEnclosureList": 2,
+    "getIntersectionList": 2,
+    "pauseAnimations": 0,
+    "setCurrentTime": 1,
+    "suspendRedraw": 1,
+    "unpauseAnimations": 0,
+    "unsuspendRedraw": 1,
+    "unsuspendRedrawAll": 0,
+    "constructor": 0
+   }
+  },
+  "SVGRectElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGRect": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGRadialGradientElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGPreserveAspectRatio": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGPolylineElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGPolygonElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGPointList": {
+   "ctorLength": 0,
+   "methods": {
+    "appendItem": 1,
+    "clear": 0,
+    "getItem": 1,
+    "initialize": 1,
+    "insertItemBefore": 2,
+    "removeItem": 1,
+    "replaceItem": 2,
+    "constructor": 0
+   }
+  },
+  "SVGPoint": {
+   "ctorLength": 0,
+   "methods": {
+    "matrixTransform": 1,
+    "constructor": 0
+   }
+  },
+  "SVGPatternElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGPathElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGNumberList": {
+   "ctorLength": 0,
+   "methods": {
+    "appendItem": 1,
+    "clear": 0,
+    "getItem": 1,
+    "initialize": 1,
+    "insertItemBefore": 2,
+    "removeItem": 1,
+    "replaceItem": 2,
+    "constructor": 0
+   }
+  },
+  "SVGNumber": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGMetadataElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGMatrix": {
+   "ctorLength": 0,
+   "methods": {
+    "flipX": 0,
+    "flipY": 0,
+    "inverse": 0,
+    "multiply": 1,
+    "rotate": 1,
+    "rotateFromVector": 2,
+    "scale": 1,
+    "scaleNonUniform": 2,
+    "skewX": 1,
+    "skewY": 1,
+    "translate": 2,
+    "constructor": 0
+   }
+  },
+  "SVGMaskElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGMarkerElement": {
+   "ctorLength": 0,
+   "methods": {
+    "setOrientToAngle": 1,
+    "setOrientToAuto": 0,
+    "constructor": 0
+   }
+  },
+  "SVGMPathElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGLinearGradientElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGLineElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGLengthList": {
+   "ctorLength": 0,
+   "methods": {
+    "appendItem": 1,
+    "clear": 0,
+    "getItem": 1,
+    "initialize": 1,
+    "insertItemBefore": 2,
+    "removeItem": 1,
+    "replaceItem": 2,
+    "constructor": 0
+   }
+  },
+  "SVGLength": {
+   "ctorLength": 0,
+   "methods": {
+    "convertToSpecifiedUnits": 1,
+    "newValueSpecifiedUnits": 2,
+    "constructor": 0
+   }
+  },
+  "SVGImageElement": {
+   "ctorLength": 0,
+   "methods": {
+    "decode": 0,
+    "constructor": 0
+   }
+  },
+  "SVGGraphicsElement": {
+   "ctorLength": 0,
+   "methods": {
+    "getBBox": 0,
+    "getCTM": 0,
+    "getScreenCTM": 0,
+    "constructor": 0
+   }
+  },
+  "SVGGradientElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGGeometryElement": {
+   "ctorLength": 0,
+   "methods": {
+    "getPointAtLength": 1,
+    "getTotalLength": 0,
+    "isPointInFill": 0,
+    "isPointInStroke": 0,
+    "constructor": 0
+   }
+  },
+  "SVGGElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGForeignObjectElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFilterElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFETurbulenceElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFETileElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFESpotLightElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFESpecularLightingElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEPointLightElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEOffsetElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEMorphologyElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEMergeNodeElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEMergeElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEImageElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEGaussianBlurElement": {
+   "ctorLength": 0,
+   "methods": {
+    "setStdDeviation": 2,
+    "constructor": 0
+   }
+  },
+  "SVGFEFuncRElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEFuncGElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEFuncBElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEFuncAElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEFloodElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEDropShadowElement": {
+   "ctorLength": 0,
+   "methods": {
+    "setStdDeviation": 2,
+    "constructor": 0
+   }
+  },
+  "SVGFEDistantLightElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEDisplacementMapElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEDiffuseLightingElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEConvolveMatrixElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFECompositeElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEComponentTransferElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEColorMatrixElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGFEBlendElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGEllipseElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGElement": {
+   "ctorLength": 0,
+   "methods": {
+    "blur": 0,
+    "focus": 0,
+    "constructor": 0
+   }
+  },
+  "SVGDescElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGDefsElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGComponentTransferFunctionElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGClipPathElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGCircleElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimationElement": {
+   "ctorLength": 0,
+   "methods": {
+    "beginElement": 0,
+    "beginElementAt": 1,
+    "endElement": 0,
+    "endElementAt": 1,
+    "getCurrentTime": 0,
+    "getSimpleDuration": 0,
+    "getStartTime": 0,
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedTransformList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedString": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedRect": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedPreserveAspectRatio": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedNumberList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedNumber": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedLengthList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedLength": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedInteger": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedEnumeration": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedBoolean": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimatedAngle": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimateTransformElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimateMotionElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAnimateElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SVGAngle": {
+   "ctorLength": 0,
+   "methods": {
+    "convertToSpecifiedUnits": 1,
+    "newValueSpecifiedUnits": 2,
+    "constructor": 0
+   }
+  },
+  "SVGAElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Response": {
+   "ctorLength": 0,
+   "methods": {
+    "arrayBuffer": 0,
+    "blob": 0,
+    "clone": 0,
+    "formData": 0,
+    "json": 0,
+    "text": 0,
+    "bytes": 0,
+    "textStream": 0,
+    "constructor": 0
+   }
+  },
+  "ResizeObserverSize": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ResizeObserverEntry": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ResizeObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 1,
+    "unobserve": 1,
+    "constructor": 1
+   }
+  },
+  "Request": {
+   "ctorLength": 1,
+   "methods": {
+    "arrayBuffer": 0,
+    "blob": 0,
+    "clone": 0,
+    "formData": 0,
+    "json": 0,
+    "text": 0,
+    "bytes": 0,
+    "textStream": 0,
+    "constructor": 1
+   }
+  },
+  "ReportingObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 0,
+    "takeRecords": 0,
+    "constructor": 1
+   }
+  },
+  "ReportBody": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "ReadableStreamDefaultReader": {
+   "ctorLength": 1,
+   "methods": {
+    "read": 0,
+    "releaseLock": 0,
+    "constructor": 1,
+    "cancel": 0
+   }
+  },
+  "ReadableStreamDefaultController": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "enqueue": 0,
+    "error": 0,
+    "constructor": 0
+   }
+  },
+  "ReadableStreamBYOBRequest": {
+   "ctorLength": 0,
+   "methods": {
+    "respond": 1,
+    "respondWithNewView": 1,
+    "constructor": 0
+   }
+  },
+  "ReadableStreamBYOBReader": {
+   "ctorLength": 1,
+   "methods": {
+    "read": 1,
+    "releaseLock": 0,
+    "constructor": 1,
+    "cancel": 0
+   }
+  },
+  "ReadableStream": {
+   "ctorLength": 0,
+   "methods": {
+    "cancel": 0,
+    "getReader": 0,
+    "pipeThrough": 1,
+    "pipeTo": 1,
+    "tee": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "ReadableByteStreamController": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "enqueue": 1,
+    "error": 0,
+    "constructor": 0
+   }
+  },
+  "Range": {
+   "ctorLength": 0,
+   "methods": {
+    "cloneContents": 0,
+    "cloneRange": 0,
+    "collapse": 0,
+    "compareBoundaryPoints": 2,
+    "comparePoint": 2,
+    "createContextualFragment": 1,
+    "deleteContents": 0,
+    "detach": 0,
+    "expand": 0,
+    "extractContents": 0,
+    "getBoundingClientRect": 0,
+    "getClientRects": 0,
+    "insertNode": 1,
+    "intersectsNode": 1,
+    "isPointInRange": 2,
+    "selectNode": 1,
+    "selectNodeContents": 1,
+    "setEnd": 2,
+    "setEndAfter": 1,
+    "setEndBefore": 1,
+    "setStart": 2,
+    "setStartAfter": 1,
+    "setStartBefore": 1,
+    "surroundContents": 1,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "RadioNodeList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "RTCTrackEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "RTCStatsReport": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "RTCSessionDescription": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "RTCSctpTransport": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "RTCRtpTransceiver": {
+   "ctorLength": 0,
+   "methods": {
+    "getHeaderExtensionsToNegotiate": 0,
+    "getNegotiatedHeaderExtensions": 0,
+    "setCodecPreferences": 1,
+    "setHeaderExtensionsToNegotiate": 1,
+    "stop": 0,
+    "constructor": 0
+   }
+  },
+  "RTCRtpSender": {
+   "ctorLength": 0,
+   "methods": {
+    "createEncodedStreams": 0,
+    "getParameters": 0,
+    "getStats": 0,
+    "replaceTrack": 1,
+    "setParameters": 1,
+    "setStreams": 0,
+    "constructor": 0
+   }
+  },
+  "RTCRtpReceiver": {
+   "ctorLength": 0,
+   "methods": {
+    "createEncodedStreams": 0,
+    "getContributingSources": 0,
+    "getParameters": 0,
+    "getStats": 0,
+    "getSynchronizationSources": 0,
+    "constructor": 0
+   }
+  },
+  "RTCPeerConnectionIceEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "RTCPeerConnectionIceErrorEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "RTCPeerConnection": {
+   "ctorLength": 0,
+   "methods": {
+    "addIceCandidate": 0,
+    "addStream": 1,
+    "addTrack": 1,
+    "addTransceiver": 1,
+    "close": 0,
+    "createAnswer": 0,
+    "createDTMFSender": 1,
+    "createDataChannel": 1,
+    "createOffer": 0,
+    "getConfiguration": 0,
+    "getLocalStreams": 0,
+    "getReceivers": 0,
+    "getRemoteStreams": 0,
+    "getSenders": 0,
+    "getStats": 0,
+    "getTransceivers": 0,
+    "removeStream": 1,
+    "removeTrack": 1,
+    "restartIce": 0,
+    "setConfiguration": 0,
+    "setLocalDescription": 0,
+    "setRemoteDescription": 1,
+    "constructor": 0
+   }
+  },
+  "RTCIceTransport": {
+   "ctorLength": 0,
+   "methods": {
+    "getLocalCandidates": 0,
+    "getLocalParameters": 0,
+    "getRemoteCandidates": 0,
+    "getRemoteParameters": 0,
+    "getSelectedCandidatePair": 0,
+    "constructor": 0
+   }
+  },
+  "RTCIceCandidate": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "RTCErrorEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "RTCError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "RTCEncodedVideoFrame": {
+   "ctorLength": 1,
+   "methods": {
+    "getMetadata": 0,
+    "toString": 0,
+    "constructor": 1
+   }
+  },
+  "RTCEncodedAudioFrame": {
+   "ctorLength": 1,
+   "methods": {
+    "getMetadata": 0,
+    "toString": 0,
+    "constructor": 1
+   }
+  },
+  "RTCDtlsTransport": {
+   "ctorLength": 0,
+   "methods": {
+    "getRemoteCertificates": 0,
+    "constructor": 0
+   }
+  },
+  "RTCDataChannelEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "RTCDTMFToneChangeEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "RTCDTMFSender": {
+   "ctorLength": 0,
+   "methods": {
+    "insertDTMF": 1,
+    "constructor": 0
+   }
+  },
+  "RTCCertificate": {
+   "ctorLength": 0,
+   "methods": {
+    "getFingerprints": 0,
+    "constructor": 0
+   }
+  },
+  "PromiseRejectionEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "ProgressEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ProcessingInstruction": {
+   "ctorLength": 0,
+   "methods": {
+    "getAttribute": 1,
+    "getAttributeNames": 0,
+    "hasAttribute": 1,
+    "hasAttributes": 0,
+    "removeAttribute": 1,
+    "setAttribute": 2,
+    "toggleAttribute": 1,
+    "constructor": 0
+   }
+  },
+  "PopStateEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "PointerEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "getPredictedEvents": 0,
+    "constructor": 1,
+    "getCoalescedEvents": 0
+   }
+  },
+  "PluginArray": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "namedItem": 1,
+    "refresh": 0,
+    "constructor": 0
+   }
+  },
+  "Plugin": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "namedItem": 1,
+    "constructor": 0
+   }
+  },
+  "PictureInPictureWindow": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PictureInPictureEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "Permissions": {
+   "ctorLength": 0,
+   "methods": {
+    "query": 1,
+    "constructor": 0
+   }
+  },
+  "PermissionStatus": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PeriodicWave": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "PerformanceTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceServerTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceScriptTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceResourceTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformancePaintTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceObserverEntryList": {
+   "ctorLength": 0,
+   "methods": {
+    "getEntries": 0,
+    "getEntriesByName": 1,
+    "getEntriesByType": 1,
+    "constructor": 0
+   }
+  },
+  "PerformanceObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 0,
+    "takeRecords": 0,
+    "constructor": 1
+   }
+  },
+  "PerformanceNavigationTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceNavigation": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceMeasure": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PerformanceMark": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "PerformanceLongTaskTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceLongAnimationFrameTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceEventTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceEntry": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceElementTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "Performance": {
+   "ctorLength": 0,
+   "methods": {
+    "clearMarks": 0,
+    "clearMeasures": 0,
+    "clearResourceTimings": 0,
+    "getEntries": 0,
+    "getEntriesByName": 1,
+    "getEntriesByType": 1,
+    "mark": 1,
+    "measure": 1,
+    "setResourceTimingBufferSize": 1,
+    "toJSON": 0,
+    "now": 0,
+    "constructor": 0
+   }
+  },
+  "Path2D": {
+   "ctorLength": 0,
+   "methods": {
+    "addPath": 1,
+    "roundRect": 4,
+    "arc": 5,
+    "arcTo": 5,
+    "bezierCurveTo": 6,
+    "closePath": 0,
+    "ellipse": 7,
+    "lineTo": 2,
+    "moveTo": 2,
+    "quadraticCurveTo": 4,
+    "rect": 4,
+    "constructor": 0
+   }
+  },
+  "PannerNode": {
+   "ctorLength": 1,
+   "methods": {
+    "setOrientation": 3,
+    "setPosition": 3,
+    "constructor": 1
+   }
+  },
+  "PageTransitionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "OverconstrainedError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "OscillatorNode": {
+   "ctorLength": 1,
+   "methods": {
+    "setPeriodicWave": 1,
+    "constructor": 1
+   }
+  },
+  "OffscreenCanvasRenderingContext2D": {
+   "ctorLength": 0,
+   "methods": {
+    "clip": 0,
+    "createConicGradient": 3,
+    "createImageData": 1,
+    "createLinearGradient": 4,
+    "createPattern": 2,
+    "createRadialGradient": 6,
+    "drawImage": 3,
+    "fill": 0,
+    "fillText": 3,
+    "getImageData": 4,
+    "getLineDash": 0,
+    "getTransform": 0,
+    "isContextLost": 0,
+    "isPointInPath": 2,
+    "isPointInStroke": 2,
+    "measureText": 1,
+    "reset": 0,
+    "roundRect": 4,
+    "setLineDash": 1,
+    "strokeText": 3,
+    "arc": 5,
+    "arcTo": 5,
+    "beginPath": 0,
+    "bezierCurveTo": 6,
+    "clearRect": 4,
+    "closePath": 0,
+    "ellipse": 7,
+    "fillRect": 4,
+    "lineTo": 2,
+    "moveTo": 2,
+    "putImageData": 3,
+    "quadraticCurveTo": 4,
+    "rect": 4,
+    "resetTransform": 0,
+    "restore": 0,
+    "rotate": 1,
+    "save": 0,
+    "scale": 2,
+    "setTransform": 0,
+    "stroke": 0,
+    "strokeRect": 4,
+    "transform": 6,
+    "translate": 2,
+    "getContextAttributes": 0,
+    "constructor": 0
+   }
+  },
+  "OffscreenCanvas": {
+   "ctorLength": 2,
+   "methods": {
+    "convertToBlob": 0,
+    "getContext": 1,
+    "transferToImageBitmap": 0,
+    "constructor": 2
+   }
+  },
+  "OfflineAudioContext": {
+   "ctorLength": 1,
+   "methods": {
+    "resume": 0,
+    "startRendering": 0,
+    "suspend": 1,
+    "constructor": 1
+   }
+  },
+  "OfflineAudioCompletionEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "Observable": {
+   "ctorLength": 1,
+   "methods": {
+    "catch": 1,
+    "drop": 1,
+    "every": 1,
+    "filter": 1,
+    "finally": 1,
+    "find": 1,
+    "first": 0,
+    "flatMap": 1,
+    "forEach": 1,
+    "inspect": 0,
+    "last": 0,
+    "map": 1,
+    "reduce": 1,
+    "some": 1,
+    "subscribe": 0,
+    "switchMap": 1,
+    "take": 1,
+    "takeUntil": 1,
+    "toArray": 0,
+    "constructor": 1
+   }
+  },
+  "NodeList": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "NodeIterator": {
+   "ctorLength": 0,
+   "methods": {
+    "detach": 0,
+    "nextNode": 0,
+    "previousNode": 0,
+    "constructor": 0
+   }
+  },
+  "Node": {
+   "ctorLength": 0,
+   "methods": {
+    "appendChild": 1,
+    "cloneNode": 0,
+    "compareDocumentPosition": 1,
+    "contains": 1,
+    "getRootNode": 0,
+    "hasChildNodes": 0,
+    "insertBefore": 2,
+    "isDefaultNamespace": 1,
+    "isEqualNode": 1,
+    "isSameNode": 1,
+    "lookupNamespaceURI": 1,
+    "lookupPrefix": 1,
+    "normalize": 0,
+    "removeChild": 1,
+    "replaceChild": 2,
+    "constructor": 0
+   }
+  },
+  "NetworkInformation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "NavigatorUAData": {
+   "ctorLength": 0,
+   "methods": {
+    "getHighEntropyValues": 1,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "Navigator": {
+   "ctorLength": 0,
+   "methods": {
+    "getGamepads": 0,
+    "javaEnabled": 0,
+    "sendBeacon": 1,
+    "vibrate": 1,
+    "constructor": 0,
+    "adAuctionComponents": 1,
+    "runAdAuction": 1,
+    "canLoadAdAuctionFencedFrame": 0,
+    "canShare": 0,
+    "share": 0,
+    "clearAppBadge": 0,
+    "getBattery": 0,
+    "getUserMedia": 3,
+    "requestMIDIAccess": 0,
+    "requestMediaKeySystemAccess": 2,
+    "setAppBadge": 0,
+    "webkitGetUserMedia": 3,
+    "clearOriginJoinedAdInterestGroups": 1,
+    "createAuctionNonce": 0,
+    "joinAdInterestGroup": 1,
+    "leaveAdInterestGroup": 0,
+    "updateAdInterestGroups": 0,
+    "deprecatedReplaceInURN": 2,
+    "deprecatedURNToURL": 1,
+    "getInstalledRelatedApps": 0,
+    "getInterestGroupAdAuctionData": 1,
+    "registerProtocolHandler": 2,
+    "unregisterProtocolHandler": 2
+   }
+  },
+  "NavigationTransition": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "NavigationPrecommitController": {
+   "ctorLength": 0,
+   "methods": {
+    "redirect": 1,
+    "addHandler": 1,
+    "constructor": 0
+   }
+  },
+  "NavigationHistoryEntry": {
+   "ctorLength": 0,
+   "methods": {
+    "getState": 0,
+    "constructor": 0
+   }
+  },
+  "NavigationDestination": {
+   "ctorLength": 0,
+   "methods": {
+    "getState": 0,
+    "constructor": 0
+   }
+  },
+  "NavigationCurrentEntryChangeEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "NavigationActivation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Navigation": {
+   "ctorLength": 0,
+   "methods": {
+    "back": 0,
+    "entries": 0,
+    "forward": 0,
+    "navigate": 1,
+    "reload": 0,
+    "traverseTo": 1,
+    "updateCurrentEntry": 1,
+    "constructor": 0
+   }
+  },
+  "NavigateEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "intercept": 0,
+    "scroll": 0,
+    "constructor": 2
+   }
+  },
+  "NamedNodeMap": {
+   "ctorLength": 0,
+   "methods": {
+    "getNamedItem": 1,
+    "getNamedItemNS": 2,
+    "item": 1,
+    "removeNamedItem": 1,
+    "removeNamedItemNS": 2,
+    "setNamedItem": 1,
+    "setNamedItemNS": 1,
+    "constructor": 0
+   }
+  },
+  "MutationRecord": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MutationObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 1,
+    "takeRecords": 0,
+    "constructor": 1
+   }
+  },
+  "MouseEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "getModifierState": 1,
+    "initMouseEvent": 1,
+    "constructor": 1
+   }
+  },
+  "MimeTypeArray": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "namedItem": 1,
+    "constructor": 0
+   }
+  },
+  "MimeType": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MessagePort": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "postMessage": 1,
+    "start": 0,
+    "constructor": 0
+   }
+  },
+  "MessageEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "initMessageEvent": 1,
+    "constructor": 1
+   }
+  },
+  "MessageChannel": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MediaStreamTrackVideoStats": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "MediaStreamTrackProcessor": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MediaStreamTrackGenerator": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MediaStreamTrackEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "MediaStreamTrackAudioStats": {
+   "ctorLength": 0,
+   "methods": {
+    "resetLatency": 0,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "MediaStreamTrack": {
+   "ctorLength": 0,
+   "methods": {
+    "applyConstraints": 0,
+    "clone": 0,
+    "getCapabilities": 0,
+    "getConstraints": 0,
+    "getSettings": 0,
+    "stop": 0,
+    "getCaptureHandle": 0,
+    "constructor": 0
+   }
+  },
+  "MediaStreamEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MediaStreamAudioSourceNode": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "MediaStreamAudioDestinationNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MediaStream": {
+   "ctorLength": 0,
+   "methods": {
+    "addTrack": 1,
+    "clone": 0,
+    "getAudioTracks": 0,
+    "getTrackById": 1,
+    "getTracks": 0,
+    "getVideoTracks": 0,
+    "removeTrack": 1,
+    "constructor": 0
+   }
+  },
+  "MediaSourceHandle": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MediaSource": {
+   "ctorLength": 0,
+   "methods": {
+    "addSourceBuffer": 1,
+    "clearLiveSeekableRange": 0,
+    "endOfStream": 0,
+    "removeSourceBuffer": 1,
+    "setLiveSeekableRange": 2,
+    "constructor": 0
+   }
+  },
+  "MediaRecorder": {
+   "ctorLength": 1,
+   "methods": {
+    "pause": 0,
+    "requestData": 0,
+    "resume": 0,
+    "start": 0,
+    "stop": 0,
+    "constructor": 1
+   }
+  },
+  "MediaQueryListEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MediaQueryList": {
+   "ctorLength": 0,
+   "methods": {
+    "addListener": 1,
+    "removeListener": 1,
+    "constructor": 0
+   }
+  },
+  "MediaList": {
+   "ctorLength": 0,
+   "methods": {
+    "appendMedium": 1,
+    "deleteMedium": 1,
+    "item": 1,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "MediaError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MediaEncryptedEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MediaElementAudioSourceNode": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "MediaCapabilities": {
+   "ctorLength": 0,
+   "methods": {
+    "decodingInfo": 1,
+    "encodingInfo": 1,
+    "constructor": 0
+   }
+  },
+  "MathMLElement": {
+   "ctorLength": 0,
+   "methods": {
+    "blur": 0,
+    "focus": 0,
+    "constructor": 0
+   }
+  },
+  "Location": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "LayoutShiftAttribution": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "LayoutShift": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "LargestContentfulPaint": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "KeyframeEffect": {
+   "ctorLength": 1,
+   "methods": {
+    "getKeyframes": 0,
+    "setKeyframes": 1,
+    "constructor": 1
+   }
+  },
+  "KeyboardEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "getModifierState": 1,
+    "initKeyboardEvent": 1,
+    "constructor": 1
+   }
+  },
+  "IntersectionObserverEntry": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IntersectionObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 1,
+    "takeRecords": 0,
+    "unobserve": 1,
+    "constructor": 1
+   }
+  },
+  "InterestEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "InputEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "getTargetRanges": 0,
+    "constructor": 1
+   }
+  },
+  "InputDeviceInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "getCapabilities": 0,
+    "constructor": 0
+   }
+  },
+  "InputDeviceCapabilities": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Ink": {
+   "ctorLength": 0,
+   "methods": {
+    "requestPresenter": 0,
+    "constructor": 0
+   }
+  },
+  "ImageData": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "ImageBitmapRenderingContext": {
+   "ctorLength": 0,
+   "methods": {
+    "transferFromImageBitmap": 1,
+    "constructor": 0
+   }
+  },
+  "ImageBitmap": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "constructor": 0
+   }
+  },
+  "IdleDeadline": {
+   "ctorLength": 0,
+   "methods": {
+    "timeRemaining": 0,
+    "constructor": 0
+   }
+  },
+  "IIRFilterNode": {
+   "ctorLength": 2,
+   "methods": {
+    "getFrequencyResponse": 3,
+    "constructor": 2
+   }
+  },
+  "IDBVersionChangeEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "IDBTransaction": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "commit": 0,
+    "objectStore": 1,
+    "constructor": 0
+   }
+  },
+  "IDBRequest": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IDBRecord": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IDBOpenDBRequest": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IDBObjectStore": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "clear": 0,
+    "count": 0,
+    "createIndex": 2,
+    "delete": 1,
+    "deleteIndex": 1,
+    "get": 1,
+    "getAll": 0,
+    "getAllKeys": 0,
+    "getAllRecords": 0,
+    "getKey": 1,
+    "index": 1,
+    "openCursor": 0,
+    "openKeyCursor": 0,
+    "put": 1,
+    "constructor": 0
+   }
+  },
+  "IDBKeyRange": {
+   "ctorLength": 0,
+   "methods": {
+    "includes": 1,
+    "constructor": 0
+   }
+  },
+  "IDBIndex": {
+   "ctorLength": 0,
+   "methods": {
+    "count": 0,
+    "get": 1,
+    "getAll": 0,
+    "getAllKeys": 0,
+    "getAllRecords": 0,
+    "getKey": 1,
+    "openCursor": 0,
+    "openKeyCursor": 0,
+    "constructor": 0
+   }
+  },
+  "IDBFactory": {
+   "ctorLength": 0,
+   "methods": {
+    "cmp": 2,
+    "databases": 0,
+    "deleteDatabase": 1,
+    "open": 1,
+    "constructor": 0
+   }
+  },
+  "IDBDatabase": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "createObjectStore": 1,
+    "deleteObjectStore": 1,
+    "transaction": 1,
+    "constructor": 0
+   }
+  },
+  "IDBCursorWithValue": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IDBCursor": {
+   "ctorLength": 0,
+   "methods": {
+    "advance": 1,
+    "continue": 0,
+    "continuePrimaryKey": 2,
+    "delete": 0,
+    "update": 1,
+    "constructor": 0
+   }
+  },
+  "History": {
+   "ctorLength": 0,
+   "methods": {
+    "back": 0,
+    "forward": 0,
+    "go": 0,
+    "pushState": 2,
+    "replaceState": 2,
+    "constructor": 0
+   }
+  },
+  "HighlightRegistry": {
+   "ctorLength": 0,
+   "methods": {
+    "clear": 0,
+    "delete": 1,
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "set": 2,
+    "values": 0,
+    "highlightsFromPoint": 2,
+    "constructor": 0
+   }
+  },
+  "Highlight": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "clear": 0,
+    "delete": 1,
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "Headers": {
+   "ctorLength": 0,
+   "methods": {
+    "append": 2,
+    "delete": 1,
+    "get": 1,
+    "getSetCookie": 0,
+    "has": 1,
+    "set": 2,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "HashChangeEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "HTMLVideoElement": {
+   "ctorLength": 0,
+   "methods": {
+    "cancelVideoFrameCallback": 1,
+    "getVideoPlaybackQuality": 0,
+    "requestPictureInPicture": 0,
+    "requestVideoFrameCallback": 1,
+    "msGetVideoProcessingTypes": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLUnknownElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLUListElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTrackElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTitleElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTimeElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTextAreaElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "select": 0,
+    "setCustomValidity": 1,
+    "setRangeText": 1,
+    "setSelectionRange": 2,
+    "constructor": 0
+   }
+  },
+  "HTMLTemplateElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTableSectionElement": {
+   "ctorLength": 0,
+   "methods": {
+    "deleteRow": 1,
+    "insertRow": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLTableRowElement": {
+   "ctorLength": 0,
+   "methods": {
+    "deleteCell": 1,
+    "insertCell": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLTableElement": {
+   "ctorLength": 0,
+   "methods": {
+    "createCaption": 0,
+    "createTBody": 0,
+    "createTFoot": 0,
+    "createTHead": 0,
+    "deleteCaption": 0,
+    "deleteRow": 1,
+    "deleteTFoot": 0,
+    "deleteTHead": 0,
+    "insertRow": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLTableColElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTableCellElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLTableCaptionElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLStyleElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLSpanElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLSourceElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLSlotElement": {
+   "ctorLength": 0,
+   "methods": {
+    "assign": 0,
+    "assignedElements": 0,
+    "assignedNodes": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLSelectedContentElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLSelectElement": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "checkValidity": 0,
+    "item": 1,
+    "namedItem": 1,
+    "remove": 0,
+    "reportValidity": 0,
+    "setCustomValidity": 1,
+    "showPicker": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLScriptElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLQuoteElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLProgressElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLPreElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLPictureElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLParamElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLParagraphElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLOutputElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "setCustomValidity": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLOptionsCollection": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "remove": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLOptionElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLOptGroupElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLObjectElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "getSVGDocument": 0,
+    "reportValidity": 0,
+    "setCustomValidity": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLOListElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLModElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLMeterElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLMetaElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLMenuElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLMediaElement": {
+   "ctorLength": 0,
+   "methods": {
+    "addTextTrack": 1,
+    "canPlayType": 1,
+    "captureStream": 0,
+    "load": 0,
+    "pause": 0,
+    "play": 0,
+    "setSinkId": 1,
+    "constructor": 0,
+    "setMediaKeys": 1
+   }
+  },
+  "HTMLMarqueeElement": {
+   "ctorLength": 0,
+   "methods": {
+    "start": 0,
+    "stop": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLMapElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLLinkElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLLegendElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLLabelElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLLIElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLInputElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "select": 0,
+    "setCustomValidity": 1,
+    "setRangeText": 1,
+    "setSelectionRange": 2,
+    "showPicker": 0,
+    "stepDown": 0,
+    "stepUp": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLImageElement": {
+   "ctorLength": 0,
+   "methods": {
+    "decode": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLIFrameElement": {
+   "ctorLength": 0,
+   "methods": {
+    "getSVGDocument": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLHtmlElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLHeadingElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLHeadElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLHRElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLFrameSetElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLFrameElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLFormElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "requestSubmit": 0,
+    "reset": 0,
+    "submit": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLFormControlsCollection": {
+   "ctorLength": 0,
+   "methods": {
+    "namedItem": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLFontElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLFieldSetElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "setCustomValidity": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLEmbedElement": {
+   "ctorLength": 0,
+   "methods": {
+    "getSVGDocument": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLElement": {
+   "ctorLength": 0,
+   "methods": {
+    "attachInternals": 0,
+    "blur": 0,
+    "click": 0,
+    "focus": 0,
+    "hidePopover": 0,
+    "showPopover": 0,
+    "togglePopover": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLDocument": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLDivElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLDirectoryElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLDialogElement": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "requestClose": 0,
+    "show": 0,
+    "showModal": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLDetailsElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLDataListElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLDataElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLDListElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLCollection": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "namedItem": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLCanvasElement": {
+   "ctorLength": 0,
+   "methods": {
+    "captureStream": 0,
+    "getContext": 1,
+    "toBlob": 1,
+    "toDataURL": 0,
+    "transferControlToOffscreen": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLButtonElement": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "setCustomValidity": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLBodyElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLBaseElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLBRElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLAudioElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLAreaElement": {
+   "ctorLength": 0,
+   "methods": {
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLAnchorElement": {
+   "ctorLength": 0,
+   "methods": {
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "HTMLAllCollection": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 0,
+    "namedItem": 1,
+    "constructor": 0
+   }
+  },
+  "GeolocationPositionError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GeolocationPosition": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "GeolocationCoordinates": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "Geolocation": {
+   "ctorLength": 0,
+   "methods": {
+    "clearWatch": 1,
+    "getCurrentPosition": 1,
+    "watchPosition": 1,
+    "constructor": 0
+   }
+  },
+  "GamepadHapticActuator": {
+   "ctorLength": 0,
+   "methods": {
+    "playEffect": 2,
+    "reset": 0,
+    "constructor": 0
+   }
+  },
+  "GamepadEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "GamepadButton": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Gamepad": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GainNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "FormDataEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "FormData": {
+   "ctorLength": 0,
+   "methods": {
+    "append": 2,
+    "delete": 1,
+    "get": 1,
+    "getAll": 1,
+    "has": 1,
+    "set": 2,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "FontFaceSetLoadEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "FontFaceSet": {
+   "ctorLength": 0,
+   "methods": {
+    "check": 1,
+    "load": 1,
+    "add": 1,
+    "clear": 0,
+    "delete": 1,
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "FontFace": {
+   "ctorLength": 2,
+   "methods": {
+    "load": 0,
+    "constructor": 2
+   }
+  },
+  "FocusEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "FileReader": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "readAsArrayBuffer": 1,
+    "readAsBinaryString": 1,
+    "readAsDataURL": 1,
+    "readAsText": 1,
+    "constructor": 0
+   }
+  },
+  "FileList": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "File": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "FeaturePolicy": {
+   "ctorLength": 0,
+   "methods": {
+    "allowedFeatures": 0,
+    "allowsFeature": 1,
+    "features": 0,
+    "getAllowlistForFeature": 1,
+    "constructor": 0
+   }
+  },
+  "External": {
+   "ctorLength": 0,
+   "methods": {
+    "AddSearchProvider": 0,
+    "IsSearchProviderInstalled": 0,
+    "constructor": 0
+   }
+  },
+  "EventTarget": {
+   "ctorLength": 0,
+   "methods": {
+    "addEventListener": 2,
+    "dispatchEvent": 1,
+    "removeEventListener": 2,
+    "when": 1,
+    "constructor": 0
+   }
+  },
+  "EventSource": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "constructor": 1
+   }
+  },
+  "EventCounts": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "Event": {
+   "ctorLength": 1,
+   "methods": {
+    "composedPath": 0,
+    "initEvent": 1,
+    "preventDefault": 0,
+    "stopImmediatePropagation": 0,
+    "stopPropagation": 0,
+    "constructor": 1
+   }
+  },
+  "ErrorEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "EncodedVideoChunk": {
+   "ctorLength": 1,
+   "methods": {
+    "copyTo": 1,
+    "constructor": 1
+   }
+  },
+  "EncodedAudioChunk": {
+   "ctorLength": 1,
+   "methods": {
+    "copyTo": 1,
+    "constructor": 1
+   }
+  },
+  "ElementInternals": {
+   "ctorLength": 0,
+   "methods": {
+    "checkValidity": 0,
+    "reportValidity": 0,
+    "setFormValue": 1,
+    "setValidity": 1,
+    "constructor": 0
+   }
+  },
+  "Element": {
+   "ctorLength": 0,
+   "methods": {
+    "after": 0,
+    "animate": 1,
+    "append": 0,
+    "attachShadow": 1,
+    "before": 0,
+    "checkVisibility": 0,
+    "closest": 1,
+    "computedStyleMap": 0,
+    "getAnimations": 0,
+    "getAttribute": 1,
+    "getAttributeNS": 2,
+    "getAttributeNames": 0,
+    "getAttributeNode": 1,
+    "getAttributeNodeNS": 2,
+    "getBoundingClientRect": 0,
+    "getClientRects": 0,
+    "getElementsByClassName": 1,
+    "getElementsByTagName": 1,
+    "getElementsByTagNameNS": 2,
+    "getHTML": 0,
+    "hasAttribute": 1,
+    "hasAttributeNS": 2,
+    "hasAttributes": 0,
+    "hasPointerCapture": 1,
+    "insertAdjacentElement": 2,
+    "insertAdjacentHTML": 2,
+    "insertAdjacentText": 2,
+    "matches": 1,
+    "moveBefore": 2,
+    "prepend": 0,
+    "querySelector": 1,
+    "querySelectorAll": 1,
+    "releasePointerCapture": 1,
+    "remove": 0,
+    "removeAttribute": 1,
+    "removeAttributeNS": 2,
+    "removeAttributeNode": 1,
+    "replaceChildren": 0,
+    "replaceWith": 0,
+    "requestFullscreen": 0,
+    "requestPointerLock": 0,
+    "scroll": 0,
+    "scrollBy": 0,
+    "scrollIntoView": 0,
+    "scrollIntoViewIfNeeded": 0,
+    "scrollTo": 0,
+    "setAttribute": 2,
+    "setAttributeNS": 3,
+    "setAttributeNode": 1,
+    "setAttributeNodeNS": 1,
+    "setHTMLUnsafe": 1,
+    "setPointerCapture": 1,
+    "startViewTransition": 0,
+    "toggleAttribute": 1,
+    "webkitMatchesSelector": 1,
+    "webkitRequestFullScreen": 0,
+    "webkitRequestFullscreen": 0,
+    "ariaNotify": 1,
+    "pseudo": 1,
+    "setHTML": 1,
+    "constructor": 0
+   }
+  },
+  "EditContext": {
+   "ctorLength": 0,
+   "methods": {
+    "attachedElements": 0,
+    "characterBounds": 0,
+    "updateCharacterBounds": 2,
+    "updateControlBounds": 1,
+    "updateSelection": 2,
+    "updateSelectionBounds": 1,
+    "updateText": 3,
+    "constructor": 0
+   }
+  },
+  "DynamicsCompressorNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "DragEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "DocumentType": {
+   "ctorLength": 0,
+   "methods": {
+    "after": 0,
+    "before": 0,
+    "remove": 0,
+    "replaceWith": 0,
+    "constructor": 0
+   }
+  },
+  "DocumentTimeline": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DocumentFragment": {
+   "ctorLength": 0,
+   "methods": {
+    "append": 0,
+    "getElementById": 1,
+    "moveBefore": 2,
+    "prepend": 0,
+    "querySelector": 1,
+    "querySelectorAll": 1,
+    "replaceChildren": 0,
+    "constructor": 0
+   }
+  },
+  "Document": {
+   "ctorLength": 0,
+   "methods": {
+    "adoptNode": 1,
+    "append": 0,
+    "captureEvents": 0,
+    "caretPositionFromPoint": 2,
+    "caretRangeFromPoint": 0,
+    "clear": 0,
+    "close": 0,
+    "createAttribute": 1,
+    "createAttributeNS": 2,
+    "createCDATASection": 1,
+    "createComment": 1,
+    "createDocumentFragment": 0,
+    "createElement": 1,
+    "createElementNS": 2,
+    "createEvent": 1,
+    "createExpression": 1,
+    "createNSResolver": 1,
+    "createNodeIterator": 1,
+    "createProcessingInstruction": 2,
+    "createRange": 0,
+    "createTextNode": 1,
+    "createTreeWalker": 1,
+    "elementFromPoint": 2,
+    "elementsFromPoint": 2,
+    "evaluate": 2,
+    "execCommand": 1,
+    "exitFullscreen": 0,
+    "exitPictureInPicture": 0,
+    "exitPointerLock": 0,
+    "getAnimations": 0,
+    "getElementById": 1,
+    "getElementsByClassName": 1,
+    "getElementsByName": 1,
+    "getElementsByTagName": 1,
+    "getElementsByTagNameNS": 2,
+    "getSelection": 0,
+    "hasFocus": 0,
+    "hasStorageAccess": 0,
+    "hasUnpartitionedCookieAccess": 0,
+    "importNode": 1,
+    "moveBefore": 2,
+    "open": 0,
+    "prepend": 0,
+    "queryCommandEnabled": 1,
+    "queryCommandIndeterm": 1,
+    "queryCommandState": 1,
+    "queryCommandSupported": 1,
+    "queryCommandValue": 1,
+    "querySelector": 1,
+    "querySelectorAll": 1,
+    "releaseEvents": 0,
+    "replaceChildren": 0,
+    "requestStorageAccess": 0,
+    "requestStorageAccessFor": 1,
+    "startViewTransition": 0,
+    "webkitCancelFullScreen": 0,
+    "webkitExitFullscreen": 0,
+    "write": 0,
+    "writeln": 0,
+    "constructor": 0,
+    "browsingTopics": 0,
+    "hasPrivateToken": 1,
+    "hasRedemptionRecord": 1,
+    "ariaNotify": 1
+   }
+  },
+  "DelegatedInkTrailPresenter": {
+   "ctorLength": 0,
+   "methods": {
+    "updateInkTrailStartPoint": 2,
+    "constructor": 0
+   }
+  },
+  "DelayNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "DecompressionStream": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "DataTransferItemList": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "clear": 0,
+    "remove": 1,
+    "constructor": 0
+   }
+  },
+  "DataTransferItem": {
+   "ctorLength": 0,
+   "methods": {
+    "getAsFile": 0,
+    "getAsString": 1,
+    "webkitGetAsEntry": 0,
+    "getAsFileSystemHandle": 0,
+    "constructor": 0
+   }
+  },
+  "DataTransfer": {
+   "ctorLength": 0,
+   "methods": {
+    "clearData": 0,
+    "getData": 1,
+    "setData": 2,
+    "setDragImage": 3,
+    "constructor": 0
+   }
+  },
+  "DOMTokenList": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "add": 0,
+    "contains": 1,
+    "item": 1,
+    "remove": 0,
+    "replace": 2,
+    "supports": 1,
+    "toggle": 1,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "DOMStringMap": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DOMStringList": {
+   "ctorLength": 0,
+   "methods": {
+    "contains": 1,
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "DOMRectReadOnly": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "DOMRectList": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "DOMRect": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DOMQuad": {
+   "ctorLength": 0,
+   "methods": {
+    "getBounds": 0,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "DOMPointReadOnly": {
+   "ctorLength": 0,
+   "methods": {
+    "matrixTransform": 0,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "DOMPoint": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DOMParser": {
+   "ctorLength": 0,
+   "methods": {
+    "parseFromString": 2,
+    "constructor": 0
+   }
+  },
+  "DOMMatrixReadOnly": {
+   "ctorLength": 0,
+   "methods": {
+    "flipX": 0,
+    "flipY": 0,
+    "inverse": 0,
+    "multiply": 0,
+    "rotate": 0,
+    "rotateAxisAngle": 0,
+    "rotateFromVector": 0,
+    "scale": 0,
+    "scale3d": 0,
+    "scaleNonUniform": 0,
+    "skewX": 0,
+    "skewY": 0,
+    "toFloat32Array": 0,
+    "toFloat64Array": 0,
+    "toJSON": 0,
+    "transformPoint": 0,
+    "translate": 0,
+    "constructor": 0,
+    "toString": 0
+   }
+  },
+  "DOMMatrix": {
+   "ctorLength": 0,
+   "methods": {
+    "invertSelf": 0,
+    "multiplySelf": 0,
+    "preMultiplySelf": 0,
+    "rotateAxisAngleSelf": 0,
+    "rotateFromVectorSelf": 0,
+    "rotateSelf": 0,
+    "scale3dSelf": 0,
+    "scaleSelf": 0,
+    "skewXSelf": 0,
+    "skewYSelf": 0,
+    "translateSelf": 0,
+    "constructor": 0,
+    "setMatrixValue": 1
+   }
+  },
+  "DOMImplementation": {
+   "ctorLength": 0,
+   "methods": {
+    "createDocument": 2,
+    "createDocumentType": 3,
+    "createHTMLDocument": 0,
+    "hasFeature": 0,
+    "constructor": 0
+   }
+  },
+  "DOMException": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DOMError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CustomStateSet": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "clear": 0,
+    "delete": 1,
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "CustomEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "initCustomEvent": 1,
+    "constructor": 1
+   }
+  },
+  "CustomElementRegistry": {
+   "ctorLength": 0,
+   "methods": {
+    "define": 2,
+    "get": 1,
+    "getName": 1,
+    "upgrade": 1,
+    "whenDefined": 1,
+    "initialize": 1,
+    "constructor": 0
+   }
+  },
+  "Crypto": {
+   "ctorLength": 0,
+   "methods": {
+    "getRandomValues": 1,
+    "constructor": 0,
+    "randomUUID": 0
+   }
+  },
+  "CountQueuingStrategy": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ConvolverNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ContentVisibilityAutoStateChangeEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ConstantSourceNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CompressionStream": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CompositionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "initCompositionEvent": 1,
+    "constructor": 1
+   }
+  },
+  "Comment": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CommandEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CloseWatcher": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "destroy": 0,
+    "requestClose": 0,
+    "constructor": 0
+   }
+  },
+  "CloseEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ClipboardEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CharacterData": {
+   "ctorLength": 0,
+   "methods": {
+    "after": 0,
+    "appendData": 1,
+    "before": 0,
+    "deleteData": 2,
+    "insertData": 2,
+    "remove": 0,
+    "replaceData": 3,
+    "replaceWith": 0,
+    "substringData": 2,
+    "constructor": 0
+   }
+  },
+  "CharacterBoundsUpdateEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ChannelSplitterNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ChannelMergerNode": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CaretPosition": {
+   "ctorLength": 0,
+   "methods": {
+    "getClientRect": 0,
+    "constructor": 0
+   }
+  },
+  "CanvasRenderingContext2D": {
+   "ctorLength": 0,
+   "methods": {
+    "clip": 0,
+    "createConicGradient": 3,
+    "createImageData": 1,
+    "createLinearGradient": 4,
+    "createPattern": 2,
+    "createRadialGradient": 6,
+    "drawFocusIfNeeded": 1,
+    "drawImage": 3,
+    "fill": 0,
+    "fillText": 3,
+    "getContextAttributes": 0,
+    "getImageData": 4,
+    "getLineDash": 0,
+    "getTransform": 0,
+    "isContextLost": 0,
+    "isPointInPath": 2,
+    "isPointInStroke": 2,
+    "measureText": 1,
+    "reset": 0,
+    "roundRect": 4,
+    "setLineDash": 1,
+    "strokeText": 3,
+    "arc": 5,
+    "arcTo": 5,
+    "beginPath": 0,
+    "bezierCurveTo": 6,
+    "clearRect": 4,
+    "closePath": 0,
+    "ellipse": 7,
+    "fillRect": 4,
+    "lineTo": 2,
+    "moveTo": 2,
+    "putImageData": 3,
+    "quadraticCurveTo": 4,
+    "rect": 4,
+    "resetTransform": 0,
+    "restore": 0,
+    "rotate": 1,
+    "save": 0,
+    "scale": 2,
+    "setTransform": 0,
+    "stroke": 0,
+    "strokeRect": 4,
+    "transform": 6,
+    "translate": 2,
+    "constructor": 0
+   }
+  },
+  "CanvasPattern": {
+   "ctorLength": 0,
+   "methods": {
+    "setTransform": 0,
+    "constructor": 0
+   }
+  },
+  "CanvasGradient": {
+   "ctorLength": 0,
+   "methods": {
+    "addColorStop": 2,
+    "constructor": 0
+   }
+  },
+  "CanvasCaptureMediaStreamTrack": {
+   "ctorLength": 0,
+   "methods": {
+    "requestFrame": 0,
+    "constructor": 0
+   }
+  },
+  "CSSViewTransitionRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSVariableReferenceValue": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSUnparsedValue": {
+   "ctorLength": 1,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "constructor": 1
+   }
+  },
+  "CSSUnitValue": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "CSSTranslate": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "CSSTransition": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSTransformValue": {
+   "ctorLength": 1,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "toMatrix": 0,
+    "constructor": 1
+   }
+  },
+  "CSSTransformComponent": {
+   "ctorLength": 0,
+   "methods": {
+    "toMatrix": 0,
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "CSSSupportsRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSStyleValue": {
+   "ctorLength": 0,
+   "methods": {
+    "toString": 0,
+    "constructor": 0
+   }
+  },
+  "CSSStyleSheet": {
+   "ctorLength": 0,
+   "methods": {
+    "addRule": 0,
+    "deleteRule": 1,
+    "insertRule": 1,
+    "removeRule": 0,
+    "replace": 1,
+    "replaceSync": 1,
+    "constructor": 0
+   }
+  },
+  "CSSStyleRule": {
+   "ctorLength": 0,
+   "methods": {
+    "deleteRule": 1,
+    "insertRule": 1,
+    "constructor": 0
+   }
+  },
+  "CSSStyleDeclaration": {
+   "ctorLength": 0,
+   "methods": {
+    "getPropertyPriority": 1,
+    "getPropertyValue": 1,
+    "item": 1,
+    "removeProperty": 1,
+    "setProperty": 2,
+    "constructor": 0
+   }
+  },
+  "CSSStartingStyleRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSSkewY": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSSkewX": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSSkew": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "CSSScopeRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSScale": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "CSSRuleList": {
+   "ctorLength": 0,
+   "methods": {
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "CSSRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSRotate": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSPropertyRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSPositionValue": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "CSSPositionTryRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSPositionTryDescriptors": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSPerspective": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSPageRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSNumericValue": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 0,
+    "div": 0,
+    "equals": 0,
+    "max": 0,
+    "min": 0,
+    "mul": 0,
+    "sub": 0,
+    "to": 1,
+    "toSum": 0,
+    "type": 0,
+    "constructor": 0
+   }
+  },
+  "CSSNumericArray": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "constructor": 0
+   }
+  },
+  "CSSNestedDeclarations": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSNamespaceRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMediaRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMatrixComponent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSMathValue": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMathSum": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMathProduct": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMathNegate": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSMathMin": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMathMax": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSMathInvert": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSMathClamp": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "CSSMarginRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSLayerStatementRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSLayerBlockRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSKeywordValue": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CSSKeyframesRule": {
+   "ctorLength": 0,
+   "methods": {
+    "appendRule": 1,
+    "deleteRule": 1,
+    "findRule": 1,
+    "constructor": 0
+   }
+  },
+  "CSSKeyframeRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSImportRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSImageValue": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSGroupingRule": {
+   "ctorLength": 0,
+   "methods": {
+    "deleteRule": 1,
+    "insertRule": 1,
+    "constructor": 0
+   }
+  },
+  "CSSFontPaletteValuesRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSFontFaceRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSCounterStyleRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSContainerRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSConditionRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSAnimation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSPViolationReportBody": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "CDATASection": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ByteLengthQueuingStrategy": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "BrowserCaptureMediaStreamTrack": {
+   "ctorLength": 0,
+   "methods": {
+    "cropTo": 1,
+    "restrictTo": 1,
+    "constructor": 0
+   }
+  },
+  "BroadcastChannel": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "postMessage": 1,
+    "constructor": 1
+   }
+  },
+  "BlobEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "Blob": {
+   "ctorLength": 0,
+   "methods": {
+    "arrayBuffer": 0,
+    "slice": 0,
+    "stream": 0,
+    "text": 0,
+    "bytes": 0,
+    "textStream": 0,
+    "constructor": 0
+   }
+  },
+  "BiquadFilterNode": {
+   "ctorLength": 1,
+   "methods": {
+    "getFrequencyResponse": 3,
+    "constructor": 1
+   }
+  },
+  "BeforeUnloadEvent": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "BeforeInstallPromptEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "prompt": 0,
+    "constructor": 1
+   }
+  },
+  "BaseAudioContext": {
+   "ctorLength": 0,
+   "methods": {
+    "createAnalyser": 0,
+    "createBiquadFilter": 0,
+    "createBuffer": 3,
+    "createBufferSource": 0,
+    "createChannelMerger": 0,
+    "createChannelSplitter": 0,
+    "createConstantSource": 0,
+    "createConvolver": 0,
+    "createDelay": 0,
+    "createDynamicsCompressor": 0,
+    "createGain": 0,
+    "createIIRFilter": 2,
+    "createOscillator": 0,
+    "createPanner": 0,
+    "createPeriodicWave": 2,
+    "createScriptProcessor": 0,
+    "createStereoPanner": 0,
+    "createWaveShaper": 0,
+    "decodeAudioData": 1,
+    "constructor": 0
+   }
+  },
+  "BarProp": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AudioWorkletNode": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "AudioSinkInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AudioScheduledSourceNode": {
+   "ctorLength": 0,
+   "methods": {
+    "start": 0,
+    "stop": 0,
+    "constructor": 0
+   }
+  },
+  "AudioProcessingEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "AudioParamMap": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "AudioParam": {
+   "ctorLength": 0,
+   "methods": {
+    "cancelAndHoldAtTime": 1,
+    "cancelScheduledValues": 1,
+    "exponentialRampToValueAtTime": 2,
+    "linearRampToValueAtTime": 2,
+    "setTargetAtTime": 3,
+    "setValueAtTime": 2,
+    "setValueCurveAtTime": 3,
+    "constructor": 0
+   }
+  },
+  "AudioNode": {
+   "ctorLength": 0,
+   "methods": {
+    "connect": 1,
+    "disconnect": 0,
+    "constructor": 0
+   }
+  },
+  "AudioListener": {
+   "ctorLength": 0,
+   "methods": {
+    "setOrientation": 6,
+    "setPosition": 3,
+    "constructor": 0
+   }
+  },
+  "AudioDestinationNode": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AudioData": {
+   "ctorLength": 1,
+   "methods": {
+    "allocationSize": 1,
+    "clone": 0,
+    "close": 0,
+    "copyTo": 2,
+    "constructor": 1
+   }
+  },
+  "AudioContext": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "createMediaElementSource": 1,
+    "createMediaStreamDestination": 0,
+    "createMediaStreamSource": 1,
+    "getOutputTimestamp": 0,
+    "resume": 0,
+    "suspend": 0,
+    "constructor": 0,
+    "setSinkId": 1
+   }
+  },
+  "AudioBufferSourceNode": {
+   "ctorLength": 1,
+   "methods": {
+    "start": 0,
+    "constructor": 1
+   }
+  },
+  "AudioBuffer": {
+   "ctorLength": 1,
+   "methods": {
+    "copyFromChannel": 2,
+    "copyToChannel": 2,
+    "getChannelData": 1,
+    "constructor": 1
+   }
+  },
+  "Attr": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AnimationTimeline": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AnimationPlaybackEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "AnimationEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "AnimationEffect": {
+   "ctorLength": 0,
+   "methods": {
+    "getComputedTiming": 0,
+    "getTiming": 0,
+    "updateTiming": 0,
+    "constructor": 0
+   }
+  },
+  "Animation": {
+   "ctorLength": 0,
+   "methods": {
+    "cancel": 0,
+    "commitStyles": 0,
+    "finish": 0,
+    "pause": 0,
+    "persist": 0,
+    "play": 0,
+    "reverse": 0,
+    "updatePlaybackRate": 1,
+    "constructor": 0
+   }
+  },
+  "AnalyserNode": {
+   "ctorLength": 1,
+   "methods": {
+    "getByteFrequencyData": 1,
+    "getByteTimeDomainData": 1,
+    "getFloatFrequencyData": 1,
+    "getFloatTimeDomainData": 1,
+    "constructor": 1
+   }
+  },
+  "AbstractRange": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AbortSignal": {
+   "ctorLength": 0,
+   "methods": {
+    "throwIfAborted": 0,
+    "constructor": 0
+   }
+  },
+  "AbortController": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "constructor": 0
+   }
+  },
+  "SuppressedError": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "DisposableStack": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "use": 1,
+    "dispose": 0,
+    "adopt": 2,
+    "defer": 1,
+    "move": 0
+   }
+  },
+  "AsyncDisposableStack": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0,
+    "use": 1,
+    "disposeAsync": 0,
+    "adopt": 2,
+    "defer": 1,
+    "move": 0
+   }
+  },
+  "Float16Array": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "AbsoluteOrientationSensor": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Accelerometer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AudioDecoder": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "configure": 1,
+    "decode": 1,
+    "flush": 0,
+    "reset": 0,
+    "constructor": 1
+   }
+  },
+  "AudioEncoder": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "configure": 1,
+    "encode": 1,
+    "flush": 0,
+    "reset": 0,
+    "constructor": 1
+   }
+  },
+  "AudioWorklet": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "BatteryManager": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Cache": {
+   "ctorLength": 0,
+   "methods": {
+    "add": 1,
+    "addAll": 1,
+    "delete": 1,
+    "keys": 0,
+    "match": 1,
+    "matchAll": 0,
+    "put": 2,
+    "constructor": 0
+   }
+  },
+  "CacheStorage": {
+   "ctorLength": 0,
+   "methods": {
+    "delete": 1,
+    "has": 1,
+    "keys": 0,
+    "match": 1,
+    "open": 1,
+    "constructor": 0
+   }
+  },
+  "Clipboard": {
+   "ctorLength": 0,
+   "methods": {
+    "read": 0,
+    "readText": 0,
+    "write": 1,
+    "writeText": 1,
+    "constructor": 0
+   }
+  },
+  "ClipboardChangeEvent": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ClipboardItem": {
+   "ctorLength": 1,
+   "methods": {
+    "getType": 1,
+    "constructor": 1
+   }
+  },
+  "CookieChangeEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "CookieStore": {
+   "ctorLength": 0,
+   "methods": {
+    "delete": 1,
+    "get": 0,
+    "getAll": 0,
+    "set": 1,
+    "constructor": 0
+   }
+  },
+  "CookieStoreManager": {
+   "ctorLength": 0,
+   "methods": {
+    "getSubscriptions": 0,
+    "subscribe": 1,
+    "unsubscribe": 1,
+    "constructor": 0
+   }
+  },
+  "CreateMonitor": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Credential": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CredentialsContainer": {
+   "ctorLength": 0,
+   "methods": {
+    "create": 0,
+    "get": 0,
+    "preventSilentAccess": 0,
+    "store": 1,
+    "constructor": 0
+   }
+  },
+  "CryptoKey": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DeviceMotionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "DeviceMotionEventAcceleration": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DeviceMotionEventRotationRate": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DeviceOrientationEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "FederatedCredential": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "GPU": {
+   "ctorLength": 0,
+   "methods": {
+    "getPreferredCanvasFormat": 0,
+    "requestAdapter": 0,
+    "constructor": 0
+   }
+  },
+  "GPUAdapter": {
+   "ctorLength": 0,
+   "methods": {
+    "requestDevice": 0,
+    "constructor": 0
+   }
+  },
+  "GPUAdapterInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUBindGroup": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUBindGroupLayout": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUBuffer": {
+   "ctorLength": 0,
+   "methods": {
+    "destroy": 0,
+    "getMappedRange": 0,
+    "mapAsync": 1,
+    "unmap": 0,
+    "constructor": 0
+   }
+  },
+  "GPUCanvasContext": {
+   "ctorLength": 0,
+   "methods": {
+    "configure": 1,
+    "getConfiguration": 0,
+    "getCurrentTexture": 0,
+    "unconfigure": 0,
+    "constructor": 0
+   }
+  },
+  "GPUCommandBuffer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUCommandEncoder": {
+   "ctorLength": 0,
+   "methods": {
+    "beginComputePass": 0,
+    "beginRenderPass": 1,
+    "copyBufferToTexture": 3,
+    "copyTextureToBuffer": 3,
+    "copyTextureToTexture": 3,
+    "finish": 0,
+    "insertDebugMarker": 1,
+    "pushDebugGroup": 1,
+    "clearBuffer": 1,
+    "copyBufferToBuffer": 2,
+    "popDebugGroup": 0,
+    "resolveQuerySet": 5,
+    "constructor": 0
+   }
+  },
+  "GPUCompilationInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUCompilationMessage": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUComputePassEncoder": {
+   "ctorLength": 0,
+   "methods": {
+    "insertDebugMarker": 1,
+    "pushDebugGroup": 1,
+    "dispatchWorkgroups": 1,
+    "dispatchWorkgroupsIndirect": 2,
+    "end": 0,
+    "popDebugGroup": 0,
+    "setBindGroup": 2,
+    "setPipeline": 1,
+    "writeTimestamp": 2,
+    "setImmediates": 2,
+    "constructor": 0
+   }
+  },
+  "GPUComputePipeline": {
+   "ctorLength": 0,
+   "methods": {
+    "getBindGroupLayout": 1,
+    "constructor": 0
+   }
+  },
+  "GPUDevice": {
+   "ctorLength": 0,
+   "methods": {
+    "createBindGroup": 1,
+    "createBindGroupLayout": 1,
+    "createBuffer": 1,
+    "createCommandEncoder": 0,
+    "createComputePipeline": 1,
+    "createComputePipelineAsync": 1,
+    "createPipelineLayout": 1,
+    "createQuerySet": 1,
+    "createRenderBundleEncoder": 1,
+    "createRenderPipeline": 1,
+    "createRenderPipelineAsync": 1,
+    "createSampler": 0,
+    "createShaderModule": 1,
+    "createTexture": 1,
+    "destroy": 0,
+    "importExternalTexture": 1,
+    "popErrorScope": 0,
+    "pushErrorScope": 1,
+    "constructor": 0
+   }
+  },
+  "GPUDeviceLostInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUExternalTexture": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUInternalError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "GPUOutOfMemoryError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "GPUPipelineError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "GPUPipelineLayout": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUQuerySet": {
+   "ctorLength": 0,
+   "methods": {
+    "destroy": 0,
+    "constructor": 0
+   }
+  },
+  "GPUQueue": {
+   "ctorLength": 0,
+   "methods": {
+    "copyExternalImageToTexture": 3,
+    "onSubmittedWorkDone": 0,
+    "submit": 1,
+    "writeBuffer": 3,
+    "writeTexture": 4,
+    "constructor": 0
+   }
+  },
+  "GPURenderBundle": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPURenderBundleEncoder": {
+   "ctorLength": 0,
+   "methods": {
+    "finish": 0,
+    "insertDebugMarker": 1,
+    "pushDebugGroup": 1,
+    "setIndexBuffer": 2,
+    "draw": 1,
+    "drawIndexed": 1,
+    "drawIndexedIndirect": 2,
+    "drawIndirect": 2,
+    "popDebugGroup": 0,
+    "setBindGroup": 2,
+    "setPipeline": 1,
+    "setVertexBuffer": 2,
+    "setImmediates": 2,
+    "constructor": 0
+   }
+  },
+  "GPURenderPassEncoder": {
+   "ctorLength": 0,
+   "methods": {
+    "executeBundles": 1,
+    "insertDebugMarker": 1,
+    "pushDebugGroup": 1,
+    "setBlendConstant": 1,
+    "setIndexBuffer": 2,
+    "beginOcclusionQuery": 1,
+    "draw": 1,
+    "drawIndexed": 1,
+    "drawIndexedIndirect": 2,
+    "drawIndirect": 2,
+    "end": 0,
+    "endOcclusionQuery": 0,
+    "popDebugGroup": 0,
+    "setBindGroup": 2,
+    "setPipeline": 1,
+    "setScissorRect": 4,
+    "setStencilReference": 1,
+    "setVertexBuffer": 2,
+    "setViewport": 6,
+    "writeTimestamp": 2,
+    "setImmediates": 2,
+    "constructor": 0
+   }
+  },
+  "GPURenderPipeline": {
+   "ctorLength": 0,
+   "methods": {
+    "getBindGroupLayout": 1,
+    "constructor": 0
+   }
+  },
+  "GPUSampler": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUShaderModule": {
+   "ctorLength": 0,
+   "methods": {
+    "getCompilationInfo": 0,
+    "constructor": 0
+   }
+  },
+  "GPUSupportedFeatures": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "GPUSupportedLimits": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUTexture": {
+   "ctorLength": 0,
+   "methods": {
+    "createView": 0,
+    "destroy": 0,
+    "constructor": 0
+   }
+  },
+  "GPUTextureView": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "GPUUncapturedErrorEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "GPUValidationError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "GravitySensor": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Gyroscope": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IdleDetector": {
+   "ctorLength": 0,
+   "methods": {
+    "start": 0,
+    "constructor": 0
+   }
+  },
+  "ImageCapture": {
+   "ctorLength": 1,
+   "methods": {
+    "getPhotoCapabilities": 0,
+    "getPhotoSettings": 0,
+    "grabFrame": 0,
+    "takePhoto": 0,
+    "constructor": 1
+   }
+  },
+  "ImageDecoder": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "decode": 0,
+    "reset": 0,
+    "constructor": 1
+   }
+  },
+  "ImageTrack": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ImageTrackList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Keyboard": {
+   "ctorLength": 0,
+   "methods": {
+    "getLayoutMap": 0,
+    "lock": 0,
+    "unlock": 0,
+    "constructor": 0
+   }
+  },
+  "KeyboardLayoutMap": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "LinearAccelerationSensor": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MIDIAccess": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MIDIConnectionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MIDIInput": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MIDIInputMap": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "MIDIMessageEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "MIDIOutput": {
+   "ctorLength": 0,
+   "methods": {
+    "send": 1,
+    "constructor": 0
+   }
+  },
+  "MIDIOutputMap": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "get": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "MIDIPort": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "open": 0,
+    "constructor": 0
+   }
+  },
+  "MediaDeviceInfo": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "MediaDevices": {
+   "ctorLength": 0,
+   "methods": {
+    "enumerateDevices": 0,
+    "getSupportedConstraints": 0,
+    "getUserMedia": 0,
+    "getDisplayMedia": 0,
+    "setCaptureHandleConfig": 0,
+    "constructor": 0
+   }
+  },
+  "MediaKeyMessageEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "MediaKeySession": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "generateRequest": 2,
+    "load": 1,
+    "remove": 0,
+    "update": 1,
+    "constructor": 0
+   }
+  },
+  "MediaKeyStatusMap": {
+   "ctorLength": 0,
+   "methods": {
+    "get": 1,
+    "has": 1,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "MediaKeySystemAccess": {
+   "ctorLength": 0,
+   "methods": {
+    "createMediaKeys": 0,
+    "getConfiguration": 0,
+    "constructor": 0
+   }
+  },
+  "MediaKeys": {
+   "ctorLength": 0,
+   "methods": {
+    "createSession": 0,
+    "setServerCertificate": 1,
+    "constructor": 0,
+    "getStatusForPolicy": 0
+   }
+  },
+  "NavigationPreloadManager": {
+   "ctorLength": 0,
+   "methods": {
+    "disable": 0,
+    "enable": 0,
+    "getState": 0,
+    "setHeaderValue": 1,
+    "constructor": 0
+   }
+  },
+  "NavigatorManagedData": {
+   "ctorLength": 0,
+   "methods": {
+    "getManagedConfiguration": 1,
+    "constructor": 0
+   }
+  },
+  "OrientationSensor": {
+   "ctorLength": 0,
+   "methods": {
+    "populateMatrix": 1,
+    "constructor": 0
+   }
+  },
+  "PasswordCredential": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "ProtectedAudience": {
+   "ctorLength": 0,
+   "methods": {
+    "queryFeatureSupport": 1,
+    "constructor": 0
+   }
+  },
+  "RelativeOrientationSensor": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ScreenDetailed": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "ScreenDetails": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Sensor": {
+   "ctorLength": 0,
+   "methods": {
+    "start": 0,
+    "stop": 0,
+    "constructor": 0
+   }
+  },
+  "SensorErrorEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "ServiceWorkerRegistration": {
+   "ctorLength": 0,
+   "methods": {
+    "unregister": 0,
+    "update": 0,
+    "constructor": 0,
+    "getNotifications": 0,
+    "showNotification": 1
+   }
+  },
+  "StorageManager": {
+   "ctorLength": 0,
+   "methods": {
+    "estimate": 0,
+    "persisted": 0,
+    "constructor": 0,
+    "getDirectory": 0,
+    "persist": 0
+   }
+  },
+  "SubtleCrypto": {
+   "ctorLength": 0,
+   "methods": {
+    "decrypt": 3,
+    "deriveBits": 2,
+    "deriveKey": 5,
+    "digest": 2,
+    "encrypt": 3,
+    "exportKey": 2,
+    "generateKey": 3,
+    "importKey": 5,
+    "sign": 3,
+    "unwrapKey": 7,
+    "verify": 4,
+    "wrapKey": 4,
+    "constructor": 0
+   }
+  },
+  "VideoDecoder": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "configure": 1,
+    "decode": 1,
+    "flush": 0,
+    "reset": 0,
+    "constructor": 1
+   }
+  },
+  "VideoEncoder": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "configure": 1,
+    "encode": 1,
+    "flush": 0,
+    "reset": 0,
+    "constructor": 1
+   }
+  },
+  "VirtualKeyboard": {
+   "ctorLength": 0,
+   "methods": {
+    "hide": 0,
+    "show": 0,
+    "constructor": 0
+   }
+  },
+  "WGSLLanguageFeatures": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "WebTransport": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "createBidirectionalStream": 0,
+    "createUnidirectionalStream": 0,
+    "constructor": 1
+   }
+  },
+  "WebTransportBidirectionalStream": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebTransportDatagramDuplexStream": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebTransportError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Worklet": {
+   "ctorLength": 0,
+   "methods": {
+    "addModule": 1,
+    "constructor": 0
+   }
+  },
+  "XRDOMOverlayState": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRWebGLBinding": {
+   "ctorLength": 2,
+   "methods": {
+    "createCubeLayer": 1,
+    "createCylinderLayer": 1,
+    "createEquirectLayer": 1,
+    "createProjectionLayer": 0,
+    "createQuadLayer": 1,
+    "getSubImage": 2,
+    "getViewSubImage": 2,
+    "getCameraImage": 1,
+    "getDepthInformation": 1,
+    "getReflectionCubeMap": 1,
+    "constructor": 2
+   }
+  },
+  "AudioPlaybackStats": {
+   "ctorLength": 0,
+   "methods": {
+    "resetLatency": 0,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "AuthenticatorAssertionResponse": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "AuthenticatorAttestationResponse": {
+   "ctorLength": 0,
+   "methods": {
+    "getAuthenticatorData": 0,
+    "getPublicKey": 0,
+    "getPublicKeyAlgorithm": 0,
+    "getTransports": 0,
+    "constructor": 0
+   }
+  },
+  "AuthenticatorResponse": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PublicKeyCredential": {
+   "ctorLength": 0,
+   "methods": {
+    "getClientExtensionResults": 0,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "Bluetooth": {
+   "ctorLength": 0,
+   "methods": {
+    "getAvailability": 0,
+    "requestDevice": 0,
+    "constructor": 0
+   }
+  },
+  "BluetoothCharacteristicProperties": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "BluetoothDevice": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "BluetoothRemoteGATTCharacteristic": {
+   "ctorLength": 0,
+   "methods": {
+    "getDescriptor": 1,
+    "getDescriptors": 0,
+    "readValue": 0,
+    "startNotifications": 0,
+    "stopNotifications": 0,
+    "writeValue": 1,
+    "writeValueWithResponse": 1,
+    "writeValueWithoutResponse": 1,
+    "constructor": 0
+   }
+  },
+  "BluetoothRemoteGATTDescriptor": {
+   "ctorLength": 0,
+   "methods": {
+    "readValue": 0,
+    "writeValue": 1,
+    "constructor": 0
+   }
+  },
+  "BluetoothRemoteGATTServer": {
+   "ctorLength": 0,
+   "methods": {
+    "connect": 0,
+    "disconnect": 0,
+    "getPrimaryService": 1,
+    "getPrimaryServices": 0,
+    "constructor": 0
+   }
+  },
+  "BluetoothRemoteGATTService": {
+   "ctorLength": 0,
+   "methods": {
+    "getCharacteristic": 1,
+    "getCharacteristics": 0,
+    "constructor": 0
+   }
+  },
+  "CaptureController": {
+   "ctorLength": 0,
+   "methods": {
+    "setFocusBehavior": 1,
+    "decreaseZoomLevel": 0,
+    "forwardWheel": 1,
+    "getSupportedZoomLevels": 0,
+    "increaseZoomLevel": 0,
+    "resetZoomLevel": 0,
+    "constructor": 0
+   }
+  },
+  "CrashReportContext": {
+   "ctorLength": 0,
+   "methods": {
+    "delete": 1,
+    "initialize": 1,
+    "set": 2,
+    "constructor": 0
+   }
+  },
+  "DevicePosture": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DigitalCredential": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "DocumentPictureInPicture": {
+   "ctorLength": 0,
+   "methods": {
+    "requestWindow": 0,
+    "constructor": 0
+   }
+  },
+  "EyeDropper": {
+   "ctorLength": 0,
+   "methods": {
+    "open": 0,
+    "constructor": 0
+   }
+  },
+  "FetchLaterResult": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "FileSystemDirectoryHandle": {
+   "ctorLength": 0,
+   "methods": {
+    "getDirectoryHandle": 1,
+    "getFileHandle": 1,
+    "removeEntry": 1,
+    "resolve": 1,
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "FileSystemFileHandle": {
+   "ctorLength": 0,
+   "methods": {
+    "createWritable": 0,
+    "getFile": 0,
+    "move": 1,
+    "constructor": 0
+   }
+  },
+  "FileSystemHandle": {
+   "ctorLength": 0,
+   "methods": {
+    "isSameEntry": 1,
+    "queryPermission": 0,
+    "remove": 0,
+    "requestPermission": 0,
+    "constructor": 0
+   }
+  },
+  "FileSystemWritableFileStream": {
+   "ctorLength": 0,
+   "methods": {
+    "seek": 1,
+    "truncate": 1,
+    "write": 1,
+    "constructor": 0
+   }
+  },
+  "FileSystemObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 1,
+    "constructor": 1
+   }
+  },
+  "FontData": {
+   "ctorLength": 0,
+   "methods": {
+    "blob": 0,
+    "constructor": 0
+   }
+  },
+  "FragmentDirective": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HID": {
+   "ctorLength": 0,
+   "methods": {
+    "getDevices": 0,
+    "constructor": 0,
+    "requestDevice": 1
+   }
+  },
+  "HIDConnectionEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "HIDDevice": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "forget": 0,
+    "open": 0,
+    "receiveFeatureReport": 1,
+    "sendFeatureReport": 2,
+    "sendReport": 2,
+    "constructor": 0
+   }
+  },
+  "HIDInputReportEvent": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IdentityCredential": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IdentityCredentialError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "IdentityProvider": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "NavigatorLogin": {
+   "ctorLength": 0,
+   "methods": {
+    "setStatus": 1,
+    "constructor": 0
+   }
+  },
+  "LanguageDetector": {
+   "ctorLength": 0,
+   "methods": {
+    "destroy": 0,
+    "detect": 1,
+    "measureInputUsage": 1,
+    "constructor": 0
+   }
+  },
+  "Lock": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "LockManager": {
+   "ctorLength": 0,
+   "methods": {
+    "query": 0,
+    "request": 2,
+    "constructor": 0
+   }
+  },
+  "ServiceWorker": {
+   "ctorLength": 0,
+   "methods": {
+    "postMessage": 1,
+    "constructor": 0
+   }
+  },
+  "ServiceWorkerContainer": {
+   "ctorLength": 0,
+   "methods": {
+    "getRegistration": 0,
+    "getRegistrations": 0,
+    "register": 1,
+    "startMessages": 0,
+    "constructor": 0
+   }
+  },
+  "NotRestoredReasonDetails": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "NotRestoredReasons": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "OTPCredential": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PaymentAddress": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PaymentRequest": {
+   "ctorLength": 1,
+   "methods": {
+    "abort": 0,
+    "canMakePayment": 0,
+    "hasEnrolledInstrument": 0,
+    "show": 0,
+    "constructor": 1
+   }
+  },
+  "PaymentRequestUpdateEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "updateWith": 1,
+    "constructor": 1
+   }
+  },
+  "PaymentResponse": {
+   "ctorLength": 0,
+   "methods": {
+    "complete": 0,
+    "retry": 0,
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PaymentManager": {
+   "ctorLength": 0,
+   "methods": {
+    "enableDelegations": 1,
+    "constructor": 0
+   }
+  },
+  "PaymentMethodChangeEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "Presentation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PresentationAvailability": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PresentationConnection": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "send": 1,
+    "terminate": 0,
+    "constructor": 0
+   }
+  },
+  "PresentationConnectionAvailableEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "PresentationConnectionCloseEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "PresentationConnectionList": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PresentationReceiver": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "PresentationRequest": {
+   "ctorLength": 1,
+   "methods": {
+    "getAvailability": 0,
+    "reconnect": 1,
+    "start": 0,
+    "constructor": 1
+   }
+  },
+  "PressureObserver": {
+   "ctorLength": 1,
+   "methods": {
+    "disconnect": 0,
+    "observe": 1,
+    "takeRecords": 0,
+    "unobserve": 1,
+    "constructor": 1
+   }
+  },
+  "PressureRecord": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "Serial": {
+   "ctorLength": 0,
+   "methods": {
+    "getPorts": 0,
+    "constructor": 0,
+    "requestPort": 0
+   }
+  },
+  "SerialPort": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "forget": 0,
+    "getInfo": 0,
+    "getSignals": 0,
+    "open": 1,
+    "setSignals": 0,
+    "constructor": 0
+   }
+  },
+  "SpeechRecognitionPhrase": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "StorageBucket": {
+   "ctorLength": 0,
+   "methods": {
+    "estimate": 0,
+    "expires": 0,
+    "getDirectory": 0,
+    "persisted": 0,
+    "setExpires": 1,
+    "constructor": 0,
+    "persist": 0
+   }
+  },
+  "StorageBucketManager": {
+   "ctorLength": 0,
+   "methods": {
+    "delete": 1,
+    "keys": 0,
+    "open": 1,
+    "constructor": 0
+   }
+  },
+  "Summarizer": {
+   "ctorLength": 0,
+   "methods": {
+    "destroy": 0,
+    "measureInputUsage": 1,
+    "summarize": 1,
+    "summarizeStreaming": 1,
+    "constructor": 0
+   }
+  },
+  "Translator": {
+   "ctorLength": 0,
+   "methods": {
+    "destroy": 0,
+    "measureInputUsage": 1,
+    "translate": 1,
+    "translateStreaming": 1,
+    "constructor": 0
+   }
+  },
+  "USB": {
+   "ctorLength": 0,
+   "methods": {
+    "getDevices": 0,
+    "constructor": 0,
+    "requestDevice": 1
+   }
+  },
+  "USBAlternateInterface": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "USBConfiguration": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "USBConnectionEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "USBDevice": {
+   "ctorLength": 0,
+   "methods": {
+    "claimInterface": 1,
+    "clearHalt": 2,
+    "close": 0,
+    "controlTransferIn": 2,
+    "controlTransferOut": 1,
+    "forget": 0,
+    "isochronousTransferIn": 2,
+    "isochronousTransferOut": 3,
+    "open": 0,
+    "releaseInterface": 1,
+    "reset": 0,
+    "selectAlternateInterface": 2,
+    "selectConfiguration": 1,
+    "transferIn": 2,
+    "transferOut": 2,
+    "constructor": 0
+   }
+  },
+  "USBEndpoint": {
+   "ctorLength": 3,
+   "methods": {
+    "constructor": 3
+   }
+  },
+  "USBInTransferResult": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "USBInterface": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "USBIsochronousInTransferPacket": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "USBIsochronousInTransferResult": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "USBIsochronousOutTransferPacket": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "USBIsochronousOutTransferResult": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "USBOutTransferResult": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "WakeLock": {
+   "ctorLength": 0,
+   "methods": {
+    "request": 0,
+    "constructor": 0
+   }
+  },
+  "WakeLockSentinel": {
+   "ctorLength": 0,
+   "methods": {
+    "release": 0,
+    "constructor": 0
+   }
+  },
+  "XRAnchor": {
+   "ctorLength": 0,
+   "methods": {
+    "delete": 0,
+    "constructor": 0
+   }
+  },
+  "XRAnchorSet": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "XRBoundedReferenceSpace": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRCPUDepthInformation": {
+   "ctorLength": 0,
+   "methods": {
+    "getDepthInMeters": 2,
+    "constructor": 0
+   }
+  },
+  "XRCamera": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRDepthInformation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRFrame": {
+   "ctorLength": 0,
+   "methods": {
+    "getPose": 2,
+    "getViewerPose": 1,
+    "createAnchor": 2,
+    "fillJointRadii": 2,
+    "fillPoses": 3,
+    "getDepthInformation": 1,
+    "getHitTestResults": 1,
+    "getHitTestResultsForTransientInput": 1,
+    "getJointPose": 2,
+    "getLightEstimate": 1,
+    "constructor": 0
+   }
+  },
+  "XRHand": {
+   "ctorLength": 0,
+   "methods": {
+    "get": 1,
+    "entries": 0,
+    "forEach": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "XRHitTestResult": {
+   "ctorLength": 0,
+   "methods": {
+    "getPose": 1,
+    "createAnchor": 0,
+    "constructor": 0
+   }
+  },
+  "XRHitTestSource": {
+   "ctorLength": 0,
+   "methods": {
+    "cancel": 0,
+    "constructor": 0
+   }
+  },
+  "XRInputSource": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRInputSourceArray": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "constructor": 0
+   }
+  },
+  "XRInputSourceEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "XRInputSourcesChangeEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "XRJointPose": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRJointSpace": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRLightEstimate": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRLightProbe": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRPose": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRRay": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRReferenceSpace": {
+   "ctorLength": 0,
+   "methods": {
+    "getOffsetReferenceSpace": 1,
+    "constructor": 0
+   }
+  },
+  "XRReferenceSpaceEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "XRRenderState": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRRigidTransform": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRSession": {
+   "ctorLength": 0,
+   "methods": {
+    "cancelAnimationFrame": 1,
+    "end": 0,
+    "pauseDepthSensing": 0,
+    "requestAnimationFrame": 1,
+    "requestHitTestSource": 1,
+    "requestHitTestSourceForTransientInput": 1,
+    "requestLightProbe": 0,
+    "requestReferenceSpace": 1,
+    "resumeDepthSensing": 0,
+    "updateRenderState": 0,
+    "constructor": 0,
+    "initiateRoomCapture": 0
+   }
+  },
+  "XRSessionEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "XRSpace": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRSystem": {
+   "ctorLength": 0,
+   "methods": {
+    "isSessionSupported": 1,
+    "requestSession": 1,
+    "constructor": 0
+   }
+  },
+  "XRTransientInputHitTestResult": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRTransientInputHitTestSource": {
+   "ctorLength": 0,
+   "methods": {
+    "cancel": 0,
+    "constructor": 0
+   }
+  },
+  "XRView": {
+   "ctorLength": 0,
+   "methods": {
+    "requestViewportScale": 1,
+    "constructor": 0
+   }
+  },
+  "XRViewerPose": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRViewport": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRWebGLDepthInformation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRWebGLLayer": {
+   "ctorLength": 2,
+   "methods": {
+    "getViewport": 1,
+    "constructor": 2
+   }
+  },
+  "XRCompositionLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "destroy": 0,
+    "constructor": 0
+   }
+  },
+  "XRProjectionLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRCubeLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRCylinderLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XREquirectLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRLayerEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "XRQuadLayer": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRSubImage": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRWebGLSubImage": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRPlane": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "XRPlaneSet": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "forEach": 1,
+    "has": 1,
+    "keys": 0,
+    "values": 0,
+    "constructor": 0
+   }
+  },
+  "XRVisibilityMaskChangeEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "AnimationTrigger": {
+   "ctorLength": 0,
+   "methods": {
+    "addAnimation": 2,
+    "getAnimations": 0,
+    "removeAnimation": 1,
+    "constructor": 0
+   }
+  },
+  "BackgroundFetchManager": {
+   "ctorLength": 0,
+   "methods": {
+    "fetch": 2,
+    "get": 1,
+    "getIds": 0,
+    "constructor": 0
+   }
+  },
+  "BackgroundFetchRecord": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "BackgroundFetchRegistration": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "match": 1,
+    "matchAll": 0,
+    "constructor": 0
+   }
+  },
+  "BluetoothUUID": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSFontFeatureValuesRule": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSFunctionDeclarations": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSFunctionDescriptors": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CSSFunctionRule": {
+   "ctorLength": 0,
+   "methods": {
+    "getParameters": 0,
+    "constructor": 0
+   }
+  },
+  "CSSPseudoElement": {
+   "ctorLength": 0,
+   "methods": {
+    "pseudo": 1,
+    "constructor": 0
+   }
+  },
+  "ChapterInformation": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "CropTarget": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "DocumentPictureInPictureEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "Fence": {
+   "ctorLength": 0,
+   "methods": {
+    "getNestedConfigs": 0,
+    "reportEvent": 1,
+    "setReportEventDataForAutomaticBeacons": 1,
+    "constructor": 0
+   }
+  },
+  "FencedFrameConfig": {
+   "ctorLength": 0,
+   "methods": {
+    "setSharedStorageContext": 1,
+    "constructor": 0
+   }
+  },
+  "HTMLFencedFrameElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLGeolocationElement": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "HTMLUserMediaElement": {
+   "ctorLength": 0,
+   "methods": {
+    "setConstraints": 0,
+    "constructor": 0
+   }
+  },
+  "IntegrityViolationReportBody": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "InteractionContentfulPaint": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceSoftNavigation": {
+   "ctorLength": 0,
+   "methods": {
+    "getLargestInteractionContentfulPaint": 0,
+    "constructor": 0
+   }
+  },
+  "LaunchParams": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "LaunchQueue": {
+   "ctorLength": 0,
+   "methods": {
+    "setConsumer": 1,
+    "constructor": 0
+   }
+  },
+  "MediaMetadata": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "MediaSession": {
+   "ctorLength": 0,
+   "methods": {
+    "setActionHandler": 2,
+    "setCameraActive": 1,
+    "setMicrophoneActive": 1,
+    "setPositionState": 0,
+    "constructor": 0
+   }
+  },
+  "Notification": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "constructor": 1
+   }
+  },
+  "Origin": {
+   "ctorLength": 0,
+   "methods": {
+    "isSameOrigin": 1,
+    "isSameSite": 1,
+    "constructor": 0
+   }
+  },
+  "PageRevealEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "PageSwapEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "PerformanceTimingConfidence": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PeriodicSyncManager": {
+   "ctorLength": 0,
+   "methods": {
+    "getTags": 0,
+    "register": 1,
+    "unregister": 1,
+    "constructor": 0
+   }
+  },
+  "Profiler": {
+   "ctorLength": 1,
+   "methods": {
+    "stop": 0,
+    "constructor": 1
+   }
+  },
+  "PushManager": {
+   "ctorLength": 0,
+   "methods": {
+    "getSubscription": 0,
+    "permissionState": 0,
+    "subscribe": 0,
+    "constructor": 0
+   }
+  },
+  "PushSubscription": {
+   "ctorLength": 0,
+   "methods": {
+    "getKey": 1,
+    "toJSON": 0,
+    "unsubscribe": 0,
+    "constructor": 0
+   }
+  },
+  "PushSubscriptionOptions": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "QuotaExceededError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "RTCDataChannel": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "send": 1,
+    "constructor": 0
+   }
+  },
+  "RTCRtpScriptTransform": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "RemotePlayback": {
+   "ctorLength": 0,
+   "methods": {
+    "cancelWatchAvailability": 0,
+    "prompt": 0,
+    "watchAvailability": 1,
+    "constructor": 0
+   }
+  },
+  "RestrictionTarget": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "Sanitizer": {
+   "ctorLength": 0,
+   "methods": {
+    "allowAttribute": 1,
+    "allowElement": 1,
+    "get": 0,
+    "removeAttribute": 1,
+    "removeElement": 1,
+    "removeUnsafe": 0,
+    "replaceElementWithChildren": 1,
+    "setComments": 1,
+    "setDataAttributes": 1,
+    "allowProcessingInstruction": 1,
+    "removeProcessingInstruction": 1,
+    "constructor": 0
+   }
+  },
+  "SharedStorage": {
+   "ctorLength": 0,
+   "methods": {
+    "append": 2,
+    "clear": 0,
+    "delete": 1,
+    "set": 2,
+    "batchUpdate": 1,
+    "constructor": 0,
+    "createWorklet": 1,
+    "run": 1,
+    "selectURL": 2
+   }
+  },
+  "SharedStorageWorklet": {
+   "ctorLength": 0,
+   "methods": {
+    "addModule": 1,
+    "constructor": 0,
+    "run": 1,
+    "selectURL": 2
+   }
+  },
+  "SharedStorageAppendMethod": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "SharedStorageClearMethod": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SharedStorageDeleteMethod": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "SharedStorageModifierMethod": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SharedStorageSetMethod": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "SharedWorker": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "SnapEvent": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SpeechGrammar": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SpeechGrammarList": {
+   "ctorLength": 0,
+   "methods": {
+    "addFromString": 1,
+    "addFromUri": 1,
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "SpeechRecognition": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "start": 0,
+    "stop": 0,
+    "constructor": 0
+   }
+  },
+  "SpeechRecognitionErrorEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "SpeechRecognitionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "SpeechSynthesis": {
+   "ctorLength": 0,
+   "methods": {
+    "cancel": 0,
+    "getVoices": 0,
+    "pause": 0,
+    "resume": 0,
+    "speak": 1,
+    "preload": 2,
+    "constructor": 0
+   }
+  },
+  "SpeechSynthesisErrorEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "SpeechSynthesisEvent": {
+   "ctorLength": 2,
+   "methods": {
+    "constructor": 2
+   }
+  },
+  "SpeechSynthesisUtterance": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "SpeechSynthesisVoice": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TimelineTrigger": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TimelineTriggerRange": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "TimelineTriggerRangeList": {
+   "ctorLength": 0,
+   "methods": {
+    "entries": 0,
+    "keys": 0,
+    "values": 0,
+    "forEach": 1,
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "Viewport": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebSocketError": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "WebSocketStream": {
+   "ctorLength": 1,
+   "methods": {
+    "close": 0,
+    "constructor": 1
+   }
+  },
+  "XSLTProcessor": {
+   "ctorLength": 0,
+   "methods": {
+    "clearParameters": 0,
+    "getParameter": 2,
+    "importStylesheet": 1,
+    "removeParameter": 2,
+    "reset": 0,
+    "setParameter": 3,
+    "transformToDocument": 1,
+    "transformToFragment": 2,
+    "constructor": 0
+   }
+  },
+  "webkitSpeechGrammar": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "webkitSpeechGrammarList": {
+   "ctorLength": 0,
+   "methods": {
+    "addFromString": 1,
+    "addFromUri": 1,
+    "item": 1,
+    "constructor": 0
+   }
+  },
+  "webkitSpeechRecognition": {
+   "ctorLength": 0,
+   "methods": {
+    "abort": 0,
+    "start": 0,
+    "stop": 0,
+    "constructor": 0
+   }
+  },
+  "webkitSpeechRecognitionError": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "webkitSpeechRecognitionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  }
+ }
+}

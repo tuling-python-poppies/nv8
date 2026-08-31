@@ -1,0 +1,2 @@
+import { registryMethod } from "./custom-element-registry-method.js";import { validateCustomElementName } from "./custom-element-registry-state.js";
+export const whenDefined=registryMethod("whenDefined",1,(state,args)=>{const name=validateCustomElementName(args[0]);if(state.definitions.has(name))return Promise.resolve(state.definitions.get(name));return new Promise(resolve=>{const waiters=state.waiters.get(name)??[];waiters.push(resolve);state.waiters.set(name,waiters);});});

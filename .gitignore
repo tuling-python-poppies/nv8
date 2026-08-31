@@ -1,0 +1,22 @@
+# 依赖
+node_modules/
+
+# 日志与临时产物
+*.log
+npm-debug.log*
+.DS_Store
+*.tmp
+*.checkpoint.json
+
+# 采集输出（NDJSON 结果落地默认写在这里，不入库）
+out/
+output/
+*.ndjson
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+
+# 指纹采集中间文件（WSL ↔ Windows 交换目录的本地副本）
+/tmp-fingerprint/

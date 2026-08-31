@@ -1,0 +1,115 @@
+{
+  "collectedAt": "2026-08-24T08:46:46.064Z",
+  "navigator": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+    "appCodeName": "Mozilla",
+    "appName": "Netscape",
+    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+    "platform": "Win32",
+    "product": "Gecko",
+    "productSub": "20030107",
+    "vendor": "Google Inc.",
+    "vendorSub": "",
+    "language": "zh-CN",
+    "languages": [
+      "zh-CN",
+      "en",
+      "en-GB",
+      "en-US"
+    ],
+    "hardwareConcurrency": 28,
+    "deviceMemory": 16,
+    "maxTouchPoints": 0,
+    "cookieEnabled": true,
+    "doNotTrack": null,
+    "onLine": true,
+    "pdfViewerEnabled": true,
+    "webdriver": false,
+    "userAgentHeadless": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+  },
+  "userAgentData": {
+    "brands": [
+      {
+        "brand": "Not=A?Brand",
+        "version": "99"
+      },
+      {
+        "brand": "Microsoft Edge",
+        "version": "151"
+      },
+      {
+        "brand": "Chromium",
+        "version": "151"
+      }
+    ],
+    "mobile": false,
+    "platform": "Windows",
+    "highEntropy": {
+      "architecture": "x86",
+      "bitness": "64",
+      "brands": [
+        {
+          "brand": "Not=A?Brand",
+          "version": "99"
+        },
+        {
+          "brand": "Microsoft Edge",
+          "version": "151"
+        },
+        {
+          "brand": "Chromium",
+          "version": "151"
+        }
+      ],
+      "formFactors": [
+        "Desktop"
+      ],
+      "fullVersionList": [
+        {
+          "brand": "Not=A?Brand",
+          "version": "99.0.0.0"
+        },
+        {
+          "brand": "Microsoft Edge",
+          "version": "151.0.4129.101"
+        },
+        {
+          "brand": "Chromium",
+          "version": "151.0.7922.170"
+        }
+      ],
+      "mobile": false,
+      "model": "",
+      "platform": "Windows",
+      "platformVersion": "19.0.0",
+      "uaFullVersion": "151.0.4129.101",
+      "wow64": false
+    }
+  },
+  "screen": {
+    "width": 800,
+    "height": 600,
+    "availWidth": 800,
+    "availHeight": 600,
+    "colorDepth": 24,
+    "pixelDepth": 24,
+    "devicePixelRatio": 1,
+    "availLeft": 0,
+    "availTop": 0,
+    "isExtended": false,
+    "orientationType": "landscape-primary"
+  },
+  "webgl": {
+    "vendor": "WebKit",
+    "renderer": "WebKit WebGL",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+    "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+    "unmaskedVendor": "Google Inc. (Microsoft)",
+    "unmaskedRenderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "surface": {
+    "globalCount": 1236,
+    "hasIterator": "function"
+  },
+  "edgePath": "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+}

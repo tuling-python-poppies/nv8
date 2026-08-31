@@ -1,0 +1,371 @@
+/**
+ * Nv8 主入口
+ * 
+ * 提供简化的 API 用于创建和管理沙箱
+ */
+
+import { Buffer } from 'node:buffer';
+import { createSandbox } from './core/sandbox.js';
+import { createPluginRegistry } from './core/plugin-registry.js';
+import { createStateRegistry } from './core/state-registry.js';
+import { createLogger } from './utils/logger.js';
+import { defaultPreset } from './presets/index.js';
+import { loadEvidenceBundle } from './evidence/loader.js';
+import { createEvidenceSource } from './evidence/evidence-source.js';
+import { normalizeTrustedScriptPolicy } from './core/evidence-contract.js';
+import { detectHostCapabilities } from './core/host-capabilities.js';
+import {
+  assertPluginLockPlan,
+  createPluginLockPlan,
+} from './core/plugin-lock-plan.js';
+import { createProfile } from './profiles/index.js';
+import * as allPlugins from './plugins/index.js';
+
+/**
+ * 创建 Nv8 实例
+ * 
+ * @param {Nv8Options} options - 配置选项
+ * @returns {Promise<Nv8Instance>}
+ */
+export async function createNv8(options = {}) {
+  if (!['legacy', 'plugin'].includes(options.runtimeMode ?? 'legacy')) {
+    throw new TypeError('runtimeMode must be legacy or plugin');
+  }
+  const {
+    appId = 'default-app',
+    plugins: configuredPlugins = null,
+    profile: profileInput = {},
+    profileId = null,
+    evidence: evidenceOption = null,
+    trace = false,
+    logger = createLogger(),
+    runtime = {},
+    runtimeMode = 'legacy',
+    pluginLockPlan = null,
+    limits = {},
+  } = options;
+  const hasProfileInput = profileId !== null
+    || typeof profileInput === 'string'
+    || (profileInput !== null && typeof profileInput === 'object'
+      && Object.keys(profileInput).length > 0);
+  const selectedProfile = hasProfileInput
+    ? createProfile(profileId || profileInput)
+    : { id: 'default' };
+  
+  // Resolve plugin references to actual plugin objects
+  let plugins = configuredPlugins || selectedProfile.plugins || defaultPreset;
+  if (selectedProfile.plugins && !configuredPlugins) {
+    // Profile contains plugin references {id, range}, need to resolve to actual plugins
+    const pluginMap = new Map();
+    for (const [exportName, plugin] of Object.entries(allPlugins)) {
+      if (plugin && typeof plugin === 'object' && plugin.id) {
+        pluginMap.set(plugin.id, plugin);
+      }
+    }
+    plugins = selectedProfile.plugins.map(ref => {
+      const plugin = pluginMap.get(ref.id || ref);
+      if (!plugin) {
+        throw new Error(`Plugin not found: ${ref.id || ref}`);
+      }
+      return plugin;
+    });
+  }
+  const profile = selectedProfile;
+  const evidence = normalizeCoreEvidence(evidenceOption);
+  // 具体 Bundle 立即包装为抽象 EvidenceSource，往下只传递契约对象
+  const evidenceSource = evidence === null
+    ? null
+    : createEvidenceSource(await loadEvidenceBundle(evidence.bundlePath, {
+      trustedScriptPolicy: evidence.trustedScriptPolicy,
+    }));
+  const configuredReplay = normalizeCoreReplay(options.replay);
+  const replay = configuredReplay.length > 0 || evidenceSource === null
+    ? configuredReplay
+    : await loadCoreReplay(evidenceSource);
+  const effectiveProfile = {
+    id: profile.id || 'default',
+    ...profile,
+    ...(typeof profileInput === 'object' ? profileInput : {}),
+  };
+  if (evidenceSource !== null && evidence.usePage) {
+    const [page] = await evidenceSource.listPages();
+    if (page) effectiveProfile.pageHtml = await evidenceSource.readText(page.id);
+  }
+  
+  // 创建插件注册表
+  const pluginRegistry = createPluginRegistry();
+  
+  // 注册所有插件
+  for (const plugin of plugins) {
+    pluginRegistry.register(plugin);
+  }
+  
+  // 解析插件依赖
+  const resolvedPlugins = pluginRegistry.resolve();
+  const hostCapabilities = detectHostCapabilities();
+  const lockPlan = createPluginLockPlan({
+    plugins: resolvedPlugins,
+    profile: effectiveProfile,
+    hostCapabilities,
+    runtimeMode,
+  });
+  assertPluginLockPlan(lockPlan, pluginLockPlan);
+  
+  logger.info(`[Nv8] Creating instance with ${resolvedPlugins.length} plugins`);
+  
+  // 创建状态注册表
+  const stateRegistry = createStateRegistry();
+  
+  // 创建沙箱
+  const sandbox = await createSandbox({
+    appId,
+    profile: effectiveProfile,
+    limits: normalizeCoreLimits(limits),
+    plugins: resolvedPlugins,
+    stateRegistry,
+    trace,
+    logger,
+    replay,
+    evidence,
+    evidenceSource,
+    runtime,
+  });
+  
+  logger.info(`[Nv8] Instance created: ${sandbox.id}`);
+  
+  return {
+    sandbox,
+    lockPlan,
+    hostCapabilities,
+    runtimeMode,
+    
+    /**
+     * 创建 Realm 并返回全局对象
+     * 
+     * @param {RealmOptions} options
+     * @returns {Promise<any>}
+     */
+    async createRealm(options = {}) {
+      const realm = await sandbox.createRealm(options);
+      return realm.global;
+    },
+    
+    /**
+     * 快速执行代码
+     * 
+     * @param {string} code - 要执行的代码
+     * @param {RealmOptions} options - Realm 配置
+     * @returns {Promise<any>}
+     */
+    async eval(code, options = {}) {
+      const realm = await sandbox.createRealm(options);
+      try {
+        return realm.evaluate(code);
+      } finally {
+        await sandbox.destroyRealm(realm.id);
+      }
+    },
+    
+    /**
+     * 销毁实例
+     */
+    async destroy() {
+      await sandbox.destroy();
+    },
+    
+    /**
+     * 调试信息
+     */
+    inspect() {
+      return sandbox.inspect();
+    },
+  };
+}
+
+function normalizeCoreLimits(input) {
+  if (input === null || typeof input !== 'object' || Array.isArray(input)) {
+    throw new TypeError('limits must be an object');
+  }
+  const integer = (value, fallback, name, minimum) => {
+    const selected = value ?? fallback;
+    if (!Number.isSafeInteger(selected) || selected < minimum) {
+      throw new RangeError(`${name} must be an integer >= ${minimum}`);
+    }
+    return selected;
+  };
+  return Object.freeze({
+    timeoutMs: integer(input.timeoutMs, 5_000, 'limits.timeoutMs', 1),
+    maxRealms: integer(input.maxRealms, 64, 'limits.maxRealms', 1),
+    maxLifecycleEntries: integer(
+      input.maxLifecycleEntries,
+      10_000,
+      'limits.maxLifecycleEntries',
+      1,
+    ),
+  });
+}
+
+function normalizeCoreReplay(input) {
+  if (input === undefined || input === null) return [];
+  if (!Array.isArray(input)) throw new TypeError('replay must be an array');
+  return input.map((entry, index) => {
+    if (entry === null || typeof entry !== 'object') {
+      throw new TypeError(`replay[${index}] must be an object`);
+    }
+    if (typeof entry.url !== 'string' || entry.url.length === 0) {
+      throw new TypeError(`replay[${index}].url must be a non-empty string`);
+    }
+    return Object.freeze({
+      method: `${entry.method ?? 'GET'}`.toUpperCase(),
+      url: entry.url,
+      status: Number(entry.status ?? 200),
+      statusText: `${entry.statusText ?? ''}`,
+      headers: Object.freeze({ ...(entry.headers || {}) }),
+      requestHeaders: entry.requestHeaders || null,
+      requestBody: entry.requestBody ?? null,
+      requestBodySha256: entry.requestBodySha256 ?? null,
+      repeat: entry.repeat ?? 'once',
+      sequence: entry.sequence,
+      matching: entry.matching ?? null,
+      body: `${entry.body ?? ''}`,
+      redirected: Boolean(entry.redirected),
+      type: `${entry.type ?? 'basic'}`,
+    });
+  });
+}
+
+async function loadCoreReplay(source) {
+  const fixture = await source.getNetworkReplayFixture();
+  if (!fixture || !Array.isArray(fixture.requests)) {
+    throw new TypeError('Evidence replay fixture must contain a requests array');
+  }
+  const entries = [];
+  for (const [index, record] of fixture.requests.entries()) {
+    const request = record?.request;
+    const response = record?.response;
+    if (!request || !response || typeof request.url !== 'string') {
+      throw new TypeError(`Invalid Evidence replay request at index ${index}`);
+    }
+    let body = response.body ?? '';
+    if (response.bodyFile !== undefined) {
+      body = await source.readText(response.bodyFile);
+    } else if (response.bodyBase64 !== undefined) {
+      body = Buffer.from(`${response.bodyBase64}`, 'base64').toString('utf8');
+    } else if (typeof body !== 'string') {
+      body = JSON.stringify(body);
+    }
+    entries.push({
+      method: `${request.method ?? 'GET'}`.toUpperCase(),
+      url: request.url,
+      status: Number(response.status ?? 200),
+      statusText: `${response.statusText ?? ''}`,
+      headers: response.headers || {},
+      requestHeaders: request.headers || null,
+      requestBody: request.body ?? null,
+      requestBodySha256: request.bodySha256 ?? null,
+      repeat: record.repeat ?? 'once',
+      sequence: record.sequence,
+      matching: fixture.matching ?? record.matching ?? null,
+      body,
+      redirected: Boolean(response.redirected),
+      type: `${response.type ?? 'basic'}`,
+    });
+  }
+  return normalizeCoreReplay(entries);
+}
+
+function normalizeCoreEvidence(input) {
+  if (input === undefined || input === null) return null;
+  const value = typeof input === 'string' ? { bundlePath: input } : input;
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new TypeError('evidence must be a path or object');
+  }
+  if (typeof value.bundlePath !== 'string' || value.bundlePath.length === 0) {
+    throw new TypeError('evidence.bundlePath must be a non-empty string');
+  }
+  // 策略校验复用契约层，包含旧名别名兼容
+  const { policy: trustedScriptPolicy } = normalizeTrustedScriptPolicy({
+    trustedScriptPolicy: value.trustedScriptPolicy,
+    scriptAllowlist: value.scriptAllowlist,
+  });
+  if (value.scriptAllowlist !== undefined && !Array.isArray(value.scriptAllowlist)) {
+    throw new TypeError('evidence.scriptAllowlist must be an array');
+  }
+  return Object.freeze({
+    bundlePath: value.bundlePath,
+    trustedScriptPolicy,
+    scriptAllowlist: Object.freeze([...(value.scriptAllowlist || [])]),
+    usePage: value.usePage ?? true,
+    executeScripts: value.executeScripts ?? true,
+  });
+}
+
+/**
+ * 快速执行代码（便捷方法）
+ * 
+ * @param {string} code - 要执行的代码
+ * @param {Nv8Options} options - 配置选项
+ * @returns {Promise<any>}
+ */
+export async function nv8Eval(code, options = {}) {
+  const instance = await createNv8(options);
+  try {
+    return await instance.eval(code);
+  } finally {
+    await instance.destroy();
+  }
+}
+
+/**
+ * 导出预设配置
+ */
+export {
+  minimalPreset,
+  basicPreset,
+  domPreset,
+  networkPreset,
+  fullPreset,
+  defaultPreset,
+} from './presets/index.js';
+export {
+  createProfile,
+  generateProfileLockPlan,
+  validateLockPlan,
+  profiles,
+} from './profiles/index.js';
+
+/**
+ * 导出所有插件（供高级用户自定义）
+ */
+export * from './plugins/index.js';
+
+/**
+ * Protocol 层：把运行时工件转成请求变换。不拥有网络出口。
+ */
+export * as protocol from './request-protocol/index.js';
+
+/**
+ * Collector 层：唯一的真实网络出口，受 allowlist 和凭据策略约束。
+ */
+export * as collector from './collector/index.js';
+
+/**
+ * TypeScript 类型定义
+ * 
+ * @typedef {Object} Nv8Options
+ * @property {string} [appId] - App ID
+ * @property {Plugin[]} [plugins] - 插件列表（默认使用 defaultPreset）
+ * @property {Object} [profile] - Profile 配置
+ * @property {boolean} [trace] - 是否启用追踪日志
+ * @property {Logger} [logger] - 自定义日志工具
+ * 
+ * @typedef {Object} RealmOptions
+ * @property {'root'|'worker'|'iframe'|'worklet'} [type] - Realm 类型
+ * 
+ * @typedef {Object} Nv8Instance
+ * @property {Sandbox} sandbox - 沙箱实例
+ * @property {function(RealmOptions): Promise<any>} createRealm - 创建 Realm
+ * @property {function(string, RealmOptions): Promise<any>} eval - 执行代码
+ * @property {function(): Promise<void>} destroy - 销毁实例
+ * @property {function(): Object} inspect - 调试信息
+ */

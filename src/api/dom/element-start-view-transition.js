@@ -1,0 +1,2 @@
+import { createViewTransition } from "../view-transition/view-transition-state.js";import { elementExtendedMethod } from "./element-extended-method.js";import { requireElement } from "./element-state.js";
+export const startViewTransition=elementExtendedMethod("startViewTransition",0,(element,args)=>{const transition=createViewTransition(element,args[0]);requireElement(element).activeViewTransition=transition;return transition;});

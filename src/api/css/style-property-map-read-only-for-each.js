@@ -1,0 +1,1 @@
+import { styleMapMethod } from "./style-property-map-read-only-method.js";export const forEach=styleMapMethod("forEach",1,(map,args,self)=>{if(typeof args[0]!=="function")throw new TypeError("forEach requires a function");for(const[key,values]of map)args[0].call(args[1],[...values],key,self);});

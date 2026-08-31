@@ -1,0 +1,204 @@
+# Node 兼容性
+
+## 支持矩阵
+
+| Node | 等级 | 说明 |
+|------|------|------|
+| 24.x | `supported` | 主要目标，开发基准 |
+| 22.x | `supported` | LTS |
+| 20.x | `supported` | LTS；`ArrayBuffer.transfer` 回退为复制 |
+| 18.18+ | `supported` | 最低版本；缺 Iterator helpers 和 `ArrayBuffer.transfer` |
+| < 18.18 | 不支持 | 启动即拒绝 |
+
+四个版本均已在完整测试套件（283 项）上验证通过。本地复现：
+
+```
+npm run test:matrix          # 自动发现 nvm 已安装版本
+npm run test:matrix 18.20.8  # 指定版本
+```
+
+`engines` 声明 `>=18.18.0`；`.node-version` 里的 `24.11.0` 是开发基准，
+不代表唯一支持版本。
+
+等级语义：
+
+- `supported` — CI 阻断式覆盖，失败视为 bug
+- `best-effort` — CI 允许失败，问题按兼容性改进处理
+
+矩阵定义在 `src/core/host-capabilities.js` 的 `NODE_SUPPORT_MATRIX`，
+CI workflow 的 tier 标注与它一一对应。
+
+## 能力探测：三态而非布尔
+
+原先能力探测只返回布尔值，这在一种情况下会误导：**API 存在但不可用**。
+最典型的是 `vm.SourceTextModule` —— 不带 `--experimental-vm-modules` 时
+构造会抛错。若只报 `true`，调用方会以为可用，直到运行期才炸。
+
+因此改为三态：
+
+| 状态 | 含义 |
+|------|------|
+| `available` | 存在且冒烟测试通过 |
+| `broken` | 存在但行为不符预期，必须给出 `reason` |
+| `unavailable` | 不存在 |
+
+```js
+import { detectHostCapabilities, hostSupports } from 'nv8/core';
+
+const host = detectHostCapabilities();
+host.capabilities['array-buffer.transfer'];
+// { id, status: 'unavailable', reason: 'not present in this runtime' }
+
+hostSupports(host, 'array-buffer.transfer');  // broken 也算 false
+```
+
+探针做真实冒烟测试，不只查 `typeof`。例如 `array-buffer.transfer` 会
+实际 transfer 一次并确认源 buffer 已分离——存在但不真正分离的实现会被
+判定为 `broken`。
+
+`features` 布尔视图保留，兼容既有调用方和 lock plan 摘要。
+
+### 启动前置检查
+
+```js
+import { preflightHostCheck } from 'nv8/core';
+
+preflightHostCheck({ warn: (msg) => logger.warn(msg) });
+```
+
+低于最低版本抛 `HOST_REQUIREMENT_UNAVAILABLE`；`best-effort` 等级只警告
+并列出降级能力。
+
+### 查看当前宿主
+
+```
+npm run capabilities
+```
+
+CI 在跑测试前先执行它，这样即便测试失败，日志里也能看到该版本缺什么。
+
+## vm module 链接策略
+
+各版本 API 不一致：
+
+| API | 18 | 20 | 22 | 24 |
+|-----|----|----|----|----|
+| `link()`（异步） | ✓ | ✓ | ✓ | ✓ |
+| `dependencySpecifiers` | ✓ | ✓ | ✓ | ✓ |
+| `moduleRequests` | – | – | – | ✓ |
+| `linkRequests()` | – | – | – | ✓ |
+| `instantiate()` | – | – | – | ✓ |
+
+Node 24 的 `linkRequests()` + `instantiate()` 是**同步**的，这让受信任的
+内部模块可以同步导入——大量 `install-*` 聚合器依赖这一点。
+
+Node 18–22 只有异步 `link()`，同步导入无法实现。策略层把差异显式暴露：
+
+```js
+import { detectLinkStrategy } from './realm/module-link-strategy.js';
+
+detectLinkStrategy();
+// Node 24: { strategy: 'requests-sync', supportsSyncLink: true, reason: null }
+// Node 20: { strategy: 'legacy-async', supportsSyncLink: false, reason: '...use importUrlAsync()' }
+```
+
+### 两条导入路径
+
+```js
+const loader = new RealmModuleLoader(context);
+
+loader.importUrl(url);          // 仅 Node 24+；否则抛 ERR_NV8_MODULE_SYNC_LINK_UNAVAILABLE
+await loader.importUrlAsync(url); // 所有版本可用
+```
+
+同步路径在缺能力时**抛错**，而不是返回半初始化模块。错误里带
+`suggestions` 指向异步路径。
+
+异步路径的实现要点：链接与求值必须分离。`link()` 的回调要求返回**尚未
+求值**的模块，若递归里提前 evaluate 了子模块，父模块链接会失败。因此
+`#linkAsync()` 只链接，求值由根模块的 `evaluate()` 沿图完成。
+
+### 测试手法
+
+`tests/node-compat-test.js` 临时从 `SourceTextModule.prototype` 删除
+`moduleRequests` / `linkRequests` / `instantiate`，模拟 Node 18–22，
+验证降级路径真的可用——而不是仅存在于文档里。测试结束后恢复原型。
+
+## 宿主 API 回退
+
+`src/compat/` 为内部实现补齐新版 API。原则：
+
+- 优先原生实现，回退只在缺失时生效
+- 保持可观察语义一致；做不到的显式抛错，不静默降级
+- 只覆盖 NV8 实际用到的调用形态，不做完整 polyfill
+
+| 函数 | 原生要求 | 回退行为 |
+|------|----------|----------|
+| `transferArrayBuffer()` | Node 21+ | 复制数据并如实上报 `detached: false` |
+| `isArrayBufferDetached()` | Node 21+ | 用 `byteLength === 0` 近似 |
+| `structuredCloneCompat()` | Node 17+ | JSON 往返；遇 Map/Set/Date/二进制/循环引用抛错 |
+| `asyncDisposeSymbol()` | Node 20+ | `Symbol.for('nodejs.asyncDispose')` |
+| `abortSignalTimeout()` | Node 17.3+ | `AbortController` + `setTimeout`（unref） |
+
+`transferArrayBuffer` 的回退值得说明：ArrayBuffer 分离是 V8 层能力，
+用户态无法模拟。所以回退复制数据并明确返回 `detached: false`，由调用方
+决定能否接受，而不是假装分离成功。
+
+`structuredCloneCompat` 的 JSON 回退无法表示 Map、Set、Date、RegExp、
+TypedArray 和循环引用。遇到这些输入抛 `ERR_NV8_STRUCTURED_CLONE_UNAVAILABLE`，
+而不是静默产出错误结果。
+
+注意：这些回退作用于**宿主**代码。沙箱内提供给目标脚本的 API 由插件负责。
+
+## CI 矩阵
+
+`.github/workflows/ci.yml` 两个 job：
+
+- `test` — Node 24 / 22 / 20 / 18.18，`best-effort` 版本设
+  `continue-on-error`
+- `backends` — `child-process` 与 `worker-thread` 必须行为一致
+
+`fail-fast: false`，一个版本失败不影响其他版本继续跑。
+
+## 同步回调与预加载
+
+有些调用点无法改成异步：ServiceWorker `controllerchange` 广播、
+`postMessage` 派送、页面生命周期钩子——调用方依赖它们的同步语义。
+
+解法是在 Realm 创建阶段（异步上下文）先把这些模块求值完，同步回调只查缓存：
+
+```js
+// realm-factory.js 创建 Realm 时
+await moduleLoader.preload(SYNC_CALLBACK_MODULE_URLS);
+
+// 同步回调内
+const module = realm.moduleLoader.importUrlSyncCached(SERVICE_WORKER_RUNTIME_URL);
+```
+
+`importUrlSyncCached()` 在支持同步链接的宿主上会回退到 `importUrl()`；
+不支持且未预加载时抛 `ERR_NV8_MODULE_NOT_PRELOADED`，并提示调用 `preload()`。
+
+## 缺失宿主内建的处理
+
+`Iterator` 全局需要 Node 22+。Node 18/20 上 `install-edge-static-functions.js`
+原先会因 `Object.defineProperty(undefined, 'concat', ...)` 直接让整个
+bootstrap 失败。
+
+现在 `defineStatic` / `defineStaticGetter` 对缺失的 owner 静默跳过——
+缺失的宿主能力由 `host-capabilities` 统一上报，不应让 bootstrap 崩溃。
+
+## 已知限制
+
+- `--experimental-vm-modules` 仍是必需 flag（所有版本）。这是 Node 的
+  实验性状态决定的，不是 NV8 可以绕开的。
+- Node 18/20 上 `Iterator` helpers 和真正的 `ArrayBuffer` 分离不可用，
+  相关 surface 与 Node 22+ 存在差异。
+
+## 测试
+
+```
+tests/node-compat-test.js   32 项
+```
+
+覆盖三态探测、版本矩阵边界、前置检查、两条链接策略、降级 API 下的
+loader 行为、宿主回退。

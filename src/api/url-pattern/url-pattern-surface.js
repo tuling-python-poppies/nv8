@@ -1,0 +1,59 @@
+// Generated from captured Edge 150 evidence.
+export const URL_PATTERN_SURFACE = Object.freeze({
+  "constructorParent": "",
+  "prototypeParent": "Object",
+  "members": [
+    [
+      "accessor",
+      "protocol"
+    ],
+    [
+      "accessor",
+      "username"
+    ],
+    [
+      "accessor",
+      "password"
+    ],
+    [
+      "accessor",
+      "hostname"
+    ],
+    [
+      "accessor",
+      "port"
+    ],
+    [
+      "accessor",
+      "pathname"
+    ],
+    [
+      "accessor",
+      "search"
+    ],
+    [
+      "accessor",
+      "hash"
+    ],
+    [
+      "accessor",
+      "hasRegExpGroups"
+    ],
+    [
+      "method",
+      "exec",
+      0
+    ],
+    [
+      "method",
+      "test",
+      0
+    ],
+    [
+      "constructor"
+    ],
+    [
+      "tag"
+    ]
+  ]
+});

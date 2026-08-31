@@ -1,0 +1,1 @@
+import { requireDocument } from "./document-record.js";import { registryMethod } from "./custom-element-registry-method.js";export const initialize=registryMethod("initialize",1,(state,args)=>{if(args[0]!==undefined)requireDocument(args[0]);});

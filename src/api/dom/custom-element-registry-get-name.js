@@ -1,0 +1,1 @@
+import { registryMethod } from "./custom-element-registry-method.js";export const getName=registryMethod("getName",1,(state,args)=>{for(const [name,constructor]of state.definitions){if(constructor===args[0])return name;}return null;});

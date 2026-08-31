@@ -1,0 +1,113 @@
+// Generated from captured Edge 150 evidence.
+export const LOCAL_FONTS_SURFACES = Object.freeze({
+  "FontFace": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "family"
+      ],
+      [
+        "accessor",
+        "style"
+      ],
+      [
+        "accessor",
+        "weight"
+      ],
+      [
+        "accessor",
+        "stretch"
+      ],
+      [
+        "accessor",
+        "unicodeRange"
+      ],
+      [
+        "accessor",
+        "variant"
+      ],
+      [
+        "accessor",
+        "featureSettings"
+      ],
+      [
+        "accessor",
+        "display"
+      ],
+      [
+        "accessor",
+        "ascentOverride"
+      ],
+      [
+        "accessor",
+        "descentOverride"
+      ],
+      [
+        "accessor",
+        "lineGapOverride"
+      ],
+      [
+        "accessor",
+        "sizeAdjust"
+      ],
+      [
+        "accessor",
+        "status"
+      ],
+      [
+        "accessor",
+        "loaded"
+      ],
+      [
+        "method",
+        "load",
+        0
+      ],
+      [
+        "accessor",
+        "variationSettings"
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  },
+  "FontData": {
+    "constructorParent": "",
+    "prototypeParent": "Object",
+    "members": [
+      [
+        "accessor",
+        "postscriptName"
+      ],
+      [
+        "accessor",
+        "fullName"
+      ],
+      [
+        "accessor",
+        "family"
+      ],
+      [
+        "accessor",
+        "style"
+      ],
+      [
+        "method",
+        "blob",
+        0
+      ],
+      [
+        "constructor"
+      ],
+      [
+        "tag"
+      ]
+    ]
+  }
+});
