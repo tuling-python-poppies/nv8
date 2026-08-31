@@ -84,6 +84,19 @@ for (const tag of tags) {
   out[tag] = entry;
   host.removeChild(el);
 }
+// html 与 body 无法用"创建一个元素塞进 body"的方式测——不能把 <body> 嵌进 body。
+// 它们必须直接测页面上已有的那两个节点。漏掉的后果很直观：
+// getComputedStyle(document.body).display 会退回 <nv8unknown> 基线的 inline，
+// 而真实浏览器是 block。
+for (const [name, node] of [['html', document.documentElement], ['body', document.body]]) {
+  const cs = getComputedStyle(node);
+  const entry = {};
+  for (const prop of allProps) {
+    const value = cs[prop];
+    if (value !== undefined && value !== '') entry[prop] = value;
+  }
+  out[name] = entry;
+}
 document.getElementById('out').textContent = JSON.stringify({ properties: allProps, tags: out });
 </` + `script></body></html>`;
 

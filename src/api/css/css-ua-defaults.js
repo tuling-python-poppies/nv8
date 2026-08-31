@@ -1,36 +1,40 @@
 /**
- * 真实 Edge 151 的 UA 默认样式表。
+ * 真实 Edge 的 UA 默认样式表。
  *
- * 由 `scripts/collect-edge-ua-defaults.mjs` 采集 94 个标签 ×
- * 736 个属性，fixture 在 `fixtures/fingerprint/edge-ua-defaults.json`。
+ * **本文件由 `scripts/build-css-ua-defaults.mjs` 生成，请勿手改。**
+ * 数据来自 `scripts/collect-edge-ua-defaults.mjs` 采集的
+ * `fixtures/fingerprint/edge-ua-defaults.json`
+ * （96 个标签 × 693 个属性）。
+ *
+ * ## 基线取 <nv8unknown> 而不是众数
+ *
+ * 用一个未知标签的计算值当初始值基线。众数选择会把 `unicodeBidi` 标错，
+ * 并把覆盖项从 82 个标签虚增到 93 个——因为「最常见的值」不等于「初始值」。
+ *
+ * ## html 与 body 必须直接测页面节点
+ *
+ * 其余标签靠「创建元素塞进 body」测量，但 `<body>` 不能嵌进 body。
+ * 早期版本因此漏掉了这两个标签，`getComputedStyle(document.body).display`
+ * 退回基线值 `inline`，而真实浏览器是 `block`。
  *
  * ## 采集时锁定 locale
  *
- * 字体族是 locale 相关的：实测中文环境给 `"Noto Sans SC"`、en-US 给
- * `"Times New Roman"`。采集不加 `--lang=en-US` 就会把采集机器的系统语言
- * 烙进默认样式表——那是最典型的机器指纹泄漏。NV8 的 profile 声明
- * languages 为 en-US，两边必须一致。
+ * 字体族与 locale 相关：中文环境给 `"Noto Sans SC"`、en-US 给
+ * `"Times New Roman"`。不加 `--lang=en-US` 就会把采集机器的系统语言烙进
+ * 默认样式表，而 profile 声明的 languages 是 en-US——一个比"缺值"更糟的
+ * 内部矛盾。
  *
- * ## 排除哪些属性靠差分实测，不靠手写名单
+ * ## 布局相关属性靠两轴差分实测排除
  *
- * 10 个与布局相关的属性被排除。判定方式是两组差分：
+ * 10 个属性被排除。判定用两组差分，缺一不可：
  *
- * 1. 同页面在 800×600 与 1400×900 下采集 → 7 项不同（与视口相关）
- * 2. 同视口下空 div 与填充内容的 div 对比 → 7 项不同（与内容排版相关）
+ * 1. 同页面 800×600 与 1400×900 → 7 项不同（视口相关）
+ * 2. 同视口下空 div 与填充内容的 div → 7 项不同（内容排版相关）
  *
- * 只做第 1 组会漏掉 `height` / `blockSize`——空 div 在两种视口下都是 0px。
- *
- * ## 基线取「未知标签」而不是众数
- *
- * 初始值用 `<nv8unknown>` 这种没有任何 UA 规则命中的元素测得。按众数取基线
- * 会出错：`unicodeBidi` 的众数是 `normal`，但真正的初始值是 `normal` 而
- * `div` 等块级元素被 UA 规则改成 `isolate`。
- *
- * 结构是「初始值 + 按标签差异」：全量列出会写死 94×736 =
- * 69184 条，实际差异只有 1069 条。
+ * 只做视口那一轴会漏掉 `height`/`blockSize`——空 div 在两种视口下都是 0px。
  */
 
-/** 没有 UA 规则命中时的初始/继承值（693 项）。 */
+/** 初始值基线（未知标签的计算值）。 */
 export const CSS_INITIAL_VALUES = Object.freeze({
   "accentColor": "auto",
   "alignContent": "normal",
@@ -727,7 +731,7 @@ export const CSS_INITIAL_VALUES = Object.freeze({
   "zoom": "1",
 });
 
-/** 按标签相对初始值的差异。 */
+/** 各标签相对基线的差集。 */
 export const CSS_TAG_OVERRIDES = Object.freeze({
   "address": Object.freeze({
     "display": "block",
@@ -774,6 +778,24 @@ export const CSS_TAG_OVERRIDES = Object.freeze({
     "webkitMarginBefore": "16px",
     "webkitMarginEnd": "40px",
     "webkitMarginStart": "40px",
+  }),
+  "body": Object.freeze({
+    "display": "block",
+    "margin": "8px",
+    "marginBlock": "8px",
+    "marginBlockEnd": "8px",
+    "marginBlockStart": "8px",
+    "marginBottom": "8px",
+    "marginInline": "8px",
+    "marginInlineEnd": "8px",
+    "marginInlineStart": "8px",
+    "marginLeft": "8px",
+    "marginRight": "8px",
+    "marginTop": "8px",
+    "webkitMarginAfter": "8px",
+    "webkitMarginBefore": "8px",
+    "webkitMarginEnd": "8px",
+    "webkitMarginStart": "8px",
   }),
   "button": Object.freeze({
     "appearance": "auto",
@@ -1319,6 +1341,10 @@ export const CSS_TAG_OVERRIDES = Object.freeze({
     "webkitTextFillColor": "rgb(128, 128, 128)",
     "webkitTextStroke": "0px rgb(128, 128, 128)",
     "webkitTextStrokeColor": "rgb(128, 128, 128)",
+  }),
+  "html": Object.freeze({
+    "display": "block",
+    "viewTransitionName": "root",
   }),
   "i": Object.freeze({
     "font": "italic 16px \"Times New Roman\"",
@@ -1972,13 +1998,14 @@ export const CSS_TAG_OVERRIDES = Object.freeze({
   }),
 });
 
-/** 本模块建模的属性集合。 */
+/** 有建模值的属性名。 */
 export const MODELED_PROPERTIES = Object.freeze(Object.keys(CSS_INITIAL_VALUES));
 
 /**
- * 与布局相关、刻意不建模的属性。
+ * 采集时排除的布局相关属性。
  *
- * 计算值需要布局引擎；列在这里是为了让「为什么这些是空串」有据可查。
+ * 这些值取决于真实排版，没有渲染引擎就无法给出可信结果。返回空串比返回
+ * 一个编造的数字好——编造的值会在脚本比对宽高时给出错误结论。
  */
 export const LAYOUT_DEPENDENT_PROPERTIES = Object.freeze([
   "width",
@@ -1990,5 +2017,5 @@ export const LAYOUT_DEPENDENT_PROPERTIES = Object.freeze([
   "transformOrigin",
   "webkitTransformOrigin",
   "perspectiveOrigin",
-  "webkitPerspectiveOrigin",
+  "webkitPerspectiveOrigin"
 ]);

@@ -130,6 +130,53 @@ export function withTimeout(transport, timeoutMs) {
 }
 
 /**
+ * 把 RequestPlan 变成可直接发出的 header 与 body。
+ *
+ * 抽出来共享而不是每个 transport 各写一份：body 编码规则一旦分叉，
+ * 两个 transport 就会在同一个计划上发出不同的请求，而这种差异极难察觉
+ * ——通过代理时成功、直连时失败，看起来像"代理有问题"。
+ *
+ * @param {object} request 已规范化的 RequestPlan
+ * @returns {{headers: Headers, body: string|Buffer|undefined}}
+ */
+export function buildRequestPayload(request) {
+  const headers = new Headers();
+  for (const entry of request.headers) {
+    for (const value of entry.values) headers.append(entry.name, value);
+  }
+  if (request.cookies.length > 0) {
+    headers.set(
+      'cookie',
+      request.cookies.map((entry) => `${entry.name}=${entry.value}`).join('; ')
+    );
+  }
+
+  let body;
+  switch (request.body.encoding) {
+    case 'none': body = undefined; break;
+    case 'text': body = request.body.value; break;
+    case 'base64': body = Buffer.from(request.body.value, 'base64'); break;
+    case 'json':
+      body = JSON.stringify(request.body.value);
+      if (!headers.has('content-type')) headers.set('content-type', 'application/json');
+      break;
+    case 'form':
+      body = new URLSearchParams(request.body.value).toString();
+      if (!headers.has('content-type')) {
+        headers.set('content-type', 'application/x-www-form-urlencoded');
+      }
+      break;
+    default:
+      throw new CollectorRequestError(
+        CollectorErrorCode.INVALID_PLAN,
+        `unsupported body encoding "${request.body.encoding}"`
+      );
+  }
+
+  return { headers, body };
+}
+
+/**
  * 基于全局 `fetch` 的传输实现。
  *
  * 说明：这是唯一发起真实网络请求的地方。调用方必须已经通过
@@ -152,38 +199,7 @@ export function createFetchTransport(options = {}) {
 
   return {
     async send(request, sendOptions = {}) {
-      const headers = new Headers();
-      for (const entry of request.headers) {
-        for (const value of entry.values) headers.append(entry.name, value);
-      }
-      if (request.cookies.length > 0) {
-        headers.set(
-          'cookie',
-          request.cookies.map((entry) => `${entry.name}=${entry.value}`).join('; ')
-        );
-      }
-
-      let body;
-      switch (request.body.encoding) {
-        case 'none': body = undefined; break;
-        case 'text': body = request.body.value; break;
-        case 'base64': body = Buffer.from(request.body.value, 'base64'); break;
-        case 'json':
-          body = JSON.stringify(request.body.value);
-          if (!headers.has('content-type')) headers.set('content-type', 'application/json');
-          break;
-        case 'form':
-          body = new URLSearchParams(request.body.value).toString();
-          if (!headers.has('content-type')) {
-            headers.set('content-type', 'application/x-www-form-urlencoded');
-          }
-          break;
-        default:
-          throw new CollectorRequestError(
-            CollectorErrorCode.INVALID_PLAN,
-            `unsupported body encoding "${request.body.encoding}"`
-          );
-      }
+      const { headers, body } = buildRequestPayload(request);
 
       const startedAt = Date.now();
       let response;

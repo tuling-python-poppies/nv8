@@ -20,3 +20,8 @@ output/
 
 # 指纹采集中间文件（WSL ↔ Windows 交换目录的本地副本）
 /tmp-fingerprint/
+
+# Realm 模块预打包缓存：键是绝对 file:// URL，与本机路径绑定。
+# 提交它等于给别人一份命中率为 0 却仍要 readFileSync + JSON.parse 的负担
+# （实测拖慢冷启动约 90ms）。用 npm run build:bundle 本地生成。
+/src/realm/module-bundle.json

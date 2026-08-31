@@ -36,6 +36,8 @@ export {
   createPaginationScheduler,
 } from './pagination.js';
 
+export { createProxyTransport } from './proxy-transport.js';
+
 export {
   ProxyPool,
   ProxyProtocol,

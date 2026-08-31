@@ -382,9 +382,54 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     分段解析已验证：CONNECT 响应头跨 TCP 段、SOCKS5 每步按需取字节
   - 半配凭据（只给用户名）是配置错误而非空密码——静默当空密码会让认证在远端
     失败、报成"代理不通"，把配置问题伪装成网络问题
-- [ ] **代理接入 transport** - 隧道与池已就绪，但全局 `fetch` 没有代理钩子
-  （undici 的 `ProxyAgent` 需要依赖，本项目零依赖）。需要基于 `node:http`
-  在 `connectThroughProxy` 返回的 socket 上自建一个 transport
+- [x] **代理接入 transport** - `src/collector/proxy-transport.js`，13 项测试
+  - 基于 `node:http`/`node:https`，通过 `createConnection` 把隧道 socket 交给
+    HTTP 客户端；HTTPS 目标在隧道内再叠一层 TLS，`servername` 必须是**目标**
+    主机名（写成代理主机名会让 SNI 与证书都对不上）
+  - **配了代理绝不直连**：回落会泄露真实出口 IP，且完全无声——请求成功、
+    采集正常，等到目标把真实 IP 拉黑才发现。要允许必须显式 `allowDirect`
+  - **响应体边收边判上限**：先缓冲完再检查的话，超限本身就是被撑爆的那一刻
+  - **修 bug**：`finish()` 必须在 `destroy()` **之前**调用。反过来的话
+    `destroy()` 触发的 error 事件会先把结果写成通用的 `REQUEST_FAILED`，
+    真正的原因（超过上限）就丢了。测试红过一次才发现
+  - **隧道建成后的失败归目标，不冷却代理**：代理已经证明自己能用，
+    因目标的问题冷却出口会把可用出口一个个误伤掉
+  - body 编码规则抽成 `buildRequestPayload()` 与 fetch transport **共享**：
+    一旦分叉，同一个计划在两条路径上会发出不同请求，而这种差异极难察觉
+    ——通过代理时成功、直连时失败，看起来像"代理有问题"
+- [x] **仓库死代码清理** - 死 JS 文件从 1504 降到 **0**（4237 个文件全部可达）
+  - **陈旧的机器特定构建产物**：`src/realm/module-bundle.json` 15.8MB，
+    3992 个键全部以 `file:///D:/develop_software/Nv8/` 开头。加载器以绝对
+    `file://` URL 为键，所以本机命中率**恒为 0**，却仍要每次启动
+    `readFileSync` + `JSON.parse`。实测冷启动因此慢约 90ms（526 → 431ms）
+    ——一个负优化。已删除 + gitignore + 补 `scripts/build-module-bundle.mjs`
+    生成器（带 `--check` 识别外来包）。在 Linux 上实测本机包**也没有可测量
+    收益**（435 vs 424ms，噪声内），故默认不生成
+  - **1465 个纯 re-export 垫片**：`src/migration-targets/` 6.2MB，
+    没有任何代码引用。折叠为单一清单 `docs/rust-migration-map.json`（231KB），
+    1465 条映射一条不丢，文件数从 1465 降到 1
+  - **废弃的 `src/core/` 平行子包**：`plugin/`、`registry/`、`app/`、
+    `scheduler/`、`trace/`、`legacy/`、`types/`、`index.js`、
+    camelCase 重复文件、自带的 `package.json` 与 vendored `node_modules/semver`
+    （项目零依赖，该 semver 只被这个死子包引用）
+  - **孤儿测试**：`test/core-integration.test.js`(11 红)、
+    `src/core/test/*`(5 红)、`src/plugins/webidl-foundation/test.js`(1 红)、
+    `tests/profile-system-test.js`（import 块损坏）。孤儿测试比没有测试更糟
+    ——看起来像覆盖，实际从不运行
+  - **13 个死的 `*-surface.js`** 与 3 个废弃 controller 文件
+    （`worker-thread.js` 已被 `worker-thread-pool.js` 取代）
+  - **18 份互相矛盾的历史文档**：根目录 7 份 + `docs/phase3-*` 等 11 份
+  - 清理后 `npm test` **706/706 绿**
+- [x] **UA 默认样式表漏了 html 与 body** - 实测
+  `getComputedStyle(document.body).display` 返回 `inline`，真实 Edge 是 `block`
+  - 根因是采集方法：其余标签靠"创建元素塞进 body"测量，而 `<body>` 不能嵌进
+    body，于是这两个标签根本没进 `TAGS` 名单，计算值退回 `<nv8unknown>` 基线
+  - 修法是直接测页面上已有的 `document.documentElement` 与 `document.body`
+  - 重采后真实 Edge 给出 `html: display=block margin=0px`、
+    `body: display=block margin=8px`；覆盖标签 86 → 88，零丢失
+  - 顺带补了缺失的生成器 `scripts/build-css-ua-defaults.mjs`——原先
+    fixture 在仓库里、生成它的代码不在。"声称是生成的但没有生成器"等于手写
+    文件，只是看起来更可信
 - [ ] **WebSocket 采集** - 当前只支持 HTTP
 - [x] **熔断器** - 按 origin 的三态熔断（`src/collector/circuit-breaker.js`，22 项测试）
   - `CIRCUIT_OPEN` 错误码早就在 `errors.js` 里定义了但没实现——缺口是设计时
