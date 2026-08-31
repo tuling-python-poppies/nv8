@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 502/502 全部通过 ✅（`npm test`）
+- **测试状态**: 726 项（`npm test`，70 个文件）
 - **项目性质**: 私有框架，无公开发布计划
 
 ---
@@ -300,12 +300,30 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     畸形 URL 改派 `load`
 - [ ] **畸形 URL 未替换为错误页文档** - 真实浏览器提交错误页并替换旧文档，
   NV8 只派发 `load` 而保留旧文档。需要一份错误页 HTML 与新的子 Realm
-- [ ] **`new URL()` 校验与规范化过于宽松**（新发现，6 项探针已登记）
-  - 真实 Edge 对 `http://%` / `http://[` / `http://` / `http://a:b:c/` 均抛
-    TypeError，NV8 全部放过；`https://a b/` 真实编码为 `https://a%20b/`，
-    NV8 原样保留；未知 scheme 真实不补尾斜杠，NV8 补成 `nv8-unknown://x/`
-  - `new URL()` 放 try/catch 做输入校验极常见，`href` 规范化结果也常被直接比较
-  - **不能拿 Node 当基准**：`https://a b/` 浏览器接受并编码，Node 直接抛
+- [x] **`new URL()` 校验与规范化** - 8 项探针全部一致
+  - 关键发现：主机字符必须分**三类**而不是两类。原实现只有「合法/非法」两类，
+    所以无论怎么调都错——全放过则 `http://%` 不抛，全拒绝则 `https://a b/` 误抛
+  - 依据是 Chromium `url_canon_host.cc` 的 `kHostCharLookup`：
+    **safe** 原样（字母数字 `-._~`）、**escape** 百分号编码（空格
+    `!"$&'()*+,;=` 反引号 `{}`）、**forbidden** 解析失败
+    （C0 / DEL / `%#/:<>?@[\]^|`）
+  - **不能拿 Node 也不能拿规范条文当基准**：空格在两者眼里都是 forbidden，
+    浏览器却编码成 `%20`。规范的 "forbidden domain code point" 与 Chromium 实现
+    在这一点上不一致
+  - 端口按**最左**冒号切分：`a:b:c` 的端口是 `b:c`，非法 → 整体失败。
+    原实现按最右冒号切且只在尾段全是数字时才当端口，于是把 `a:b` 当主机名放过
+  - 非特殊 scheme **不补**尾斜杠（`nv8-unknown://x` 而不是 `nv8-unknown://x/`）；
+    特殊 scheme 忽略 `//` 后多余的斜杠（`http:///a` → `http://a/`），
+    但 `file:` 例外（`file:///etc/passwd` 的主机确实为空）
+  - setter 对非法值**静默忽略**而不是抛，所以主机解析器返回 `null` 让调用方决定；
+    在解析器里抛的话 setter 得包 try/catch，而 catch 无法区分「值非法」与「有 bug」
+  - 仍未实现且无探针覆盖：IDN / punycode（非 ASCII 主机原样保留）、
+    IPv6 压缩形式重新序列化、IPv4 点分十进制数值归一化
+  - 测试 20 项（`tests/url-parsing-test.js`）+ 8 项探针
+- [x] **iframe 畸形 URL 现在走 malformedUrl 分支** - 顺带修好
+  - `html-iframe-element-realm-state.js` 早就写好了 `malformedUrl` 分支，
+    但 `new URL('http://%')` 从不抛，所以那条分支**从未执行过**——
+    iframe 反而拿 `http://%/` 建了个真的子 Realm。现在 URL 会抛，分支才真正生效
 - [ ] **iframe 导航未排成任务** - NV8 对**每次属性变更**立即导航；真实浏览器把
   导航排成任务，`removeAttribute('srcdoc')` + `setAttribute('src')` 合并为一次。
   NV8 会先派发一次中间 blank 的 `load`

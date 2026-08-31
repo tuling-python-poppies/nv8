@@ -1,4 +1,113 @@
+/**
+ * URL 记录的解析、序列化与组件更新。
+ *
+ * 基准是**真实浏览器**（Edge 151 / Chromium），既不是规范条文也不是 Node 的
+ * `URL`。三者在主机解析上并不一致，实测对比：
+ *
+ * | 输入 | 真实 Edge | Node | WHATWG 条文 |
+ * |---|---|---|---|
+ * | `https://a b/` | `https://a%20b/` | THROWS | 失败 |
+ * | `http://%` | THROWS | THROWS | 失败 |
+ * | `nv8-unknown://x` | `nv8-unknown://x` | 同 | 同 |
+ *
+ * 空格那一行尤其说明为什么不能拿 Node 当代理：Chromium 的
+ * `url_canon_host.cc` 里 `kHostCharLookup` 把空格标成 **escape** 而不是
+ * **invalid**，所以浏览器接受并编码成 `%20`；规范和 Node 都判失败。
+ * 按 Node 实现会得出「应该抛」的错误结论。
+ *
+ * 因此主机字符分三类而不是两类：
+ *
+ * - **safe** —— 原样（字母折成小写）
+ * - **escape** —— 百分号编码，不失败
+ * - **forbidden** —— 解析失败
+ *
+ * 只有 forbidden 一类会抛。把 escape 类错记成 forbidden 会让大量真实可用的
+ * URL 变成 TypeError，比放过更危险——`new URL()` 常被放在 try/catch 里当输入
+ * 校验，一旦误判整段逻辑就走错分支。
+ */
+
 const absoluteUrlPattern = /^([A-Za-z][A-Za-z0-9+.-]*):\/\/([^/?#]*)([^?#]*)(\?[^#]*)?(#.*)?$/u;
+
+/**
+ * WHATWG 的 "special scheme"。影响三件事，缺一件都会出现可检测偏差：
+ *
+ * 1. 主机不可为空（`file:` 例外，`file:///etc/passwd` 的主机就是空的）
+ * 2. 空路径序列化成 `/`；非特殊 scheme **不补**尾斜杠
+ *    （实测 `nv8-unknown://x` 的 `href` 就是 `nv8-unknown://x`）
+ * 3. 主机按 domain 规则解析（可转义），而不是 opaque 规则（只校验）
+ */
+const SPECIAL_SCHEMES = new Set([
+  "ftp:",
+  "file:",
+  "http:",
+  "https:",
+  "ws:",
+  "wss:",
+]);
+
+/** domain 主机里导致**解析失败**的 ASCII 字符（另加 C0 控制符与 DEL）。 */
+const FORBIDDEN_DOMAIN_CHARS = new Set([
+  "%",
+  "#",
+  "/",
+  ":",
+  "<",
+  ">",
+  "?",
+  "@",
+  "[",
+  "\\",
+  "]",
+  "^",
+  "|",
+]);
+
+/** domain 主机里可以原样保留的字符；其余 ASCII 走百分号编码。 */
+const SAFE_DOMAIN_CHAR = /^[A-Za-z0-9\-._~]$/u;
+
+/**
+ * opaque 主机（非特殊 scheme）的禁用字符。
+ *
+ * 这里按规范的 forbidden host code point，**不**做 escape 分类——非特殊
+ * scheme 的主机不参与 IDN，浏览器也不对它做 domain 那套转义。
+ */
+const FORBIDDEN_OPAQUE_CHARS = new Set([
+  "\u0000",
+  "\t",
+  "\n",
+  "\r",
+  " ",
+  "#",
+  "/",
+  ":",
+  "<",
+  ">",
+  "?",
+  "@",
+  "[",
+  "\\",
+  "]",
+  "^",
+  "|",
+]);
+
+const IPV6_PATTERN = new RegExp(
+  "^(?:"
+  + "(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}"
+  + "|(?:[0-9a-f]{1,4}:){1,7}:"
+  + "|(?:[0-9a-f]{1,4}:){1,6}:[0-9a-f]{1,4}"
+  + "|(?:[0-9a-f]{1,4}:){1,5}(?::[0-9a-f]{1,4}){1,2}"
+  + "|(?:[0-9a-f]{1,4}:){1,4}(?::[0-9a-f]{1,4}){1,3}"
+  + "|(?:[0-9a-f]{1,4}:){1,3}(?::[0-9a-f]{1,4}){1,4}"
+  + "|(?:[0-9a-f]{1,4}:){1,2}(?::[0-9a-f]{1,4}){1,5}"
+  + "|[0-9a-f]{1,4}:(?::[0-9a-f]{1,4}){1,6}"
+  + "|:(?:(?::[0-9a-f]{1,4}){1,7}|:)"
+  + "|(?:[0-9a-f]{1,4}:){6}(?:\\d{1,3}\\.){3}\\d{1,3}"
+  + "|(?:[0-9a-f]{1,4}:){1,5}:(?:\\d{1,3}\\.){3}\\d{1,3}"
+  + "|::(?:[0-9a-f]{1,4}:){0,5}(?:\\d{1,3}\\.){3}\\d{1,3}"
+  + ")$",
+  "u",
+);
 
 export function parseUrl(value, base = null) {
   const input = `${value}`;
@@ -67,11 +176,7 @@ export function updateUrlComponent(record, component, value) {
     case "host":
       return withHost(record, input);
     case "hostname":
-      return {
-        ...record,
-        hostname: input,
-        host: record.port === "" ? input : `${input}:${record.port}`,
-      };
+      return withHostname(record, input);
     case "port":
       return withPort(record, input);
     case "pathname":
@@ -96,8 +201,16 @@ export function updateUrlComponent(record, component, value) {
 
 function fromAbsoluteMatch(match) {
   const protocol = `${match[1].toLowerCase()}:`;
-  const parsedAuthority = parseAuthority(match[2], protocol);
-  const { username, password, hostname, port, host } = parsedAuthority;
+  const { authority, path } = ignoreExtraAuthoritySlashes(
+    protocol,
+    match[2],
+    match[3],
+  );
+  const parsed = parseAuthority(authority, protocol);
+  if (parsed === null) {
+    throw new TypeError("Invalid URL");
+  }
+  const { username, password, hostname, port, host } = parsed;
   return {
     protocol,
     username,
@@ -105,10 +218,49 @@ function fromAbsoluteMatch(match) {
     host,
     hostname,
     port,
-    pathname: normalizePath(match[3] || "/"),
+    pathname: normalizeAbsolutePath(path, protocol),
     search: match[4] || "",
     hash: match[5] || "",
   };
+}
+
+/**
+ * 特殊 scheme 会忽略 `//` 之后多余的斜杠：`http:///a` 在真实浏览器里等价于
+ * `http://a/`。
+ *
+ * `file:` 例外——`file:///etc/passwd` 的主机确实是空的，把第三个斜杠当成主机
+ * 起点会把它解析成 `file://etc/passwd`。
+ */
+function ignoreExtraAuthoritySlashes(protocol, authority, path) {
+  if (
+    authority !== ""
+    || protocol === "file:"
+    || !SPECIAL_SCHEMES.has(protocol)
+  ) {
+    return { authority, path };
+  }
+  const trimmed = path.replace(/^\/+/u, "");
+  if (trimmed === "") {
+    return { authority, path };
+  }
+  const cut = trimmed.indexOf("/");
+  return cut === -1
+    ? { authority: trimmed, path: "" }
+    : { authority: trimmed.slice(0, cut), path: trimmed.slice(cut) };
+}
+
+/**
+ * 绝对 URL 的路径。
+ *
+ * 特殊 scheme 空路径补 `/`；非特殊 scheme **保持为空**——实测真实 Edge
+ * 给出的 `new URL('nv8-unknown://x').href` 是 `nv8-unknown://x`，
+ * 补成 `nv8-unknown://x/` 就是一处可检测偏差。
+ */
+function normalizeAbsolutePath(path, protocol) {
+  if (path !== "") {
+    return normalizePath(path);
+  }
+  return SPECIAL_SCHEMES.has(protocol) ? "/" : "";
 }
 
 function parseBlobUrl(input) {
@@ -127,10 +279,18 @@ function parseBlobUrl(input) {
     hash: split.hash,
     blobOrigin: originMatch === null
       ? "null"
-      : urlOrigin(fromAbsoluteMatch(
-        absoluteUrlPattern.exec(`${originMatch[1]}/`),
-      )),
+      : blobInnerOrigin(originMatch[1]),
   };
+}
+
+function blobInnerOrigin(prefix) {
+  try {
+    return urlOrigin(fromAbsoluteMatch(
+      absoluteUrlPattern.exec(`${prefix}/`),
+    ));
+  } catch {
+    return "null";
+  }
 }
 
 function splitPathQueryHash(value) {
@@ -168,30 +328,15 @@ function normalizePath(pathname) {
   return `/${normalized.join("/")}${pathname.endsWith("/") && normalized.length > 0 ? "/" : ""}`;
 }
 
-function withHost(record, host) {
-  const { hostname, port } = splitHost(host, record.protocol);
-  return {
-    ...record,
-    host: port === "" ? hostname : `${hostname}:${port}`,
-    hostname,
-    port,
-  };
-}
+// ------------------------------------------------------------- 主机与端口
 
-function withPort(record, port) {
-  if (port !== "" && (!/^\d+$/u.test(port) || Number(port) > 65535)) {
-    return record;
-  }
-  const normalized = isDefaultPort(record.protocol, port) ? "" : port;
-  return {
-    ...record,
-    port: normalized,
-    host: normalized === ""
-      ? record.hostname
-      : `${record.hostname}:${normalized}`,
-  };
-}
-
+/**
+ * 解析 authority（可能含 userinfo / 主机 / 端口）。
+ *
+ * @returns {{username: string, password: string, hostname: string,
+ *   port: string, host: string} | null} 解析失败返回 `null`，由调用方决定
+ *   是抛 TypeError（构造器）还是静默忽略（setter）。
+ */
 function parseAuthority(authority, protocol) {
   const at = authority.lastIndexOf("@");
   const userInfo = at === -1 ? "" : authority.slice(0, at);
@@ -203,35 +348,32 @@ function parseAuthority(authority, protocol) {
   const password = encodeUserInfo(
     userSeparator === -1 ? "" : userInfo.slice(userSeparator + 1),
   );
-  return {
-    username,
-    password,
-    ...splitHost(rawHost, protocol),
-  };
+  const hostAndPort = parseHostAndPort(rawHost, protocol);
+  if (hostAndPort === null) {
+    return null;
+  }
+  return { username, password, ...hostAndPort };
 }
 
-function splitHost(value, protocol) {
-  let hostname = value;
-  let port = "";
-  if (value.startsWith("[")) {
-    const close = value.indexOf("]");
-    if (close !== -1) {
-      hostname = value.slice(0, close + 1).toLowerCase();
-      if (value[close + 1] === ":") {
-        port = validPort(value.slice(close + 2));
-      }
-    }
-  } else {
-    const separator = value.lastIndexOf(":");
-    if (separator !== -1 && /^\d*$/u.test(value.slice(separator + 1))) {
-      hostname = value.slice(0, separator).toLowerCase();
-      port = validPort(value.slice(separator + 1));
-    } else {
-      hostname = value.toLowerCase();
-    }
+/**
+ * 拆主机与端口，然后分别校验。
+ *
+ * 端口按**最左**冒号切分而不是最右：`a:b:c` 的端口是 `b:c`，非法，
+ * 于是整个 URL 解析失败（实测真实 Edge 对 `http://a:b:c/` 抛 TypeError）。
+ * 按最右冒号切会把 `a:b` 当成主机名放过去。
+ */
+function parseHostAndPort(value, protocol) {
+  const split = splitHostPort(value);
+  if (split === null) {
+    return null;
   }
-  if (isDefaultPort(protocol, port)) {
-    port = "";
+  const hostname = parseHostname(split.host, protocol);
+  if (hostname === null) {
+    return null;
+  }
+  const port = normalizePortValue(split.port, protocol);
+  if (port === null) {
+    return null;
   }
   return {
     hostname,
@@ -240,8 +382,180 @@ function splitHost(value, protocol) {
   };
 }
 
-function validPort(value) {
-  return value === "" || Number(value) > 65535 ? "" : value;
+function splitHostPort(value) {
+  if (value.startsWith("[")) {
+    const close = value.indexOf("]");
+    if (close === -1) {
+      return null;
+    }
+    const rest = value.slice(close + 1);
+    if (rest === "") {
+      return { host: value, port: "" };
+    }
+    if (!rest.startsWith(":")) {
+      return null;
+    }
+    return { host: value.slice(0, close + 1), port: rest.slice(1) };
+  }
+  const colon = value.indexOf(":");
+  return colon === -1
+    ? { host: value, port: "" }
+    : { host: value.slice(0, colon), port: value.slice(colon + 1) };
+}
+
+function parseHostname(value, protocol) {
+  if (value.startsWith("[")) {
+    return parseIPv6Host(value);
+  }
+  const special = SPECIAL_SCHEMES.has(protocol);
+  if (value === "") {
+    // 空主机只对 `file:` 与非特殊 scheme 合法。
+    return special && protocol !== "file:" ? null : "";
+  }
+  return special ? parseDomainHost(value) : parseOpaqueHost(value);
+}
+
+/**
+ * IPv6 字面量。
+ *
+ * 没有闭合的 `]` 直接失败——这正是 `http://[` 抛 TypeError 的原因。
+ * 不做压缩形式的重新序列化（真实浏览器会，但没有探针覆盖，
+ * 编一个近似实现只会引入新的偏差）。
+ */
+function parseIPv6Host(value) {
+  if (!value.endsWith("]") || value.length < 3) {
+    return null;
+  }
+  const body = value.slice(1, -1).toLowerCase();
+  return IPV6_PATTERN.test(body) ? `[${body}]` : null;
+}
+
+/**
+ * domain 主机（特殊 scheme）。
+ *
+ * 三类字符：safe 原样、escape 编码、forbidden 失败。分类依据是 Chromium 的
+ * `kHostCharLookup`，不是规范的 forbidden domain code point ——两者对空格
+ * 的判定相反。
+ */
+function parseDomainHost(value) {
+  let output = "";
+  let index = 0;
+  while (index < value.length) {
+    const character = value[index];
+    if (character === "%") {
+      const hex = value.slice(index + 1, index + 3);
+      if (!/^[0-9A-Fa-f]{2}$/u.test(hex)) {
+        // 无效的转义序列。`http://%` 走这条路。
+        return null;
+      }
+      const byte = Number.parseInt(hex, 16);
+      if (isForbiddenDomainByte(byte)) {
+        return null;
+      }
+      output += `%${hex.toUpperCase()}`;
+      index += 3;
+      continue;
+    }
+    const code = value.codePointAt(index);
+    if (code > 0x7f) {
+      // 没有 IDN / punycode 实现，非 ASCII 原样保留。
+      output += String.fromCodePoint(code);
+      index += code > 0xffff ? 2 : 1;
+      continue;
+    }
+    index += 1;
+    if (isForbiddenDomainByte(code)) {
+      return null;
+    }
+    if (SAFE_DOMAIN_CHAR.test(character)) {
+      output += character.toLowerCase();
+      continue;
+    }
+    output += percentEncodeByte(code);
+  }
+  return output;
+}
+
+function isForbiddenDomainByte(byte) {
+  if (byte <= 0x1f || byte === 0x7f) {
+    return true;
+  }
+  return FORBIDDEN_DOMAIN_CHARS.has(String.fromCharCode(byte));
+}
+
+function parseOpaqueHost(value) {
+  for (const character of value) {
+    if (FORBIDDEN_OPAQUE_CHARS.has(character)) {
+      return null;
+    }
+  }
+  return value;
+}
+
+function percentEncodeByte(byte) {
+  return `%${byte.toString(16).toUpperCase().padStart(2, "0")}`;
+}
+
+/**
+ * 端口归一化。
+ *
+ * @returns {string | null} 非法端口返回 `null`（解析时抛、setter 时忽略）。
+ */
+function normalizePortValue(port, protocol) {
+  if (port === "") {
+    return "";
+  }
+  if (!/^\d+$/u.test(port)) {
+    return null;
+  }
+  const number = Number(port);
+  if (number > 65535) {
+    return null;
+  }
+  const normalized = `${number}`;
+  return isDefaultPort(protocol, normalized) ? "" : normalized;
+}
+
+/** `host` setter：非法值静默忽略，规范要求不抛。 */
+function withHost(record, host) {
+  const parsed = parseHostAndPort(host, record.protocol);
+  if (parsed === null) {
+    return record;
+  }
+  return {
+    ...record,
+    host: parsed.host,
+    hostname: parsed.hostname,
+    port: parsed.port,
+  };
+}
+
+/** `hostname` setter：非法值静默忽略。 */
+function withHostname(record, hostname) {
+  const parsed = parseHostname(hostname, record.protocol);
+  if (parsed === null) {
+    return record;
+  }
+  return {
+    ...record,
+    hostname: parsed,
+    host: record.port === "" ? parsed : `${parsed}:${record.port}`,
+  };
+}
+
+/** `port` setter：非法值静默忽略。 */
+function withPort(record, port) {
+  const normalized = normalizePortValue(port, record.protocol);
+  if (normalized === null) {
+    return record;
+  }
+  return {
+    ...record,
+    port: normalized,
+    host: normalized === ""
+      ? record.hostname
+      : `${record.hostname}:${normalized}`,
+  };
 }
 
 function isDefaultPort(protocol, port) {

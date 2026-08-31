@@ -110,40 +110,15 @@ const DYNAMIC_IFRAME_REASON = '动态 iframe 的 contentWindow 同步为 null；
   + '见 docs/adr/0004-dynamic-iframe-timing.md';
 
 /**
- * `new URL()` 的校验与规范化都太宽松。
+ * `urlParsing` 8 项曾经全部登记为差异，现已全部一致，登记条目已删除。
  *
- * 实测三方对比：
- *
- * | 输入 | 真实 Edge | Node | NV8 |
- * |---|---|---|---|
- * | `http://%` | THROWS | THROWS | `http://%/` |
- * | `http://[` | THROWS | THROWS | `http://[/` |
- * | `http://` | THROWS | THROWS | `http:///` |
- * | `http://a:b:c/` | THROWS | THROWS | `http://a:b:c/` |
- * | `https://a b/` | `https://a%20b/` | THROWS | `https://a b/` |
- * | `nv8-unknown://x` | `nv8-unknown://x` | 同 | `nv8-unknown://x/` |
- *
- * `new URL()` 放在 try/catch 里做输入校验是极常见的写法，`url.href` 的
- * 规范化结果也常被直接比较，所以这条不是边角问题。
- *
- * 注意**不能拿 Node 的 URL 当基准**：`https://a b/` 浏览器接受并编码成
- * `%20`，Node 直接抛。基准必须是浏览器。
- *
- * 修它要实现 WHATWG URL 的校验与规范化，是独立工作量。
+ * 修法记在 `src/navigation/url-record.js`：主机字符分 safe / escape /
+ * forbidden **三类**而不是两类。只分两类的话空格会被判成非法，
+ * 而真实浏览器把它编码成 `%20`——按规范条文或按 Node 实现都会得出相反结论。
  */
-const URL_PARSING_REASON = 'NV8 的 URL 构造器几乎不校验也不规范化；'
-  + '真实 Edge 对 http://% 、http://[ 、http:// 、http://a:b:c/ 均抛 TypeError，'
-  + '且把 https://a b/ 编码为 https://a%20b/ 、不给未知 scheme 补尾斜杠';
-
 const KNOWN_BEHAVIOR_DIFFERENCES = Object.freeze({
   'realm/identity-bundle': DYNAMIC_IFRAME_REASON,
   'realm/foreign-native-toString': DYNAMIC_IFRAME_REASON,
-  'url/malformed-percent': URL_PARSING_REASON,
-  'url/malformed-bracket': URL_PARSING_REASON,
-  'url/empty-host': URL_PARSING_REASON,
-  'url/multiple-colons-in-authority': URL_PARSING_REASON,
-  'url/space-in-host-encoded': URL_PARSING_REASON,
-  'url/unknown-scheme-normalization': URL_PARSING_REASON,
 });
 
 /**

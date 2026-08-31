@@ -304,7 +304,8 @@ await sandbox.evaluate('typeof require');   // "undefined"
 `arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`eventTiming`、
 `crossRealm`、`urlParsing`、`typeTag`。
 
-现状：**104 项一致，8 项登记**。
+现状：**110 项一致，2 项登记**（余下 2 项都是动态 iframe 时序，见
+[ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)）。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
 10 个成员），行为层却查出 **6 处**不同。形状层永远看不到那个洞。
@@ -325,6 +326,9 @@ await sandbox.evaluate('typeof require');   // "undefined"
   在 complete 状态下首次执行内联脚本——单一信号即可判定。
 - **CSS 属性挂错位置**：745 个 CSS 属性在真实浏览器里是 style 对象的
   **自有属性**，不在原型上。挂到原型会让第二层报 745 个多余成员。
+- **URL 主机校验按两类字符实现**：`https://a b/` 被原样放过。真实浏览器把主机
+  字符分**三类**——safe 原样、escape 编码、forbidden 失败。空格属于 escape
+  （编码成 `%20`），而规范条文和 Node 都判它失败。只分两类无论选哪一侧都错。
 
 ---
 
@@ -601,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，706 项
+npm test              # 全量，726 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -638,7 +642,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（706 项 / 69 个文件） |
+| `npm test` | 全量测试（726 项 / 70 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -691,7 +695,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 69 个测试文件
+tests/                 70 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -738,7 +742,7 @@ css-ua-defaults.js），现在都有了脚本。
 
 - **3 个全局名缺失**：`HTMLUserMediaElement`、`InteractionContentfulPaint`、
   `PerformanceSoftNavigation`。需要表面生成器支持按 `browserMajorVersion` 门控。
-- **8 个行为探针不一致**，已登记。
+- **2 个行为探针不一致**，已登记（都是动态 iframe 时序）。
 - **2 项刻意不探**（`UNPROBED_KNOWN_GAPS`，断言恰好为 2）：
   - CSS 属性描述符形状（访问器 vs 可写数据属性）。纯 JS 无法复制 V8 的
     命名属性拦截器。选访问器是因为读写语义正确性（自动同步 `cssText` 与
@@ -767,11 +771,22 @@ css-ua-defaults.js），现在都有了脚本。
 
 ### URL
 
-`new URL()` 的校验与规范化偏宽松（6 个探针已登记）。真实 Edge 对
-`http://%`、`http://[`、`http://`、`http://a:b:c/` 抛 TypeError，
-把 `https://a b/` 编码为 `https://a%20b/`，且不给未知 scheme 补尾斜杠。
+主机解析已按真实 Edge 对齐（8 项探针全部一致，另有
+[tests/url-parsing-test.js](tests/url-parsing-test.js) 20 项）。关键是主机字符
+分**三类**而不是两类：
 
-**Node 不能当基准**——它对 `https://a b/` 直接抛。
+| 类别 | 字符 | 处理 |
+|---|---|---|
+| safe | 字母数字 `-._~` | 原样（字母折小写） |
+| escape | 空格 `!"$&'()*+,;=` `` ` `` `{}` | 百分号编码 |
+| forbidden | C0 / DEL / `%#/:<>?@[\]^\|` | 解析失败 |
+
+**Node 不能当基准**——`https://a b/` 浏览器接受并编码为 `https://a%20b/`，
+Node 直接抛。规范条文也把空格列为 forbidden domain code point，同样与浏览器
+不符；依据是 Chromium `url_canon_host.cc` 的 `kHostCharLookup`。
+
+仍未实现：IDN / punycode（非 ASCII 主机原样保留）、IPv6 压缩形式的重新序列化、
+IPv4 点分十进制的数值归一化。三者都无探针覆盖。
 
 ### legacy 导航
 
