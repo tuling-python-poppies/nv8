@@ -210,6 +210,9 @@ function navigate(element) {
     parentOrigin,
     parentPostMessage,
     sameOrigin: current.sameOrigin,
+    // 跨源时不传：子 Realm 连引用都不该拿到。规范也要求容器文档不同源时
+    // `frameElement` 返回 null。
+    frameElement: current.sameOrigin ? element : null,
     outerWindow: null,
     clientId: current.clientId,
     navigatePage(nextUrl) {

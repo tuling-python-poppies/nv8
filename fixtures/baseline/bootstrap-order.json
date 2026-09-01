@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 337,
-      "callSequenceSha256": "d6de2550fb51d6f430a9eb676c61353827096749510ee16d18b924c014603c77",
+      "callCount": 338,
+      "callSequenceSha256": "6614c922701de784bbacdec3d9258f9944ccaa2f84977753ccde786dc8ebd14e",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -341,6 +341,7 @@
         "install:installServiceWorker",
         "install:installWindowSelfReferences",
         "configure:configureWindowMessaging",
+        "configure:configureFrameElement",
         "configure:configureDocumentDefaultView",
         "configure:configureDocument",
         "install:installEdgeStaticFunctions",
@@ -348,9 +349,9 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "fce76415b84530af8c825863b0f765b6825f0f8f767cba734f4b376724426e29",
-        "functionStartLine": 832,
-        "functionEndLine": 1283
+        "sourceSha256": "4a68264970d7c19e46ce1766adbaa50a6e2ec2b2ebdba8ebd30a3a1f52b3f794",
+        "functionStartLine": 833,
+        "functionEndLine": 1287
       }
     },
     "worker": {
@@ -472,7 +473,7 @@
         "finalize:finalizeWorkerSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "fd731abbb78ed885fe2227f7975b7d32c4c91819d3c8e7623a814c7fe4f3d0e3",
+        "sourceSha256": "718f51356b0eba0d817c923c04d1ef415185a730ebef4ab6f4473c8765738750",
         "functionStartLine": 198,
         "functionEndLine": 368
       }
@@ -500,7 +501,7 @@
         "install:installRegistration"
       ],
       "informational": {
-        "sourceSha256": "cb556ddf94935a4e1ca1ba1e9cf637125a0b309752ae4c707f7a8f0d27be57b0",
+        "sourceSha256": "03e35e7ba001b922c4313a486528365f04a2703a00ddb152b2c052c9c4b7a932",
         "functionStartLine": 30,
         "functionEndLine": 72
       }

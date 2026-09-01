@@ -21,6 +21,34 @@ const viewState = {
 };
 let styleMedia;
 
+/**
+ * 本 Realm 所属的 iframe 元素（父 Realm 的对象），顶层窗口为 `null`。
+ *
+ * 原先 `frameElement` 硬编码 `() => null`，于是 iframe 里的脚本永远看不到自己
+ * 的容器元素。广告与反爬代码常用它判断「我是不是被嵌在别人页面里」，
+ * 恒为 null 等于声称自己是顶层窗口，而同时 `parent !== window`——**自相矛盾**，
+ * 比单独一处错更容易被识别。
+ *
+ * 值是父 Realm 的 DOM 对象，跨 Realm 传递是**正确**的：真实浏览器里
+ * `frameElement` 属于父文档，所以 `frameElement instanceof HTMLIFrameElement`
+ * 在子 Realm 里也是 false（要用 `parent.HTMLIFrameElement` 才为 true）。
+ */
+let frameElementValue = null;
+
+/**
+ * 注入本 Realm 的 `frameElement`。
+ *
+ * 跨源时必须传 `null`：规范规定容器文档与本文档不同源时 `frameElement`
+ * 返回 null，泄露元素等于把跨源隔离打穿。
+ *
+ * @param {object | null} element
+ */
+export function configureFrameElement(element) {
+  frameElementValue = (element === undefined || element === null)
+    ? null
+    : element;
+}
+
 export function installWindowStateGlobals() {
   defineStatefulAccessor("name");
   defineStatefulAccessor("status");
@@ -28,7 +56,7 @@ export function installWindowStateGlobals() {
   defineReplaceableAccessor("frames", () => globalThis);
   defineReplaceableAccessor("length", directFrameCount);
   defineReplaceableAccessor("opener", () => null);
-  defineReadonlyAccessor("frameElement", () => null);
+  defineReadonlyAccessor("frameElement", () => frameElementValue);
   defineReplaceableAccessor("innerWidth", () => viewportWidth());
   defineReplaceableAccessor("innerHeight", () => viewportHeight());
   defineReplaceableAccessor("scrollX", () => viewState.scrollX);

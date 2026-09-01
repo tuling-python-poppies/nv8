@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 753 项（`npm test`，72 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 757 项（`npm test`，73 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 753 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 757 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 753 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 757 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 753/753）
+- [x] Node 18–24 矩阵（四档 757/757）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1120,10 +1120,38 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     settings object 解决，NV8 的两个 vm context 之间没有这个概念
   - 因此这三条需要 **ADR-0007** 定案（侧信道传 incumbent / 让 `parent.window`
     指向 facade 自身 / 接受一层更深的偏差），不该硬选
-  - 后两条（`frameElement`、`about:blank`）与之**无关**，可以先做：
-    `frameElement` 在 `window-state-globals-runtime.js` 是硬编码 `() => null`；
-    空白 iframe 的 URL 在 `html-iframe-element-realm-state.js` 默认取
-    `parentPageUrl`。后者的前置条件（URL 支持 opaque path）已完成
+  - 后两条与前三条**无关**，可以分开做：
+    - [x] **`frameElement` 已实现**（legacy 模式）。原先是硬编码 `() => null`。
+      这不只是「少一个值」：广告与反爬代码常用它判断「我是不是被嵌在别人页面
+      里」，恒为 null 等于声称自己是顶层窗口，而同时 `parent !== window`
+      ——**两个信号自相矛盾**，比单独一处错更容易被识别
+      - 返回的是**父 Realm 的 DOM 对象**，这是正确的：真实浏览器里该元素属于
+        父文档，所以子 Realm 里 `frameElement instanceof HTMLIFrameElement`
+        为 false、`instanceof parent.HTMLIFrameElement` 为 true。
+        这条容易被误当成 bug 而「修」成子 Realm 的对象——那才是偏差
+      - 跨源一律 null（规范要求），且在**源头**就不传：子 Realm 连引用都拿不到，
+        否则顺着 `ownerDocument` 就能读父文档
+      - plugin 模式刻意不接：那一档的 Window 表面里压根没有这个访问器
+        （surface fixture 的 plugin 档是 ABSENT，按 ADR-0001 是按需组装的结果）。
+        加一个必然无效的配置调用就是「看起来可配置但实际不可配置」
+      - 测试 4 项（`tests/iframe-frame-element-test.js`）
+    - [ ] **空白 iframe 的 `location.href` 不是一行改动**（重新定性）
+      - 原以为把 `html-iframe-element-realm-state.js` 里的默认 URL 从
+        `parentPageUrl` 改成 `about:blank` 就行。前置条件（URL 支持 opaque
+        path）已完成，但真正的障碍在别处：**NV8 目前把文档 origin 从页面 URL
+        推导出来**，而 `about:blank` 是第一个 URL 与 origin 必须分离的场合
+        （URL 不透明、origin 继承父页面）
+      - 至少四处要解耦：宿主侧 `runtime-pool` 用 `pageUrl.origin` 当
+        localStorage 键 / 网络记录器 / broadcast 连接器；Realm 内
+        `configureNavigation(pageUrl)` 决定 `location.origin`、
+        `configureWindowMessaging(new URL(pageUrl).origin, ...)` 决定
+        postMessage 的 origin
+      - 直接改会让 `childOrigin` 变成 `"null"`，`current.sameOrigin` 判假，
+        同源 iframe 退化成跨源门面——把一处 href 偏差换成整条同源链路失效
+      - 实测确认当前 `origin` 是**正确继承**的，所以改 href 时不能改坏它
+      - 顺带发现同一处的第二个偏差：`srcdoc` iframe 的 `href` 真实是
+        `about:srcdoc`，NV8 也给父页面 URL
+      - 结论：这是一次 origin/URL 解耦改造，应当单独立项，不该塞进本轮
   - 反爬脚本最常用的「从干净 iframe 取原生函数」写法是**同步**的：
     `const f = document.createElement('iframe'); document.body.appendChild(f);
     f.contentWindow.Function.prototype.toString`
@@ -1178,8 +1206,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 **P0 低风险、确定性高**
 
 1. 清理过时账目 —— 本轮完成（第四节、第八节、第十节、本节）
-2. `frameElement` 与空白 iframe 的 `about:blank`（§12）——
-   前置条件（URL opaque path）已完成，两处都局部可验证
+2. `frameElement`（§12）已完成；空白 iframe 的 `about:blank`
+   **重新定性为 origin/URL 解耦改造**，单独立项（§12）
 
 **P1 核心检测价值，需要先设计**
 
@@ -1217,5 +1245,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（753 项 / 72 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（757 项 / 73 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

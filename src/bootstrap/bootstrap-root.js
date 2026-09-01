@@ -723,6 +723,7 @@ import {
   installWindowStateGlobals,
 } from "../install/install-window-state-globals.js";
 import {
+  configureFrameElement,
   setWindowClosed,
 } from "../api/window/window-state-globals-runtime.js";
 import {
@@ -876,6 +877,7 @@ export function bootstrapRoot(
   browserMajorVersion = 150,
   timingProfile = null,
   navigatorMetadata = null,
+  frameElement = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -1273,6 +1275,8 @@ export function bootstrapRoot(
     parentPostMessage,
     parentSameOrigin,
   );
+  // 跨源时一律 null：规范要求容器文档不同源时 `frameElement` 返回 null。
+  configureFrameElement(parentSameOrigin ? frameElement : null);
   configureDocumentDefaultView(outerWindow);
   configureDocument(pageReferrer, pageContentType);
 

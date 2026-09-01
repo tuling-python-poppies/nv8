@@ -406,6 +406,7 @@ export class RuntimePool {
         capabilitiesProfile: this.options.fingerprint.capabilities,
         nativeFunctionRegistry: this.nativeFunctionRegistry,
         objectURLRegistry: this.objectURLRegistry,
+        frameElement: options.frameElement ?? null,
         onContext: context => {
           options.onContext?.(vm.runInContext("globalThis", context));
         },

@@ -77,6 +77,7 @@ export function activateRealmShell(shell, options) {
     timingProfile = null,
     nativeFunctionRegistry = null,
     objectURLRegistry = null,
+    frameElement = null,
     onContext = null,
   } = options;
   const { context, moduleLoader, bootstrap } = shell;
@@ -128,6 +129,7 @@ export function activateRealmShell(shell, options) {
     browserMajorVersion,
     timingProfile,
     navigatorProfile,
+    frameElement,
   );
   if (typeof onContext === "function") onContext(context);
   auditRealmGlobals(context);

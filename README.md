@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，753 项
+npm test              # 全量，757 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -690,7 +690,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（753 项 / 72 个文件） |
+| `npm test` | 全量测试（757 项 / 73 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -743,7 +743,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 72 个测试文件
+tests/                 73 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -809,10 +809,18 @@ css-ua-defaults.js），现在都有了脚本。
 - **动态创建的 iframe，`contentWindow` 同步为 `null`**。子 Realm 引导需要
   265ms，无法在 `appendChild` 内同步完成。三个方案各有代价，见
   [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)（状态：待决策）。
-- **父子链 5 处不符**：`contentWindow.parent === window` 为 false、`top` 同样、
-  `parent.window === parent` 也是 false、`frameElement` 恒为 `null`、
-  空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`。
-  这些在**静态** iframe 上也复现，与 ADR-0004 的动态时序无关。
+- **父子链 4 处不符**：`contentWindow.parent === window` 为 false、`top` 同样、
+  `parent.window === parent` 也是 false、空白 iframe 的 `location.href` 是父页面
+  URL 而非 `about:blank`。这些在**静态** iframe 上也复现，与 ADR-0004 的动态
+  时序无关。
+  前三条根因单一（`createSameOriginParentFacade()` 用 `Object.create` 换取正确的
+  `postMessage` 路由），但不能简单换成真对象——子 realm 调 `parent.postMessage()`
+  执行的是父 realm 的函数，`event.origin` 会变成父页面的，等于把指纹问题换成
+  安全语义问题。需要 ADR-0007 定案。
+  第四条已重新定性：`about:blank` 是第一个 **URL 与 origin 必须分离**的场合
+  （URL 不透明、origin 继承父页面），而 NV8 目前把文档 origin 从页面 URL 推导，
+  至少四处要解耦，是独立的改造。
+  `window.frameElement` 已修好（legacy 模式，4 项测试）。
 - **iframe Realm 绕过堆容量守卫**：低堆配置下能建成超量 iframe 且不报结构化
   错误，随后 V8 OOM。与 ADR-0004 的池位账目是同一片区域。
 - **被顶掉的导航仍会建出子 Realm 再关掉**：真实浏览器压根不会开始。是 CPU
