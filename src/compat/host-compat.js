@@ -26,6 +26,32 @@ export const HAS_NATIVE_ASYNC_DISPOSE = typeof Symbol.asyncDispose === 'symbol';
 export const HAS_NATIVE_ABORT_TIMEOUT = typeof AbortSignal?.timeout === 'function';
 
 /**
+ * vm 的 contextified global 是否用 `PropertyQueryCallback` 回答 `in`。
+ *
+ * Node 22 之前，`vm` 通过 **getter** 实现全局对象的 `has` 查询，于是在 Realm
+ * 里写 `'X' in globalThis` 会**真的调用**那个 getter。实测：
+ *
+ * | Node | `'X' in globalThis` | getter 被调用次数 |
+ * |---|---|---|
+ * | 18.20.8 | true | **1** |
+ * | 20.20.2 | true | **1** |
+ * | 22.22.2 | true | 0 |
+ * | 24.11.0 | true | 0 |
+ *
+ * 影响不止一处：
+ *
+ * - 特性探测 `'fetch' in window` 会触发 getter 的副作用（trace 会记下一次
+ *   从未发生的属性读取）
+ * - 抛错型 getter（严格能力诊断）会让 `in` 直接抛，而不是返回 true
+ *
+ * 这是 V8/Node 的宿主能力，用户态无法修补——只能记录并在依赖它的地方按版本
+ * 分支。不要试图用 Proxy 包 globalThis 来抹平：那会引入代理对象自身的可检测面，
+ * 比这条差异危险得多。
+ */
+export const HAS_VM_PROPERTY_QUERY_CALLBACK =
+  Number(/^(\d+)/.exec(process.versions.node)?.[1] ?? 0) >= 22;
+
+/**
  * 分离一个 ArrayBuffer，返回持有原数据的新 buffer。
  *
  * Node 21+ 用原生 `transfer()`。更早版本无法真正分离 ArrayBuffer——

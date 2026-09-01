@@ -160,6 +160,16 @@ TypedArray 和循环引用。遇到这些输入抛 `ERR_NV8_STRUCTURED_CLONE_UNA
 
 `fail-fast: false`，一个版本失败不影响其他版本继续跑。
 
+`best-effort` 版本设 `continue-on-error` 是历史遗留：Node 18 / 20 曾各有
+5 项固定失败（V8 内建缺口未接入版本门控 + `in` 触发 getter）。现在四档
+**741/741 全绿**，实测方式是直接调用 nvm 里各版本的 node.exe，不切换全局符号链接：
+
+```
+D:\...\nvm\v18.20.8\node.exe --experimental-vm-modules --test ...
+```
+
+（`npm run test:matrix` 是 bash 脚本，只在 POSIX nvm 布局下可用。）
+
 ## 同步回调与预加载
 
 有些调用点无法改成异步：ServiceWorker `controllerchange` 广播、
@@ -187,12 +197,59 @@ bootstrap 失败。
 现在 `defineStatic` / `defineStaticGetter` 对缺失的 owner 静默跳过——
 缺失的宿主能力由 `host-capabilities` 统一上报，不应让 bootstrap 崩溃。
 
+### 补 shim 还是留空
+
+判据是**能不能补得和原生一样**，不是「有没有办法补」：
+
+| 缺失项 | 处理 | 理由 |
+|---|---|---|
+| `SuppressedError` / `DisposableStack` / `AsyncDisposableStack` | **补** | 纯语义，能做到成员集、descriptor、`length`、原生 `toString` 全一致 |
+| `Float16Array` | **补形状** | 半精度存储做不到（shim 继承 `Float32Array`），但没人用它算签名 |
+| `DataView.getFloat16` / `setFloat16` | **补真实实现** | 结果直接进协议字节，近似值等于静默产出错误数据 |
+| `Iterator` 全局 | 留空 | 引擎级迭代器协议，用户态复刻不出 |
+| `Array.prototype.toSorted` 等 | 留空 | 补 JS 版本会让 `toString` 与报错文案都对不上 |
+| `RegExp.prototype.unicodeSets` | 留空 | 背后是引擎的正则编译能力，返回假值只会让特性探测得到错误结论 |
+| `Set` 的集合运算 | 留空 | 同上 |
+| `ArrayBuffer.prototype.transfer` | 留空（Realm 内） | V8 层能力；宿主侧另有 `transferArrayBuffer()` 回退 |
+
+补的那部分必须做到与原生**逐字节一致**：`fixtures/baseline/full-surface.json`
+的 node18 / node20 / node22 三档对这五个全局的记录与 node24 完全相同。
+`tests/modern-builtins-shim-test.js` 刻意不分版本，同一张表在 24 上验原生、
+在 18–22 上验 shim——分成两套期望值等于承认「shim 长什么样都行」。
+
+留空的那部分登记在 `src/baseline/known-differences.js` 的
+`NODE_VERSION_DEPENDENT_MEMBERS`，由 `edge-member-parity` /
+`edge-surface-parity` 在比对时剔除。不剔除的话 Node 18/20 上会永久红若干项，
+而永久红的断言和没有断言等价。
+
+`minimumNodeMajor` 取**矩阵内实测**的边界而不是按 V8 版本推算：
+`ArrayBuffer.prototype.transfer` 实际随 Node 21 落地，但 21 不在矩阵里、
+无法实测，所以记 22。记宽不会放过回归——这张表只在成员**确实缺失**时才被查询。
+
 ## 已知限制
 
 - `--experimental-vm-modules` 仍是必需 flag（所有版本）。这是 Node 的
   实验性状态决定的，不是 NV8 可以绕开的。
 - Node 18/20 上 `Iterator` helpers 和真正的 `ArrayBuffer` 分离不可用，
   相关 surface 与 Node 22+ 存在差异。
+- **Node 22 之前，Realm 里的 `'X' in globalThis` 会调用 X 的 getter。**
+  Node 22 才给 `vm` 的 contextified global 接上 `PropertyQueryCallback`；
+  在那之前 `has` 查询是用 **getter** 实现的。实测：
+
+  | Node | `'X' in globalThis` | getter 被调用次数 |
+  |---|---|---|
+  | 18.20.8 | true | **1** |
+  | 20.20.2 | true | **1** |
+  | 22.22.2 | true | 0 |
+  | 24.11.0 | true | 0 |
+
+  影响两处：特性探测 `'fetch' in window` 会触发 getter 的副作用（trace 会记下
+  一次从未发生的属性读取）；抛错型 getter（严格能力诊断）会让 `in` 直接抛而
+  不是返回 true。
+
+  标志位是 `HAS_VM_PROPERTY_QUERY_CALLBACK`（`src/compat/host-compat.js`）。
+  **不要用 Proxy 包 globalThis 来抹平**——那会引入代理对象自身的可检测面，
+  比这条差异危险得多。
 
 ## 测试
 

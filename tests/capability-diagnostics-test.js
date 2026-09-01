@@ -22,6 +22,7 @@ import {
   removeStrictCapabilityDiagnostics,
   suggestPluginsFor,
 } from '../src/core/capability-diagnostics.js';
+import { HAS_VM_PROPERTY_QUERY_CALLBACK } from '../src/compat/host-compat.js';
 
 const sampleMap = new Map([
   ['document', { plugin: '@nv8/plugin-dom-core', capability: 'dom.document' }],
@@ -209,7 +210,19 @@ test('strict diagnostics are non-enumerable', () => {
 
   // 否则 Object.keys(globalThis) 会让未装载的能力看起来像已存在
   assert.equal(evaluate('Object.keys(globalThis).includes("document")'), false);
-  assert.equal(evaluate("'document' in globalThis"), true);
+
+  if (HAS_VM_PROPERTY_QUERY_CALLBACK) {
+    assert.equal(evaluate("'document' in globalThis"), true);
+    return;
+  }
+
+  // Node 22 之前 vm 用 **getter** 回答全局对象的 `has` 查询，所以 `in` 会
+  // 真的调用那个抛错的 getter。见 host-compat.js 的
+  // HAS_VM_PROPERTY_QUERY_CALLBACK：这是宿主能力，用户态修不了。
+  //
+  // 这里断言"会抛"而不是跳过：跳过等于在旧版本上放弃检查，而抛错本身也是
+  // 一种确定行为，值得钉住——哪天它变了应该被发现。
+  assert.throws(() => evaluate("'document' in globalThis"), /was not loaded/);
 });
 
 test('strict diagnostics stay configurable so plugins can install later', () => {

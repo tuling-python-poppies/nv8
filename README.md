@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，738 项
+npm test              # 全量，741 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -670,7 +670,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（738 项 / 71 个文件） |
+| `npm test` | 全量测试（741 项 / 71 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -821,12 +821,35 @@ IPv4 点分十进制的数值归一化。三者都无探针覆盖。
 beforeunload / unload 事件已到位，但导航仍不替换文档（`location.href` 更新，
 DOM 不变）。需要子 Realm 回调宿主。
 
-### 其他
+### Node 版本
+
+四档（18 / 20 / 22 / 24）**741/741 全绿**。差异分两类处理：
+
+- **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
+  `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。
+  `full-surface.json` 的 node18/20/22 三档对这五个全局的记录与 node24
+  **逐字节相同**。
+- **补不像的就留空并登记**：`Iterator`、`Array.prototype.toSorted` 等、
+  `RegExp.prototype.unicodeSets`、`Set` 集合运算、`ArrayBuffer.prototype.transfer`。
+  补一个 JS 版本会让 `toString` 与报错文案都对不上，等于把「缺一个方法」
+  换成「有一个假方法」——后者更容易被识别。
+
+登记表是 `NODE_VERSION_DEPENDENT_MEMBERS`，与 baseline 共用同一份。
+
+其他版本相关限制：
 
 - `--experimental-vm-modules` 在**所有** Node 版本上都必需。
 - Node 18 的 vm 模块链接是异步的，同步 `importUrl()` 不可用，
   必须走 `importUrlAsync()`（见 [docs/node-compatibility.md](docs/node-compatibility.md)）。
+- **Node 22 之前，Realm 里的 `'X' in globalThis` 会调用 X 的 getter。**
+  `vm` 直到 Node 22 才给 contextified global 接上 `PropertyQueryCallback`，
+  之前 `has` 查询是用 getter 实现的。用户态修不了；标志位是
+  `HAS_VM_PROPERTY_QUERY_CALLBACK`。别用 Proxy 包 globalThis 抹平——
+  代理对象自身的可检测面比这条差异危险得多。
 - Node 18/20 与 worker-thread 后端的性能基线尚未采集。
+
+### 其他
+
 - `plugin` 模式覆盖面小于 `legacy`，按需拉取（[ADR-0001](docs/adr/0001-plugin-surface-coverage.md)）。
 
 完整待办见 [REMAINING_TASKS.md](REMAINING_TASKS.md)。

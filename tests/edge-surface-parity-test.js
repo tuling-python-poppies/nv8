@@ -21,6 +21,8 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import process from 'node:process';
 
+import { expectedMissingForNode } from '../src/baseline/known-differences.js';
+
 const REAL_GLOBALS_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.meta.url);
 const SURFACE_URL = new URL('../fixtures/baseline/full-surface.json', import.meta.url);
 
@@ -124,7 +126,12 @@ test('every missing global is registered with a reason', () => {
     .filter((name) => !nv8Globals.has(name))
     .sort();
 
-  const unregistered = missing.filter((name) => KNOWN_MISSING[name] === undefined);
+  const unregistered = missing
+    // 宿主 Node 版本造成的缺失（如 `Iterator` 需要 Node 22+）另有登记表，
+    // 与 baseline 共用同一份。不剔除的话 Node 18/20 上会永久红一项——
+    // 而永久红的断言和没有断言等价。
+    .filter((name) => expectedMissingForNode(name) === null)
+    .filter((name) => KNOWN_MISSING[name] === undefined);
 
   assert.deepEqual(
     unregistered,

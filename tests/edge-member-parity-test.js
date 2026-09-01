@@ -21,6 +21,12 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
+import {
+  NODE_VERSION_DEPENDENT_MEMBERS,
+  expectedMissingForNode,
+  expectedMissingMemberForNode,
+} from '../src/baseline/known-differences.js';
+
 const REAL_MEMBERS_URL = new URL('../fixtures/fingerprint/edge-members.json', import.meta.url);
 
 const hasFixture = existsSync(REAL_MEMBERS_URL);
@@ -65,6 +71,37 @@ const KNOWN_MISSING_PROTOTYPES = Object.freeze([
   'InteractionContentfulPaint',
   'PerformanceSoftNavigation',
 ]);
+
+/**
+ * 剔除由宿主 Node 版本造成的缺口。
+ *
+ * `Iterator` / `ArrayBuffer.prototype.transfer` / `Set` 的集合运算都是 V8 语言
+ * 内建，旧版 Node 的 V8 里压根没有。它们**不是** NV8 的缺口，登记在
+ * `src/baseline/known-differences.js`（与 baseline 共用同一份登记表，
+ * 各写一份必然漂移）。
+ *
+ * 不这么做的后果是 Node 18/20 上永久红 5 项——而永久红的断言和没有断言等价，
+ * 很快就会被学会忽略，真正的回归也就跟着被忽略。
+ *
+ * @param {ReadonlyArray<object>} rows `diffMembers()` 的输出
+ * @returns {object[]} 过滤后的差异行；整条被解释掉的会被移除
+ */
+function withoutNodeVersionGaps(rows) {
+  const kept = [];
+  for (const row of rows) {
+    if (row.absent) {
+      if (expectedMissingForNode(row.name) !== null) continue;
+      kept.push(row);
+      continue;
+    }
+    const missing = row.missing.filter(
+      (key) => expectedMissingMemberForNode(row.name, key) === null,
+    );
+    if (missing.length === 0 && row.extra.length === 0) continue;
+    kept.push({ ...row, missing });
+  }
+  return kept;
+}
 
 // ---------------------------------------------------- 共享捕获
 
@@ -230,7 +267,7 @@ test('every missing prototype member is registered with a reason', async () => {
   const snapshot = await captureNv8Surface();
   const unregistered = [];
 
-  for (const row of diffMembers(snapshot)) {
+  for (const row of withoutNodeVersionGaps(diffMembers(snapshot))) {
     if (row.absent) {
       if (!KNOWN_MISSING_PROTOTYPES.includes(row.name)) {
         unregistered.push(`${row.name} (whole prototype)`);
@@ -284,12 +321,15 @@ test('the registry has no stale entries', async () => {
 
 test('prototype-level parity stays above the recorded floor', async () => {
   const snapshot = await captureNv8Surface();
-  const rows = diffMembers(snapshot);
+  const rows = withoutNodeVersionGaps(diffMembers(snapshot));
   const total = Object.keys(realPrototypes).length;
   const identical = total - rows.length;
 
   // 151 profile 下实测 966 原型中 963 个成员集完全一致；剩 3 个是 NV8
   // 压根没有的接口（见 KNOWN_MISSING_PROTOTYPES）。下限只允许上调。
+  //
+  // 宿主 Node 版本造成的缺口先剔除，否则同一份代码在 Node 18/20 上会因为
+  // V8 没有 `Set.prototype.union` 之类而"覆盖率下降"——那不是覆盖率问题。
   assert.ok(
     identical >= 963,
     `only ${identical}/${total} prototypes match exactly; expected at least 963`
@@ -298,7 +338,7 @@ test('prototype-level parity stays above the recorded floor', async () => {
 
 test('the member gap stays small enough to be meaningful', async () => {
   const snapshot = await captureNv8Surface();
-  const rows = diffMembers(snapshot);
+  const rows = withoutNodeVersionGaps(diffMembers(snapshot));
   const missingCount = rows.reduce((sum, row) => sum + row.missing.length, 0);
 
   // 上限只允许下调。13 → 9 是把对比基准改成 151 profile（那 4 条本来就实现了），
@@ -307,4 +347,29 @@ test('the member gap stays small enough to be meaningful', async () => {
     missingCount <= 0,
     `missing members grew to ${missingCount}; implement some before registering more`
   );
+});
+
+/**
+ * 版本门控不能变成万能豁免。
+ *
+ * 登记表里的每条都必须在**当前** Node 上真的解释掉了某个缺口，或者当前 Node
+ * 高于它的门槛。否则一条写错原型名的条目会永远静静躺着，看起来像已经处理过。
+ */
+test('the Node-version member registry has no dead entries', () => {
+  const dead = [];
+  for (const entry of NODE_VERSION_DEPENDENT_MEMBERS) {
+    if (realPrototypes[entry.prototype] === undefined) {
+      dead.push(`${entry.prototype} is not a prototype real Edge exposes`);
+      continue;
+    }
+    const realNames = new Set(
+      realPrototypes[entry.prototype].members.map((member) => member.name),
+    );
+    for (const member of entry.members) {
+      if (!realNames.has(member)) {
+        dead.push(`${entry.prototype}.${member} does not exist in real Edge either`);
+      }
+    }
+  }
+  assert.deepEqual(dead, [], 'these registry entries explain nothing');
 });

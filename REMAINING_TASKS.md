@@ -3,8 +3,8 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 738 项（`npm test`，71 个文件）。Node 22 / 24 全绿；
-  Node 18 / 20 有 5 项引擎版本缺口未登记（见第十二节末）
+- **测试状态**: 741 项（`npm test`，71 个文件）。Node 18 / 20 / 22 / 24
+  四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
 ---
@@ -584,9 +584,8 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 738 项在 Node 22 / 24 上全绿；Node 18 / 20 各 5 项红，
-  全部是 V8 版本缺口（`Iterator` / `ArrayBuffer.transfer` / `Set` 集合运算），
-  与实现无关，尚未接入版本门控
+- **稳定性验证** - 741 项在 Node 18 / 20 / 22 / 24 四档全绿。
+  实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
 - [ ] **Backend 兼容性矩阵实际差异测试** - CI 已配置，缺针对性断言
@@ -882,14 +881,38 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     四档都用生成器在对应 Node major 上实跑，没有手抄
   - 测试 14 项（`tests/modern-builtins-shim-test.js`），刻意不分版本：
     同一张表在 24 上验原生、在 18–22 上验 shim
-- [ ] **Node 18 / 20 的引擎缺口未接入版本门控** - 各 5 项红，与实现无关
-  - `Iterator`（V8 12.2 / Node 22+）、`ArrayBuffer.prototype.detached` /
-    `transfer` / `transferToFixedLength`（Node 21+）、`Set` 的 7 个集合运算
-    （Node 22+）
-  - `known-differences.js` 已有 `expectedMissingForNode()` 机制服务于 baseline，
-    但 `edge-member-parity` / `edge-surface-parity` 两个测试没接
-  - 另有 `capability-diagnostics` 的 `strict diagnostics are non-enumerable`
-    在 18 / 20 上红，需单独排查
+- [x] **Node 18 / 20 的引擎缺口已接入版本门控** - 四档从此全绿
+  - 缺口清单（全部实测四档确认边界，不按 V8 版本推算）：
+    `Array.prototype.toReversed/toSorted/toSpliced/with`、
+    `String.prototype.isWellFormed/toWellFormed`、
+    `RegExp.prototype.unicodeSets`、
+    `ArrayBuffer.prototype.maxByteLength/resizable/resize`（以上 Node 20+）；
+    `ArrayBuffer.prototype.detached/transfer/transferToFixedLength`、
+    `Set` 的 7 个集合运算、`Iterator` 全局（以上 Node 22+）
+  - 登记表放 `known-differences.js` 的 `NODE_VERSION_DEPENDENT_MEMBERS`，
+    与 baseline 的 `expectedMissingForNode()` **共用同一份**：各写一份必然漂移
+  - **ArrayBuffer 拆成两条条目**而不是合并：resizable 系列 Node 20 就有、
+    transfer 系列要 21+。合并只能取最高门槛，于是 Node 20 上 resize/resizable
+    明明该被解释却报成未登记
+  - 记宽不会放过回归——这张表只在成员**确实缺失**时才被查询
+  - 新增「登记表无死条目」断言：每条都必须在真实 Edge 里确实存在，
+    否则一条写错原型名的条目会永远静静躺着，看起来像已经处理过
+  - 为什么必须门控：永久红的断言和没有断言等价，很快会被学会忽略，
+    真正的回归也就跟着被忽略
+- [x] **`in` 在 Node 22 之前会触发 getter** - 根因定位并登记
+  - `capability-diagnostics` 的 `strict diagnostics are non-enumerable`
+    在 18/20 上红。原以为是 `Object.keys` 调了 getter，实测是
+    **`'document' in globalThis`** 调了
+  - 根因：`vm` 直到 Node 22 才给 contextified global 接上
+    `PropertyQueryCallback`，之前 `has` 查询是用 **getter** 实现的。
+    实测 getter 调用次数：18.20.8 → 1、20.20.2 → 1、22.22.2 → 0、24.11.0 → 0
+  - 影响不止诊断：特性探测 `'fetch' in window` 会触发 getter 副作用，
+    trace 会记下一次从未发生的属性读取
+  - 标志位 `HAS_VM_PROPERTY_QUERY_CALLBACK` 放 `host-compat.js`（源码里，
+    测试引用），不在测试里重写一遍版本判断
+  - **不用 Proxy 包 globalThis 抹平**：代理对象自身的可检测面比这条差异危险
+  - 测试按版本分支断言「会抛」而不是跳过：跳过等于在旧版本上放弃检查，
+    而抛错本身也是确定行为，哪天变了应该被发现
 - [x] **`BeforeUnloadEvent` 已封锁** - 8 个不可构造事件接口全部到位
   - 之前判断「封锁会让 beforeunload 取消整体失效」是基于一次失败尝试。
     正解不是找内部构造通道，而是**用本 Realm 的 `Event` 造实例**（肯定能被
