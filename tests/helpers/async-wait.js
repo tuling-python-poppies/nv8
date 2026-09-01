@@ -87,13 +87,28 @@ export async function drainTasks(rounds = 8) {
 }
 
 /**
- * 单次让位。unref 定时器，避免拖住进程退出。
+ * 单次让位。
+ *
+ * **不能 unref 这个定时器。** 曾经加过 `timer.unref()`，理由写的是「避免拖住
+ * 进程退出」——这恰好把定时器的作用弄反了：让位期间它就是唯一该维持事件循环
+ * 存活的句柄。unref 之后，只要此刻没有别的 refed 句柄，事件循环就直接排空，
+ * 这个 promise **永远不会 settle**。
+ *
+ * 症状是 node:test 报
+ * `Promise resolution is still pending but the event loop has already resolved`，
+ * 整个文件被 `cancelledByParent` 连带取消。而它成不成立取决于「当时恰好有没有
+ * 别的活动句柄」——`document-open` / `page-lifecycle-events` /
+ * `root-window-client-navigation` / `script-injector` 四个文件（36 项）
+ * 就是这么被取消的，另一批用同一助手的测试却一直是绿的。
+ *
+ * 「拖住退出」的担忧不成立：每个 sleep 都被 await，时长 0–2ms，
+ * 不存在无人回收的长定时器。
+ *
  * @param {number} ms
  * @returns {Promise<void>}
  */
 export function sleep(ms) {
   return new Promise((resolve) => {
-    const timer = setTimeout(resolve, ms);
-    if (typeof timer.unref === 'function') timer.unref();
+    setTimeout(resolve, ms);
   });
 }

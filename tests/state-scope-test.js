@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import {
   STATE_SCOPE,
@@ -160,13 +161,32 @@ test('state scope module has no Node or browser implementation dependencies', as
  */
 const HOST_GRAPH_STATE_BUDGET = 4;
 
+/**
+ * 跑一次模块状态审计并缓存结果。
+ *
+ * 三个断言原先各 spawn 一次，每次都要重扫 1800+ 个模块；更要紧的是 cwd 在三处
+ * 各写一遍，修一处漏两处。
+ *
+ * cwd 必须走 `fileURLToPath`：`new URL('..', import.meta.url).pathname` 在
+ * Windows 上是 `/C:/...`，spawnSync 直接 ENOENT，而报错里显示的是 node.exe 的
+ * 路径，看起来像「Node 装坏了」——真实原因（cwd 非法）被完全掩盖。
+ */
+const PROJECT_ROOT = fileURLToPath(new URL('..', import.meta.url));
+let auditReportCache = null;
+
+function auditReport() {
+  if (auditReportCache === null) {
+    auditReportCache = JSON.parse(execFileSync(
+      process.execPath,
+      ['scripts/audit-module-state.mjs', '--json'],
+      { cwd: PROJECT_ROOT, encoding: 'utf8' }
+    ));
+  }
+  return auditReportCache;
+}
+
 test('host ESM graph mutable module state stays within budget', () => {
-  const output = execFileSync(
-    process.execPath,
-    ['scripts/audit-module-state.mjs', '--json'],
-    { cwd: new URL('..', import.meta.url).pathname, encoding: 'utf8' }
-  );
-  const report = JSON.parse(output);
+  const report = auditReport();
 
   assert.ok(report.hostGraphModules > 0, 'audit must resolve the host graph');
   assert.ok(
@@ -178,12 +198,7 @@ test('host ESM graph mutable module state stays within budget', () => {
 });
 
 test('process-level exemptions all carry a written reason', () => {
-  const output = execFileSync(
-    process.execPath,
-    ['scripts/audit-module-state.mjs', '--json'],
-    { cwd: new URL('..', import.meta.url).pathname, encoding: 'utf8' }
-  );
-  const { exempt } = JSON.parse(output);
+  const { exempt } = auditReport();
 
   assert.ok(exempt.length > 0, 'expected the reviewed exemption list to be populated');
   for (const entry of exempt) {
@@ -196,12 +211,7 @@ test('process-level exemptions all carry a written reason', () => {
 });
 
 test('audited files list stays sorted by severity for reviewability', () => {
-  const output = execFileSync(
-    process.execPath,
-    ['scripts/audit-module-state.mjs', '--json'],
-    { cwd: new URL('..', import.meta.url).pathname, encoding: 'utf8' }
-  );
-  const { files } = JSON.parse(output);
+  const { files } = auditReport();
   for (let index = 1; index < files.length; index += 1) {
     assert.ok(
       files[index - 1].findings.length >= files[index].findings.length,

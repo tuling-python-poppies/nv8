@@ -16,6 +16,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import {
   captureFullSurface,
@@ -24,7 +25,9 @@ import {
 } from '../src/baseline/full-surface.js';
 import { expectedMissingForNode } from '../src/baseline/known-differences.js';
 
-const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+// fileURLToPath 而不是 `.pathname`：后者在 Windows 上是 `/C:/...`，
+// `path.resolve` 会拼成 `C:\C:\...`。
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const FIXTURE_DIR = path.join(ROOT, 'fixtures', 'baseline');
 const FIXTURE_PATH = path.join(FIXTURE_DIR, 'full-surface.json');
 

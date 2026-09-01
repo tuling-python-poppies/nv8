@@ -15,12 +15,15 @@
  *   node scripts/audit-module-state.mjs --max 75  # 超过阈值即失败
  */
 
-import { readFileSync, existsSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+// 必须走 fileURLToPath 而不是 `new URL(..).pathname`：后者在 Windows 上给
+// `/C:/...`，`path.resolve` 会把它拼成 `C:\C:\...`；在任何平台上路径含空格
+// 时还会留下 `%20`。
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 /** 只审计这些前缀下的实现模块 */
 const AUDITED_PREFIXES = [
@@ -48,14 +51,30 @@ const REVIEWED_PROCESS_LEVEL_STATE = new Map([
     '安装期的当前上下文指针：由 setNativeFunctionContext() 在 Realm 激活时设置并在安装后失效'],
 ]);
 
+/**
+ * 枚举插件入口。
+ *
+ * 原先是 `execSync('ls src/plugins/*​/index.js')`：依赖 POSIX `ls` 与 shell 的
+ * 通配展开，在 Windows 上直接 `'ls' 不是内部或外部命令`，整个审计脚本崩掉，
+ * 连带 3 项 state-scope 断言变红。审计脚本自己不该依赖外部命令——它的职责
+ * 是读源码。
+ */
+function pluginEntries() {
+  const pluginsDir = path.join(ROOT, 'src', 'plugins');
+  if (!existsSync(pluginsDir)) return [];
+  return readdirSync(pluginsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(pluginsDir, entry.name, 'index.js'))
+    .filter((file) => existsSync(file))
+    .sort();
+}
+
 function collectHostGraph() {
   const roots = [
     'src/index.js',
     'src/public/create-sandbox.js',
     'src/public/edge-sandbox.js',
-    ...execSync('ls src/plugins/*/index.js', { cwd: ROOT, encoding: 'utf8' })
-      .trim().split('\n'),
-  ].map((entry) => path.resolve(ROOT, entry));
+  ].map((entry) => path.resolve(ROOT, entry)).concat(pluginEntries());
 
   const seen = new Set();
   const queue = [...roots];
@@ -104,7 +123,10 @@ function audit() {
   const exempt = [];
 
   for (const file of [...graph].sort()) {
-    const relative = path.relative(ROOT, file);
+    // 一律用正斜杠：AUDITED_PREFIXES 与 REVIEWED_PROCESS_LEVEL_STATE 的键都是
+    // `src/api/...` 形式。在 Windows 上 path.relative 给反斜杠，前缀判断会全部
+    // 落空——审计于是**报 0 项待迁移**。比崩掉更糟：它谎报通过。
+    const relative = path.relative(ROOT, file).replaceAll(path.sep, '/');
     if (!AUDITED_PREFIXES.some((prefix) => relative.startsWith(prefix))) continue;
     const findings = countMutableState(readFileSync(file, 'utf8'));
 

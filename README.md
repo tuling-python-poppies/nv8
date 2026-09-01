@@ -613,7 +613,7 @@ npm run audit:state   # 模块级可变状态审计
 npm run capabilities  # 宿主能力探测报告
 ```
 
-### 两条硬规矩
+### 三条硬规矩
 
 **1. 不许用固定时长 sleep。** 由 `tests/test-hygiene-test.js` 强制（上限 2ms）。
 需要等待就用 `tests/helpers/async-wait.js` 轮询条件。
@@ -621,12 +621,40 @@ npm run capabilities  # 宿主能力探测报告
 固定 sleep 的问题不是慢，是**它把「时间够了」冒充成「条件满足了」**——
 在 CI 上一定会以随机的方式失败。
 
-**2. 偶发失败必须查到根因。** 不接受「资源竞争」这类结论。
+**2. 让位用的定时器不许 unref。** `async-wait.js` 里的 `sleep()` 曾经写了
+`timer.unref()`，理由是「避免拖住进程退出」——恰好把作用弄反了：让位期间它就是
+唯一该维持事件循环存活的句柄。unref 之后，只要此刻没有别的 refed 句柄，
+事件循环直接排空，promise **永远不 settle**。
+
+症状是 node:test 报
+`Promise resolution is still pending but the event loop has already resolved`，
+整个文件被 `cancelledByParent`。**36 项测试就这样一直没有真正运行过**，
+而它们看起来只是「那几个文件红了」。用同一助手的其他文件却是绿的——
+差别只在「当时恰好有没有别的活动句柄」。
+
+比失败更糟的是这种沉默：一个断言从不执行，和它不存在没有区别，
+但它在计数里、在报告里、在你以为已经覆盖了的地方。
+
+**3. 偶发失败必须查到根因。** 不接受「资源竞争」这类结论。
 
 真实案例：某项测试在全量套件里偶尔失败，前三次被归因为资源竞争。第四次用
 **十路并发复现**（4/10 红），抓到 `SandboxChildExitError (signal=SIGABRT)`，
 再打开子进程 stderr 看到 `FATAL ERROR: Reached heap limit`——
 根因是 `maxHeapBytes` 被同时用于两件互不相干的事。修复后十路并发 10/10 绿。
+
+### 工具脚本必须跨平台
+
+审计与采集脚本自己也会坏，而且坏法通常是**谎报通过**：
+
+- `audit:state` 用 `path.relative()` 拼相对路径去比 `src/api/` 前缀。Windows 上
+  `path.relative` 给反斜杠，前缀判断全部落空，审计于是报「0 项待迁移」——
+  比崩掉危险得多。
+- 同一个脚本还 `execSync('ls src/plugins/*/index.js')`，在 Windows 上直接
+  `'ls' 不是内部或外部命令`，连带 3 项断言变红。审计脚本不该依赖外部命令。
+- `new URL('..', import.meta.url).pathname` 在 Windows 上是 `/C:/...`，
+  `path.resolve` 会拼成 `C:\C:\...`，`spawnSync` 的 cwd 则直接 ENOENT——
+  而报错里显示的是 node.exe 的路径，看起来像「Node 装坏了」。
+  一律用 `fileURLToPath()`（顺带解决路径含空格时残留 `%20`）。
 
 ### 性能预算
 

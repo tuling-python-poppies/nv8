@@ -45,19 +45,21 @@ import {
  * 这是最常被触碰的行为，脚本里 `el.style.display === 'none'` 这类判断到处都是。
  */
 
-/** 从 fixture 采集的真实属性名清单，顺序即真实枚举顺序。 */
-let propertyNames = CSS_PROPERTY_NAMES;
-
 /**
- * 注入 CSS 属性名清单。
+ * 从 fixture 采集的真实属性名清单，顺序即真实枚举顺序。
  *
- * 由安装层在启动时调用，避免运行时模块去读文件。
+ * 这里原先是 `let` + 一个导出的 `configureCSSPropertyNames()` 注入口，
+ * 但那个注入口**从未被调用过**（全仓零引用）。留着它有两处代价：
  *
- * @param {string[]} names
+ * 1. 模块级可变绑定会被 `npm run audit:state` 计成待迁移状态——而它其实
+ *    只是个常量
+ * 2. 一个「看起来可配置但实际不可配置」的接口比没有接口更容易误导：
+ *    以为改它就能换 CSS 属性表
+ *
+ * 真要支持多套属性表，正确做法是按 Realm 传参而不是模块级赋值，
+ * 否则同进程内混用 edge-150 / edge-151 profile 时后写者会覆盖前者。
  */
-export function configureCSSPropertyNames(names) {
-  propertyNames = Object.freeze([...names]);
-}
+const propertyNames = CSS_PROPERTY_NAMES;
 
 /**
  * 当前生效的属性名清单。

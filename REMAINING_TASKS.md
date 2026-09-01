@@ -556,7 +556,35 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 - **固定等待卫生检查** - `tests/test-hygiene-test.js`
   - 禁止测试中新增超过 2ms 的裸 `setTimeout` 等待
   - 已验证临时违规能被检查捕获
-- **稳定性验证** - 当前全套 `502/502` 通过
+- **让位定时器不许 unref**（本轮修复，**36 项测试因此从未真正运行过**）
+  - `async-wait.js` 的 `sleep()` 写了 `timer.unref()`，注释理由是「避免拖住
+    进程退出」——恰好把作用弄反了：让位期间它就是唯一该维持事件循环存活的句柄。
+    unref 之后，只要此刻没有别的 refed 句柄，事件循环直接排空，
+    promise **永远不 settle**
+  - 症状：node:test 报 `Promise resolution is still pending but the event loop
+    has already resolved`，整个文件被 `cancelledByParent`。
+    `document-open`(10) / `page-lifecycle-events`(11) /
+    `root-window-client-navigation`(7) / `script-injector`(8) 四个文件全灭
+  - 用同一助手的其他文件却一直是绿的——差别只在「当时恰好有没有别的活动句柄」，
+    所以它长期看起来像「那几个文件坏了」而不是「助手坏了」
+  - **比失败更糟的是这种沉默**：一个断言从不执行，和它不存在没有区别，
+    但它在计数里、在报告里、在你以为已经覆盖了的地方
+  - 「拖住退出」的担忧本身不成立：每个 sleep 都被 await，时长 0–2ms
+- **工具脚本的跨平台缺陷**（本轮修复，其中一个是**谎报通过**）
+  - `audit:state` 用 `path.relative()` 的结果去比 `src/api/` 前缀。Windows 上
+    给的是反斜杠，前缀判断全部落空，审计报「0 项待迁移 / 0 项已审阅豁免」——
+    看起来比真实情况更好。修好后立刻暴露 4 项豁免 + 1 项真实待迁移
+  - 同一脚本 `execSync('ls src/plugins/*/index.js')`：依赖 POSIX `ls` 与 shell
+    通配展开，Windows 上直接崩，连带 3 项断言变红。改用 `readdirSync`
+  - 四个脚本 + 两个测试用 `new URL('..', import.meta.url).pathname`：
+    Windows 上是 `/C:/...`，`path.resolve` 拼成 `C:\C:\...`，`spawnSync` 的 cwd
+    直接 ENOENT——而报错显示的是 node.exe 的路径，看起来像「Node 装坏了」。
+    一律改 `fileURLToPath()`（顺带解决路径含空格残留 `%20`）
+  - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
+    却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
+    比没有接口更容易误导
+- **稳定性验证** - 当前 726 项中 722 通过；余下 4 项是 Node 22 的
+  shim 缺口（见第十二节 `DisposableStack.undefined`），Node 24 上全绿
 
 ### 未完成项
 - [ ] **Backend 兼容性矩阵实际差异测试** - CI 已配置，缺针对性断言

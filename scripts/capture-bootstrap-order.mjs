@@ -18,13 +18,16 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 
 import {
   captureBootstrapOrderSnapshot,
   diffBootstrapSequence,
 } from '../src/baseline/bootstrap-order.js';
 
-const ROOT = path.resolve(new URL('..', import.meta.url).pathname);
+// fileURLToPath 而不是 `.pathname`：后者在 Windows 上是 `/C:/...`，
+// `path.resolve` 会拼成 `C:\C:\...`。
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const FIXTURE_PATH = path.join(ROOT, 'fixtures', 'baseline', 'bootstrap-order.json');
 
 function toFixture(snapshot) {

@@ -10,6 +10,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   EVIDENCE_SOURCE_METHODS,
@@ -237,7 +238,7 @@ test('Core source never imports a concrete Evidence implementation', async () =>
       // 契约自身（./evidence-contract.js）是 Core 的一部分，允许
       if (specifier.includes('evidence-contract')) continue;
       offenders.push({
-        file: path.relative(process.cwd(), file.pathname),
+        file: path.relative(process.cwd(), fileURLToPath(file)),
         specifier,
       });
     }
