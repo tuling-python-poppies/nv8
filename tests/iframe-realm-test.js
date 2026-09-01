@@ -81,11 +81,13 @@ test('Core iframe malformed src dispatches load, not error', async () => {
 /**
  * 不支持的 scheme：导航整体中止，不派发任何事件。
  *
- * 这里在 append **之前**就把 src 设好，只做一次导航。改成
- * `removeAttribute('srcdoc')` 再 `setAttribute('src')` 会引入第二个混淆项：
- * NV8 对**每次属性变更**都立即导航，中间那次「既无 srcdoc 也无 src」的状态
- * 会先派发一次 blank 的 load；真实浏览器把导航排成任务，两次属性变更被合并
- * 成一次导航。那条差距单独登记，不该混进这个用例。
+ * 这里在 append **之前**就把 src 设好，只做一次导航——用意是把用例收窄到
+ * 「坏 scheme」这一个变量上。
+ *
+ * 原注释说改成 `removeAttribute('srcdoc')` + `setAttribute('src')` 会引入
+ * 「中间 blank 的 load」这个混淆项。**重测后不成立**：同一个同步块里的多次
+ * 属性变更已经合并成一次导航，被顶掉的那次既不提交文档也不派事件。
+ * 见 `tests/iframe-navigation-coalescing-test.js`。
  */
 test('Core iframe unsupported scheme dispatches nothing', async () => {
   const nv8 = await createDomRuntime();

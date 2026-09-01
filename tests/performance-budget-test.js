@@ -7,6 +7,10 @@
  * 约 490ms，但 CI 机器负载波动能轻易造成 2–3 倍差异——预算卡在 1.5 倍只会
  * 制造假警报，然后大家开始习惯性忽略红灯。
  *
+ * 光放宽预算不够：冷启动那条原来只采**一次**样，在并行跑整套测试时它测的是
+ * 「此刻机器有多忙」，实测两次越过 3000ms 而单独跑只要几百毫秒。现在取
+ * 多次采样的最小值——竞争只会让采样变大，所以最小值是受污染最少的估计。
+ *
  * 精确数字由 `npm run benchmark` 报告（中位数 + p90），这里只守住底线。
  *
  * ## 泄漏怎么判定
@@ -57,14 +61,36 @@ function handleTally() {
 
 // ------------------------------------------------------------ 性能预算
 
+/**
+ * 冷启动取**多次采样的最小值**，不是单次。
+ *
+ * 单次采样在并行跑整套测试时测的是「此刻机器有多忙」，不是「启动能有多快」。
+ * 实测这条断言以 3977ms / 3260ms 两次越过 3000ms 预算，而单独跑同一条只要
+ * 几百毫秒——放大预算等于把噪声正当化，本项目已经因为固定 sleep 吃过这个教训。
+ *
+ * 取最小值而不是中位数：这里断言的是**上界**（"启动不该慢于 X"），而竞争只会
+ * 让采样变大、不会变小。所以最小值是受污染最少的估计。
+ *
+ * 另有一个具体原因：**第一次采样包含宿主 ESM 图的加载**（约 1700 个模块，
+ * 每个进程一次），那不是每次建沙箱都要付的成本。README 里 ~490ms 的数字来自
+ * `npm run benchmark` 的重复采样，同样是在宿主图已加载之后测的。用第一次采样
+ * 去比那个预算，比的是两件不同的事。
+ */
+const COLD_START_SAMPLES = 3;
+
 test('cold start stays within budget', async () => {
-  const started = process.hrtime.bigint();
-  await withSandbox(sandbox => sandbox.run('document.title'));
-  const elapsed = Number(process.hrtime.bigint() - started) / 1e6;
+  const samples = [];
+  for (let index = 0; index < COLD_START_SAMPLES; index += 1) {
+    const started = process.hrtime.bigint();
+    await withSandbox(sandbox => sandbox.run('document.title'));
+    samples.push(Number(process.hrtime.bigint() - started) / 1e6);
+  }
+  const fastest = Math.min(...samples);
 
   assert.ok(
-    elapsed < BUDGETS.coldStartMs,
-    `cold start took ${elapsed.toFixed(0)}ms, budget is ${BUDGETS.coldStartMs}ms`
+    fastest < BUDGETS.coldStartMs,
+    `fastest cold start took ${fastest.toFixed(0)}ms, budget is `
+    + `${BUDGETS.coldStartMs}ms (samples: ${samples.map(v => v.toFixed(0)).join(', ')})`
   );
 });
 

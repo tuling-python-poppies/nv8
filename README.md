@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，741 项
+npm test              # 全量，745 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -613,7 +613,7 @@ npm run audit:state   # 模块级可变状态审计
 npm run capabilities  # 宿主能力探测报告
 ```
 
-### 三条硬规矩
+### 五条硬规矩
 
 **1. 不许用固定时长 sleep。** 由 `tests/test-hygiene-test.js` 强制（上限 2ms）。
 需要等待就用 `tests/helpers/async-wait.js` 轮询条件。
@@ -641,6 +641,26 @@ npm run capabilities  # 宿主能力探测报告
 **十路并发复现**（4/10 红），抓到 `SandboxChildExitError (signal=SIGABRT)`，
 再打开子进程 stderr 看到 `FATAL ERROR: Reached heap limit`——
 根因是 `maxHeapBytes` 被同时用于两件互不相干的事。修复后十路并发 10/10 绿。
+
+**4. 断言「某件事没发生」不许靠等一段时间。** 那是同一个赌注换了方向。
+
+要证明「没有多余的 `load`」，正确做法是造一个**因果哨兵**：先让被测操作完成，
+再触发一次导航到哨兵 URL 并等它的 `load`。任何多余的中间事件都排在哨兵之前，
+于是「有没有多余项」变成「序列是否恰好等于预期」。见
+`tests/iframe-navigation-coalescing-test.js`。
+
+等 200ms 看第三个事件有没有来是双输：一次子 Realm 构建要几百毫秒，等太短抓不到，
+等太长就成了 CI 抖动源。
+
+**5. 上界断言取多次采样的最小值，不取单次。**
+
+冷启动预算原来只采一次样，在并行跑整套测试时它测的是「此刻机器有多忙」——
+实测两次越过 3000ms 预算，而单独跑同一条只要几百毫秒。放大预算等于把噪声
+正当化。取最小值是因为竞争只会让采样变大，所以最小值受污染最少。
+
+还有个具体原因：**第一次采样包含宿主 ESM 图的加载**（约 1700 个模块，每进程
+一次），那不是每次建沙箱都要付的成本。拿它去比 `benchmark` 报的 490ms，
+比的是两件不同的事。
 
 ### 工具脚本必须跨平台
 
@@ -670,7 +690,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（741 项 / 71 个文件） |
+| `npm test` | 全量测试（745 项 / 72 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -723,7 +743,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 71 个测试文件
+tests/                 72 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -789,13 +809,15 @@ css-ua-defaults.js），现在都有了脚本。
 - **动态创建的 iframe，`contentWindow` 同步为 `null`**。子 Realm 引导需要
   265ms，无法在 `appendChild` 内同步完成。三个方案各有代价，见
   [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)（状态：待决策）。
-- **父子链 4 处不符**：`contentWindow.parent === window` 为 false、`top` 同样、
-  `frameElement` 恒为 `null`、空白 iframe 的 `location.href` 是父页面 URL
-  而非 `about:blank`。
+- **父子链 5 处不符**：`contentWindow.parent === window` 为 false、`top` 同样、
+  `parent.window === parent` 也是 false、`frameElement` 恒为 `null`、
+  空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`。
+  这些在**静态** iframe 上也复现，与 ADR-0004 的动态时序无关。
 - **iframe Realm 绕过堆容量守卫**：低堆配置下能建成超量 iframe 且不报结构化
   错误，随后 V8 OOM。与 ADR-0004 的池位账目是同一片区域。
-- **导航未作为任务排队**：NV8 在每次属性变更时导航，真实浏览器会把
-  `removeAttribute('srcdoc')` + `setAttribute('src')` 合并为一次。
+- **被顶掉的导航仍会建出子 Realm 再关掉**：真实浏览器压根不会开始。是 CPU
+  浪费而非可观察偏差——导航合并本身是正确的（同一同步块内的多次属性变更只
+  提交最后一次，见 `tests/iframe-navigation-coalescing-test.js`）。
 
 ### URL
 

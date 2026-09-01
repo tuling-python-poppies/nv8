@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 741 项（`npm test`，71 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 745 项（`npm test`，72 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -325,9 +325,29 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - `html-iframe-element-realm-state.js` 早就写好了 `malformedUrl` 分支，
     但 `new URL('http://%')` 从不抛，所以那条分支**从未执行过**——
     iframe 反而拿 `http://%/` 建了个真的子 Realm。现在 URL 会抛，分支才真正生效
-- [ ] **iframe 导航未排成任务** - NV8 对**每次属性变更**立即导航；真实浏览器把
-  导航排成任务，`removeAttribute('srcdoc')` + `setAttribute('src')` 合并为一次。
-  NV8 会先派发一次中间 blank 的 `load`
+- [x] **iframe 导航合并** - 原记为差距，**重测后不成立**，已改为锁住现状
+  - 原记录：「NV8 对每次属性变更立即导航，会先派发一次中间 blank 的 `load`」
+  - 实测四个场景（`tests/iframe-navigation-coalescing-test.js`，4 项）：
+    同步块内 srcdoc 后改 src → 只有 target 一次 load；同步连设两次 src →
+    只有最后一个；append 后立刻设 src → 一次；append 后立刻 remove →
+    不留下子 Realm
+  - 已经正确的原因是**合并发生在完成时而不是调度时**：`navigate()` 每次给
+    元素记录的 `version` 加一，在飞的那次完成后检查
+    `current.version === version`，不等就 `handle.close()` 且**不派 `load`**
+  - 曾按原记录实现「用微任务排队合并」，实测前后四个场景可观察行为**完全一致**，
+    于是回滚：为一个测不出收益的改动引入 `navigateClient()` 的 promise 身份变化
+    是纯风险
+  - 断言方式值得记一笔：不用「等 200ms 看还有没有第三个 load」——一次子 Realm
+    构建要几百毫秒，等太短抓不到、等太长成 CI 抖动源。改用**因果顺序**：目标
+    load 到达后再导航到一个哨兵 URL，任何多余的中间 load 都排在哨兵之前，
+    于是「有没有多余项」变成「序列是否恰好等于预期」
+- [ ] **被顶掉的导航仍会建出子 Realm 再关掉** - 剩下的真实差别，无探针覆盖
+  - 真实浏览器压根不会开始那次导航；NV8 会走完 `createChildRealm()` 再
+    `handle.close()`。是 CPU 浪费（一次构建几百毫秒）而非可观察偏差
+  - 三次非侵入式测量（可观察 load 序列 / 峰值 Realm 数 / Realm id 序号）
+    **都没能测到**它，所以不写成结论
+  - 与「iframe Realm 绕过堆容量守卫」是同一片区域（在飞的创建已经吃掉内存），
+    应一并处理
 
 ---
 
@@ -584,7 +604,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 741 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 745 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
