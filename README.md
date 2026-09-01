@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，745 项
+npm test              # 全量，753 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -690,7 +690,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（745 项 / 72 个文件） |
+| `npm test` | 全量测试（753 项 / 72 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -822,7 +822,7 @@ css-ua-defaults.js），现在都有了脚本。
 ### URL
 
 主机解析已按真实 Edge 对齐（8 项探针全部一致，另有
-[tests/url-parsing-test.js](tests/url-parsing-test.js) 20 项）。关键是主机字符
+[tests/url-parsing-test.js](tests/url-parsing-test.js) 28 项）。关键是主机字符
 分**三类**而不是两类：
 
 | 类别 | 字符 | 处理 |
@@ -834,6 +834,19 @@ css-ua-defaults.js），现在都有了脚本。
 **Node 不能当基准**——`https://a b/` 浏览器接受并编码为 `https://a%20b/`，
 Node 直接抛。规范条文也把空格列为 forbidden domain code point，同样与浏览器
 不符；依据是 Chromium `url_canon_host.cc` 的 `kHostCharLookup`。
+
+**opaque path**（有 scheme 但没有 `//`：`about:` / `mailto:` / `data:` /
+`javascript:` / `tel:` / `urn:`）此前完全不支持，后果分两种，第二种更糟：
+
+| 输入 | 原行为 | 真实浏览器 |
+|---|---|---|
+| `new URL('mailto:a@b.com')` | THROWS | `mailto:a@b.com` |
+| `new URL('mailto:a@b.com', base)` | `https://t.test/dir/mailto:a@b.com` | `mailto:a@b.com` |
+
+抛错至少是显式失败；带 base 时它**静默**拼成一个 http URL，origin 还成了父页面
+的。同时修了 origin：元组 origin 只属于特殊 scheme，其余（含
+`nv8-unknown://x`、`about://x`）一律 `"null"`——拼出 `protocol//host` 会让两个
+不同的不透明 origin 被判成同源，而同源判断错在放宽方向上比报错危险。
 
 仍未实现：IDN / punycode（非 ASCII 主机原样保留）、IPv6 压缩形式的重新序列化、
 IPv4 点分十进制的数值归一化。三者都无探针覆盖。

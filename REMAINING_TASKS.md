@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 745 项（`npm test`，72 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 753 项（`npm test`，72 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -320,7 +320,30 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     在解析器里抛的话 setter 得包 try/catch，而 catch 无法区分「值非法」与「有 bug」
   - 仍未实现且无探针覆盖：IDN / punycode（非 ASCII 主机原样保留）、
     IPv6 压缩形式重新序列化、IPv4 点分十进制数值归一化
-  - 测试 20 项（`tests/url-parsing-test.js`）+ 8 项探针
+  - 测试 28 项（`tests/url-parsing-test.js`）+ 8 项探针
+- [x] **URL 支持 opaque path** - `about:` / `mailto:` / `data:` / `javascript:` /
+  `tel:` / `urn:` 此前完全不认
+  - 后果分两种，**第二种更糟**：
+    `new URL('mailto:a@b.com')` 抛错；而
+    `new URL('mailto:a@b.com', base)` **静默**拼成
+    `https://t.test/dir/mailto:a@b.com`，origin 还成了父页面的。
+    脚本拿它去比对、发请求、判同源都会走到完全错误的分支
+  - 特殊 scheme 即使没写 `//` 也**不是** opaque path：规范的
+    "special authority ignore slashes state" 会跳过缺失或多余的斜杠，
+    所以 `http:example.com/p` 等价于 `http://example.com/p`。
+    不处理这条的话它会被当成 opaque path，origin 变 `null`
+  - opaque path 只能用 fragment 做相对解析基准；相对路径必须失败而不是
+    编一个结果。空串按「沿用 base」处理（`new URL('', location.href)` 很常见）
+  - `host` / `hostname` / `port` / `pathname` 四个 setter 对 opaque path
+    静默忽略——真去写会造出 `mailto://host` 这种既无法序列化回原样、
+    也不可能出现在真实浏览器里的记录
+  - **顺带修 origin**：元组 origin 只属于特殊 scheme，其余（含
+    `nv8-unknown://x`、`about://x`）一律 `"null"`。拼出 `protocol//host` 会让
+    两个不同的不透明 origin 被判成同源，而同源判断错在**放宽**方向上比报错危险。
+    `file:` 保留 `file://`，与 Chromium 实测一致
+  - 这一组不存在「浏览器与规范打架」的情况（不像主机里的空格），按规范实现即可
+  - 这也是把空白 iframe 的 `location.href` 修成 `about:blank` 的前置条件——
+    在此之前 `new URL('about:blank')` 直接抛
 - [x] **iframe 畸形 URL 现在走 malformedUrl 分支** - 顺带修好
   - `html-iframe-element-realm-state.js` 早就写好了 `malformedUrl` 分支，
     但 `new URL('http://%')` 从不抛，所以那条分支**从未执行过**——
@@ -604,7 +627,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 745 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 753 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项

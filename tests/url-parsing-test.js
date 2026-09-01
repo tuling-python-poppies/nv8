@@ -37,7 +37,6 @@ function href(input, base = BASE) {
 function throws(input, base = BASE) {
   assert.throws(() => parseUrl(input, base), TypeError, `${input} should be rejected`);
 }
-
 // ------------------------------------------------------ forbidden：必须失败
 
 test('invalid percent escapes in the host are rejected', () => {
@@ -233,4 +232,98 @@ test('blob URLs keep their inner origin and survive a malformed inner URL', () =
   // 内层 URL 解析失败不能让整个 blob: URL 抛——真实浏览器给 opaque origin。
   assert.equal(urlOrigin(parseUrl('blob:http://%/abc')), 'null');
   assert.equal(urlOrigin(parseUrl('blob:abc')), 'null');
+});
+
+// ------------------------------------------------------ opaque path
+
+/**
+ * 有 scheme 但没有 `//` 的 URL —— WHATWG 的 opaque path。
+ *
+ * 原实现完全不认它们，后果分两种，**第二种更糟**：
+ *
+ * | 输入 | 原行为 | 真实浏览器 |
+ * |---|---|---|
+ * | `new URL('mailto:a@b.com')` | THROWS | `mailto:a@b.com` |
+ * | `new URL('mailto:a@b.com', base)` | `https://t.test/dir/mailto:a@b.com` | `mailto:a@b.com` |
+ *
+ * 抛错至少是显式失败；带 base 时它**静默**拼成一个 http URL，origin 还成了父
+ * 页面的。脚本拿这个结果去比对、去发请求、去判同源，都会走到完全错误的分支。
+ *
+ * 这一组不存在「浏览器与规范打架」的情况（不像主机里的空格），
+ * 所以按规范实现即可。
+ */
+
+test('schemes without // parse as opaque-path URLs', () => {
+  for (const [input, expected] of [
+    ['about:blank', 'about:blank'],
+    ['mailto:a@b.com', 'mailto:a@b.com'],
+    ['data:text/plain,hi', 'data:text/plain,hi'],
+    ['javascript:void 0', 'javascript:void 0'],
+    ['tel:+123', 'tel:+123'],
+    ['urn:isbn:1', 'urn:isbn:1'],
+    ['about:blank#frag', 'about:blank#frag'],
+    ['mailto:a@b?x=1', 'mailto:a@b?x=1'],
+  ]) {
+    assert.equal(href(input), expected, `${input} with a base`);
+    assert.equal(href(input, null), expected, `${input} without a base`);
+  }
+});
+
+test('an absolute opaque-path URL ignores the base entirely', () => {
+  // 这条是这组里最重要的：原实现会把它拼到 base 的目录下，
+  // 变成一个 origin 属于父页面的 https URL——静默且错得彻底。
+  assert.equal(href('mailto:a@b.com'), 'mailto:a@b.com');
+  assert.notEqual(href('mailto:a@b.com'), 'https://t.test/dir/mailto:a@b.com');
+});
+
+test('opaque-path URLs have an opaque origin', () => {
+  for (const input of ['about:blank', 'mailto:a@b.com', 'data:text/plain,x']) {
+    assert.equal(urlOrigin(parseUrl(input)), 'null', input);
+  }
+});
+
+test('non-special schemes with an authority also have an opaque origin', () => {
+  // 元组 origin 只属于特殊 scheme。拼出 `protocol//host` 会让两个
+  // `nv8-unknown://x` 被判成同源——同源判断错在放宽方向上，比报错危险。
+  assert.equal(urlOrigin(parseUrl('nv8-unknown://x')), 'null');
+  assert.equal(urlOrigin(parseUrl('about://x')), 'null');
+  // 特殊 scheme 不受影响
+  assert.equal(urlOrigin(parseUrl('https://ok.test:8443/p')), 'https://ok.test:8443');
+  assert.equal(urlOrigin(parseUrl('file:///etc/passwd')), 'file://');
+});
+
+test('special schemes without // still get an authority', () => {
+  // 规范的 "special authority ignore slashes state" 会跳过缺失或多余的斜杠。
+  // 不处理这条的话 `http:example.com/` 会被当成 opaque path，origin 变 null。
+  assert.equal(href('http:example.com/p'), 'http://example.com/p');
+  assert.equal(href('https:/foo'), 'https://foo/');
+  assert.equal(urlOrigin(parseUrl('http:example.com/p')), 'http://example.com');
+});
+
+test('an opaque-path base only accepts a fragment', () => {
+  const opaque = parseUrl('mailto:a@b.com');
+  assert.equal(href('#f', opaque), 'mailto:a@b.com#f');
+  assert.equal(href('', opaque), 'mailto:a@b.com');
+  // `mailto:a@b` 没有目录结构可以拼，相对路径必须失败而不是编一个结果
+  throws('x', opaque);
+  throws('/y', opaque);
+});
+
+test('opaque-path setters ignore authority and path, but accept query and hash', () => {
+  const opaque = parseUrl('mailto:a@b.com');
+  for (const component of ['host', 'hostname', 'port', 'pathname']) {
+    assert.equal(
+      serializeUrl(updateUrlComponent(opaque, component, 'zzz')),
+      'mailto:a@b.com',
+      `${component} must be ignored on an opaque path`,
+    );
+  }
+  assert.equal(serializeUrl(updateUrlComponent(opaque, 'hash', 'h')), 'mailto:a@b.com#h');
+  assert.equal(serializeUrl(updateUrlComponent(opaque, 'search', 'q=1')), 'mailto:a@b.com?q=1');
+});
+
+test('a single-letter scheme is still a scheme', () => {
+  // `C:/x` 看起来像 Windows 路径，但 `C` 是合法 scheme，浏览器按 URL 解析。
+  // 这条锁住「不要为了照顾路径写法而放弃 scheme 判定」。
+  assert.equal(href('C:/x'), 'c:/x');
 });

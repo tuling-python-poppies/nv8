@@ -29,6 +29,23 @@
 const absoluteUrlPattern = /^([A-Za-z][A-Za-z0-9+.-]*):\/\/([^/?#]*)([^?#]*)(\?[^#]*)?(#.*)?$/u;
 
 /**
+ * 有 scheme 但**没有** `//` 的绝对 URL —— WHATWG 的「opaque path」
+ * （旧称 cannot-be-a-base-URL）。
+ *
+ * `about:blank` / `mailto:` / `data:` / `javascript:` / `tel:` / `urn:` 全属此类。
+ * 原实现完全不认它们，后果分两种，第二种更糟：
+ *
+ * | 输入 | 原行为 | 真实浏览器 |
+ * |---|---|---|
+ * | `new URL('mailto:a@b.com')` | THROWS | `mailto:a@b.com` |
+ * | `new URL('mailto:a@b.com', base)` | `https://t.test/dir/mailto:a@b.com` | `mailto:a@b.com` |
+ *
+ * 抛错至少是显式失败；**带 base 时它静默拼成了一个 http URL**，origin 还成了
+ * 父页面的。脚本拿这个结果去比对或发请求都会走到完全错误的分支。
+ */
+const opaqueUrlPattern = /^([A-Za-z][A-Za-z0-9+.-]*):([^?#]*)(\?[^#]*)?(#.*)?$/u;
+
+/**
  * WHATWG 的 "special scheme"。影响三件事，缺一件都会出现可检测偏差：
  *
  * 1. 主机不可为空（`file:` 例外，`file:///etc/passwd` 的主机就是空的）
@@ -118,7 +135,19 @@ export function parseUrl(value, base = null) {
   if (absolute !== null) {
     return fromAbsoluteMatch(absolute);
   }
+  const opaque = opaqueUrlPattern.exec(input);
+  if (opaque !== null) {
+    return fromOpaqueMatch(opaque);
+  }
   if (base === null) {
+    throw new TypeError("Invalid URL");
+  }
+  if (base.opaquePath === true) {
+    // opaque path 不能当相对解析的基准：`mailto:a@b` 没有目录结构可以拼。
+    // 规范只允许纯 fragment。空串按"沿用 base"处理——它不产生新路径，
+    // 而抛错会让 `new URL('', location.href)` 这类无害写法失败。
+    if (input.startsWith("#")) return { ...base, hash: input };
+    if (input === "") return { ...base };
     throw new TypeError("Invalid URL");
   }
   if (input.startsWith("//")) {
@@ -149,6 +178,10 @@ export function serializeUrl(record) {
   if (record.protocol === "blob:") {
     return `blob:${record.pathname}${record.search}${record.hash}`;
   }
+  if (record.opaquePath === true) {
+    // opaque path 不带 `//`，也没有 authority
+    return `${record.protocol}${record.pathname}${record.search}${record.hash}`;
+  }
   const credentials = record.username === ""
     ? ""
     : `${record.username}${record.password === "" ? "" : `:${record.password}`}@`;
@@ -159,11 +192,30 @@ export function urlOrigin(record) {
   if (record.protocol === "blob:") {
     return record.blobOrigin ?? "null";
   }
+  // 只有特殊 scheme 有元组 origin。其余一律不透明，返回 `"null"`。
+  //
+  // 之前非特殊 scheme 会拼出 `protocol//host`，于是 `about:blank` 之间、
+  // `nv8-unknown://x` 之间会被判成**同源**——真实浏览器给的是两个互不相同的
+  // 不透明 origin。同源判断错在放宽方向上，比报错危险。
+  //
+  // `file:` 保留 `file://`（host 为空），与 Chromium 实测一致。
+  if (!SPECIAL_SCHEMES.has(record.protocol)) {
+    return "null";
+  }
   return `${record.protocol}//${record.host}`;
 }
 
 export function updateUrlComponent(record, component, value) {
   const input = `${value}`;
+  // opaque path 没有 authority，也没有可结构化的路径。规范要求这四个 setter
+  // 静默忽略——真去写会造出 `mailto://host` 这种既无法序列化回原样、
+  // 也不可能出现在真实浏览器里的记录。
+  if (
+    record.opaquePath === true
+    && ["host", "hostname", "port", "pathname"].includes(component)
+  ) {
+    return record;
+  }
   switch (component) {
     case "href":
       return parseUrl(input, record);
@@ -261,6 +313,41 @@ function normalizeAbsolutePath(path, protocol) {
     return normalizePath(path);
   }
   return SPECIAL_SCHEMES.has(protocol) ? "/" : "";
+}
+
+/**
+ * 构造 opaque path 记录。
+ *
+ * 特殊 scheme 即使写成 `http:example.com/`（没有 `//`）也**不是** opaque path：
+ * 规范的 "special authority ignore slashes state" 会跳过缺失/多余的斜杠直接进
+ * authority，所以它等价于 `http://example.com/`。这条不处理的话，
+ * `http:example.com/` 会被当成 opaque path，origin 变成 `null`。
+ */
+function fromOpaqueMatch(match) {
+  const protocol = `${match[1].toLowerCase()}:`;
+  const path = match[2] ?? "";
+  const search = match[3] ?? "";
+  const hash = match[4] ?? "";
+
+  if (SPECIAL_SCHEMES.has(protocol)) {
+    return parseUrl(
+      `${protocol}//${path.replace(/^\/+/u, "")}${search}${hash}`,
+      null,
+    );
+  }
+
+  return {
+    protocol,
+    username: "",
+    password: "",
+    host: "",
+    hostname: "",
+    port: "",
+    pathname: path,
+    search,
+    hash,
+    opaquePath: true,
+  };
 }
 
 function parseBlobUrl(input) {
