@@ -3,7 +3,8 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 726 项（`npm test`，70 个文件）
+- **测试状态**: 738 项（`npm test`，71 个文件）。Node 22 / 24 全绿；
+  Node 18 / 20 有 5 项引擎版本缺口未登记（见第十二节末）
 - **项目性质**: 私有框架，无公开发布计划
 
 ---
@@ -583,8 +584,9 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 当前 726 项中 722 通过；余下 4 项是 Node 22 的
-  shim 缺口（见第十二节 `DisposableStack.undefined`），Node 24 上全绿
+- **稳定性验证** - 738 项在 Node 22 / 24 上全绿；Node 18 / 20 各 5 项红，
+  全部是 V8 版本缺口（`Iterator` / `ArrayBuffer.transfer` / `Set` 集合运算），
+  与实现无关，尚未接入版本门控
 
 ### 未完成项
 - [ ] **Backend 兼容性矩阵实际差异测试** - CI 已配置，缺针对性断言
@@ -850,6 +852,44 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 顺带修掉一条**影响全部 7 个 `aria*Elements`** 的偏差：属性不存在时真实
     Edge 返回 `null`，NV8 返回空数组。实测四种情形：属性不存在 → null，
     属性存在但解析不到 → array(0)，可解析 → array(1)，空字符串 → array(0)
+- [x] **Node 18–22 的内建 shim 与原生对齐** - 四档 surface 现在完全一致
+  - `SuppressedError` / `DisposableStack` / `AsyncDisposableStack` /
+    `Float16Array` / `DataView` 的半精度方法都是 V8 13（Node 24）才有的，
+    18–22 走 `install-modern-builtins.js` 的 shim。五处 shim 全都和原生不一样：
+  - **`DisposableStack.prototype` 多出字符串键 `"undefined"`**（最严重）：
+    `Symbol.dispose` 在 Node 20 以下不存在，`[Symbol.dispose]() {}` 的计算键
+    被 ToPropertyKey 转成字符串 `"undefined"`。多出的成员是宿主特征泄漏，
+    比缺少成员危险。同时符号键少两个（`Symbol.dispose` 与 `Symbol.toStringTag`），
+    `Object.prototype.toString.call(stack)` 退回 `[object Object]`
+  - `SuppressedError` 的 `name` 写在构造器里（落在**实例**上），
+    原型缺 `message` / `name`
+  - `Float16Array.prototype` 少 `BYTES_PER_ELEMENT`，却多一个显式的
+    `Symbol.toStringTag`（真实的那个是 `%TypedArray%.prototype` 上的 getter）。
+    取形状一致而牺牲了 `[object Float16Array]` 标签——形状进对等性比对，
+    标签只在极少数探针出现
+  - `DataView.getFloat16` / `setFloat16` 完全缺失。这两个**做真实的 binary16
+    编解码**（Float16Array 只补形状）：DataView 的结果直接进协议字节，
+    给近似值等于静默产出错误数据。舍入必须 ties-to-even，用 `Math.round`
+    会让 2049 这类值错掉最后一位
+  - shim 方法此前**全都没有原生伪装**：`DisposableStack.prototype.use.toString()`
+    直接吐 JS 源码。已按原型逐个登记，`constructor` 用类名而不是 `"constructor"`
+  - **一条推断被实测纠正**：以为符号键方法名带方括号（`[Symbol.dispose]`），
+    在 Node 22 的 shim 上通过、Node 24 原生上失败——原生里
+    `prototype[Symbol.dispose] === prototype.dispose` 是**同一个函数对象**，
+    名字就是 `dispose`。同一张表跑两条路径才能发现，只测 shim 会把推断固化成契约
+  - 修完后 `full-surface.json` 的 node18 / node20 / node22 三档对这五个全局的
+    记录与 node24 **逐字节相同**（成员数、符号数、descriptor 摘要）。
+    四档都用生成器在对应 Node major 上实跑，没有手抄
+  - 测试 14 项（`tests/modern-builtins-shim-test.js`），刻意不分版本：
+    同一张表在 24 上验原生、在 18–22 上验 shim
+- [ ] **Node 18 / 20 的引擎缺口未接入版本门控** - 各 5 项红，与实现无关
+  - `Iterator`（V8 12.2 / Node 22+）、`ArrayBuffer.prototype.detached` /
+    `transfer` / `transferToFixedLength`（Node 21+）、`Set` 的 7 个集合运算
+    （Node 22+）
+  - `known-differences.js` 已有 `expectedMissingForNode()` 机制服务于 baseline，
+    但 `edge-member-parity` / `edge-surface-parity` 两个测试没接
+  - 另有 `capability-diagnostics` 的 `strict diagnostics are non-enumerable`
+    在 18 / 20 上红，需单独排查
 - [x] **`BeforeUnloadEvent` 已封锁** - 8 个不可构造事件接口全部到位
   - 之前判断「封锁会让 beforeunload 取消整体失效」是基于一次失败尝试。
     正解不是找内部构造通道，而是**用本 Realm 的 `Event` 造实例**（肯定能被

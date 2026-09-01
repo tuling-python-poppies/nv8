@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，726 项
+npm test              # 全量，738 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -670,7 +670,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（726 项 / 70 个文件） |
+| `npm test` | 全量测试（738 项 / 71 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -723,7 +723,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 70 个测试文件
+tests/                 71 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
