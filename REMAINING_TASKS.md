@@ -131,22 +131,39 @@
   - HTML Elements、iframe
   - Performance、Crypto、WebSocket
 
-### 未完成项（按需实现）
-- [ ] **Canvas/WebGL/WebGPU** - 渲染能力
-- [ ] **Media APIs** - Audio、Video、MediaSource、WebRTC
-- [ ] **Device APIs** - Geolocation、Battery、Sensors
-- [ ] **CSSOM** - 完整 CSS 对象模型
-- [ ] **SVG/MathML** - 非 HTML 命名空间
-- [ ] **高级 DOM** - Range、Selection、Shadow DOM、MutationObserver 完整语义
-- [ ] **Blob/File/FileReader** - 二进制数据完整处理
-- [ ] **Object URLs** - `URL.createObjectURL()` 和生命周期
-- [ ] **IndexedDB** - 完整离线数据库
-- [ ] **Cookie Store API**
-- [ ] **Permissions API**
-- [ ] **Clipboard API**
-- [ ] **Credentials API**
-- [ ] **Web Animations**
-- [ ] **Intersection/Resize/PerformanceObserver** - 完整 Observer 语义
+### 原「未完成（按需实现）」清单已作废 ✅
+
+这里原先列了 14 组「未实现」的浏览器 API。**逐组核查后全部存在**，
+按 `fixtures/baseline/full-surface.json`（node22 / legacy）：
+
+| 组 | 抽查的全局 | 结果 |
+|---|---|---|
+| Canvas/WebGL/WebGPU | `CanvasRenderingContext2D` `WebGL(2)RenderingContext` `GPU` `GPUDevice` `OffscreenCanvas` | 6/6 |
+| Media | `HTMLAudioElement` `HTMLVideoElement` `MediaSource` `RTCPeerConnection` `AudioContext` `MediaStream` | 6/6 |
+| Device | `Geolocation` `BatteryManager` `Sensor` `Gyroscope` | 4/4 |
+| CSSOM | `CSSStyleDeclaration` `CSSStyleSheet` `CSSRule` `CSSStyleRule` `StylePropertyMap` `CSSKeyframesRule` | 6/6 |
+| SVG/MathML | `SVGElement` `SVGSVGElement` `MathMLElement` | 3/3 |
+| 高级 DOM | `Range` `Selection` `ShadowRoot` `MutationObserver` `TreeWalker` `NodeIterator` `AbortSignal` | 7/7 |
+| Blob/File | `Blob` `File` `FileReader` `FileList` `FileSystemHandle` | 5/5 |
+| IndexedDB | `IDBDatabase` `IDBObjectStore` `IDBTransaction` `IDBRequest` `IDBFactory` | 5/5 |
+| Cookie Store | `CookieStore` `CookieChangeEvent` | 2/2 |
+| Permissions | `Permissions` `PermissionStatus` | 2/2 |
+| Clipboard | `Clipboard` `ClipboardItem` `ClipboardEvent` | 3/3 |
+| Credentials | `CredentialsContainer` `Credential` `PasswordCredential` | 3/3 |
+| Web Animations | `Animation` `AnimationEffect` `KeyframeEffect` `AnimationTimeline` | 4/4 |
+| Observers | `IntersectionObserver` `ResizeObserver` `PerformanceObserver` `ReportingObserver` | 4/4 |
+
+权威口径不是这张表而是两个测试：`edge-surface-parity-test.js`
+（多余 0、缺失全部登记）与 `edge-member-parity-test.js`
+（963/966 原型成员集完全一致、缺失 0、多余 0）。
+
+**但这只证明形状对，不证明行为对。** 上表 14 组里，行为探针覆盖到的只有
+CSSOM(22) 与 Canvas(9)；Media / IndexedDB / Web Animations / Observers / SVG /
+Range / Selection **一个探针都没有**。真正的剩余工作在那里，见第十二节末。
+
+留着一份「说 IndexedDB 未实现」的清单比没有清单更糟——照它决策会从零开始重做
+一遍。这与本项目「登记而不是隐藏」的原则是同一条：登记表一旦失真就必须修，
+不能放着。
 
 ### 模块级状态迁移 ✅ 已完成
 先纠正一处此前的误判：`src/migration-targets/` 下的 90 个目录只是 Rust→JS
@@ -187,9 +204,10 @@
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
+- [x] **完整 Profile Node 支持矩阵** - 753 项在 Node 18 / 20 / 22 / 24 四档全绿；
+  `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
-- [ ] **完整 Profile Node 支持矩阵** - Node 18/20/22/24 兼容性测试
 - [ ] **Profile 能力降级策略** - 缺失宿主能力时的行为
 - [ ] **受信任脚本策略完整定义** - CSP、module 权限边界
 
@@ -423,8 +441,10 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 - **文档** - `docs/protocol-collector.md`
 
 ### 未完成项
-- [ ] **Collector 上层编排** - 分页、批量调度、限流
-- [ ] **数据持久化** - 结果落库、增量更新
+- [x] **Collector 上层编排** - 分页 / 限流 / 熔断 / 检查点全部完成，见下方各条。
+  这条原先与下面的 `[x]` 直接矛盾，属于早期清单没跟着实现更新
+- [x] **数据持久化** - 结果落地与增量去重完成（`result-sink.js`，23 项）。
+  刻意不内置 DB 驱动，接口是 `write/flush/close`，见本节末「真实存储适配」
 - [x] **代理支持** - `src/collector/proxy.js`，44 项测试（含真实隧道）
   - **代理故障必须与目标故障分开**（本模块首要理由）：代理不通是我们这一侧的
     出口坏了。混在一起 → 一个代理挂掉 → 熔断器跳闸所有 origin → 运维看到
@@ -705,8 +725,11 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵
-- [ ] 冷启动、reset、内存、并发指标
+- [x] Node 18–24 矩阵（四档 753/753）
+- [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
+  + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
+  不取单次——单次测的是「此刻机器有多忙」
+- [ ] reset 指标 - 未单独采集（冷启动/热执行/Realm 创建销毁已有）
 
 ---
 
@@ -1072,107 +1095,127 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 与 ADR-0004 的池位账目是同一片区域，应一并设计
   - 行为探针因此从"每项各建一个 iframe"改为**全部共用一个**（14 项合并为 2 项），
     这也更贴近真实脚本行为
-- [ ] **iframe 父子链与 URL 四处不符**（先行缺陷，静态 iframe 也一样）
-  - `contentWindow.parent === window` 为 false、`top` 同样
-  - `frameElement` 恒为 `null`（`window-state-globals-runtime.js` 硬编码）
-  - 空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`
-  - 说明"接上池"只是第一步：即使 `contentWindow` 可用，父子链仍对不上
+- [ ] **iframe 父子链与 URL 五处不符**（先行缺陷，**静态 iframe 也一样**）
+  - 本轮在一个静态 iframe 上实测（`contentWindow` 可用，所以与 ADR-0004 的动态
+    时序无关）：
+
+    | 探测 | NV8 | 真实 |
+    |---|---|---|
+    | `contentWindow.parent === window` | false | true |
+    | `contentWindow.top === window` | false | true |
+    | `contentWindow.parent.window === contentWindow.parent` | false | true |
+    | `contentWindow.frameElement` | `null` | iframe 元素 |
+    | `contentWindow.location.href` | 父页面 URL | `about:blank` |
+    | `contentWindow.origin` | 已正确继承 | 同 |
+
+    第三条原记录里没有；`origin` 本来就对，改 `href` 时**不能把它改坏**
+    （真实浏览器的空白 iframe 是 `about:blank` + 继承父 origin）
+  - 前三条根因单一：`window-messaging.js` 的 `createSameOriginParentFacade()`
+    返回 `Object.create(parentWindow)` —— 一个原型链挂到父 window 的**新对象**。
+    它存在的唯一理由是覆盖 `postMessage`，让投递出去的事件带上**子** realm 的
+    `source` / `origin`
+  - **不能简单换成真对象**：子 realm 调 `parent.postMessage()` 执行的是父 realm
+    的函数，父 realm 无从得知调用者是谁，于是 `event.origin` 会变成父页面的
+    origin。那是把指纹问题换成**安全语义**问题，更差。真实浏览器靠 incumbent
+    settings object 解决，NV8 的两个 vm context 之间没有这个概念
+  - 因此这三条需要 **ADR-0007** 定案（侧信道传 incumbent / 让 `parent.window`
+    指向 facade 自身 / 接受一层更深的偏差），不该硬选
+  - 后两条（`frameElement`、`about:blank`）与之**无关**，可以先做：
+    `frameElement` 在 `window-state-globals-runtime.js` 是硬编码 `() => null`；
+    空白 iframe 的 URL 在 `html-iframe-element-realm-state.js` 默认取
+    `parentPageUrl`。后者的前置条件（URL 支持 opaque path）已完成
   - 反爬脚本最常用的「从干净 iframe 取原生函数」写法是**同步**的：
     `const f = document.createElement('iframe'); document.body.appendChild(f);
     f.contentWindow.Function.prototype.toString`
-  - 实测 NV8 时序：同步 `null` → 微任务后 `null` → 一个宏任务后仍 `null`
-    → 约 30ms 后才可用。真实浏览器在 `appendChild` 返回时就有初始 about:blank
-    文档
-  - **静态**写在页面 HTML 里的 iframe 没有这个问题（页面构建时已 await），
-    已用专项断言把差距范围钉死在动态创建上，避免误记成「iframe Realm 不支持」
-  - 另有一条断言证明这是**时序**差距而非功能缺失（轮询等到 Realm 建好）
-  - 修它需要同步创建子 Realm，依赖同步 vm module 链接——Node 18–22 不支持
-    （见 `docs/node-compatibility.md`），是独立的架构工作
-- [ ] **行为探针仍未覆盖** - 字体度量、Intl/时区格式化、
-  Performance/时间精度
+  - 说明「接上池」只是第一步：即使 `contentWindow` 可用，父子链仍对不上
+- [ ] **行为探针覆盖面是当前最大的缺口** - 112 项 / 13 类，对 1232 全局 /
+  8901 成员
+  - 分布极不均：`cssom` 22、`argumentCount` 19、`crossRealm` 只有 2
+  - **完全没有探针**的领域：DOM 遍历 / Range / Selection、fetch / XHR /
+    WebSocket 语义、Storage、IndexedDB、Worker / ServiceWorker、Media、
+    Web Animations、Observers、SVG、Crypto、Performance 时间精度、
+    Intl / 时区、字体度量
+  - 形状层已经到顶（多余 0、缺失 0、963/966 原型一致），继续投形状层收益递减；
+    行为层是唯一还能发现真问题的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
+    行为层却查出 6 处
+  - **当前被环境卡住**：本机 Edge 是 152.0.4191.53，fixture 基准是 151。
+    用 152 重采会引入版本偏斜，而「采集基准必须与 profile 一致」这个坑已经
+    踩过两次。所以第一步不是写探针，而是**搞一个固定 Edge 151 的采集环境**
 
 **测试**：`tests/edge-surface-parity-test.js`(8)、
-`tests/edge-member-parity-test.js`(9)、`tests/webgl-parity-test.js`(8)、
+`tests/edge-member-parity-test.js`(10)、`tests/webgl-parity-test.js`(8)、
 `tests/gpu-profiles-test.js`(13)、`tests/fingerprint-calibration-test.js`(12)、
 `tests/event-handler-attribute-test.js`(14)、
-`tests/lifecycle-event-targets-test.js`(13)
+`tests/lifecycle-event-targets-test.js`(13)、
+`tests/edge-behavior-parity-test.js`(25)
 
 **文档**：`docs/edge-parity.md`
 
 ---
 
-## 总结
+## 总结与优先级
 
-### 🔴 高优先级（核心架构）
+原来这一节列的三项「高优先级」（Protocol/Collector 边界、Evidence Loader 解耦、
+默认模式切换）中，前两项已完成，第三项按 ADR-0001 **作废**（legacy 与 plugin
+并存，不是新旧替换）。下面是按实际状态重排的。
 
-1. **Protocol/Collector 边界** (Gate 5)
-   - 定义 Protocol 工件接口
-   - 实现 Collector 真实网络层
-   - 端到端示例
+### 剩余工作的真实口径
 
-2. **Evidence Loader 解耦** (Gate 1/4)
-   - Core 依赖抽象接口
+不要数复选框——数它会得出错误结论（本轮就清掉了 19 条过时项，包括 14 组
+明明存在的 API）。按三层对齐看：
 
-3. **默认模式切换**
-   - 从 `legacy` 切换到 `plugin`
+| 层 | 状态 |
+|---|---|
+| 全局名存在性 | 覆盖真实 Edge 99.68%，多余 **0** —— 基本到顶 |
+| 原型成员与描述符 | **963/966** 完全一致，缺失 0，多余 0 —— 基本到顶 |
+| 运行时行为 | 112 探针 / 13 类 —— **剩余工作几乎全在这里** |
 
----
+### 优先级
 
-### 🟡 中优先级（功能完整性，按需）
+**这一节只做索引，复选框一律留在正文各节。** 两处都能勾会立刻漂移——本轮清掉的
+19 条过时项里，「Collector 上层编排」正是这么和下方的 `[x]` 自相矛盾的。
 
-4. **动态模块导入** - 页面和 Worker 的 `import()`
-5. **完整 Parser/Navigation** - `document.write()`、根导航
-6. **高级浏览器 API** - Canvas/Media/Device（按目标站点需求）
-7. **模块级状态清理** - native-function.js 等
-8. **性能和稳定性测试** - 基准、泄漏检测
+**P0 低风险、确定性高**
 
----
+1. 清理过时账目 —— 本轮完成（第四节、第八节、第十节、本节）
+2. `frameElement` 与空白 iframe 的 `about:blank`（§12）——
+   前置条件（URL opaque path）已完成，两处都局部可验证
 
-### 🟢 低优先级（可延后）
+**P1 核心检测价值，需要先设计**
 
-9. **非核心浏览器 API** - IndexedDB/CSSOM/SVG 等
-10. **安全加固** - Bundle 签名、版本兼容
-11. **Baseline 完整覆盖** - 完整快照和差异追踪
-12. **Node 兼容性矩阵** - 多版本 CI
-13. **文档和示例** - 内部使用指南
+3. ADR-0007：`parent` / `top` 身份（§12）——
+   `createSameOriginParentFacade()` 用 `Object.create(parentWindow)` 换取正确的
+   `postMessage` 路由，代价是 5 处身份不符。直接换成真对象会把指纹问题变成
+   **安全语义**问题（`event.origin` 变成父页面的）。值得决策而不是硬选
+4. ADR-0004 池位账目 → 动态 iframe `contentWindow` 同步可用（§12）——
+   收益最大（现在脚本会直接抛，是「跑不起来」而非「指纹不对」），
+   但必须排在 3 之后：池落地了而父子链仍不符，那条经典探针照样过不去
+5. iframe Realm 绕过堆容量守卫（§12）—— 与 4 同一片区域，一并设计
 
----
+**P2 最大的质量缺口，被采集环境卡住**
 
-## 🎯 建议行动路线（私有项目）
+6. 固定 Edge 151 的采集环境 —— 价值高于任何单个 API 的补齐
+7. 行为探针扩到空白领域（§12 末的清单）
 
-```
-1️⃣ 完成 Protocol/Collector 架构设计
-   ↓
-2️⃣ 实现端到端 Evidence → Protocol → Collector
-   ↓
-3️⃣ Evidence Loader 接口解耦
-   ↓
-4️⃣ 默认切换到 plugin 模式
-   ↓
-5️⃣ 按实际目标站点需求添加高级浏览器 API
-   ↓
-6️⃣ 性能优化和稳定性改进（按需）
-```
+**P3 工程完备性，按实际采集需求**
 
----
+8. WebSocket 采集（§8）、Worker 资源上限与 module cache 生命周期（§7）、
+   后端异常的句柄泄漏验证（§2）、后端矩阵针对性断言与多版本性能基线（§9）
 
-## 📊 完成度估算
+**P4 可选、延后**
 
-| 类别 | 进度 |
-|------|------|
-| Core 运行时 | ████████░░ 85% |
-| Plugin SDK | ██████████ 100% |
-| 浏览器 API（核心） | █████████░ 90% |
-| 浏览器 API（高级） | ███░░░░░░░ 30% |
-| Evidence/Script | ████████░░ 80% |
-| Protocol/Collector | ░░░░░░░░░░ 0% |
-| **总体（核心架构）** | **███████░░░ 70%** |
+9. Bundle 签名与版本兼容、受信任脚本策略（§5）；信任边界可测试与安全边界文档、
+   API 文档、示例代码（§9、§10）
+10. 剩余功能缺口：legacy 整文档替换、畸形 URL 的错误页文档、
+    3 个需要版本门控的全局名（§12）
+11. 刻意不做的两项（CSS descriptor 形状、10 个布局相关计算值）保持登记
 
 ---
 
 ## 📁 相关文档
 
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
+- **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test` (当前 98/98 通过)
+- **测试**: `npm test`（753 项 / 72 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
