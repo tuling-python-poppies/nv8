@@ -29,7 +29,60 @@ import {
   resolveTrustedScriptIds,
 } from "../core/evidence-contract.js";
 
+/**
+ * 每个**额外** Realm 的老生代增量估算。
+ */
 const ESTIMATED_FULL_REALM_HEAP_BYTES = 36 * 1024 * 1024;
+
+/**
+ * 根 Realm 的老生代基线。
+ *
+ * 原公式是 `floor(maxHeapBytes / 36MB)`，把根 Realm 也按 36MB 算。实测它**放行
+ * 的子 Realm 数超过堆能装下的数量**，溢出表现为子进程 SIGABRT（V8 OOM abort），
+ * 没有任何结构化错误——abort 之后没有 JS 能再运行，所以永远不可能变成结构化错误，
+ * 只能保证不放行到那一步。
+ *
+ * 实测（child-process 后端，Node 22，动态建 n 个空白 iframe）：
+ *
+ * | maxHeapBytes | 实测安全上限 | 原守卫放行 | 结果 |
+ * |---|---|---|---|
+ * | 128MB | **1** | 2 | SIGABRT |
+ * | 256MB | **5** | 6 | SIGABRT |
+ * | 512MB（默认）| 11 | 11 | 正常 |
+ *
+ * 512MB 之所以没崩，是被 `limits.maxRealms`（默认 12）挡住的，**不是**堆估算起了
+ * 作用——换句话说堆估算在所有实测档位上都偏大，只是默认配置恰好被另一个上限救了。
+ *
+ * 根 Realm 更贵和「引导一个完整 Realm 需要相当的老生代空间」是同一件事：
+ * `runtime-heap-floor.js` 实测单个 Realm 引导在 64MB 上 5/6 成功、80MB 上 6/6。
+ * 取 90MB 作基线，使公式在三个实测档位上都**不超过**安全上限：
+ *
+ * | maxHeapBytes | `floor((heap - 90MB) / 36MB)` | 实测安全 |
+ * |---|---|---|
+ * | 128MB | 1 | 1 |
+ * | 256MB | 4 | 5（保守 1 个）|
+ * | 512MB | 11 | 11 |
+ *
+ * 宁可保守一个：多放行一个的代价是 SIGABRT，少放行一个的代价是一个结构化的
+ * 容量错误。两者不对称。
+ */
+const ESTIMATED_ROOT_REALM_HEAP_BYTES = 90 * 1024 * 1024;
+
+/**
+ * 由堆上限推出允许的**总** Realm 数（含根）。
+ *
+ * 返回值直接喂给 `reserveRealmCapacity()` 现有的比较式，所以是「子 Realm 上限 + 1」。
+ *
+ * @param {number} maxHeapBytes
+ * @returns {number}
+ */
+export function heapSafeRealmLimitFor(maxHeapBytes) {
+  const forChildren = Math.floor(
+    (maxHeapBytes - ESTIMATED_ROOT_REALM_HEAP_BYTES)
+    / ESTIMATED_FULL_REALM_HEAP_BYTES,
+  );
+  return Math.max(0, forChildren) + 1;
+}
 
 // Module-level pre-warmed shell survives across RuntimePool instances.
 let pendingShell = null;
@@ -90,11 +143,8 @@ export class RuntimePool {
     this.pendingRealmCreations = 0;
     this.generation = 0;
     this.closed = false;
-    this.heapSafeRealmLimit = Math.max(
-      1,
-      Math.floor(
-        options.limits.maxHeapBytes / ESTIMATED_FULL_REALM_HEAP_BYTES,
-      ),
+    this.heapSafeRealmLimit = heapSafeRealmLimitFor(
+      options.limits.maxHeapBytes,
     );
     this.sharedWorkers = new Map();
     this.workletRealmsByOwner = new WeakMap();

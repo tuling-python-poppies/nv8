@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，763 项
+npm test              # 全量，769 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -690,7 +690,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（763 项 / 74 个文件） |
+| `npm test` | 全量测试（769 项 / 75 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -743,7 +743,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 74 个测试文件
+tests/                 75 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -818,8 +818,12 @@ css-ua-defaults.js），现在都有了脚本。
   兼作 incumbent 标记）；写成 `const p = parent; setTimeout(() => p.postMessage(...))`
   会退化成父窗口自己。要精确需要真正的 incumbent 栈，见
   [ADR-0007](docs/adr/0007-parent-window-identity.md)。
-- **iframe Realm 绕过堆容量守卫**：低堆配置下能建成超量 iframe 且不报结构化
-  错误，随后 V8 OOM。与 ADR-0004 的池位账目是同一片区域。
+- **容量拒绝在 iframe 上派发 `error` 事件**。真实浏览器的 iframe 导航失败从不派发
+  `error`；容量拒绝是 NV8 内部条件、没有浏览器对应物，但派 `error` 仍是可检测的
+  （脚本连建多个 iframe 就能看到）。堆容量守卫本身已修：原公式
+  `floor(maxHeapBytes / 36MB)` 把根 Realm 也按 36MB 算，实测放行数超过堆能装下的
+  数量，溢出是 **SIGABRT** 而不是结构化错误（128MB 安全上限 1 个、原放行 2 个）。
+  现为 `floor((maxHeapBytes - 90MB) / 36MB)`，默认 512MB 的能力不变。
 - **被顶掉的导航仍会建出子 Realm 再关掉**：真实浏览器压根不会开始。是 CPU
   浪费而非可观察偏差——导航合并本身是正确的（同一同步块内的多次属性变更只
   提交最后一次，见 `tests/iframe-navigation-coalescing-test.js`）。

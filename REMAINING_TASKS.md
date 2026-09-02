@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 763 项（`npm test`，74 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 769 项（`npm test`，75 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 763 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 769 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 763 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 769 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 763/763）
+- [x] Node 18–24 矩阵（四档 769/769）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1073,28 +1073,38 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 三个后端入口（`child-process` / `worker-thread` / `worker-thread-pool`）
     统一走同一地板
   - 验证：修复前十路并发 4/10 红，修复后 **10/10 绿**
-- [ ] **iframe Realm 绕过堆容量守卫**（原记录为"第 8 个 iframe SIGABRT"，
-  本轮重测后重新定性）
-  - 重测数据（`n` 个 iframe，`maxHeapBytes` 变量，Node 24）：
+- [x] **堆容量守卫放行数超过堆能装下的数量已修**（原记录两次定性都不准）
+  - 原记录说「8 个 iframe 全部建成且没有任何结构化错误」，也说「默认 512MB 下
+    8/12/20 全部正常」。本轮按 `maxHeapBytes` × iframe 数做了完整扫描，
+    两条都不准确——低堆下不是「建成后 close 才崩」，而是**建的过程中就
+    SIGABRT**（code=134，连 `close()` 都跑不到）：
 
-    | heap | n=8 结果 | close |
-    |---|---|---|
-    | 128MB | 建成 8/8，**无结构化错误** | `FATAL ERROR: Ineffective mark-compacts` → SIGABRT |
-    | 256MB | 建成 8/8，**无结构化错误** | 同上 |
-    | 512MB（默认）| 建成 8/8 | 正常 |
+    | maxHeapBytes | 实测安全上限 | 原守卫放行 | 结果 |
+    |---|---|---|---|
+    | 128MB | **1** | 2 | SIGABRT |
+    | 256MB | **5** | 6 | SIGABRT |
+    | 512MB（默认）| 11 | 11 | 正常 |
 
-  - 默认 512MB 下 8/12/20 个 iframe 全部正常，close 干净。原"第 8 个必崩"
-    在当前代码上**不复现**
-  - 真正的缺陷是：`heapSafeRealmLimit = floor(maxHeapBytes/36MB)`
-    在 128MB 时为 3，`createChildRealm` 也确实调了 `reserveRealmCapacity()`，
-    但 8 个 iframe **全部建成且没有任何结构化错误**——守卫没拦住。
-    随后 V8 OOM
-  - 机制推测（未证实）：iframe 的 Realm 创建是异步的（正是 ADR-0004 里
-    `contentWindow` 同步为 null 的原因），容量拒绝发生在没人观察的异步路径上，
-    而在飞的创建已经把内存吃掉了
-  - 与 ADR-0004 的池位账目是同一片区域，应一并设计
-  - 行为探针因此从"每项各建一个 iframe"改为**全部共用一个**（14 项合并为 2 项），
-    这也更贴近真实脚本行为
+  - 根因不是「守卫没拦住」（`reserveRealmCapacity()` 确实被调了），而是**守卫的
+    算术偏大**：`floor(maxHeapBytes / 36MB)` 把根 Realm 也按 36MB 算。
+    根 Realm 更贵——`runtime-heap-floor.js` 早就实测出单个 Realm 引导在 64MB 上
+    5/6 成功、80MB 上 6/6
+  - **512MB 没崩是被 `limits.maxRealms`（默认 12）挡住的，不是堆估算起了作用。**
+    也就是说堆估算在所有实测档位上都偏大，只是默认配置恰好被另一个上限救了
+    ——这类「靠别处的上限兜住」的正确性最容易在调参时消失
+  - 修法：`floor((maxHeapBytes - 90MB) / 36MB)`，90MB 是根 Realm 基线。
+    三个实测档位下给 1 / 4 / 11，都不超过安全上限；**默认 512MB 的行为不变**
+    （收紧公式不能顺手改掉默认配置下的能力）
+  - 宁可保守一个：多放行一个的代价是 SIGABRT，少放行一个的代价是一个结构化的
+    容量错误。两者不对称
+  - 修后重扫 128 / 256 / 512MB × 2 / 5 / 6 / 12 共 12 种组合，**无一崩溃**
+  - 测试 6 项（`tests/realm-heap-capacity-test.js`）：公式层三个档位不得超过实测
+    安全上限、不得保守超过 1 个、默认档行为不变、单调性；端到端一项验证低堆下给
+    结构化拒绝而不是崩
+- [ ] **容量拒绝在 iframe 上派发 `error` 事件** - 真实浏览器的 iframe 导航失败
+  从不派发 `error`（见本节前文）。容量拒绝是 NV8 内部条件、没有浏览器对应物，
+  但派 `error` 仍是可检测的：脚本连建多个 iframe 就能看到。宿主侧目前也看不到
+  结构化错误（拒绝在 Realm 内被消化）
 - [x] **`parent.document` 静默返回子文档已修**（ADR-0007 选 A + C）
   - 症状（修复前，在子 Realm 内部实测）：
 
@@ -1235,7 +1245,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 4. ADR-0004 池位账目 → 动态 iframe `contentWindow` 同步可用（§12）——
    收益最大（现在脚本会直接抛，是「跑不起来」而非「指纹不对」），
    但必须排在 3 之后：池落地了而父子链仍不符，那条经典探针照样过不去
-5. iframe Realm 绕过堆容量守卫（§12）—— 与 4 同一片区域，一并设计
+5. **堆容量守卫已修**（§12）：原公式放行数超过堆能装下的数量，溢出是 SIGABRT
+   而不是结构化错误。剩余的是「容量拒绝派发 error 事件」这条可检测面
 
 **P2 最大的质量缺口，被采集环境卡住**
 
@@ -1262,5 +1273,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（763 项 / 74 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（769 项 / 75 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
