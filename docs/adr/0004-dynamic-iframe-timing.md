@@ -1,6 +1,6 @@
 # ADR-0004：动态 iframe 的 `contentWindow` 时序
 
-- 状态：**待决策**（选项 A 已实现并回滚，回滚原因见下）
+- 状态：**已定案 —— 选 A（opt-in 预热池，默认关闭）**，见「决定」与「落地记录」
 - 日期：2026-01
 - 依赖：ADR-0001（按需组装）、`docs/node-compatibility.md`
 
@@ -154,17 +154,124 @@ Realm、不占额度、但仍要参与关闭清理。那是一次跨 `runtime-po
 第 2 条说明"接上池"只是第一步——即使 `contentWindow` 可用了，父子链仍然
 对不上。
 
-## 倾向
+## 决定：A，但按 Profile opt-in、预热「已激活的 Realm」、默认关闭
 
-倾向 **A + B 组合**：Node 24 上走同步 bootstrap（B），其余版本用预热池（A）
-兜底。但这个组合会让两条代码路径都要维护，且行为在版本间不一致——需要先回答：
+原倾向是 **A + B 组合**（Node 24 走同步 bootstrap，其余版本用池兜底），并列了三个
+待回答问题。定案时把这三个问题都用实测回答了，结论是**放弃 B**。
 
-1. NV8 是否接受"可观测行为随 Node 版本变化"？现有降级都只影响性能与可用性，
-   不影响行为。
-2. 若接受 A，池深多少？`maxRealms` 默认 64，池占 2 个是否可接受？
-3. 265ms 的同步阻塞（B）是否可接受？真实浏览器这一步是微秒级。
+### 先把 254ms 拆开
 
-在回答之前不动手——这是架构决策，不是补丁。
+仓库里本来就有「异步准备 + 同步激活」的机制（`createRealmShellAsync` /
+`activateRealmShell`），根 Realm 一直在用。实测两段耗时：
+
+```
+createRealmShellAsync  (异步：模块图加载+链接)   median 148ms
+activateRealmShell     (同步：337 个 install)    median 106ms
+                                          合计   254ms
+```
+
+这决定了池该预热什么：
+
+- **预热 shell** → `appendChild` 里仍要同步跑 `activateRealmShell`，阻塞 **106ms**
+- **预热已激活的 Realm** → `appendChild` 零同步开销，254ms 全部前移到 `create()`
+
+必须选后者。真实浏览器建初始 about:blank 文档是**微秒级**——`appendChild` 里同步卡
+106ms 本身就是一个浏览器没有的时序特征，任何围绕 iframe 创建做 `performance.now()`
+差值、或观察 RAF/timer 节奏的代码都能看到这个停顿。**用一个可检测特征去修另一个
+可检测特征，不值。**
+
+同一个理由否掉 **B**：它的 106ms 同步阻塞是同一个问题；而且「可观测行为随 Node
+版本变化」与刚做完的四档 surface 逐字节对齐方向相反（node18/20/22 对
+`SuppressedError` / `DisposableStack` / `Float16Array` / `DataView` 的记录已经与
+node24 完全相同）。
+
+### 三个问题的答案
+
+1. **是否接受可观测行为随 Node 版本变化？** 不接受。四档 surface 刚统一，
+   不能反手在行为层分叉。
+2. **池深多少？** 由调用方定，默认 **0**，上限 8。池位是真实的 Realm、占真实的堆，
+   512MB 默认堆实测只装得下 11 个子 Realm（见 `heapSafeRealmLimitFor`），
+   池深超过个位数等于把额度全给了预热。
+3. **106ms 同步阻塞是否可接受？** 不可接受，所以不走 shell 方案。
+
+### 为什么 opt-in 不是妥协
+
+原 ADR 卡在「是否接受冷启动翻倍」上。这个问题在逆向场景里是**假问题**：NV8 不是
+通用浏览器，每个目标本来就有自己的 Profile / evidence bundle / replay 清单，
+**按目标配置是这个项目的常态**。谁的目标用了那套 iframe 写法，谁付冷启动的钱。
+
+默认关闭还直接解决了上次回滚的根因：那次池永远开着，池位与业务 Realm 在账目上
+无法区分，全量套件 **59 项红**。默认 0 意味着现有测试看到零个池位，账目完全不变
+——实测 777 项在四档全绿，**默认路径一项都没动**。
+
+### 池位账目
+
+池位**同时**在 `childRealms` 里：它们是真实的 Realm，占真实的堆，所以必须参与
+容量守卫与关闭清理。把它们排除在额度之外会重犯「守卫的算术与现实不符」那个错
+（那个错刚在 `heapSafeRealmLimitFor` 里修掉——原公式放行数超过堆能装下的数量，
+溢出是 SIGABRT）。
+
+`readResources()` 增加 `idlePrewarmedRealms`，于是「当前有几个业务 Realm」
+= `childRealms - idlePrewarmedRealms`，仍然答得出来。
+
+### 顺带纠正选项 C 的一处事实错误
+
+原文说选项 C（同步建裸上下文）会让 `contentWindow.Array` 是 `undefined`。
+**这是错的**——`vm.createContext()` 免费提供全部 JS intrinsics，缺的是 DOM/Window
+表面。所以对 `f.contentWindow.Function.prototype.toString` 这个具体写法，裸上下文
+其实能用。
+
+C 仍然要拒，但理由要换：`contentWindow.document === undefined` 比
+`contentWindow === null` 是**更强**的信号，而且「一个 Window 的表面随时间长出来」
+是任何浏览器都没有的状态。
+
+## 落地记录
+
+- `limits.prewarmChildRealms`（0–8，默认 **0**）
+- 池在 `initialize()` 里、**根 Realm 之前**填满。必须如此：页面脚本在
+  `bootstrapRoot()` 内部就执行了（`parsePageHTML()`），根 Realm 一返回它们已经跑完。
+  原 ADR 记的「池在 load 之后才填满，inline 脚本拿不到」正是这个问题
+- 池位以「自己是顶层」的状态引导（那时根 Realm 还不存在，没有 `parentWindow`
+  可传），被领走时由 `bootstrap-root.js` 新增的 `reparentRealm()` 补上父子关系。
+  走 bootstrap 命名空间而不是 `importUrlSyncCached()`：bootstrap 模块本来就已加载，
+  不需要额外 preload，在 Node 18–22 上也不依赖同步模块链接
+- `createChildRealm()` 命中池时**同步**返回 handle，未命中返回 promise；
+  `html-iframe-element-realm-state.js` 两种都处理。`load` 仍异步派发——真实浏览器
+  把它排成任务，同步派发会让 `addEventListener('load')` 在注册前就错过
+- 只有**空白**（既无 `src` 也无 `srcdoc`）且**同源**且 URL 等于父页面的 iframe 能
+  领池位：池位的文档是空白骨架，带 src/srcdoc 的需要不同文档，重建文档和新建一个
+  Realm 没有区别
+- 填池失败**静默放弃**剩余池位：预热是优化不是功能，让它把沙箱创建带崩等于把一个
+  可选加速做成新的失败点
+
+开启 `prewarmChildRealms: 1` 后实测：
+
+```
+syncContentWindow    true
+windowTag            [object Window]
+documentTag          [object HTMLDocument]
+arrayDiffers         true        （池位有独立 intrinsics）
+selfRef              true
+parentIsWindow       true        ← 靠 ADR-0007
+topIsWindow          true        ← 靠 ADR-0007
+frameElementMatches  true        ← 靠 frameElement 那一轮
+nativeToString       function addEventListener() { [native code] }
+```
+
+`realm/identity-bundle` 的 16 个子项现在与真实 Edge 151 **逐字相同**（唯一不含的是
+`href`：空白 iframe 的 `location.href` 仍是父页面 URL 而非 `about:blank`，那是独立
+的 origin/URL 解耦改造）。这验证了排序判断——ADR-0007 与 `frameElement` 必须先做，
+否则池落地了那条经典探针照样过不去。
+
+测试 8 项（`tests/iframe-prewarm-pool-test.js`）。777 项在 Node 18/20/22/24 四档全绿。
+
+## 残留
+
+- **池深 N 只覆盖建 ≤N 个 iframe 的目标**，超出退回原行为。这是缓解不是根治，
+  有专门断言把它写死——以为「iframe 已经修好了」比知道自己在赌更危险
+- 默认配置（0）下 `contentWindow` 仍同步为 `null`，
+  `edge-behavior-parity-test.js` 的两条登记差异保持不变
+- 空白 iframe 的 `location.href`：独立立项
 
 ## 附：复现
 

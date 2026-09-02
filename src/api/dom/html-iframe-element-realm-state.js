@@ -209,10 +209,13 @@ function navigate(element) {
     registerIncumbentSource(() => iframeContentWindow(element));
   };
   const scope = iframeScope();
-  current.loading = Promise.resolve(scope.createChildRealm({
+  const created = scope.createChildRealm({
     pageUrl: url,
     pageHtml: html,
     navigationSource: srcdoc === null ? "src" : "srcdoc",
+    // 空白 iframe（既无 src 也无 srcdoc）才能领预热池位：池位的文档就是空白骨架。
+    // 带 src / srcdoc 的需要不同的文档，重建文档和新建一个 Realm 没有区别。
+    blankDocument: srcdoc === null && (source === null || source.trim() === ""),
     pageReferrer: scope.parentPageUrl,
     pageContentType: "text/html",
     parentWindow: globalThis,
@@ -234,7 +237,31 @@ function navigate(element) {
         current.lastWindow = window;
       }
     },
-  })).then(handle => {
+  });
+
+  // 命中预热池时工厂**同步**返回 handle —— 这是整个池存在的理由：
+  // `document.body.appendChild(frame)` 之后 `frame.contentWindow` 必须立刻可用，
+  // 反爬脚本「从干净 iframe 取原生函数」的写法是同步的。
+  //
+  // 但 `load` 仍然必须异步派发：真实浏览器把它排成任务，同步派发会让
+  // `frame.addEventListener('load', ...)` 在注册之前就错过事件。
+  if (created !== null && created !== undefined && typeof created.then !== "function") {
+    current.handle = created;
+    current.clientId = created.clientId ?? current.clientId;
+    current.pendingWindow = created.window;
+    current.lastWindow = created.window;
+    current.loading = Promise.resolve().then(() => {
+      if (current.version !== version || !element.isConnected) {
+        created.close();
+        return;
+      }
+      dispatch(element, "load");
+      return created;
+    });
+    return;
+  }
+
+  current.loading = Promise.resolve(created).then(handle => {
     if (current.version !== version || !element.isConnected) {
       handle.close();
       return;

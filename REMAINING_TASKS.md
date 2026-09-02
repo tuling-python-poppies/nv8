@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 769 项（`npm test`，75 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 777 项（`npm test`，76 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 769 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 777 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 769 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 777 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 769/769）
+- [x] Node 18–24 矩阵（四档 777/777）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1042,15 +1042,46 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   `transformOrigin` / `perspectiveOrigin` 及其 webkit 版共 10 项需要布局引擎，
   刻意不建模（清单在 `css-ua-defaults.js` 的 `LAYOUT_DEPENDENT_PROPERTIES`）
 - [x] **跨 Realm 对象身份探针** - 14 项，全部指向同一个根因
-- [ ] **动态 iframe 的 contentWindow 同步为 null**（高优先级，ADR-0004；
-      **选项 A 已实现并回滚**）
-  - 池功能上成立：`contentWindow` 同步可用、intrinsics 独立、原生 toString
-    正确，跨 Realm 探针 17 个子项里 12 项转为一致
-  - **回滚原因**：池位与普通子 Realm 在账目上无法区分——池位进 `childRealms`、
-    占 realm 额度、计入资源统计，导致所有断言 Realm 数量与清理的测试失败，
-    全量套件 **59 项红**。要落地必须先设计独立的池位账目（不算业务 Realm、
-    不占额度、但参与关闭清理），跨 `runtime-pool` / `create-realm` / 资源统计
-    三处
+- [x] **动态 iframe 的 `contentWindow` 已可同步可用**（ADR-0004 定案：
+      opt-in 预热池，默认关闭）
+  - 定性纠正：这不是「指纹不对」而是**「跑不起来」**。反爬脚本「从干净 iframe 取
+    原生函数」的写法是同步的，`contentWindow === null` 会让脚本在那一行抛
+    TypeError，整个目标无法运行
+  - **把 254ms 拆开是决策依据**：`createRealmShellAsync`（异步：模块图加载+链接）
+    median 148ms、`activateRealmShell`（同步：337 个 install）median 106ms。
+    所以只预热 shell 不行——`appendChild` 里仍要同步卡 106ms，而真实浏览器建初始
+    about:blank 文档是**微秒级**。用一个可检测特征去修另一个可检测特征不值。
+    预热**已激活**的 Realm 把开销全部前移到 `create()`：逆向场景里启动慢无所谓，
+    运行时的时序异常才要命
+  - 同一理由否掉原倾向里的选项 B（Node 24 同步 bootstrap）：同样是 106ms 同步阻塞，
+    且「可观测行为随 Node 版本变化」与刚统一的四档 surface 方向相反
+  - **上次回滚的根因由「默认关闭」直接解决**：那次池永远开着，池位与业务 Realm
+    账目不分，59 项红。默认 0 意味着现有测试看到零个池位，实测 777 项四档全绿、
+    默认路径一项没动
+  - 池位**照旧占**堆额度并参与关闭清理（它们是真实 Realm、占真实堆），
+    `readResources()` 增加 `idlePrewarmedRealms` 单列，于是
+    「业务 Realm 数 = childRealms − idlePrewarmedRealms」仍答得出来。
+    假装池位不占内存就是重犯刚修掉的那个「守卫算术与现实不符」
+  - 池必须在**根 Realm 之前**填满：页面脚本在 `bootstrapRoot()` 内部
+    （`parsePageHTML()`）就执行了。原 ADR 记的「池在 load 之后才填满、inline 脚本
+    拿不到」正是这个问题
+  - 池位以「自己是顶层」引导，被领走时由新增的 `reparentRealm()` 补父子关系；
+    走 bootstrap 命名空间而不是 `importUrlSyncCached()`，不需要额外 preload、
+    在 Node 18–22 上也不依赖同步模块链接
+  - 开 `prewarmChildRealms: 1` 后 `realm/identity-bundle` 的 16 个子项与真实
+    Edge 151 **逐字相同**。这验证了排序判断：ADR-0007 与 `frameElement` 必须先做，
+    否则池落地了那条经典探针照样过不去（`parentIsUs` / `frameElementMatches` 靠
+    那两轮）
+  - 顺带纠正 ADR 里一处事实错误：原文说裸上下文会让 `contentWindow.Array` 为
+    `undefined`——`vm.createContext()` 免费提供全部 JS intrinsics，缺的是 DOM 表面。
+    选项 C 仍要拒，但理由是「`contentWindow.document === undefined` 比 `null` 是更
+    强的信号，且表面随时间长出来是任何浏览器都没有的状态」
+  - 测试 8 项（`tests/iframe-prewarm-pool-test.js`）
+- [ ] **池深 N 只覆盖建 ≤N 个 iframe 的目标** - 超出退回原行为
+  - 缓解不是根治。有专门断言把这条写死——以为「iframe 已经修好了」比知道自己在赌
+    更危险
+  - 默认配置（0）下 `contentWindow` 仍同步为 `null`，
+    `edge-behavior-parity-test.js` 的两条登记差异保持不变
 - [x] **子进程 SIGABRT 根因定位并修复** - `src/controller/runtime-heap-floor.js`，
   6 项测试
   - 起因是那条被放过三次的偶发失败 `realm guard returns a structured error on
@@ -1242,9 +1273,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
    **静默错误数据**：`Object.create(parentWindow)` 不是可用的跨 Realm 委托机制，
    同源子帧里 `parent.document` 读到的是自己的文档。现已交出真实父 global，
    并用 `parent` getter 兼作 incumbent 标记补回 `event.source`（§12）
-4. ADR-0004 池位账目 → 动态 iframe `contentWindow` 同步可用（§12）——
-   收益最大（现在脚本会直接抛，是「跑不起来」而非「指纹不对」），
-   但必须排在 3 之后：池落地了而父子链仍不符，那条经典探针照样过不去
+4. **ADR-0004 已定案并落地**（A：opt-in 预热池，默认 0）。
+   把 254ms 拆成 148ms 异步 + 106ms 同步是决策依据：只预热 shell 会在
+   `appendChild` 里同步卡 106ms，那是真实浏览器（微秒级）没有的时序特征。
+   默认关闭直接化解了上次 59 项红的账目问题（§12）
 5. **堆容量守卫已修**（§12）：原公式放行数超过堆能装下的数量，溢出是 SIGABRT
    而不是结构化错误。剩余的是「容量拒绝派发 error 事件」这条可检测面
 
@@ -1273,5 +1305,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（769 项 / 75 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（777 项 / 76 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

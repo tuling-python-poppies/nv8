@@ -84,6 +84,9 @@ export function heapSafeRealmLimitFor(maxHeapBytes) {
   return Math.max(0, forChildren) + 1;
 }
 
+/** 空白子文档的骨架，与 `html-iframe-element-realm-state.js` 保持一致。 */
+const BLANK_CHILD_HTML = "<!doctype html><html><head></head><body></body></html>";
+
 // Module-level pre-warmed shell survives across RuntimePool instances.
 let pendingShell = null;
 
@@ -139,7 +142,18 @@ export class RuntimePool {
     );
     this.cookieData = options.persistence?.cookieData ?? "";
     this.childRealms = new Set();
-    // 空白子 Realm 预热池，见 docs/adr/0004-dynamic-iframe-timing.md
+    /**
+     * 空闲的预热池位（已激活的空白子 Realm 的 handle）。
+     *
+     * 池位**同时**在 `childRealms` 里：它们是真实的 Realm，占真实的堆，所以必须
+     * 参与容量守卫与关闭清理。把它们排除在额度之外会重犯「守卫的算术与现实不符」
+     * 那个错（见 `heapSafeRealmLimitFor` 的注释）。
+     *
+     * 这个数组只是「哪些还没被领走」的索引，用于诊断时把业务 Realm 与池位分开。
+     * 见 `docs/adr/0004-dynamic-iframe-timing.md`。
+     */
+    this.idlePrewarmedHandles = [];
+    this.prewarmTarget = options.limits.prewarmChildRealms ?? 0;
     this.pendingRealmCreations = 0;
     this.generation = 0;
     this.closed = false;
@@ -207,8 +221,88 @@ export class RuntimePool {
 
   async initialize() {
     await this.initializeEvidence();
+    // 必须在根 Realm **之前**填池：页面脚本在 `bootstrapRoot()` 内部就执行了
+    // （`parsePageHTML()`），根 Realm 一返回它们已经跑完。反爬脚本「从干净
+    // iframe 取原生函数」的写法经常就在 inline 里，池晚一步就等于没修。
+    await this.fillPrewarmPool();
     this.realm = await this.createRootRealm();
     await this.injectEvidenceScripts();
+  }
+
+  /**
+   * 预建空白子 Realm。
+   *
+   * 池位以「自己是顶层」的状态引导（那时根 Realm 还不存在，没有 `parentWindow`
+   * 可传），被某个 `<iframe>` 领走时再由 `reparentRealm()` 补上父子关系。
+   *
+   * 任何一个池位建失败都**静默放弃**剩下的：预热是优化，不是功能。让它把整个
+   * 沙箱创建带崩，等于把一个可选加速做成了新的失败点。
+   */
+  async fillPrewarmPool() {
+    for (let index = 0; index < this.prewarmTarget; index += 1) {
+      try {
+        const handle = await this.createChildRealmAsync({
+          pageUrl: this.page.url,
+          pageHtml: BLANK_CHILD_HTML,
+          pageReferrer: this.page.url,
+          pageContentType: "text/html",
+          parentWindow: null,
+          prewarmed: true,
+        });
+        this.idlePrewarmedHandles.push(handle);
+      } catch {
+        return;
+      }
+    }
+  }
+
+  /**
+   * 子 Realm 工厂。
+   *
+   * 命中池时**同步**返回 handle —— 这是整个池存在的理由：
+   * `document.body.appendChild(frame)` 之后 `frame.contentWindow` 必须立刻可用。
+   * 未命中时返回 promise，调用方两种都能处理。
+   */
+  createChildRealm(options) {
+    const prewarmed = this.takePrewarmedRealm(options);
+    if (prewarmed !== null) return prewarmed;
+    return this.createChildRealmAsync(options);
+  }
+
+  /**
+   * 尝试领一个池位。
+   *
+   * 只有**空白** iframe 能用池：池位的文档是空白骨架，正好就是空白 iframe 该有的
+   * 样子。带 `src` / `srcdoc` 的需要不同的文档，重建文档的成本和新建一个 Realm
+   * 没有区别，走池只会多一层复杂度。
+   *
+   * 同源也是硬条件：跨源 iframe 的 origin 与池位不同，而 origin 在引导时就定了。
+   *
+   * @returns {object | null} 命中的 handle，未命中返回 `null`
+   */
+  takePrewarmedRealm(options) {
+    if (this.closed) throw this.lifecycleError();
+    if (this.idlePrewarmedHandles.length === 0) return null;
+    if (options.blankDocument !== true) return null;
+    if (options.sameOrigin !== true) return null;
+    if (`${options.pageUrl}` !== `${this.page.url}`) return null;
+
+    const handle = this.idlePrewarmedHandles.pop();
+    if (handle.realm.destroyed) return null;
+    handle.realm.bootstrap.reparentRealm(
+      options.parentWindow ?? null,
+      options.topWindow ?? options.parentWindow ?? null,
+      options.parentOrigin ?? "",
+      options.parentPostMessage ?? null,
+      true,
+      options.frameElement ?? null,
+    );
+    options.onContext?.(handle.window);
+    return handle;
+  }
+
+  async createChildRealmAsync(options) {
+    return this.buildChildRealm(options);
   }
 
   async initializeEvidence() {
@@ -405,7 +499,7 @@ export class RuntimePool {
     return createRealm(realmOptions);
   }
 
-  async createChildRealm(options) {
+  async buildChildRealm(options) {
     const generation = this.captureGeneration();
     const pageUrl = new URL(`${options.pageUrl}`);
     const replayDocument = options.navigationSource === "src"
@@ -477,6 +571,8 @@ export class RuntimePool {
     const window = vm.runInContext("globalThis", realm.context);
     return {
       window,
+      // 池位领走时要按 realm 重配父子关系，也要能判断它是否已被销毁
+      realm,
       origin: pageUrl.origin,
       deliverParentMessage(message, origin, targetOriginOrOptions, transfer) {
         if (realm.destroyed) return;
@@ -1042,6 +1138,9 @@ export class RuntimePool {
       generation: this.generation,
       pendingRealmCreations: this.pendingRealmCreations,
       childRealms: Number(this.childRealms.size),
+      // 池位也在 childRealms 里（它们是真实的 Realm，占真实的堆）。单列出来，
+      // 「当前有几个业务 Realm」才答得出来：childRealms - idlePrewarmedRealms
+      idlePrewarmedRealms: Number(this.idlePrewarmedHandles.length),
       sharedWorkerGraphs: Number(this.sharedWorkers.size),
       root: {
         workers: Number(root.workers ?? 0),
@@ -1078,6 +1177,8 @@ export class RuntimePool {
     }
     for (const realm of [...this.childRealms]) this.destroyChildRealm(realm);
     this.childRealms.clear();
+    // 池位在 childRealms 里，上一行已经销毁；这里只清索引
+    this.idlePrewarmedHandles.length = 0;
     this.sharedWorkers.clear();
     this.workletRealmsByOwner = new WeakMap();
   }
@@ -1116,6 +1217,12 @@ export class RuntimePool {
       destroyRealm(realm);
     }
     this.childRealms.delete(realm);
+    // 未被领走就被销毁的池位要从索引里摘掉，否则 takePrewarmedRealm() 会拿到
+    // 一个已销毁的 Realm，而 idlePrewarmedRealms 也会虚报
+    const idleIndex = this.idlePrewarmedHandles.findIndex(
+      (handle) => handle.realm === realm,
+    );
+    if (idleIndex !== -1) this.idlePrewarmedHandles.splice(idleIndex, 1);
   }
 
   runScheduledTasks() {

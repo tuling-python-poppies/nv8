@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，769 项
+npm test              # 全量，777 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -690,7 +690,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（769 项 / 75 个文件） |
+| `npm test` | 全量测试（777 项 / 76 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -743,7 +743,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 75 个测试文件
+tests/                 76 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -806,9 +806,16 @@ css-ua-defaults.js），现在都有了脚本。
 
 ### iframe
 
-- **动态创建的 iframe，`contentWindow` 同步为 `null`**。子 Realm 引导需要
-  265ms，无法在 `appendChild` 内同步完成。三个方案各有代价，见
-  [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)（状态：待决策）。
+- **动态创建的 iframe，`contentWindow` 默认同步为 `null`**。子 Realm 引导需要
+  254ms，无法在 `appendChild` 内同步完成。
+  反爬脚本「从干净 iframe 取原生函数」的写法是同步的，所以这不是「指纹不对」而是
+  **「跑不起来」**——脚本在那一行抛 TypeError。
+  开 `limits.prewarmChildRealms`（0–8，默认 0）可以关掉这条：`create()` 会在页面
+  脚本**之前**建好 N 个空白子 Realm，`appendChild` 之后 `contentWindow` 同步可用，
+  `realm/identity-bundle` 的 16 个子项与真实 Edge 151 逐字相同。
+  默认关闭是刻意的（每个池位 254ms + 占一个子 Realm 的堆额度），且池深 N 只覆盖建
+  ≤N 个 iframe 的目标——**缓解不是根治**。
+  实测依据与选项对比见 [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)。
 - **空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`**。
   已重新定性：`about:blank` 是第一个 **URL 与 origin 必须分离**的场合
   （URL 不透明、origin 继承父页面），而 NV8 目前把文档 origin 从页面 URL 推导，
@@ -923,7 +930,7 @@ DOM 不变）。需要子 Realm 回调宿主。
 | [0001](docs/adr/0001-plugin-surface-coverage.md) | 插件模式不追赶 legacy 覆盖面 |
 | [0002](docs/adr/0002-missing-capability-diagnostics.md) | 缺能力诊断不修改全局 |
 | [0003](docs/adr/0003-dynamic-import.md) | 动态 import 走离线回放 |
-| [0004](docs/adr/0004-dynamic-iframe-timing.md) | 动态 iframe 时序（待决策） |
+| [0004](docs/adr/0004-dynamic-iframe-timing.md) | 动态 iframe 用 opt-in 预热池，默认关闭 |
 | [0005](docs/adr/0005-machine-specific-values.md) | 机器特定值不得进入浏览器身份 |
 | [0006](docs/adr/0006-parity-layers.md) | 三层对齐职责不重叠 |
 | [0007](docs/adr/0007-parent-window-identity.md) | 同源 `parent` / `top` 交出真实父 window |

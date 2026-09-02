@@ -1407,3 +1407,46 @@ export function receiveParentMessage(
     transfer,
   );
 }
+
+/**
+ * 把一个**预热的**空白子 Realm 接到真正的父窗口上。
+ *
+ * 预热池在根 Realm 存在**之前**就把子 Realm 建好了（否则 `contentWindow` 无法
+ * 同步可用，见 `docs/adr/0004-dynamic-iframe-timing.md`），那时还没有
+ * `parentWindow` 可传，所以池位是以「自己是顶层」的状态引导的。真正被某个
+ * `<iframe>` 领走时再补上父子关系。
+ *
+ * 只重配**父子关系**，不重建文档：池位的文档已经是空白骨架，正好就是空白 iframe
+ * 该有的样子。带 `src` / `srcdoc` 的 iframe 不走池——那需要不同的文档，
+ * 重建文档的成本和新建一个 Realm 没有区别。
+ *
+ * 走 `bootstrap` 命名空间而不是 `importUrlSyncCached()`：bootstrap 模块本来就已
+ * 经加载好（它就是引导入口），不需要额外 preload，在 Node 18–22 上也不依赖同步
+ * 模块链接。
+ */
+export function reparentRealm(
+  parentWindow = null,
+  topWindow = null,
+  parentOrigin = "",
+  parentPostMessage = null,
+  parentSameOrigin = false,
+  frameElement = null,
+) {
+  configureWindowMessaging(
+    currentOriginForReparent(),
+    parentWindow,
+    topWindow ?? parentWindow,
+    parentOrigin,
+    parentPostMessage,
+    parentSameOrigin,
+  );
+  configureFrameElement(parentSameOrigin ? frameElement : null);
+}
+
+/**
+ * 重配时不能重新解析页面 URL —— 池位的 origin 在引导时就定了，
+ * 而 `location` 已经是权威来源。
+ */
+function currentOriginForReparent() {
+  return new URL(globalThis.location.href).origin;
+}

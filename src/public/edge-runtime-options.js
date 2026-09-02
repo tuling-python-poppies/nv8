@@ -27,6 +27,16 @@ const DEFAULT_LIMITS = Object.freeze({
   maxFrameQueueBytes: 32 * 1024 * 1024,
   maxValueDepth: 32,
   maxRealms: 12,
+  // 预热的空白子 Realm 数。**默认 0**，见 docs/adr/0004-dynamic-iframe-timing.md。
+  //
+  // 开启后 `create()` 会在页面脚本执行**之前**建好这些 Realm，于是
+  // `document.body.appendChild(iframe)` 之后 `contentWindow` 同步可用——
+  // 反爬脚本「从干净 iframe 取原生函数」的写法是同步的，池空就等于没修。
+  //
+  // 默认关闭是刻意的：每个池位实测 254ms 且占一个子 Realm 的堆额度。
+  // NV8 每个目标本来就有自己的 Profile / evidence / replay，按目标付这笔钱
+  // 才合理；而全局默认开会让所有人的冷启动翻倍。
+  prewarmChildRealms: 0,
 });
 
 const DEFAULT_TRACE = Object.freeze({
@@ -1281,6 +1291,16 @@ export function normalizeRuntimeOptions(options = {}) {
       "limits.maxRealms",
       1,
       4096,
+    ),
+    // 上限刻意压得很低（8）：池位是**真实的** Realm，占真实的堆。
+    // 512MB 默认堆实测只装得下 11 个子 Realm，池深超过个位数就等于把额度
+    // 全给了预热，业务 iframe 反而建不出来。
+    prewarmChildRealms: finiteInteger(
+      inputLimits.prewarmChildRealms,
+      DEFAULT_LIMITS.prewarmChildRealms,
+      "limits.prewarmChildRealms",
+      0,
+      8,
     ),
   });
   const inputTrace = options.proxyTrace ?? {};
