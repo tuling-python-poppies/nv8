@@ -1095,7 +1095,28 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 与 ADR-0004 的池位账目是同一片区域，应一并设计
   - 行为探针因此从"每项各建一个 iframe"改为**全部共用一个**（14 项合并为 2 项），
     这也更贴近真实脚本行为
-- [ ] **iframe 父子链与 URL 五处不符**（先行缺陷，**静态 iframe 也一样**）
+- [ ] **`parent.document` 静默返回子文档**（本轮实测发现，**比身份问题严重**）
+  - 父页面放 `<div id="parent-only">`、子文档放 `<div id="child-only">`，
+    在子 Realm 内部实测：
+
+    ```
+    parent.document has parent-only      false   真实: true
+    parent.document has child-only       true    真实: false
+    parent.document === document         true    真实: false
+    ```
+
+    同源子 frame 里 `parent.document.*` 读到的是**自己的**文档。不报错、
+    不为 null，返回一个形状完全正常的 `HTMLDocument`。
+    `parent.document.cookie` / `.referrer` / `.querySelector('#token')`
+    全部静默读错对象。`parent.location` 同样
+  - 根因：`Object.create(parentWindow)` **不是可用的跨 Realm 委托机制**。
+    同一轮实测里，普通数据属性沿原型链委托成功，而 `document` / `location`
+    这类由 contextify 拦截器支撑的访问器**不跟随原型**，会落回访问方所在
+    Realm 的全局。facade 只忠实暴露它自己那三个属性（`postMessage` /
+    `window` / `self`），其余一切静默降级
+  - 这不是「指纹偏差」而是**静默的错误数据**，比抛错危险
+  - 决策与实测记录见 **ADR-0007**
+- [ ] **同源 `parent` / `top` 身份 4 处不符**（先行缺陷，**静态 iframe 也一样**）
   - 本轮在一个静态 iframe 上实测（`contentWindow` 可用，所以与 ADR-0004 的动态
     时序无关）：
 
@@ -1104,58 +1125,58 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     | `contentWindow.parent === window` | false | true |
     | `contentWindow.top === window` | false | true |
     | `contentWindow.parent.window === contentWindow.parent` | false | true |
-    | `contentWindow.frameElement` | `null` | iframe 元素 |
-    | `contentWindow.location.href` | 父页面 URL | `about:blank` |
+    | `contentWindow.parent.self === contentWindow.parent` | false | true |
     | `contentWindow.origin` | 已正确继承 | 同 |
 
-    第三条原记录里没有；`origin` 本来就对，改 `href` 时**不能把它改坏**
-    （真实浏览器的空白 iframe 是 `about:blank` + 继承父 origin）
-  - 前三条根因单一：`window-messaging.js` 的 `createSameOriginParentFacade()`
-    返回 `Object.create(parentWindow)` —— 一个原型链挂到父 window 的**新对象**。
-    它存在的唯一理由是覆盖 `postMessage`，让投递出去的事件带上**子** realm 的
-    `source` / `origin`
-  - **不能简单换成真对象**：子 realm 调 `parent.postMessage()` 执行的是父 realm
-    的函数，父 realm 无从得知调用者是谁，于是 `event.origin` 会变成父页面的
-    origin。那是把指纹问题换成**安全语义**问题，更差。真实浏览器靠 incumbent
-    settings object 解决，NV8 的两个 vm context 之间没有这个概念
-  - 因此这三条需要 **ADR-0007** 定案（侧信道传 incumbent / 让 `parent.window`
-    指向 facade 自身 / 接受一层更深的偏差），不该硬选
-  - 后两条与前三条**无关**，可以分开做：
-    - [x] **`frameElement` 已实现**（legacy 模式）。原先是硬编码 `() => null`。
-      这不只是「少一个值」：广告与反爬代码常用它判断「我是不是被嵌在别人页面
-      里」，恒为 null 等于声称自己是顶层窗口，而同时 `parent !== window`
-      ——**两个信号自相矛盾**，比单独一处错更容易被识别
-      - 返回的是**父 Realm 的 DOM 对象**，这是正确的：真实浏览器里该元素属于
-        父文档，所以子 Realm 里 `frameElement instanceof HTMLIFrameElement`
-        为 false、`instanceof parent.HTMLIFrameElement` 为 true。
-        这条容易被误当成 bug 而「修」成子 Realm 的对象——那才是偏差
-      - 跨源一律 null（规范要求），且在**源头**就不传：子 Realm 连引用都拿不到，
-        否则顺着 `ownerDocument` 就能读父文档
-      - plugin 模式刻意不接：那一档的 Window 表面里压根没有这个访问器
-        （surface fixture 的 plugin 档是 ABSENT，按 ADR-0001 是按需组装的结果）。
-        加一个必然无效的配置调用就是「看起来可配置但实际不可配置」
-      - 测试 4 项（`tests/iframe-frame-element-test.js`）
-    - [ ] **空白 iframe 的 `location.href` 不是一行改动**（重新定性）
-      - 原以为把 `html-iframe-element-realm-state.js` 里的默认 URL 从
-        `parentPageUrl` 改成 `about:blank` 就行。前置条件（URL 支持 opaque
-        path）已完成，但真正的障碍在别处：**NV8 目前把文档 origin 从页面 URL
-        推导出来**，而 `about:blank` 是第一个 URL 与 origin 必须分离的场合
-        （URL 不透明、origin 继承父页面）
-      - 至少四处要解耦：宿主侧 `runtime-pool` 用 `pageUrl.origin` 当
-        localStorage 键 / 网络记录器 / broadcast 连接器；Realm 内
-        `configureNavigation(pageUrl)` 决定 `location.origin`、
-        `configureWindowMessaging(new URL(pageUrl).origin, ...)` 决定
-        postMessage 的 origin
-      - 直接改会让 `childOrigin` 变成 `"null"`，`current.sameOrigin` 判假，
-        同源 iframe 退化成跨源门面——把一处 href 偏差换成整条同源链路失效
-      - 实测确认当前 `origin` 是**正确继承**的，所以改 href 时不能改坏它
-      - 顺带发现同一处的第二个偏差：`srcdoc` iframe 的 `href` 真实是
-        `about:srcdoc`，NV8 也给父页面 URL
-      - 结论：这是一次 origin/URL 解耦改造，应当单独立项，不该塞进本轮
+    后两条原记录里没有；`origin` 本来就对
+  - 与上一条同根：都是 facade 造成的
+  - **不能简单换成真对象**——已实测：`event.source` 会从子窗口变成父窗口自己，
+    打断 `event.source.postMessage(reply, event.origin)` 这条标准应答写法。
+    但 `event.origin` **两者相同**（同源场景父子 origin 本来一样），
+    所以 facade 在 origin 上并没有换来额外正确性
+  - 真实浏览器靠 incumbent settings object 决定 `event.source`；NV8 的两个 vm
+    context 之间没有这个概念，`this` 在两种调用下都是父 global
+  - 选项与倾向见 **ADR-0007**（倾向 A：换真实父 global；可选 C：用 `parent`
+    getter 兼作 incumbent 标记补回 `event.source`）
+  - 顺带发现：`tests/iframe-realm-test.js` 的
+    `Core iframe creates same-origin child Realm and contentDocument`
+    把 `parent === window` 为 **false** 写进了期望值——**测试固化了缺陷**，
+    修实现时必须一并改成 `true`
   - 反爬脚本最常用的「从干净 iframe 取原生函数」写法是**同步**的：
     `const f = document.createElement('iframe'); document.body.appendChild(f);
     f.contentWindow.Function.prototype.toString`
-  - 说明「接上池」只是第一步：即使 `contentWindow` 可用，父子链仍对不上
+    ——说明「接上 ADR-0004 的池」只是第一步：即使 `contentWindow` 可用，
+    父子链仍对不上，所以本 ADR 应当先决
+- [x] **`window.frameElement` 已实现**（legacy 模式）。原先是硬编码 `() => null`
+  - 这不只是「少一个值」：广告与反爬代码常用它判断「我是不是被嵌在别人页面里」，
+    恒为 null 等于声称自己是顶层窗口，而同时 `parent !== window`
+    ——**两个信号自相矛盾**，比单独一处错更容易被识别
+  - 返回的是**父 Realm 的 DOM 对象**，这是正确的：真实浏览器里该元素属于父文档，
+    所以子 Realm 里 `frameElement instanceof HTMLIFrameElement` 为 false、
+    `instanceof parent.HTMLIFrameElement` 为 true。这条容易被误当成 bug 而
+    「修」成子 Realm 的对象——那才是偏差
+  - 跨源一律 null（规范要求），且在**源头**就不传：子 Realm 连引用都拿不到，
+    否则顺着 `ownerDocument` 就能读父文档
+  - plugin 模式刻意不接：那一档的 Window 表面里压根没有这个访问器
+    （surface fixture 的 plugin 档是 ABSENT，按 ADR-0001 是按需组装的结果）。
+    加一个必然无效的配置调用就是「看起来可配置但实际不可配置」
+  - 测试 4 项（`tests/iframe-frame-element-test.js`）
+- [ ] **空白 iframe 的 `location.href` 不是一行改动**（重新定性为 origin/URL 解耦）
+  - 原以为把 `html-iframe-element-realm-state.js` 里的默认 URL 从
+    `parentPageUrl` 改成 `about:blank` 就行。前置条件（URL 支持 opaque path）
+    已完成，但真正的障碍在别处：**NV8 目前把文档 origin 从页面 URL 推导出来**，
+    而 `about:blank` 是第一个 URL 与 origin 必须分离的场合
+    （URL 不透明、origin 继承父页面）
+  - 至少四处要解耦：宿主侧 `runtime-pool` 用 `pageUrl.origin` 当 localStorage 键 /
+    网络记录器 / broadcast 连接器；Realm 内 `configureNavigation(pageUrl)` 决定
+    `location.origin`、`configureWindowMessaging(new URL(pageUrl).origin, ...)`
+    决定 postMessage 的 origin
+  - 直接改会让 `childOrigin` 变成 `"null"`，`current.sameOrigin` 判假，
+    同源 iframe 退化成跨源门面——把一处 href 偏差换成整条同源链路失效
+  - 实测确认当前 `origin` 是**正确继承**的，所以改 href 时不能改坏它
+  - 顺带发现同一处的第二个偏差：`srcdoc` iframe 的 `href` 真实是
+    `about:srcdoc`，NV8 也给父页面 URL
+  - 结论：这是一次 origin/URL 解耦改造，应当单独立项
 - [ ] **行为探针覆盖面是当前最大的缺口** - 112 项 / 13 类，对 1232 全局 /
   8901 成员
   - 分布极不均：`cssom` 22、`argumentCount` 19、`crossRealm` 只有 2
@@ -1211,10 +1232,12 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 **P1 核心检测价值，需要先设计**
 
-3. ADR-0007：`parent` / `top` 身份（§12）——
-   `createSameOriginParentFacade()` 用 `Object.create(parentWindow)` 换取正确的
-   `postMessage` 路由，代价是 5 处身份不符。直接换成真对象会把指纹问题变成
-   **安全语义**问题（`event.origin` 变成父页面的）。值得决策而不是硬选
+3. **ADR-0007 已写**（`docs/adr/0007-parent-window-identity.md`），待决策。
+   实测把这条从「指纹偏差」重新定性为**静默错误数据**：
+   `Object.create(parentWindow)` 不是可用的跨 Realm 委托机制，
+   同源子 frame 里 `parent.document` 读到的是**自己的**文档。
+   倾向选项 A（换真实父 global），代价只有 `event.source`；
+   可选 C 用 `parent` getter 兼作 incumbent 标记把它补回来
 4. ADR-0004 池位账目 → 动态 iframe `contentWindow` 同步可用（§12）——
    收益最大（现在脚本会直接抛，是「跑不起来」而非「指纹不对」），
    但必须排在 3 之后：池落地了而父子链仍不符，那条经典探针照样过不去

@@ -809,18 +809,25 @@ css-ua-defaults.js），现在都有了脚本。
 - **动态创建的 iframe，`contentWindow` 同步为 `null`**。子 Realm 引导需要
   265ms，无法在 `appendChild` 内同步完成。三个方案各有代价，见
   [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)（状态：待决策）。
-- **父子链 4 处不符**：`contentWindow.parent === window` 为 false、`top` 同样、
-  `parent.window === parent` 也是 false、空白 iframe 的 `location.href` 是父页面
-  URL 而非 `about:blank`。这些在**静态** iframe 上也复现，与 ADR-0004 的动态
-  时序无关。
-  前三条根因单一（`createSameOriginParentFacade()` 用 `Object.create` 换取正确的
-  `postMessage` 路由），但不能简单换成真对象——子 realm 调 `parent.postMessage()`
-  执行的是父 realm 的函数，`event.origin` 会变成父页面的，等于把指纹问题换成
-  安全语义问题。需要 ADR-0007 定案。
-  第四条已重新定性：`about:blank` 是第一个 **URL 与 origin 必须分离**的场合
+- **`parent.document` 静默返回子文档**（最严重的一条）。同源子 frame 里
+  `parent.document === document` 为 true——读到的是**自己的**文档。不报错、
+  不为 null，返回一个形状完全正常的 `HTMLDocument`，所以
+  `parent.document.cookie` / `.referrer` / `.querySelector('#token')`
+  全部静默读错对象。`parent.location` 同样。
+  根因是 `Object.create(parentWindow)` **不是可用的跨 Realm 委托机制**：
+  普通数据属性能沿原型链委托，而 `document` / `location` 这类由 contextify
+  拦截器支撑的访问器**不跟随原型**，会落回访问方所在 Realm 的全局。
+- **同源 `parent` / `top` 身份 4 处不符**：`parent === window`、`top === window`、
+  `parent.window === parent`、`parent.self === parent` 全为 false。与上一条同根。
+  在**静态** iframe 上也复现，与 ADR-0004 的动态时序无关。
+  换成真实父 global 能同时修掉这两条，代价实测只有 `event.source`
+  （从子窗口变成父窗口自己；`event.origin` 两者相同）。
+  选项与倾向见 [ADR-0007](docs/adr/0007-parent-window-identity.md)（待决策）。
+- **空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`**。
+  已重新定性：`about:blank` 是第一个 **URL 与 origin 必须分离**的场合
   （URL 不透明、origin 继承父页面），而 NV8 目前把文档 origin 从页面 URL 推导，
-  至少四处要解耦，是独立的改造。
-  `window.frameElement` 已修好（legacy 模式，4 项测试）。
+  至少四处要解耦，是独立的改造。`srcdoc` 同理（真实是 `about:srcdoc`）。
+- `window.frameElement` 已修好（legacy 模式，4 项测试）。
 - **iframe Realm 绕过堆容量守卫**：低堆配置下能建成超量 iframe 且不报结构化
   错误，随后 V8 OOM。与 ADR-0004 的池位账目是同一片区域。
 - **被顶掉的导航仍会建出子 Realm 再关掉**：真实浏览器压根不会开始。是 CPU
@@ -911,7 +918,7 @@ DOM 不变）。需要子 Realm 回调宿主。
 | [docs/state-scope.md](docs/state-scope.md) | 状态作用域规则 |
 | [docs/node-compatibility.md](docs/node-compatibility.md) | Node 18–24 兼容矩阵 |
 | [docs/rust-migration-map.json](docs/rust-migration-map.json) | Rust 原实现 → JS 实现对应关系 |
-| [docs/adr/](docs/adr/) | 架构决策记录（6 篇） |
+| [docs/adr/](docs/adr/) | 架构决策记录（7 篇） |
 | [REMAINING_TASKS.md](REMAINING_TASKS.md) | 完整待办 |
 | [sandbox_manual.md](sandbox_manual.md) | Sandbox 使用手册 |
 
@@ -925,6 +932,7 @@ DOM 不变）。需要子 Realm 回调宿主。
 | [0004](docs/adr/0004-dynamic-iframe-timing.md) | 动态 iframe 时序（待决策） |
 | [0005](docs/adr/0005-machine-specific-values.md) | 机器特定值不得进入浏览器身份 |
 | [0006](docs/adr/0006-parity-layers.md) | 三层对齐职责不重叠 |
+| [0007](docs/adr/0007-parent-window-identity.md) | 同源 `parent` / `top` 的对象身份（待决策） |
 
 ---
 
