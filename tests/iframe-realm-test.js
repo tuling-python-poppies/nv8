@@ -31,7 +31,9 @@ test('Core iframe creates same-origin child Realm and contentDocument', async ()
       frame.srcdoc = '<!doctype html><html><body><main id="child">child</main></body></html>';
       document.body.appendChild(frame);
     })`);
-    assert.deepEqual(JSON.parse(result), [true, 'https://example.test/', 'complete', false, false]);
+    // 最后两项原先写的是 `false, false`——那是把缺陷当成契约。同源子帧的
+    // `parent` / `top` 在真实浏览器里就是父窗口**本身**，见 ADR-0007。
+    assert.deepEqual(JSON.parse(result), [true, 'https://example.test/', 'complete', true, true]);
     assert.equal(nv8.sandbox.inspect().realms.length, 2);
     await nv8.sandbox.destroyRealm(realm.id);
   } finally {

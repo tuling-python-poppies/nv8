@@ -605,7 +605,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，757 项
+npm test              # 全量，763 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -690,7 +690,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（757 项 / 73 个文件） |
+| `npm test` | 全量测试（763 项 / 74 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -743,7 +743,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 73 个测试文件
+tests/                 74 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -809,25 +809,15 @@ css-ua-defaults.js），现在都有了脚本。
 - **动态创建的 iframe，`contentWindow` 同步为 `null`**。子 Realm 引导需要
   265ms，无法在 `appendChild` 内同步完成。三个方案各有代价，见
   [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)（状态：待决策）。
-- **`parent.document` 静默返回子文档**（最严重的一条）。同源子 frame 里
-  `parent.document === document` 为 true——读到的是**自己的**文档。不报错、
-  不为 null，返回一个形状完全正常的 `HTMLDocument`，所以
-  `parent.document.cookie` / `.referrer` / `.querySelector('#token')`
-  全部静默读错对象。`parent.location` 同样。
-  根因是 `Object.create(parentWindow)` **不是可用的跨 Realm 委托机制**：
-  普通数据属性能沿原型链委托，而 `document` / `location` 这类由 contextify
-  拦截器支撑的访问器**不跟随原型**，会落回访问方所在 Realm 的全局。
-- **同源 `parent` / `top` 身份 4 处不符**：`parent === window`、`top === window`、
-  `parent.window === parent`、`parent.self === parent` 全为 false。与上一条同根。
-  在**静态** iframe 上也复现，与 ADR-0004 的动态时序无关。
-  换成真实父 global 能同时修掉这两条，代价实测只有 `event.source`
-  （从子窗口变成父窗口自己；`event.origin` 两者相同）。
-  选项与倾向见 [ADR-0007](docs/adr/0007-parent-window-identity.md)（待决策）。
 - **空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`**。
   已重新定性：`about:blank` 是第一个 **URL 与 origin 必须分离**的场合
   （URL 不透明、origin 继承父页面），而 NV8 目前把文档 origin 从页面 URL 推导，
   至少四处要解耦，是独立的改造。`srcdoc` 同理（真实是 `about:srcdoc`）。
-- `window.frameElement` 已修好（legacy 模式，4 项测试）。
+- **`event.source` 在别名跨任务写法下退化**。同源子帧直写
+  `parent.postMessage(x, '*')` 的 `event.source` 是精确的（靠 `parent` getter
+  兼作 incumbent 标记）；写成 `const p = parent; setTimeout(() => p.postMessage(...))`
+  会退化成父窗口自己。要精确需要真正的 incumbent 栈，见
+  [ADR-0007](docs/adr/0007-parent-window-identity.md)。
 - **iframe Realm 绕过堆容量守卫**：低堆配置下能建成超量 iframe 且不报结构化
   错误，随后 V8 OOM。与 ADR-0004 的池位账目是同一片区域。
 - **被顶掉的导航仍会建出子 Realm 再关掉**：真实浏览器压根不会开始。是 CPU
@@ -932,7 +922,7 @@ DOM 不变）。需要子 Realm 回调宿主。
 | [0004](docs/adr/0004-dynamic-iframe-timing.md) | 动态 iframe 时序（待决策） |
 | [0005](docs/adr/0005-machine-specific-values.md) | 机器特定值不得进入浏览器身份 |
 | [0006](docs/adr/0006-parity-layers.md) | 三层对齐职责不重叠 |
-| [0007](docs/adr/0007-parent-window-identity.md) | 同源 `parent` / `top` 的对象身份（待决策） |
+| [0007](docs/adr/0007-parent-window-identity.md) | 同源 `parent` / `top` 交出真实父 window |
 
 ---
 

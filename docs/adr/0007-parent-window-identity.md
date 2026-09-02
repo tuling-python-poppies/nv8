@@ -1,6 +1,6 @@
 # ADR-0007：同源 `parent` / `top` 的对象身份
 
-- 状态：**待决策**（选项 A 已实测，见「实测记录」；未合入）
+- 状态：**已定案 —— 选 A + C**（2026-09 落地，见文末「落地记录」）
 - 日期：2026-09
 - 依赖：ADR-0004（动态 iframe 时序）、ADR-0006（三层对齐职责）
 
@@ -160,14 +160,76 @@ Realm 的 `postMessage` 消费一次后清除。
    原先以为的小。
 3. A 会删掉一层抽象；C 是在 A 之上加一个可选的精确化，可以分两步走。
 
-## 未决
+## 决定
 
-- 选 A 还是 A+C
-- 若选 A：`event.source` 差距要登记到
-  `tests/edge-behavior-parity-test.js` 的 `KNOWN_BEHAVIOR_DIFFERENCES`，
-  并写明 incumbent 的原理，避免后来者以为是漏改
-- `Core iframe creates same-origin child Realm and contentDocument` 的期望值
-  要从 `false, false` 改成 `true, true`——它现在把缺陷当成契约
+**A + C**：`parent` / `top` 返回真实的父 global，并用「`parent` getter 兼作
+incumbent 标记」把 `event.source` 补回来。
+
+定案时补充的一条实测，改变了权重分配：**在子帧内部，最常见的嵌入检测本来就是
+对的**。
+
+```
+top !== self                   true    ✓ 真实亦然
+parent !== window              true    ✓
+parent === self                false   ✓
+frameElement !== null          true    ✓
+parent.document === document   true    ✗ 真实是 false
+```
+
+所以前面那 4 处身份不符只在**父侧**可见（`f.contentWindow.parent === window`），
+那是个罕见得多的写法。**指纹价值不高，真正的风险是 `parent.document`。**
+
+从逆向的角度这条决定性：反爬 SDK 与验证码组件**故意**跑在 iframe 里（为了拿干净
+的 intrinsics），然后回头读 `parent.document.referrer` / `parent.location.href` /
+`parent.document.cookie`，这些经常直接进签名 payload。读错了脚本照样跑完、照样吐
+出格式正常的 token，只是算错了输入——本地零信号，只在服务端被拒。
+「停住的失败指向问题；算错的失败指向任何地方。」
+
+C 与 A 一起做而不是分两步，原因是：只做 A 就必须把两条**正确的**断言
+（`event.source` 必须是子窗口）改成登记的已知差异——那是削弱正确的测试来迁就实现。
+C 只有约 20 行，做了就不用削。
+
+### 为什么最初设想的 A′ 不成立
+
+原本计划里 A′ 是「让 `event.source` 变成 `null`，把静默错误变成响的错误」。
+它**不可实现**：父窗口自发的 `window.postMessage(x, '*')` 在真实浏览器里
+`event.source === window` 是**正确**的，而父侧分辨不出「子帧在调我的
+postMessage」与「我自己在调」——正是 C 要解决的那个问题。无条件置 `null` 会
+弄坏一条本来正确的路径，去让一条错误的路径更响，方向是错的。
+
+所以 A′ 塌进了 C：有了 incumbent，自发 post 保持 `source === window`（正确），
+子帧直写 post 得到 `source === 子窗口`（正确），只有别名跨任务的写法退化。
+
+## 落地记录
+
+- `configureWindowMessaging()` 同源分支直接交出 `parentWindow` /
+  `topWindow ?? parentWindow`，删掉 `createSameOriginParentFacade()`
+- `windowParent()` / `windowTop()` 调 `notifyParentIncumbent()`；
+  `notifyIncumbent` 挂在 `parentPostMessage` 函数对象上随同一条通道下发
+  ——这样不必往 `bootstrapRoot()` 的 40+ 个位置参数里再穿一个
+- `windowPostMessage()` 的自投递分支用 `consumeIncumbentSource() ?? globalThis`
+- incumbent **用后即清 + 微任务末清空**：只读了 `parent` 却没发消息时，
+  残留登记不能让之后一次父窗口自发的 post 被误记成来自子帧
+- 跨源分支不动：`createWindowFacade()` 只暴露规范允许的成员，不依赖原型委托，
+  没有同一个问题。有专门断言防止「顺手把跨源也改成真对象」
+
+`tests/iframe-realm-test.js` 的
+`Core iframe creates same-origin child Realm and contentDocument` 原先断言
+`parent === window` 为 **false**——**测试固化了缺陷**，已改成 `true`。
+
+新增 `tests/iframe-parent-identity-test.js`（6 项），断言分三组：跨帧 DOM 读取
+（真正的目的）、身份、跨源门面不受影响。incumbent 只锁**方向安全**
+（一个子帧的消息永不记到兄弟头上），刻意不锁别名写法退化到哪个具体值——那取决于
+微任务与宏任务的相对时序，写成契约就是把一次偶然调度当契约。
+
+763 项在 Node 18 / 20 / 22 / 24 四档全绿。
+
+## 未决（留给后续）
+
+- 别名 + 跨任务写法的 `event.source` 仍退化。要精确需要真正的 incumbent 栈，
+  依赖宿主侧介入，与 ADR-0004 的池位账目是同一类架构工作
+- 空白 iframe 的 `location.href` 仍是父页面 URL 而非 `about:blank`：那是
+  origin/URL 解耦改造，单独立项
 
 ## 相关
 

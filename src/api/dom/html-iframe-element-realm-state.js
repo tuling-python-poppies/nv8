@@ -7,6 +7,7 @@ import {
   createWindowFacade,
   enqueueWindowMessage,
   normalizePostMessageTarget,
+  registerIncumbentSource,
   transferOptions,
 } from "../window/window-messaging.js";
 import { registerNativeGetter } from "../../webidl/native-function.js";
@@ -197,6 +198,15 @@ function navigate(element) {
       iframeContentWindow(element),
       transferOptions(targetOriginOrOptions, transfer),
     );
+  };
+  // 子 Realm 读 `parent` / `top` 时回调这里，让父 Realm 知道「现在是哪个子帧在
+  // 访问我」。父 Realm 的 `windowPostMessage()` 消费一次即清。
+  //
+  // 挂在函数对象上而不是新加一个透传参数：`bootstrapRoot()` 已经有 40+ 个位置
+  // 参数，再穿一个只会更容易漏；而这两个能力属于同一段父子关系。
+  // 页面脚本拿不到这个函数（只存在子 Realm 的模块状态里），不构成可检测面。
+  parentPostMessage.notifyIncumbent = () => {
+    registerIncumbentSource(() => iframeContentWindow(element));
   };
   const scope = iframeScope();
   current.loading = Promise.resolve(scope.createChildRealm({

@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 757 项（`npm test`，73 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 763 项（`npm test`，74 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 757 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 763 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 757 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 763 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 757/757）
+- [x] Node 18–24 矩阵（四档 763/763）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1095,9 +1095,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 与 ADR-0004 的池位账目是同一片区域，应一并设计
   - 行为探针因此从"每项各建一个 iframe"改为**全部共用一个**（14 项合并为 2 项），
     这也更贴近真实脚本行为
-- [ ] **`parent.document` 静默返回子文档**（本轮实测发现，**比身份问题严重**）
-  - 父页面放 `<div id="parent-only">`、子文档放 `<div id="child-only">`，
-    在子 Realm 内部实测：
+- [x] **`parent.document` 静默返回子文档已修**（ADR-0007 选 A + C）
+  - 症状（修复前，在子 Realm 内部实测）：
 
     ```
     parent.document has parent-only      false   真实: true
@@ -1105,48 +1104,45 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     parent.document === document         true    真实: false
     ```
 
-    同源子 frame 里 `parent.document.*` 读到的是**自己的**文档。不报错、
-    不为 null，返回一个形状完全正常的 `HTMLDocument`。
-    `parent.document.cookie` / `.referrer` / `.querySelector('#token')`
-    全部静默读错对象。`parent.location` 同样
+    同源子帧里 `parent.document.*` 读到的是**自己的**文档。不报错、不为 null，
+    返回一个形状完全正常的 `HTMLDocument`
   - 根因：`Object.create(parentWindow)` **不是可用的跨 Realm 委托机制**。
-    同一轮实测里，普通数据属性沿原型链委托成功，而 `document` / `location`
-    这类由 contextify 拦截器支撑的访问器**不跟随原型**，会落回访问方所在
-    Realm 的全局。facade 只忠实暴露它自己那三个属性（`postMessage` /
-    `window` / `self`），其余一切静默降级
-  - 这不是「指纹偏差」而是**静默的错误数据**，比抛错危险
-  - 决策与实测记录见 **ADR-0007**
-- [ ] **同源 `parent` / `top` 身份 4 处不符**（先行缺陷，**静态 iframe 也一样**）
-  - 本轮在一个静态 iframe 上实测（`contentWindow` 可用，所以与 ADR-0004 的动态
-    时序无关）：
-
-    | 探测 | NV8 | 真实 |
-    |---|---|---|
-    | `contentWindow.parent === window` | false | true |
-    | `contentWindow.top === window` | false | true |
-    | `contentWindow.parent.window === contentWindow.parent` | false | true |
-    | `contentWindow.parent.self === contentWindow.parent` | false | true |
-    | `contentWindow.origin` | 已正确继承 | 同 |
-
-    后两条原记录里没有；`origin` 本来就对
-  - 与上一条同根：都是 facade 造成的
-  - **不能简单换成真对象**——已实测：`event.source` 会从子窗口变成父窗口自己，
-    打断 `event.source.postMessage(reply, event.origin)` 这条标准应答写法。
-    但 `event.origin` **两者相同**（同源场景父子 origin 本来一样），
-    所以 facade 在 origin 上并没有换来额外正确性
-  - 真实浏览器靠 incumbent settings object 决定 `event.source`；NV8 的两个 vm
-    context 之间没有这个概念，`this` 在两种调用下都是父 global
-  - 选项与倾向见 **ADR-0007**（倾向 A：换真实父 global；可选 C：用 `parent`
-    getter 兼作 incumbent 标记补回 `event.source`）
-  - 顺带发现：`tests/iframe-realm-test.js` 的
-    `Core iframe creates same-origin child Realm and contentDocument`
-    把 `parent === window` 为 **false** 写进了期望值——**测试固化了缺陷**，
-    修实现时必须一并改成 `true`
-  - 反爬脚本最常用的「从干净 iframe 取原生函数」写法是**同步**的：
-    `const f = document.createElement('iframe'); document.body.appendChild(f);
-    f.contentWindow.Function.prototype.toString`
-    ——说明「接上 ADR-0004 的池」只是第一步：即使 `contentWindow` 可用，
-    父子链仍对不上，所以本 ADR 应当先决
+    实测普通数据属性沿原型链委托成功，而 `document` / `location` 这类由
+    contextify 拦截器支撑的访问器**不跟随原型**，会落回访问方所在 Realm 的全局。
+    facade 只忠实暴露它自己那三个属性，其余一切静默降级
+  - 从逆向角度这条是决定性的：反爬 SDK 与验证码组件**故意**跑在 iframe 里
+    （为了拿干净 intrinsics），然后回头读 `parent.document.referrer` /
+    `parent.location.href` / `parent.document.cookie`，这些经常直接进签名
+    payload。读错了脚本照样跑完、照样吐出格式正常的 token，只是算错了输入
+    ——本地零信号，只在服务端被拒
+  - 修法：同源分支直接交出真实的父 global，删掉 `createSameOriginParentFacade()`
+- [x] **同源 `parent` / `top` 身份 4 处已修**（同上一条同根）
+  - `parent === window`、`top === window`、`parent.window === parent`、
+    `parent.self === parent` 现在全为 true
+  - 定案时补的一条实测把这条的权重降下来了：**在子帧内部，最常见的嵌入检测本来
+    就是对的**（`top !== self` / `parent !== window` / `parent === self` /
+    `frameElement` 全对）。那 4 处只在**父侧**可见
+    （`f.contentWindow.parent === window`），是罕见得多的写法。
+    指纹价值不高，真正的风险是 `parent.document`
+  - `tests/iframe-realm-test.js` 原先断言 `parent === window` 为 **false**
+    ——**测试固化了缺陷**，已改成 `true`
+- [x] **`event.source` 用 incumbent 近似补回**（选项 C，约 20 行）
+  - 只做 A 的话必须把两条**正确的**断言（`event.source` 必须是子窗口）改成登记的
+    已知差异——削弱正确的测试来迁就实现。C 做了就不用削
+  - 机制：`parent` 在子 Realm 里是 getter，`parent.postMessage(x, '*')` 是单个
+    表达式，getter 与调用之间插不进其他 Realm 的代码（单线程），所以 getter 顺手
+    登记「现在是我」，父侧消费一次即清 + 微任务末清空
+  - `notifyIncumbent` 挂在 `parentPostMessage` 函数对象上随同一条通道下发，
+    避免往 `bootstrapRoot()` 的 40+ 个位置参数里再穿一个
+  - **最初设想的 A′（把 `event.source` 置 null 让错误变响）不成立**：父窗口自发
+    `window.postMessage()` 的 `source === window` 是**正确**的，无条件置 null 会
+    弄坏一条本来正确的路径。A′ 塌进了 C
+  - 测试只锁**方向安全**（一个子帧的消息永不记到兄弟头上），刻意不锁别名写法退化
+    到哪个具体值——那取决于微任务与宏任务的相对时序
+- [ ] **`event.source` 在别名跨任务写法下仍退化**
+  - `const p = parent; setTimeout(() => p.postMessage(...))` 会退化成父窗口自己
+  - 退化方向安全（不会记错兄弟），但不精确。要精确需要真正的 incumbent 栈，
+    依赖宿主侧介入，与 ADR-0004 的池位账目是同一类架构工作
 - [x] **`window.frameElement` 已实现**（legacy 模式）。原先是硬编码 `() => null`
   - 这不只是「少一个值」：广告与反爬代码常用它判断「我是不是被嵌在别人页面里」，
     恒为 null 等于声称自己是顶层窗口，而同时 `parent !== window`
@@ -1232,12 +1228,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 **P1 核心检测价值，需要先设计**
 
-3. **ADR-0007 已写**（`docs/adr/0007-parent-window-identity.md`），待决策。
-   实测把这条从「指纹偏差」重新定性为**静默错误数据**：
-   `Object.create(parentWindow)` 不是可用的跨 Realm 委托机制，
-   同源子 frame 里 `parent.document` 读到的是**自己的**文档。
-   倾向选项 A（换真实父 global），代价只有 `event.source`；
-   可选 C 用 `parent` getter 兼作 incumbent 标记把它补回来
+3. **ADR-0007 已定案并落地**（选 A + C）。实测把这条从「指纹偏差」重新定性为
+   **静默错误数据**：`Object.create(parentWindow)` 不是可用的跨 Realm 委托机制，
+   同源子帧里 `parent.document` 读到的是自己的文档。现已交出真实父 global，
+   并用 `parent` getter 兼作 incumbent 标记补回 `event.source`（§12）
 4. ADR-0004 池位账目 → 动态 iframe `contentWindow` 同步可用（§12）——
    收益最大（现在脚本会直接抛，是「跑不起来」而非「指纹不对」），
    但必须排在 3 之后：池落地了而父子链仍不符，那条经典探针照样过不去
@@ -1268,5 +1262,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（757 项 / 73 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（763 项 / 74 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
