@@ -599,6 +599,34 @@ limits: { timeoutMs: 30_000 }
   Node 直接抛。
 - **跨页面/iframe 测量需要临时本地 HTTP 服务**（绑 127.0.0.1）。
   `file://` 让每个文件成为不透明源，iframe 拿不到 `parent`。
+- **采集脚本必须能在开发机上直接跑**。7 个 collector 原来只列了 WSL(`/mnt/c`) 与
+  Linux 的 Edge 路径，在原生 Windows 上必须每次手动 `--edge`。而「基准跟随本机
+  Edge」要成为常规做法，就不能依赖手动传参——已补上 Windows 候选路径。
+
+### 已测出的 151 → 152 差异
+
+本机 Edge 已是 152，7 份 fixture 全部重采并与 151 对比过（**只采集、未换基准**）：
+
+| 维度 | 151 | 152 | 变化 |
+|---|---|---|---|
+| 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
+| 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2**（`AbstractRange.startContainer/endContainer` 移到 `NodeRange`）|
+| 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
+| 行为探针 | 112 | 112 | **零变化** |
+| CSS 属性 | 745 | 746 | +`windowDrag`（`css-ua-defaults.js` 里本来就有）|
+| UA 默认值 | 96 标签 | 96 标签 | 无 |
+| UA / brands | `Edg/151` | `Edg/152` | brands **顺序与 GREASE 串都变了**：<br>`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一 |
+
+两条值得单独记：
+
+- **行为层零变化**说明探针可以跨 major 迁移，扩探针不必等特定版本。
+- **brands 不只是版本号变了**，GREASE 品牌串与数组顺序都变。这类字段照抄才安全，
+  按规律推导会错（ADR-0005 同一条铁律）。
+
+换基准的阻塞项不在采集，而在 `finalize-window-surface-order.js` **没有生成器**：
+新增全局要在那份 1.5 万行文件里手改三处（capture / delete / redefine）且顺序敏感。
+这与「3 个全局名缺失待版本门控」是同一个阻塞，应当一并解决，否则换基准只会把
+缺失全局从 3 涨到 6、把棘轮往上推而没有还债。
 
 ---
 

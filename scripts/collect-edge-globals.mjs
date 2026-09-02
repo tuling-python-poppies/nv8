@@ -16,6 +16,11 @@ import path from 'node:path';
 import process from 'node:process';
 
 const EDGE_CANDIDATES = [
+  // 原生 Windows 路径放在最前：脚本原来只列了 WSL(/mnt/c) 与 Linux 路径，
+  // 在 Windows 上必须手动 --edge。而『基准跟随本机 Edge』要成为常规做法，
+  // 就不能依赖每次手动传参。
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
   '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
   '/mnt/c/Program Files/Microsoft/Edge/Application/msedge.exe',
   '/usr/bin/microsoft-edge',

@@ -1214,19 +1214,61 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 顺带发现同一处的第二个偏差：`srcdoc` iframe 的 `href` 真实是
     `about:srcdoc`，NV8 也给父页面 URL
   - 结论：这是一次 origin/URL 解耦改造，应当单独立项
+- [x] **采集脚本已能在原生 Windows 直接跑** - 7 个 collector 原来只列了
+  WSL(`/mnt/c`) 与 Linux 的 Edge 路径
+  - `collect-edge-lengths.mjs` 更糟：路径**直接写成 `execFile` 的第一个实参**，
+    连候选列表都没有。补 `findEdge()` 时才发现
+  - 「基准跟随本机 Edge」要成为常规做法，就不能依赖每次手动 `--edge`
+- [ ] **换基准到本机 Edge 152** - 采集已完成，**未换**，阻塞项已定位
+  - 7 份 fixture 全部重采并与 151 对比（纯信息采集，未动实现）：
+
+    | 维度 | 151 | 152 | 变化 |
+    |---|---|---|---|
+    | 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
+    | 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2** |
+    | 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
+    | 行为探针 | 112 | 112 | **零变化** |
+    | CSS 属性 | 745 | 746 | +`windowDrag` |
+    | UA 默认值 | 96 标签 | 96 标签 | 无 |
+
+  - 新增成员：`ShadowRoot.referenceTarget`、`Navigator.cpuPerformance`、
+    `HTMLTemplateElement.shadowRootReferenceTarget` / `shadowRootSlotAssignment`、
+    `HTMLInputElement.createValueRange`、`HTMLTextAreaElement.createValueRange`
+  - **移除**成员：`AbstractRange.startContainer` / `endContainer`（移到新的
+    `NodeRange`）。这两个要按 `< 152` 门控，不是删掉
+  - **brands 不只是版本号变了**：GREASE 品牌串与数组顺序都变
+    （`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一）。这类字段必须照抄，
+    按规律推导会错——ADR-0005 同一条铁律
+  - **行为层零变化**是个好消息：探针可以跨 major 迁移，扩探针不必等特定版本
+  - **阻塞项不在采集，在 `finalize-window-surface-order.js` 没有生成器**：
+    新增全局要在那份 1.5 万行文件里手改三处（capture / delete / redefine）
+    且顺序敏感。成员可以在 install 层按 `browserMajorVersion >= N` 门控
+    （已有约 20 处这种用法），全局不行
+  - 与「3 个全局名缺失待版本门控」是**同一个阻塞**，应当一并解决。单独换基准只会
+    把缺失全局从 3 涨到 6、把 `edge-surface-parity` 的棘轮往上推而没有还债
+    ——那正是这套棘轮要防的事
 - [ ] **行为探针覆盖面是当前最大的缺口** - 112 项 / 13 类，对 1232 全局 /
   8901 成员
   - 分布极不均：`cssom` 22、`argumentCount` 19、`crossRealm` 只有 2
-  - **完全没有探针**的领域：DOM 遍历 / Range / Selection、fetch / XHR /
-    WebSocket 语义、Storage、IndexedDB、Worker / ServiceWorker、Media、
-    Web Animations、Observers、SVG、Crypto、Performance 时间精度、
-    Intl / 时区、字体度量
+  - **完全没有探针**的领域：**音频指纹**（`OfflineAudioContext` → oscillator →
+    取 buffer 求和，排得上前五的真实指纹向量，surface 里
+    `AudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer` 全都在，
+    只有行为没验过）、Intl / 时区、Performance 时间精度、字体度量、
+    DOM 遍历 / Range / Selection、fetch / XHR / WebSocket 语义、Storage、
+    IndexedDB、Worker / ServiceWorker、Media、Web Animations、Observers、SVG、Crypto
+  - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。第一梯队只有三项：
+    音频指纹、Intl / 时区（采集必须锁 locale + TZ，ADR-0005 的 `fontFamily`
+    就是没锁 locale 把采集机的中文系统语言烙进 fixture）、`performance.now()`
+    精度与钳制。IndexedDB / Range / Selection / SVG / Web Animations / Observers
+    极少被用来算签名，给它们写探针是在刷覆盖率
   - 形状层已经到顶（多余 0、缺失 0、963/966 原型一致），继续投形状层收益递减；
     行为层是唯一还能发现真问题的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
     行为层却查出 6 处
   - **当前被环境卡住**：本机 Edge 是 152.0.4191.53，fixture 基准是 151。
-    用 152 重采会引入版本偏斜，而「采集基准必须与 profile 一致」这个坑已经
-    踩过两次。所以第一步不是写探针，而是**搞一个固定 Edge 151 的采集环境**
+    但实测 151 → 152 的**行为层零变化**（112 项全部一致），说明探针本身可以跨
+    major 迁移。真正的阻塞是 `finalize-window-surface-order.js` 没有生成器
+    ——见上一条。所以第一步不是「搞 151 环境」，而是把全局的版本门控能力做出来，
+    然后基准跟随本机 Edge
 
 **测试**：`tests/edge-surface-parity-test.js`(8)、
 `tests/edge-member-parity-test.js`(10)、`tests/webgl-parity-test.js`(8)、
@@ -1282,8 +1324,12 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 **P2 最大的质量缺口，被采集环境卡住**
 
-6. 固定 Edge 151 的采集环境 —— 价值高于任何单个 API 的补齐
-7. 行为探针扩到空白领域（§12 末的清单）
+6. ~~固定 Edge 151 的采集环境~~ —— **重新定性**：151 → 152 实测行为层零变化，
+   探针可以跨 major 迁移。真正的阻塞是 `finalize-window-surface-order.js` 没有
+   生成器（新增全局要手改 1.5 万行文件的三处且顺序敏感），与「3 个全局名缺失待
+   版本门控」是同一件事。先做全局版本门控能力，再让基准跟随本机 Edge（§12）
+7. 行为探针扩到空白领域，**按反爬真正读什么排**：音频指纹 / Intl 时区 /
+   `performance.now()` 精度三项优先，其余延后（§12 末）
 
 **P3 工程完备性，按实际采集需求**
 

@@ -12,8 +12,35 @@
  */
 import http from 'node:http';
 import { execFile } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
+
+/**
+ * 定位本机 Edge。
+ *
+ * 原来这里把路径直接写成 `execFile` 的第一个实参，且只有 WSL 的 `/mnt/c` 形式，
+ * 在原生 Windows 上必然失败。而「基准跟随本机 Edge」要成为常规做法，就不能依赖
+ * 每次手动传 `--edge`。
+ */
+const EDGE_CANDIDATES = [
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  'C:/Program Files/Microsoft/Edge/Application/msedge.exe',
+  '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  '/mnt/c/Program Files/Microsoft/Edge/Application/msedge.exe',
+  '/usr/bin/microsoft-edge',
+  '/usr/bin/microsoft-edge-stable',
+];
+
+function findEdge() {
+  const explicitIndex = process.argv.indexOf('--edge');
+  const candidates = explicitIndex === -1
+    ? EDGE_CANDIDATES
+    : [process.argv[explicitIndex + 1], ...EDGE_CANDIDATES];
+  for (const candidate of candidates) {
+    if (candidate !== undefined && existsSync(candidate)) return candidate;
+  }
+  throw new Error('Edge not found; pass --edge <path>');
+}
 
 const PAGE = `<!doctype html><html><body><pre id="out">p</pre><script>
 const out = {};
@@ -40,7 +67,7 @@ const server = http.createServer((q, r) => { r.writeHead(200, {'content-type':'t
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const { port } = server.address();
 const dom = await new Promise((res, rej) => execFile(
-  '/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  findEdge(),
   ['--headless=new','--disable-gpu','--no-sandbox','--virtual-time-budget=6000','--dump-dom',`http://127.0.0.1:${port}/`],
   { encoding:'utf8', maxBuffer: 200*1024*1024, timeout: 180000 },
   (e, out) => (e && !out ? rej(e) : res(out))));
