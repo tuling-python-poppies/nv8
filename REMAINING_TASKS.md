@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 778 项（`npm test`，76 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 780 项（`npm test`，76 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 778 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 780 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 778 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 780 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 778/778）
+- [x] Node 18–24 矩阵（四档 780/780）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1273,8 +1273,59 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     机器相关的值不能进浏览器身份，也违反「跨运行确定、与机器无关」的准入条件
   - 采集在 Edge 152 上做的，**原 112 项零变化**（151 → 152 的行为层差异实测为 0），
     所以这次重采不构成版本偏斜
-- [ ] **行为探针覆盖面仍是最大的缺口** - 126 项 / 14 类，对 1232 全局 / 8901 成员
-  - 分布极不均：`cssom` 22、`argumentCount` 19、`audio` 14、`crossRealm` 只有 2
+- [x] **Intl / 时区与 `performance.now()` 精度探针已补**（18 项，第一梯队剩下两项）
+  - Intl 13 项、performance 5 项，抓到 4 处偏差，其中 2 处 NV8 自己的问题已修：
+    - `Intl.v8BreakIterator` 报成「NV8 缺一个 Intl 成员」，实际是**测试用了默认
+      150 profile 去比 151+ 的 fixture**——`browserMajorVersion >= 151` 门控的成员
+      被误报成缺失。这正是「采集基准版本必须与 profile 一致」那个踩过两次的坑，
+      `edge-member-parity-test.js` 早就显式传 151 profile 了，behavior 这份漏了
+    - `performance.measure()` 对不存在的 mark 报错缺 Chromium 的
+      `Failed to execute 'measure' on 'Performance': ` 前缀
+  - 剩下 2 处是**宿主级差异**，已登记：
+    - **ICU 数据版本**：Node 与 Chromium 各自打包 ICU。差异很窄——`NumberFormat` /
+      `ListFormat` / `RelativeTimeFormat` / `PluralRules` / `Collator` /
+      `Segmenter` 全部逐字一致，只有语言显示名不同
+      （`zh-Hant` → 真实 `Chinese (Traditional)`，Node `Traditional Chinese`）。
+      四档 Node 一致，所以宿主升级修不掉；要对齐得随 NV8 打包 Chromium 的 ICU 并
+      接管整个 `Intl`，会打破零依赖
+    - **V8 非法 locale 文案**：V8 13.x 改成 `Invalid language tag: !!`，
+      四档 Node 都还是 `Incorrect locale information provided`。对齐需要包一层所有
+      Intl 构造器并伪装 toString，代价大于收益
+  - **`Intl.DurationFormat` 从成员表探针里剔掉**：它只在 Node 24 的 V8 里有。
+    整份成员表混进一个宿主版本相关的名字，探针就会在四档 Node 里给不同结果，
+    而行为层没有版本门控机制。剔掉后其余 12 个名字仍逐个受检
+  - **两条采集纪律**（都靠实测定下来，不是推断）：
+    - 每个 Intl 探针**显式传 locale**，不用默认 locale。采集器不传 `--lang`，
+      默认 locale 会跟采集机的系统语言走——ADR-0005 的 `fontFamily` 就是这么中招的
+    - **时区相关的输出一律不进探针**：实测 Chromium 在 Windows 上**不理 `TZ`
+      环境变量**、只跟随操作系统时区（给采集器传 `TZ=UTC`，
+      `resolvedOptions().timeZone` 仍是本机的 `Asia/Shanghai`），所以采集器锁不住。
+      `new Date(0).toString()` 因此只探**形状**（正则匹配 + 段数）——第一版把偏移
+      和时区名替换成占位符就以为够了，时间部分 `08:00:00` 仍跟着采集机时区走
+  - `performance.now()` 的 100µs 钳制只报布尔，不报具体耗时——后者是机器性能
+- [ ] **profile 的 locale 与 UA 默认样式表自相矛盾**（本轮实测发现）
+  - `edge-150.js` / `edge-151.js` 都声明 `locale: "zh-CN"`、
+    `languages: ["zh-CN","zh"]`、`timezone: "Asia/Shanghai"`，
+    而 `css-ua-defaults.js` 里 `fontFamily` 是 `"Times New Roman"`——
+    那是 **en-US** 的默认字体
+  - 实测真实 Edge：`--lang=zh-CN` 给 `"Noto Sans SC"`，`--lang=en-US` 给
+    `"Times New Roman"`
+  - 于是 NV8 现在的状态是：`navigator.language === 'zh-CN'` 而
+    `getComputedStyle(document.body).fontFamily` 是英文默认值。**读这两个值一比就
+    对不上**，正是 ADR-0005 说的「比缺值更糟的内部矛盾」
+  - README 记的是反向的那次修复（「采集机的中文系统语言混进默认样式表，
+    而 navigator.language 声明 en-US」）。但 profile 实际写的是 zh-CN，
+    所以把采集器锁到 en-US 是**制造**了矛盾而不是消除它——修了采集器没修 profile
+  - 两条路都有代价，需要产品决策：
+    - 把 profile 改成 en-US locale + 匹配的时区 → 与现有 fixture 一致，
+      但放弃「声称是中文用户」这个对中文站点更自然的身份
+    - 保持 zh-CN 并按 `--lang=zh-CN` 重采 UA 默认值 → 但中文默认字体**是机器相关
+      的**（本机给 `Noto Sans SC`，装了别的字体的机器会给 `Microsoft YaHei` /
+      `SimSun`），按 ADR-0005 不该进身份
+  - 无论选哪条，都该加一条断言把「profile locale ↔ UA 默认字体」的一致性钉住，
+    否则改了一侧忘另一侧还会再发生
+- [ ] **行为探针覆盖面仍是最大的缺口** - 144 项 / 16 类，对 1232 全局 / 8901 成员
+  - 分布极不均：`cssom` 22、`argumentCount` 19、`audio` 14、`intl` 13、`crossRealm` 只有 2
   - **完全没有探针**的领域：**音频指纹**（`OfflineAudioContext` → oscillator →
     取 buffer 求和，排得上前五的真实指纹向量，surface 里
     `AudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer` 全都在，
@@ -1353,9 +1404,12 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
    探针可以跨 major 迁移。真正的阻塞是 `finalize-window-surface-order.js` 没有
    生成器（新增全局要手改 1.5 万行文件的三处且顺序敏感），与「3 个全局名缺失待
    版本门控」是同一件事。先做全局版本门控能力，再让基准跟随本机 Edge（§12）
-7. 行为探针扩到空白领域，**按反爬真正读什么排**：音频指纹**已完成**
-   （14 项，抓到 10 处偏差）；剩 Intl / 时区、`performance.now()` 精度两项优先，
-   其余延后（§12 末）
+7. 行为探针第一梯队**三项全部完成**：音频指纹（14 项，10 处偏差）、
+   Intl / 时区（13 项）、`performance.now()` 精度（5 项，共 4 处偏差、
+   2 处宿主级已登记）。剩余领域按「反爬真正读什么」判断价值不高，明确延后（§12 末）
+8. **新发现待决策**：profile 声明 `locale: zh-CN` 而 UA 默认样式表的 `fontFamily`
+   是 en-US 的 `"Times New Roman"`——`navigator.language` 与
+   `getComputedStyle(document.body).fontFamily` 一比就对不上（§12）
 
 **P3 工程完备性，按实际采集需求**
 
@@ -1377,5 +1431,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（778 项 / 76 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（780 项 / 76 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

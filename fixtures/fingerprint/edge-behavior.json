@@ -1,6 +1,6 @@
 {
-  "collectedAt": "2026-09-03T05:18:01.760Z",
-  "probeCount": 126,
+  "collectedAt": "2026-09-03T05:48:59.383Z",
+  "probeCount": 144,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -426,6 +426,78 @@
     "audio/context-constructor-guard": {
       "threw": false,
       "value": "TypeError: Failed to construct 'OfflineAudioContext': Please use the 'new' operator, this DOM object constructor cannot be called as a function."
+    },
+    "intl/namespace-members": {
+      "threw": false,
+      "value": "Collator,DateTimeFormat,DisplayNames,ListFormat,Locale,NumberFormat,PluralRules,RelativeTimeFormat,Segmenter,getCanonicalLocales,supportedValuesOf,v8BreakIterator"
+    },
+    "intl/datetimeformat-resolved-keys": {
+      "threw": false,
+      "value": "calendar,day,locale,month,numberingSystem,timeZone,year"
+    },
+    "intl/numberformat": {
+      "threw": false,
+      "value": "1,234,567.891|1,234,567.891|1.234.567,891|$12.50"
+    },
+    "intl/listformat": {
+      "threw": false,
+      "value": "a, b, and c|a、b和c"
+    },
+    "intl/relativetimeformat": {
+      "threw": false,
+      "value": "1 day ago|1天前"
+    },
+    "intl/collator-order": {
+      "threw": false,
+      "value": "a,A,ä,b,B"
+    },
+    "intl/displaynames": {
+      "threw": false,
+      "value": "China|美国|Chinese (Traditional)"
+    },
+    "intl/pluralrules": {
+      "threw": false,
+      "value": "one|other|other"
+    },
+    "intl/segmenter-resolved": {
+      "threw": false,
+      "value": "zh-CN|word"
+    },
+    "intl/invalid-locale": {
+      "threw": false,
+      "value": "RangeError: Invalid language tag: !!"
+    },
+    "intl/invalid-timezone": {
+      "threw": false,
+      "value": "RangeError: Invalid time zone specified: Not/AZone"
+    },
+    "intl/date-tostring-shape": {
+      "threw": false,
+      "value": "matches=true|segments=7"
+    },
+    "intl/date-toutcstring": {
+      "threw": false,
+      "value": "Thu, 01 Jan 1970 00:00:00 GMT|1970-01-01T00:00:00.000Z|1970-01-01T00:00:00.000Z"
+    },
+    "perf/now-type-and-origin": {
+      "threw": false,
+      "value": "number|number|[object Performance]|function"
+    },
+    "perf/now-clamped-to-100us": {
+      "threw": false,
+      "value": "clamped=true|monotonic=true"
+    },
+    "perf/mark-missing-argument": {
+      "threw": false,
+      "value": "TypeError: Failed to execute 'mark' on 'Performance': 1 argument required, but only 0 present."
+    },
+    "perf/measure-unknown-mark": {
+      "threw": false,
+      "value": "SyntaxError: Failed to execute 'measure' on 'Performance': The mark 'nv8-nonexistent-mark' does not exist."
+    },
+    "perf/entry-shape": {
+      "threw": false,
+      "value": "[object PerformanceMark]|mark|nv8-probe|0|1|[object Array]"
     },
     "event/phase-order": {
       "threw": false,

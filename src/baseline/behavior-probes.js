@@ -809,6 +809,211 @@ export const BEHAVIOR_PROBES = Object.freeze([
     }`,
   },
 
+  // ---------------------------------------------- Intl / 时区
+  //
+  // 每个探针都**显式传 locale**，不用默认 locale。原因是采集器不传 `--lang`，
+  // 默认 locale 会跟采集机的系统语言走——那正是 ADR-0005 里 `fontFamily` 踩过的
+  // 坑（采集机的中文系统语言被烙进 fixture）。显式传 locale 之后探针与采集机
+  // 无关，只依赖浏览器自带的 ICU 数据，那是 browser build 的属性。
+  //
+  // **刻意不测任何依赖时区的输出**。实测 Chromium 在 Windows 上**不理 `TZ`
+  // 环境变量**、只跟随操作系统时区：给采集器传 `TZ=UTC`，
+  // `Intl.DateTimeFormat().resolvedOptions().timeZone` 仍然是本机的
+  // `Asia/Shanghai`。所以时区相关的值采集器锁不住，会把采集机的时区烙进 fixture。
+  // （NV8 自己能锁：`childEnvironment()` 会给子进程设 `TZ`，Node 认这个变量。）
+  {
+    id: 'intl/namespace-members',
+    category: 'intl',
+    // 剔掉 `DurationFormat`：它只在 Node 24 的 V8 里有，18–22 没有。整份成员表
+    // 混进一个宿主版本相关的名字，这个探针就会在四档 Node 里给不同结果，
+    // 而行为层没有版本门控机制。剔掉之后其余 12 个名字仍然逐个受检。
+    expression: `() => Object.getOwnPropertyNames(Intl)
+      .filter((name) => name !== 'DurationFormat')
+      .sort().join(',')`,
+  },
+  {
+    id: 'intl/datetimeformat-resolved-keys',
+    category: 'intl',
+    // 只取 key 集合，不取值——值里含 timeZone。
+    expression: `() => Object.keys(
+      new Intl.DateTimeFormat('en-US').resolvedOptions(),
+    ).sort().join(',')`,
+  },
+  {
+    id: 'intl/numberformat',
+    category: 'intl',
+    expression: `() => [
+      new Intl.NumberFormat('en-US').format(1234567.891),
+      new Intl.NumberFormat('zh-CN').format(1234567.891),
+      new Intl.NumberFormat('de-DE').format(1234567.891),
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(12.5),
+    ].join('|')`,
+  },
+  {
+    id: 'intl/listformat',
+    category: 'intl',
+    expression: `() => [
+      new Intl.ListFormat('en-US').format(['a', 'b', 'c']),
+      new Intl.ListFormat('zh-CN').format(['a', 'b', 'c']),
+    ].join('|')`,
+  },
+  {
+    id: 'intl/relativetimeformat',
+    category: 'intl',
+    expression: `() => [
+      new Intl.RelativeTimeFormat('en-US').format(-1, 'day'),
+      new Intl.RelativeTimeFormat('zh-CN').format(-1, 'day'),
+    ].join('|')`,
+  },
+  {
+    id: 'intl/collator-order',
+    category: 'intl',
+    expression: `() => ['b', 'a', 'B', 'A', 'ä']
+      .sort(new Intl.Collator('de-DE').compare).join(',')`,
+  },
+  {
+    id: 'intl/displaynames',
+    category: 'intl',
+    expression: `() => [
+      new Intl.DisplayNames('en-US', { type: 'region' }).of('CN'),
+      new Intl.DisplayNames('zh-CN', { type: 'region' }).of('US'),
+      new Intl.DisplayNames('en-US', { type: 'language' }).of('zh-Hant'),
+    ].join('|')`,
+  },
+  {
+    id: 'intl/pluralrules',
+    category: 'intl',
+    expression: `() => [
+      new Intl.PluralRules('en-US').select(1),
+      new Intl.PluralRules('en-US').select(2),
+      new Intl.PluralRules('zh-CN').select(2),
+    ].join('|')`,
+  },
+  {
+    id: 'intl/segmenter-resolved',
+    category: 'intl',
+    expression: `() => {
+      const options = new Intl.Segmenter('zh-CN', { granularity: 'word' })
+        .resolvedOptions();
+      return options.locale + '|' + options.granularity;
+    }`,
+  },
+  {
+    id: 'intl/invalid-locale',
+    category: 'intl',
+    expression: `() => {
+      try {
+        new Intl.NumberFormat('!!');
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'intl/invalid-timezone',
+    category: 'intl',
+    expression: `() => {
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone: 'Not/AZone' });
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'intl/date-tostring-shape',
+    category: 'intl',
+    // 只报**形状**，不报内容。第一版把偏移与时区名替换成占位符就以为够了，
+    // 结果时间部分（`08:00:00`）仍然跟着采集机的时区走——把机器时区烙进了
+    // fixture。改成正则匹配 + 各段长度，彻底与时区无关。
+    expression: `() => {
+      const value = new Date(0).toString();
+      const pattern = /^[A-Z][a-z]{2} [A-Z][a-z]{2} \\d{2} \\d{4} \\d{2}:\\d{2}:\\d{2} GMT[+-]\\d{4} \\(.+\\)$/;
+      return 'matches=' + pattern.test(value)
+        + '|segments=' + value.split(' ').length;
+    }`,
+  },
+  {
+    id: 'intl/date-toutcstring',
+    category: 'intl',
+    // UTC 系列与时区无关，可以整串比。
+    expression: `() => [
+      new Date(0).toUTCString(),
+      new Date(0).toISOString(),
+      new Date(0).toJSON(),
+    ].join('|')`,
+  },
+
+  // ---------------------------------------------- Performance 时间精度
+  //
+  // `performance.now()` 的粒度是**浏览器策略**（非 cross-origin-isolated 上下文
+  // 会被钳到 100µs），不是机器测量值，所以跨运行确定、可以进探针。
+  //
+  // 但**不测具体耗时**：那是机器性能，进 fixture 就是烙一个机器指纹。
+  {
+    id: 'perf/now-type-and-origin',
+    category: 'performance',
+    expression: `() => [
+      typeof performance.now(),
+      typeof performance.timeOrigin,
+      Object.prototype.toString.call(performance),
+      typeof performance.now,
+    ].join('|')`,
+  },
+  {
+    id: 'perf/now-clamped-to-100us',
+    category: 'performance',
+    // Chromium 在非隔离上下文把 now() 钳到 0.1ms 的整数倍。取多个样本全部检验，
+    // 只报布尔——报具体数值就变成机器性能了。
+    expression: `() => {
+      const samples = [];
+      for (let index = 0; index < 50; index += 1) samples.push(performance.now());
+      const clamped = samples.every(
+        (value) => Math.abs(value * 10 - Math.round(value * 10)) < 1e-6,
+      );
+      const monotonic = samples.every(
+        (value, index) => index === 0 || value >= samples[index - 1],
+      );
+      return 'clamped=' + clamped + '|monotonic=' + monotonic;
+    }`,
+  },
+  {
+    id: 'perf/mark-missing-argument',
+    category: 'performance',
+    expression: `() => {
+      try {
+        performance.mark();
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'perf/measure-unknown-mark',
+    category: 'performance',
+    expression: `() => {
+      try {
+        performance.measure('probe', 'nv8-nonexistent-mark');
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'perf/entry-shape',
+    category: 'performance',
+    expression: `() => {
+      performance.clearMarks();
+      const entry = performance.mark('nv8-probe');
+      const found = performance.getEntriesByName('nv8-probe');
+      performance.clearMarks();
+      return [
+        Object.prototype.toString.call(entry),
+        entry.entryType,
+        entry.name,
+        entry.duration,
+        found.length,
+        Object.prototype.toString.call(found),
+      ].join('|');
+    }`,
+  },
+
   // ---------------------------------------------- 事件时序细节
   {
     id: 'event/phase-order',

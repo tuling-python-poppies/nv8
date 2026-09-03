@@ -57,11 +57,17 @@ let probePromise = null;
 function runProbes() {
   probePromise ??= (async () => {
     const { createSandbox } = await import('../src/public/create-sandbox.js');
+    const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
     const sandbox = await createSandbox('https://behavior.test/page', {
       page: { html: '<!doctype html><html><head></head><body></body></html>' },
-      // 116 个探针里有 14 个会创建 iframe（各自触发一次子 Realm 创建），
-      // 一轮下来超过默认的 1000ms。那个默认值是给不受信页面脚本的生产安全
-      // 上限，不是「探针该跑多快」的断言。
+      // 采集基准是真实 Edge 151+，所以对比也必须用 151 profile——与
+      // `edge-member-parity-test.js` 同一条理由。用默认的 150 profile 会把
+      // `browserMajorVersion >= 151` 门控的成员误报成缺失：`Intl.v8BreakIterator`
+      // 就是这么被记成「NV8 缺一个 Intl 成员」的，而它其实只是没到版本门槛。
+      fingerprint: { ...edge151Fingerprint, browserMajorVersion: 151 },
+      // 探针里有若干会创建 iframe（各自触发一次子 Realm 创建），一轮下来超过默认
+      // 的 1000ms。那个默认值是给不受信页面脚本的生产安全上限，不是「探针该跑多快」
+      // 的断言。
       limits: { timeoutMs: 30_000 },
     });
     try {
@@ -116,9 +122,50 @@ const DYNAMIC_IFRAME_REASON = '动态 iframe 的 contentWindow 同步为 null；
  * forbidden **三类**而不是两类。只分两类的话空格会被判成非法，
  * 而真实浏览器把它编码成 `%20`——按规范条文或按 Node 实现都会得出相反结论。
  */
+/**
+ * Node 的 ICU 与 Chromium 的 ICU 不是同一份数据。
+ *
+ * NV8 的 `Intl` 直接用宿主 Node 的实现，而 Node 与 Chromium 各自打包 ICU。
+ * 实测差异**很窄**：`NumberFormat` / `ListFormat` / `RelativeTimeFormat` /
+ * `PluralRules` / `Collator` / `Segmenter` 全部逐字一致，只有语言**显示名**不同：
+ *
+ * ```
+ * new Intl.DisplayNames('en-US', { type: 'language' }).of('zh-Hant')
+ *   真实 Edge : "Chinese (Traditional)"
+ *   Node 18–24: "Traditional Chinese"
+ * ```
+ *
+ * 四档 Node 给的都是后者，所以这不是 Node 版本问题，而是 ICU 数据版本问题。
+ * 要修就得随 NV8 打包一份 Chromium 的 ICU 数据并接管整个 `Intl`——那是独立的
+ * 大工程，且会把「零依赖」这条打破。
+ */
+const ICU_DATA_REASON = 'Node 与 Chromium 各自打包 ICU，语言显示名的措辞不同；'
+  + '实测四档 Node 一致，所以是 ICU 数据版本差异而非 Node 版本差异；'
+  + '要修需随 NV8 打包 Chromium 的 ICU 数据并接管整个 Intl';
+
+/**
+ * V8 的非法 locale 报错文案在版本间变了。
+ *
+ * ```
+ * new Intl.NumberFormat('!!')
+ *   真实 Edge (V8 13.x): RangeError: Invalid language tag: !!
+ *   Node 18–24 (V8 ≤13): RangeError: Incorrect locale information provided
+ * ```
+ *
+ * 四档 Node 给的都是旧文案，所以宿主升级也修不掉——要对齐得包一层
+ * `Intl.NumberFormat` 等构造器，把非法 locale 的异常重写。那会给每个 Intl
+ * 构造器加一层包装（原生 toString 也要跟着伪装），代价明显大于收益：
+ * 「把非法 locale 的报错文案拿去做指纹」不是常见写法。
+ */
+const V8_LOCALE_MESSAGE_REASON = 'V8 13.x 改了非法 locale 的报错文案；'
+  + '四档 Node 都是旧文案，宿主升级修不掉；'
+  + '对齐需要包一层所有 Intl 构造器并伪装其 toString，代价大于收益';
+
 const KNOWN_BEHAVIOR_DIFFERENCES = Object.freeze({
   'realm/identity-bundle': DYNAMIC_IFRAME_REASON,
   'realm/foreign-native-toString': DYNAMIC_IFRAME_REASON,
+  'intl/displaynames': ICU_DATA_REASON,
+  'intl/invalid-locale': V8_LOCALE_MESSAGE_REASON,
 });
 
 /**
@@ -212,6 +259,8 @@ categoryTest('collections', 'collection iterability and tags');
 categoryTest('cssom', 'CSSOM computed values and declaration semantics');
 categoryTest('canvas', 'canvas and TextMetrics interface shape');
 categoryTest('audio', 'Web Audio defaults, ranges and error shapes');
+categoryTest('intl', 'Intl formatting and locale-independent date shapes');
+categoryTest('performance', 'performance.now clamping and entry shapes');
 categoryTest('eventTiming', 'event phases and propagation control');
 categoryTest('crossRealm', 'cross-realm object identity');
 categoryTest('urlParsing', 'URL validation and normalization');
@@ -249,8 +298,12 @@ test('probe results are stable across repeated runs', async () => {
   const first = await runProbes();
 
   const { createSandbox } = await import('../src/public/create-sandbox.js');
+  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
   const sandbox = await createSandbox('https://behavior.test/page', {
     page: { html: '<!doctype html><html><head></head><body></body></html>' },
+    // 必须与 runProbes() 用**同一个** profile，否则这条测的是「两个不同 profile
+    // 给不同结果」而不是「同一环境跨运行是否确定」。版本门控的成员会立刻让它红。
+    fingerprint: { ...edge151Fingerprint, browserMajorVersion: 151 },
     limits: { timeoutMs: 30_000 },
   });
   let second;

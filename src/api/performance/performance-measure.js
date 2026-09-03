@@ -91,7 +91,10 @@ function resolveMark(state, name) {
     }
   }
   throw new DOMException(
-    `The mark '${name}' does not exist.`,
+    // Chromium 的 DOMException 文案统一带 `Failed to execute 'X' on 'Y': ` 前缀，
+    // 缺前缀是可检测偏差（`argumentCount` 那批 244 处构造器就是同一个问题）。
+    `Failed to execute 'measure' on 'Performance': `
+    + `The mark '${name}' does not exist.`,
     "SyntaxError",
   );
 }

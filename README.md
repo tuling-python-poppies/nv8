@@ -298,15 +298,14 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 ### 第三层：运行时行为
 
-前两层都对，行为仍可能不同。这一层用 **126 个探针 / 14 类**覆盖：
+前两层都对，行为仍可能不同。这一层用 **144 个探针 / 16 类**覆盖：
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
 `arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`audio`、
-`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
+`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
 
-现状：**124 项一致，2 项登记**（余下 2 项都是动态 iframe 时序，见
-[ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)；开
-`limits.prewarmChildRealms` 后这两项也一致）。
+现状：**140 项一致，4 项登记**——2 项动态 iframe 时序（开
+`limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
 10 个成员），行为层却查出 **6 处**不同。形状层永远看不到那个洞。
@@ -317,6 +316,27 @@ descriptor 零差异，而 14 个新增行为探针里 **10 个不一致**——
 `undefined`、destination 通道数是 2 而真实是 1、五处报错类型是 `RangeError` 而真实
 是 `NotSupportedError` / `IndexSizeError`、`frequency.minValue` 是 float32 极值而真实
 是 ±nyquist。形状完整、行为未验证，是最容易出「看起来对但算出来不一样」的地方。
+
+### Intl 的天花板：ICU 数据不是同一份
+
+`Intl` 直接用宿主 Node 的实现，而 Node 与 Chromium **各自打包 ICU**。实测差异
+很窄——`NumberFormat` / `ListFormat` / `RelativeTimeFormat` / `PluralRules` /
+`Collator` / `Segmenter` 全部逐字一致，只有语言**显示名**不同：
+
+```
+new Intl.DisplayNames('en-US', { type: 'language' }).of('zh-Hant')
+  真实 Edge : "Chinese (Traditional)"
+  Node 18–24: "Traditional Chinese"
+```
+
+四档 Node 给的都是后者，所以这是 ICU **数据版本**差异，不是 Node 版本差异
+——宿主升级修不掉。同理 `new Intl.NumberFormat('!!')` 的报错文案：V8 13.x 改成了
+`Invalid language tag: !!`，四档 Node 都还是 `Incorrect locale information provided`。
+两条都已登记。
+
+**时区相关的输出刻意不进探针**：实测 Chromium 在 Windows 上不理 `TZ` 环境变量、
+只跟随操作系统时区，所以采集器锁不住它，写进 fixture 就是烙一个采集机的时区。
+（NV8 自己能锁——子进程 env 会设 `TZ`，Node 认这个变量。）
 
 ### 这套机制抓出来的真实问题（举例）
 
@@ -570,7 +590,7 @@ limits: { timeoutMs: 30_000 }
 | `npm run fingerprint:globals` | 1236 个全局名 |
 | `npm run fingerprint:members` | 8941 个原型成员与描述符 |
 | `npm run fingerprint:lengths` | 3496 个方法的 `length` |
-| `npm run fingerprint:behavior` | 126 个行为探针 |
+| `npm run fingerprint:behavior` | 144 个行为探针 |
 | `npm run fingerprint:css` | 745 个 CSS 属性名（保留真实枚举顺序） |
 | `npm run fingerprint:ua-defaults` | 96 个标签 × 736 个属性的 UA 默认值 |
 
@@ -641,7 +661,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，778 项
+npm test              # 全量，780 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -726,7 +746,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（778 项 / 76 个文件） |
+| `npm test` | 全量测试（780 项 / 76 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
