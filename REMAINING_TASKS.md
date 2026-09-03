@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 777 项（`npm test`，76 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 778 项（`npm test`，76 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 777 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 778 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 777 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 778 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 777/777）
+- [x] Node 18–24 矩阵（四档 778/778）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1247,9 +1247,34 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 与「3 个全局名缺失待版本门控」是**同一个阻塞**，应当一并解决。单独换基准只会
     把缺失全局从 3 涨到 6、把 `edge-surface-parity` 的棘轮往上推而没有还债
     ——那正是这套棘轮要防的事
-- [ ] **行为探针覆盖面是当前最大的缺口** - 112 项 / 13 类，对 1232 全局 /
-  8901 成员
-  - 分布极不均：`cssom` 22、`argumentCount` 19、`crossRealm` 只有 2
+- [x] **音频指纹探针已补**（14 项，第一梯队第一项）
+  - 补之前**一个探针都没有**，而 surface 里 `AudioContext` /
+    `OfflineAudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer`
+    全部齐备、descriptor 零差异。14 项里 **10 项不一致**——形状层完全看不到
+  - 抓到的偏差：
+    - `OfflineAudioContext.length` 读出 `undefined`（内部叫 `offlineLength`，没映射）
+    - destination 是 `2|2|max`，真实是 `1|1|explicit`（跟随 `numberOfChannels`）
+    - **五处报错类型错**：`RangeError` 而真实是 `NotSupportedError`（构造）/
+      `IndexSizeError`（`fftSize`、`getChannelData`）。脚本按 `error.name` 分支，
+      类型错比文案错严重
+    - `sampleRate: 1` 被静默接受，真实抛 `[3000, 768000]` 越界
+    - `new OfflineAudioContext(1)` 报 `length must be a positive integer`，
+      真实走字典重载报 `not of type 'OfflineAudioContextOptions'`
+    - `frequency.minValue/maxValue` 是 float32 极值，真实是 **±nyquist**
+      （`sampleRate/2`）；`detune` 真实是 ±153600
+    - **float32 加宽的小数展开**：`attack.defaultValue` 是 `0.003` 而真实是
+      `0.003000000026077032`；`gain.minValue` 是 `-3.4028235e+38` 而真实是
+      `-3.4028234663852886e+38`。根因是把 float32 极值的十进制**缩写**当 double
+      字面量写死。正解是 AudioParam 一律 `Math.fround`——Chromium 里它是 float 存储，
+      读出来是 float32 加宽成 double
+  - **刻意不把渲染出来的样本值写成探针**：典型音频指纹是
+    `OfflineAudioContext` → oscillator → compressor → `startRendering()` →
+    buffer 求和取哈希，那条链的浮点结果可能随 CPU 的 SIMD 路径变化。按 ADR-0005
+    机器相关的值不能进浏览器身份，也违反「跨运行确定、与机器无关」的准入条件
+  - 采集在 Edge 152 上做的，**原 112 项零变化**（151 → 152 的行为层差异实测为 0），
+    所以这次重采不构成版本偏斜
+- [ ] **行为探针覆盖面仍是最大的缺口** - 126 项 / 14 类，对 1232 全局 / 8901 成员
+  - 分布极不均：`cssom` 22、`argumentCount` 19、`audio` 14、`crossRealm` 只有 2
   - **完全没有探针**的领域：**音频指纹**（`OfflineAudioContext` → oscillator →
     取 buffer 求和，排得上前五的真实指纹向量，surface 里
     `AudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer` 全都在，
@@ -1328,8 +1353,9 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
    探针可以跨 major 迁移。真正的阻塞是 `finalize-window-surface-order.js` 没有
    生成器（新增全局要手改 1.5 万行文件的三处且顺序敏感），与「3 个全局名缺失待
    版本门控」是同一件事。先做全局版本门控能力，再让基准跟随本机 Edge（§12）
-7. 行为探针扩到空白领域，**按反爬真正读什么排**：音频指纹 / Intl 时区 /
-   `performance.now()` 精度三项优先，其余延后（§12 末）
+7. 行为探针扩到空白领域，**按反爬真正读什么排**：音频指纹**已完成**
+   （14 项，抓到 10 处偏差）；剩 Intl / 时区、`performance.now()` 精度两项优先，
+   其余延后（§12 末）
 
 **P3 工程完备性，按实际采集需求**
 
@@ -1351,5 +1377,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（777 项 / 76 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（778 项 / 76 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

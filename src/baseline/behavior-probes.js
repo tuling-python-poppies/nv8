@@ -601,6 +601,214 @@ export const BEHAVIOR_PROBES = Object.freeze([
     expression: "() => document.createElement('canvas').getContext('2d').font",
   },
 
+  // ---------------------------------------------- 音频指纹
+  //
+  // 音频是排得上前五的真实指纹向量，此前**一个探针都没有**——而 surface 里
+  // `AudioContext` / `OfflineAudioContext` / `OscillatorNode` / `AnalyserNode` /
+  // `AudioBuffer` 全都在。形状完整、行为未验证，是最容易出「看起来对但算出来
+  // 不一样」的地方。
+  //
+  // 刻意**不**把渲染出来的样本值写成探针。典型的音频指纹是
+  // `OfflineAudioContext` → oscillator → compressor → `startRendering()` →
+  // 把 buffer 求和取哈希，而那条链的浮点结果可能随 CPU 的 SIMD 路径变化。
+  // 按 ADR-0005，机器相关的值不能进浏览器身份；写成探针还会违反「跨运行确定、
+  // 与机器无关」的准入条件。渲染值另有单独的调查记录。
+  //
+  // 这里取的是引擎固定产出的**结构性事实**：默认参数、参数范围、类型标签、
+  // 非法实参的报错形态。这些既是脚本真的会读的（很多指纹脚本先核对默认值，
+  // 对不上直接判定为伪造环境），也满足准入条件。
+  {
+    id: 'audio/offline-context-shape',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 44100, 44100);
+      return [
+        ctx.sampleRate,
+        ctx.length,
+        ctx.destination.channelCount,
+        ctx.destination.maxChannelCount,
+        ctx.destination.channelCountMode,
+        ctx.destination.channelInterpretation,
+        ctx.state,
+        Object.prototype.toString.call(ctx),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'audio/offline-context-invalid-length',
+    category: 'audio',
+    expression: `() => {
+      try {
+        new OfflineAudioContext(1, 0, 44100);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/offline-context-invalid-rate',
+    category: 'audio',
+    expression: `() => {
+      try {
+        new OfflineAudioContext(1, 44100, 1);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/offline-context-arity',
+    category: 'audio',
+    expression: `() => {
+      try {
+        new OfflineAudioContext(1);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/oscillator-defaults',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const node = ctx.createOscillator();
+      return [
+        node.type,
+        node.frequency.defaultValue,
+        node.frequency.minValue,
+        node.frequency.maxValue,
+        node.detune.defaultValue,
+        node.detune.minValue,
+        node.detune.maxValue,
+        node.numberOfInputs,
+        node.numberOfOutputs,
+        Object.prototype.toString.call(node),
+        Object.prototype.toString.call(node.frequency),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'audio/analyser-defaults',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const node = ctx.createAnalyser();
+      return [
+        node.fftSize,
+        node.frequencyBinCount,
+        node.minDecibels,
+        node.maxDecibels,
+        node.smoothingTimeConstant,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'audio/analyser-invalid-fftsize',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const node = ctx.createAnalyser();
+      try {
+        node.fftSize = 100;
+        return 'no-throw:' + node.fftSize;
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/compressor-defaults',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const node = ctx.createDynamicsCompressor();
+      return [
+        node.threshold.defaultValue,
+        node.knee.defaultValue,
+        node.ratio.defaultValue,
+        node.attack.defaultValue,
+        node.release.defaultValue,
+        node.reduction,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'audio/gain-defaults',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const node = ctx.createGain();
+      return [
+        node.gain.defaultValue,
+        node.gain.minValue,
+        node.gain.maxValue,
+        node.channelCount,
+        node.channelCountMode,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'audio/buffer-shape',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const buffer = ctx.createBuffer(2, 100, 22050);
+      return [
+        buffer.numberOfChannels,
+        buffer.length,
+        buffer.sampleRate,
+        buffer.duration,
+        buffer.getChannelData(0).length,
+        Object.prototype.toString.call(buffer),
+        Object.prototype.toString.call(buffer.getChannelData(0)),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'audio/buffer-invalid-channel',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const buffer = ctx.createBuffer(1, 100, 22050);
+      try {
+        buffer.getChannelData(5);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/cross-context-connect',
+    category: 'audio',
+    expression: `() => {
+      const a = new OfflineAudioContext(1, 128, 44100);
+      const b = new OfflineAudioContext(1, 128, 44100);
+      try {
+        a.createGain().connect(b.destination);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/param-illegal-receiver',
+    category: 'audio',
+    expression: `() => {
+      const ctx = new OfflineAudioContext(1, 128, 44100);
+      const setter = Object.getOwnPropertyDescriptor(
+        AudioParam.prototype, 'value',
+      ).set;
+      try {
+        setter.call({}, 1);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'audio/context-constructor-guard',
+    category: 'audio',
+    expression: `() => {
+      try {
+        OfflineAudioContext(1, 128, 44100);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+
   // ---------------------------------------------- 事件时序细节
   {
     id: 'event/phase-order',

@@ -211,6 +211,7 @@ categoryTest('errorShape', 'error identity and stack shape');
 categoryTest('collections', 'collection iterability and tags');
 categoryTest('cssom', 'CSSOM computed values and declaration semantics');
 categoryTest('canvas', 'canvas and TextMetrics interface shape');
+categoryTest('audio', 'Web Audio defaults, ranges and error shapes');
 categoryTest('eventTiming', 'event phases and propagation control');
 categoryTest('crossRealm', 'cross-realm object identity');
 categoryTest('urlParsing', 'URL validation and normalization');

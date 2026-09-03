@@ -207,6 +207,11 @@ export function audioProperty(value, name) {
   if (record.handlers?.has(name)) return record.handlers.get(name);
   if (record.kind === "context" || record.kind === "offlineContext") {
     if (name === "currentTime") return contextCurrentTime(record);
+    // OfflineAudioContext.length 内部叫 offlineLength（`length` 在别处另有含义），
+    // 不映射的话这个属性读出来是 undefined。音频指纹脚本会读它。
+    if (name === "length" && record.kind === "offlineContext") {
+      return record.offlineLength;
+    }
     return record[name];
   }
   if (record.kind === "audioBuffer") {
@@ -344,6 +349,16 @@ function initializeOfflineContext(context, options, args) {
       sampleRate: options.sampleRate,
     };
   } else {
+    // 三参数重载。少于三个实参时 Chromium 走字典重载，于是一个数字会被当成
+    // OfflineAudioContextOptions 而报 TypeError——实测
+    // `new OfflineAudioContext(1)` 给
+    // "The provided value is not of type 'OfflineAudioContextOptions'."
+    if (args.length < 3) {
+      throw new TypeError(
+        "Failed to construct 'OfflineAudioContext': "
+        + "The provided value is not of type 'OfflineAudioContextOptions'.",
+      );
+    }
     normalized = {
       numberOfChannels: options,
       length: args[1],
@@ -352,11 +367,63 @@ function initializeOfflineContext(context, options, args) {
   }
   initializeAudioContext(context, normalized, true);
   const record = requireRecord(context);
-  record.numberOfChannels = positiveInteger(
-    normalized.numberOfChannels,
-    "numberOfChannels",
+  record.numberOfChannels = offlineChannelCount(normalized.numberOfChannels);
+  record.offlineLength = offlineFrameCount(normalized.length);
+  requireSupportedSampleRate(record.sampleRate);
+  // destination 的通道数跟随 numberOfChannels，且 mode 是 `explicit`。
+  // 实测 `new OfflineAudioContext(1, 44100, 44100)` 的 destination 是
+  // `1|1|explicit|speakers`，而原实现一律给 `2|2|max|speakers`。
+  // destination 在 initializeAudioContext() 里就建好了，那时还不知道通道数，
+  // 所以这里补配。
+  const destinationRecord = requireRecord(record.destination);
+  destinationRecord.channelCount = record.numberOfChannels;
+  destinationRecord.maxChannelCount = record.numberOfChannels;
+  destinationRecord.channelCountMode = "explicit";
+}
+
+/**
+ * `numberOfChannels` 校验。
+ *
+ * 报错类型必须是 `NotSupportedError` 而不是 `RangeError`——脚本经常按
+ * `error.name` 分支。
+ */
+function offlineChannelCount(value) {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number <= 0 || number > 32) {
+    throw new DOMException(
+      "Failed to construct 'OfflineAudioContext': The number of channels provided "
+      + `(${number}) is outside the range [1, 32].`,
+      "NotSupportedError",
+    );
+  }
+  return number;
+}
+
+function offlineFrameCount(value) {
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number <= 0) {
+    throw new DOMException(
+      "Failed to construct 'OfflineAudioContext': The number of frames provided "
+      + `(${number}) is less than the minimum bound (1).`,
+      "NotSupportedError",
+    );
+  }
+  return number;
+}
+
+/**
+ * 采样率范围 [3000, 768000]（实测真实 Edge 的报错文案直接带这个区间）。
+ *
+ * 原实现只要求「有限正数」，于是 `sampleRate: 1` 被静默接受——一个把采样率设成
+ * 非法值再看是否抛错的探测，能直接区分出来。
+ */
+function requireSupportedSampleRate(sampleRate) {
+  if (sampleRate >= 3000 && sampleRate <= 768000) return;
+  throw new DOMException(
+    "Failed to construct 'OfflineAudioContext': The sampleRate provided "
+    + `(${sampleRate}) is outside the range [3000, 768000].`,
+    "NotSupportedError",
   );
-  record.offlineLength = positiveInteger(normalized.length, "length");
 }
 
 function initializeAudioBuffer(buffer, options) {
@@ -438,15 +505,44 @@ function createListener(context) {
   return listener;
 }
 
-function createParam(context, defaultValue, minValue = -3.4028235e38, maxValue = 3.4028235e38) {
+/**
+ * float32 的最大值**加宽成 double 之后**的精确值。
+ *
+ * 原来写的是 `3.4028235e38`——那是 float32 最大值的十进制**缩写**，直接当 double
+ * 用会打印成 `3.4028235e+38`，而真实 Chromium 打印
+ * `3.4028234663852886e+38`。AudioParam 在 Chromium 里是 float 存储，读出来是
+ * float32 加宽成 double，所以小数展开是完整的。
+ *
+ * 一个 `node.gain.minValue` 就能看出差别，成本极低。
+ */
+const FLOAT32_MAX = 3.4028234663852886e38;
+
+/**
+ * `detune` 的取值范围（实测真实 Edge：±153600 音分）。
+ *
+ * 原来所有 AudioParam 的 min/max 都是 float32 极值，于是 `frequency` 与 `detune`
+ * 的范围全都不对。这两个是音频指纹脚本最常读的字段。
+ */
+const DETUNE_LIMIT = 153600;
+
+function createParam(
+  context,
+  defaultValue,
+  minValue = -FLOAT32_MAX,
+  maxValue = FLOAT32_MAX,
+) {
   const param = Object.create(AudioParam.prototype);
+  // Chromium 里 AudioParam 是 float 存储，所有读出来的值都是 float32 加宽成
+  // double。不 fround 的话 `attack.defaultValue` 会是 0.003 而真实是
+  // 0.003000000026077032——写死小数字面量必然对不上。
+  const rounded = Math.fround(Number(defaultValue));
   state.set(param, {
     kind: "audioParam",
     context,
-    value: defaultValue,
-    defaultValue,
-    minValue,
-    maxValue,
+    value: rounded,
+    defaultValue: rounded,
+    minValue: Math.fround(Number(minValue)),
+    maxValue: Math.fround(Number(maxValue)),
     automationRate: "a-rate",
     events: [],
   });
@@ -653,7 +749,8 @@ function nodeOperation(node, record, name, args) {
         || destinationRecord.context !== record.context
       ) {
         throw new DOMException(
-          "Audio nodes must belong to the same context.",
+          "Failed to execute 'connect' on 'AudioNode': cannot connect to an "
+          + "AudioNode belonging to a different audio context.",
           "InvalidAccessError",
         );
       }
@@ -866,8 +963,14 @@ function nodeDefaults(kind, contextRecord, options) {
       return {
         ...common,
         type: `${options.type ?? "sine"}`,
-        frequency: param(options.frequency ?? 440),
-        detune: param(options.detune ?? 0),
+        // 实测真实 Edge：frequency 的范围是 ±nyquist（sampleRate/2），
+        // detune 是 ±153600。原来两者都用 float32 极值，是错的。
+        frequency: param(
+          options.frequency ?? 440,
+          -contextRecord.sampleRate / 2,
+          contextRecord.sampleRate / 2,
+        ),
+        detune: param(options.detune ?? 0, -DETUNE_LIMIT, DETUNE_LIMIT),
       };
     case "panner":
       return {
@@ -915,7 +1018,14 @@ function setNodeProperty(record, name, input) {
   if (name === "fftSize") {
     const size = Number(input);
     if (!Number.isInteger(size) || size < 32 || size > 32768 || (size & (size - 1)) !== 0) {
-      throw new RangeError("fftSize must be a power of two from 32 to 32768");
+      // 报错类型必须是 IndexSizeError 而不是 RangeError——脚本按 error.name 分支。
+      // 文案里的「不是 2 的幂」是 Chromium 的模板，范围超界另有一套文案，
+      // 这里只对齐被探针覆盖的那条。
+      throw new DOMException(
+        "Failed to set the 'fftSize' property on 'AnalyserNode': "
+        + `The value provided (${size}) is not a power of two.`,
+        "IndexSizeError",
+      );
     }
     record.props.set("fftSize", size);
     record.props.set("frequencyBinCount", size / 2);
@@ -1003,7 +1113,13 @@ function createAudioBuffer(numberOfChannels, length, sampleRate) {
 function channelData(record, channelNumber) {
   const index = Number(channelNumber);
   if (!Number.isInteger(index) || index < 0 || index >= record.numberOfChannels) {
-    throw new RangeError("Channel index is outside the AudioBuffer");
+    // IndexSizeError，不是 RangeError。注意真实文案**结尾没有句点**。
+    throw new DOMException(
+      "Failed to execute 'getChannelData' on 'AudioBuffer': "
+      + `channel index (${index}) exceeds number of channels `
+      + `(${record.numberOfChannels})`,
+      "IndexSizeError",
+    );
   }
   return record.channels[index];
 }

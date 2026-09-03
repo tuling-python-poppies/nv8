@@ -298,17 +298,25 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 ### 第三层：运行时行为
 
-前两层都对，行为仍可能不同。这一层用 **112 个探针 / 13 类**覆盖：
+前两层都对，行为仍可能不同。这一层用 **126 个探针 / 14 类**覆盖：
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
-`arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`eventTiming`、
-`crossRealm`、`urlParsing`、`typeTag`。
+`arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`audio`、
+`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
 
-现状：**110 项一致，2 项登记**（余下 2 项都是动态 iframe 时序，见
-[ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)）。
+现状：**124 项一致，2 项登记**（余下 2 项都是动态 iframe 时序，见
+[ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)；开
+`limits.prewarmChildRealms` 后这两项也一致）。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
 10 个成员），行为层却查出 **6 处**不同。形状层永远看不到那个洞。
+
+**音频是第二个同样的例子**：`AudioContext` / `OfflineAudioContext` /
+`OscillatorNode` / `AnalyserNode` / `AudioBuffer` 在形状层全部齐备、
+descriptor 零差异，而 14 个新增行为探针里 **10 个不一致**——`ctx.length` 读出
+`undefined`、destination 通道数是 2 而真实是 1、五处报错类型是 `RangeError` 而真实
+是 `NotSupportedError` / `IndexSizeError`、`frequency.minValue` 是 float32 极值而真实
+是 ±nyquist。形状完整、行为未验证，是最容易出「看起来对但算出来不一样」的地方。
 
 ### 这套机制抓出来的真实问题（举例）
 
@@ -562,7 +570,7 @@ limits: { timeoutMs: 30_000 }
 | `npm run fingerprint:globals` | 1236 个全局名 |
 | `npm run fingerprint:members` | 8941 个原型成员与描述符 |
 | `npm run fingerprint:lengths` | 3496 个方法的 `length` |
-| `npm run fingerprint:behavior` | 112 个行为探针 |
+| `npm run fingerprint:behavior` | 126 个行为探针 |
 | `npm run fingerprint:css` | 745 个 CSS 属性名（保留真实枚举顺序） |
 | `npm run fingerprint:ua-defaults` | 96 个标签 × 736 个属性的 UA 默认值 |
 
@@ -633,7 +641,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，777 项
+npm test              # 全量，778 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -718,7 +726,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（777 项 / 76 个文件） |
+| `npm test` | 全量测试（778 项 / 76 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
