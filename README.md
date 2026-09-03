@@ -338,6 +338,32 @@ new Intl.DisplayNames('en-US', { type: 'language' }).of('zh-Hant')
 只跟随操作系统时区，所以采集器锁不住它，写进 fixture 就是烙一个采集机的时区。
 （NV8 自己能锁——子进程 env 会设 `TZ`，Node 认这个变量。）
 
+### locale 必须由 profile 决定，不能由宿主机器决定
+
+这一层**行为探针验证不了**：探针的期望值来自真实 Edge，而采集时真实 Edge 的默认
+locale 就是采集机的系统 locale——拿它当基准等于把采集机的 locale 写进契约。所以它
+是一条**内部一致性**检查（`tests/intl-default-locale-test.js`）。
+
+实测修复前的状态（Windows 中文系统）：profile 声明 `en-US`，而
+
+```
+Intl.DateTimeFormat().resolvedOptions().locale  → "zh-CN"   ← 宿主机器的
+new Intl.ListFormat().format(['a','b','c'])     → "a、b和c"  ← 宿主机器的
+```
+
+`Intl` 的默认 locale 来自操作系统，profile 不起作用。zh-CN profile 在中文机器上
+「看起来对」纯属巧合。后果有两层：`navigator.language` 与
+`Intl.DateTimeFormat().resolvedOptions()` 对不上（这是最常一起被读的一对），
+以及**同一 profile 在不同机器上给出不同身份**。
+
+宿主侧改不了，逐个实测过：`LANG` / `LC_ALL` 在 Windows 无效、没有
+`--icu-default-locale`、`vm.createContext()` 无 locale 选项。所以在 Realm 内接管：
+包装 9 个 `Intl` 构造器与 8 个 `toLocale*` 方法，**仅在调用方没传 locales 时**填入
+profile 的 `navigator.language`。`timezone` 本来就是对的（子进程 env 设 `TZ`）。
+
+测试特意同时断言 zh-CN 与 en-US 两个 profile。**只测一个的话，在与之同语言的机器上
+永远是绿的**——这正是这个 bug 藏住的原因。
+
 ### 这套机制抓出来的真实问题（举例）
 
 - **legacy 模式下完全没有原生函数伪装**：
@@ -661,7 +687,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，780 项
+npm test              # 全量，785 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -746,7 +772,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（780 项 / 76 个文件） |
+| `npm test` | 全量测试（785 项 / 77 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -799,7 +825,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 76 个测试文件
+tests/                 77 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR

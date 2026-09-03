@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 780 项（`npm test`，76 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 785 项（`npm test`，77 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 780 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 785 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 780 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 785 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 780/780）
+- [x] Node 18–24 矩阵（四档 785/785）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1303,6 +1303,41 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
       `new Date(0).toString()` 因此只探**形状**（正则匹配 + 段数）——第一版把偏移
       和时区名替换成占位符就以为够了，时间部分 `08:00:00` 仍跟着采集机时区走
   - `performance.now()` 的 100µs 钳制只报布尔，不报具体耗时——后者是机器性能
+- [x] **`Intl` 的默认 locale 现在跟随 profile**（本轮实测发现并修复，比 fontFamily
+  那条严重）
+  - 修复前实测（Windows 中文系统）：profile 声明 `locale: en-US` /
+    `navigator.language: en-US`，而
+
+    ```
+    Intl.DateTimeFormat().resolvedOptions().locale  → "zh-CN"   ← 宿主机器的
+    new Intl.ListFormat().format(['a','b','c'])     → "a、b和c"  ← 宿主机器的
+    ```
+
+    也就是说 `Intl` 的默认 locale 来自**操作系统**，profile 完全不起作用。
+    zh-CN profile 在本机「看起来对」纯属巧合——本机系统语言就是 zh-CN
+  - 两层后果：**内部矛盾**（`navigator.language` 与
+    `Intl.DateTimeFormat().resolvedOptions()` 是最常一起被读的一对）；
+    **身份随机器变**（同一 profile 在中文机与英文机上给出不同身份），
+    与 ADR-0005 铁律直接冲突，和 `module-bundle.json` 那次「本机命中率恒为 0」
+    是同一类错
+  - 宿主侧改不了，逐个实测：`LANG` / `LC_ALL` 在 Windows 无效（仍 zh-CN）、
+    没有 `--icu-default-locale`（`node: bad option`）、`vm.createContext()`
+    无 locale 选项。所以只能在 Realm 内接管
+  - `timezone` 本来就是对的（子进程 env 设 `TZ`，Node 认）——**只有 locale 漏了**
+  - 实现：`install-intl-default-locale.js` 包装 9 个 `Intl` 构造器 + 8 个
+    `toLocale*` 方法，**仅在调用方没传 locales 时**填入 profile 的
+    `navigator.language`。判据是 `undefined`（规范里表示「用默认」），
+    `null` / `[]` 是调用方明确给出的值，替换它就从「身份不一致」变成「功能错误」
+  - 身份保全逐项验证：`name` / `length` / `prototype` /
+    **`prototype.constructor` 回链**（不改这条
+    `new Intl.NumberFormat().constructor === Intl.NumberFormat` 会变 false）/
+    静态方法 / 原生 `toString`
+  - **这一层不能靠行为探针验证**：探针期望值来自真实 Edge，而采集时真实 Edge 的
+    默认 locale 就是采集机的系统 locale——拿它当基准等于把采集机 locale 写进契约。
+    所以新增的是**内部一致性**测试（`tests/intl-default-locale-test.js`，5 项）：
+    profile 声明什么，运行时就该是什么
+  - 测试特意同时断言 zh-CN 与 en-US 两个 profile。单测一个的话，在与之同语言的
+    机器上永远绿——正是这个 bug 藏了这么久的原因
 - [ ] **profile 的 locale 与 UA 默认样式表自相矛盾**（本轮实测发现）
   - `edge-150.js` / `edge-151.js` 都声明 `locale: "zh-CN"`、
     `languages: ["zh-CN","zh"]`、`timezone: "Asia/Shanghai"`，
@@ -1431,5 +1466,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（780 项 / 76 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（785 项 / 77 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

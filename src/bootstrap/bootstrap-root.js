@@ -48,6 +48,9 @@ import { installDateProfile } from "../install/install-date-profile.js";
 import {
   installIntlV8BreakIterator,
 } from "../install/install-intl-v8-break-iterator.js";
+import {
+  installIntlDefaultLocale,
+} from "../install/install-intl-default-locale.js";
 import { installWindowTimers } from "../install/install-window-timers.js";
 import { installScreen } from "../install/install-screen.js";
 import {
@@ -959,6 +962,10 @@ export function bootstrapRoot(
   configureMediaElementCodecProfile(capabilitiesProfile?.media);
   configureDeviceProfile(capabilitiesProfile?.sensors);
   configureSpeechProfile(navigatorLanguage);
+  // `Intl` 的默认 locale 必须跟随 profile 而不是宿主操作系统——实测 profile 声明
+  // en-US 时 `Intl.DateTimeFormat().resolvedOptions().locale` 仍是宿主的 zh-CN。
+  // 详见 install-intl-default-locale.js。
+  installIntlDefaultLocale(navigatorLanguage);
   installWorklet();
   configureStorage(localStorageData, sessionStorageData);
   configureCookies(cookieData);

@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 338,
-      "callSequenceSha256": "6614c922701de784bbacdec3d9258f9944ccaa2f84977753ccde786dc8ebd14e",
+      "callCount": 339,
+      "callSequenceSha256": "4d83482d4e118c6cac2002330d5f383c9cf6985f1bc28e4dfb163268559082e2",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -32,6 +32,7 @@
         "configure:configureMediaElementCodecProfile",
         "configure:configureDeviceProfile",
         "configure:configureSpeechProfile",
+        "install:installIntlDefaultLocale",
         "install:installWorklet",
         "configure:configureStorage",
         "configure:configureCookies",
@@ -349,9 +350,9 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "4a68264970d7c19e46ce1766adbaa50a6e2ec2b2ebdba8ebd30a3a1f52b3f794",
-        "functionStartLine": 833,
-        "functionEndLine": 1287
+        "sourceSha256": "4be74f5bfac035e31d3af2e6bcecb7721fb16e996e23faf469d59350fc47d00a",
+        "functionStartLine": 836,
+        "functionEndLine": 1294
       }
     },
     "worker": {
