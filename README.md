@@ -364,6 +364,29 @@ profile 的 `navigator.language`。`timezone` 本来就是对的（子进程 env
 测试特意同时断言 zh-CN 与 en-US 两个 profile。**只测一个的话，在与之同语言的机器上
 永远是绿的**——这正是这个 bug 藏住的原因。
 
+### UA 默认字体族也跟着 locale 切
+
+同一条一致性要求的另一半：`css-ua-defaults.js` 里 `fontFamily` 的基线是采集时那个
+locale 的值，而 profile 的 locale 可切，字体必须跟着切。逐 locale 实测
+（Windows 11 + Edge 152）：
+
+| `--lang` | `getComputedStyle(document.body).fontFamily` |
+|---|---|
+| en-US / en-GB / de-DE / ru-RU / **zh-TW** | `"Times New Roman"` |
+| zh-CN | `"Noto Sans SC"` |
+| ja-JP | `"Yu Gothic"` |
+| ko-KR | `"Malgun Gothic"` |
+
+`zh-TW` 走通用默认，所以**不能按 `zh` 前缀一刀切**，要最长前缀匹配。`<pre>` 在八个
+locale 下一律 `monospace`——标签级 override 与 locale 无关，覆盖只作用于**基线**值。
+
+`zh-CN` 那一项特意核查过是不是开发机产物：`Noto Sans SC` 不是上古 Windows 自带字体，
+但实测它在本机 `%WINDIR%\Fonts` 里（Windows 11 的中文语言支持会装），而同目录下
+`simsun.ttc` / `msyh.ttc` 都在却**没被选中**——说明这是 Chromium 对 zh-Hans 的偏好
+顺序，不是「碰巧只有 Noto」。Windows 10 上大概率会落到 `Microsoft YaHei`，所以这个值
+做成**可覆盖字段**而不是硬编码，与 [ADR-0005](docs/adr/0005-machine-specific-values.md)
+下的 `gpu-profiles.js` 同一个套路：值是**挑选**的，不是从开发机采下来就当真理。
+
 ### 这套机制抓出来的真实问题（举例）
 
 - **legacy 模式下完全没有原生函数伪装**：
@@ -687,7 +710,7 @@ limits: { timeoutMs: 30_000 }
 ## 测试
 
 ```bash
-npm test              # 全量，785 项
+npm test              # 全量，791 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -772,7 +795,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（785 项 / 77 个文件） |
+| `npm test` | 全量测试（791 项 / 78 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -825,7 +848,7 @@ src/
 ├── core/              Sandbox、插件注册表、状态作用域、诊断
 └── compat/            Node 版本兼容
 
-tests/                 77 个测试文件
+tests/                 78 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR

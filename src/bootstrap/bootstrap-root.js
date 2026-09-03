@@ -51,6 +51,12 @@ import {
 import {
   installIntlDefaultLocale,
 } from "../install/install-intl-default-locale.js";
+import {
+  configureStandardFontFamily,
+} from "../api/css/css-computed-value.js";
+import {
+  standardFontFamilyFor,
+} from "../fingerprint/ua-default-fonts.js";
 import { installWindowTimers } from "../install/install-window-timers.js";
 import { installScreen } from "../install/install-screen.js";
 import {
@@ -966,6 +972,10 @@ export function bootstrapRoot(
   // en-US 时 `Intl.DateTimeFormat().resolvedOptions().locale` 仍是宿主的 zh-CN。
   // 详见 install-intl-default-locale.js。
   installIntlDefaultLocale(navigatorLanguage);
+  // UA 默认样式表的标准字体族也必须跟着 locale 切，否则 `navigator.language`
+  // 与 `getComputedStyle(document.body).fontFamily` 会对不上。
+  // 实测表见 src/fingerprint/ua-default-fonts.js。
+  configureStandardFontFamily(standardFontFamilyFor(navigatorLanguage));
   installWorklet();
   configureStorage(localStorageData, sessionStorageData);
   configureCookies(cookieData);

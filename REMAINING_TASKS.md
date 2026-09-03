@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 785 项（`npm test`，77 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 791 项（`npm test`，78 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -204,7 +204,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 
 ### 未完成项
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
-- [x] **完整 Profile Node 支持矩阵** - 785 项在 Node 18 / 20 / 22 / 24 四档全绿；
+- [x] **完整 Profile Node 支持矩阵** - 791 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
 - [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
@@ -647,7 +647,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带删掉 `configureCSSPropertyNames()`：全仓零引用的注入口，
     却让 `let propertyNames` 被计成模块级状态。「看起来可配置但实际不可配置」
     比没有接口更容易误导
-- **稳定性验证** - 785 项在 Node 18 / 20 / 22 / 24 四档全绿。
+- **稳定性验证** - 791 项在 Node 18 / 20 / 22 / 24 四档全绿。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
@@ -725,7 +725,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### 质量保证
 - [x] Baseline 三项验收（bootstrap 顺序 / 完整 surface / observability）
-- [x] Node 18–24 矩阵（四档 785/785）
+- [x] Node 18–24 矩阵（四档 791/791）
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
@@ -1338,27 +1338,46 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     profile 声明什么，运行时就该是什么
   - 测试特意同时断言 zh-CN 与 en-US 两个 profile。单测一个的话，在与之同语言的
     机器上永远绿——正是这个 bug 藏了这么久的原因
-- [ ] **profile 的 locale 与 UA 默认样式表自相矛盾**（本轮实测发现）
-  - `edge-150.js` / `edge-151.js` 都声明 `locale: "zh-CN"`、
-    `languages: ["zh-CN","zh"]`、`timezone: "Asia/Shanghai"`，
-    而 `css-ua-defaults.js` 里 `fontFamily` 是 `"Times New Roman"`——
-    那是 **en-US** 的默认字体
-  - 实测真实 Edge：`--lang=zh-CN` 给 `"Noto Sans SC"`，`--lang=en-US` 给
-    `"Times New Roman"`
-  - 于是 NV8 现在的状态是：`navigator.language === 'zh-CN'` 而
-    `getComputedStyle(document.body).fontFamily` 是英文默认值。**读这两个值一比就
-    对不上**，正是 ADR-0005 说的「比缺值更糟的内部矛盾」
-  - README 记的是反向的那次修复（「采集机的中文系统语言混进默认样式表，
-    而 navigator.language 声明 en-US」）。但 profile 实际写的是 zh-CN，
-    所以把采集器锁到 en-US 是**制造**了矛盾而不是消除它——修了采集器没修 profile
-  - 两条路都有代价，需要产品决策：
-    - 把 profile 改成 en-US locale + 匹配的时区 → 与现有 fixture 一致，
-      但放弃「声称是中文用户」这个对中文站点更自然的身份
-    - 保持 zh-CN 并按 `--lang=zh-CN` 重采 UA 默认值 → 但中文默认字体**是机器相关
-      的**（本机给 `Noto Sans SC`，装了别的字体的机器会给 `Microsoft YaHei` /
-      `SimSun`），按 ADR-0005 不该进身份
-  - 无论选哪条，都该加一条断言把「profile locale ↔ UA 默认字体」的一致性钉住，
-    否则改了一侧忘另一侧还会再发生
+- [x] **UA 默认字体族已跟随 locale**（原「profile 的 locale 与 UA 默认样式表
+  自相矛盾」）
+  - 修复前：`edge-150.js` / `edge-151.js` 都声明 `locale: "zh-CN"`，而
+    `css-ua-defaults.js` 里 `fontFamily` 是 `"Times New Roman"`——**en-US** 的默认
+    字体。于是 `navigator.language === 'zh-CN'` 而
+    `getComputedStyle(document.body).fontFamily` 是英文值，一比就对不上
+  - README 记的是反向的那次修复（「采集机的中文系统语言混进默认样式表，而
+    navigator.language 声明 en-US」）。但 profile 实际写的是 zh-CN，所以当时把采集器
+    锁到 `--lang=en-US` 是**制造**了矛盾——修了采集器没修 profile
+  - **不用「选一个 locale」解决，而是让 locale 成为能切的一维**：使用场景里中文站点
+    与英文站点都有，钉在任一个 locale 上，另一半目标就天天带着不匹配的
+    `Accept-Language`
+  - 逐 locale 实测（Windows 11 + Edge 152，headless）：
+
+    | `--lang` | body fontFamily |
+    |---|---|
+    | en-US / en-GB / de-DE / ru-RU / **zh-TW** | `"Times New Roman"` |
+    | zh-CN | `"Noto Sans SC"` |
+    | ja-JP | `"Yu Gothic"` |
+    | ko-KR | `"Malgun Gothic"` |
+
+    `<pre>` 在八个 locale 下一律 `monospace`——标签级 override 与 locale 无关，
+    所以覆盖只能作用于**基线**值
+  - 三条结论决定了表的形状：拉丁/西里尔一律 `Times New Roman`；**`zh-TW` 也是**
+    （所以不能按 `zh` 前缀一刀切，要最长前缀匹配）；ja / ko 拿到的是 Windows
+    自带字体（Yu Gothic 随 Win8+、Malgun Gothic 随 Win7+），与机器无关
+  - **`zh-CN` 那一项特意核查过是不是开发机产物**：`Noto Sans SC` 不是上古 Windows
+    自带字体，但实测它在本机 `%WINDIR%\Fonts` 里
+    （`NotoSansSC-VF.ttf`，Windows 11 的中文语言支持会装），而同目录下
+    `simsun.ttc` / `msyh.ttc` 都在却**没被选中**——说明这是 Chromium 对 zh-Hans 的
+    偏好顺序，不是「碰巧只有 Noto」。Windows 10 或没装中文语言支持的机器大概率会落到
+    `Microsoft YaHei`，所以它是**可覆盖的字段**而不是硬编码，与 `gpu-profiles.js`
+    同一个套路：值是**挑选**的，不是从开发机采下来就当真理
+  - 实现：`src/fingerprint/ua-default-fonts.js`（表 + 最长前缀查找 +
+    `validateLocaleFontPair()`）；`css-computed-value.js` 加 per-Realm 覆盖，
+    只改基线不动标签级 override。做成覆盖而不是重新生成 fixture，
+    因为 fixture 只能存一个 locale 的值，而这一维是运行时可变的
+  - 测试 6 项（`tests/ua-default-font-locale-test.js`）：查表最长前缀、
+    配对校验能抓到不匹配与缺值、表项都是带引号的计算值形态、默认 profile 一致、
+    切 locale 四档一起跟着切、`<pre>` 的 monospace 不被破坏
 - [ ] **行为探针覆盖面仍是最大的缺口** - 144 项 / 16 类，对 1232 全局 / 8901 成员
   - 分布极不均：`cssom` 22、`argumentCount` 19、`audio` 14、`intl` 13、`crossRealm` 只有 2
   - **完全没有探针**的领域：**音频指纹**（`OfflineAudioContext` → oscillator →
@@ -1442,9 +1461,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 7. 行为探针第一梯队**三项全部完成**：音频指纹（14 项，10 处偏差）、
    Intl / 时区（13 项）、`performance.now()` 精度（5 项，共 4 处偏差、
    2 处宿主级已登记）。剩余领域按「反爬真正读什么」判断价值不高，明确延后（§12 末）
-8. **新发现待决策**：profile 声明 `locale: zh-CN` 而 UA 默认样式表的 `fontFamily`
-   是 en-US 的 `"Times New Roman"`——`navigator.language` 与
-   `getComputedStyle(document.body).fontFamily` 一比就对不上（§12）
+8. **locale 已成为可切的一维**：`Intl` 默认 locale 与 UA 默认字体族都跟随 profile，
+   两条内部一致性测试各自同时断言多个 locale（§12）
 
 **P3 工程完备性，按实际采集需求**
 
@@ -1466,5 +1484,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（785 项 / 77 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（791 项 / 78 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

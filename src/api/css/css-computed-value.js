@@ -1,4 +1,30 @@
 import { CSS_INITIAL_VALUES, CSS_TAG_OVERRIDES } from "./css-ua-defaults.js";
+import { createRealmSlot } from "../../core/state-scope.js";
+
+/**
+ * 标准字体族的 per-Realm 覆盖。
+ *
+ * `css-ua-defaults.js` 是生成文件，里面 `fontFamily` 的基线是采集时那一个 locale
+ * 的值（`"Times New Roman"`，en-US）。但 profile 的 locale 是可切的，字体必须跟着
+ * 切，否则 `navigator.language` 与 `getComputedStyle(document.body).fontFamily`
+ * 会对不上——见 `src/fingerprint/ua-default-fonts.js` 的实测表。
+ *
+ * 做成覆盖而不是重新生成 fixture：fixture 只能存一个 locale 的值，而这一维是
+ * 运行时可变的。
+ */
+const fontSlot = createRealmSlot(() => ({
+  standardFontFamily: null,
+}), "css-standard-font");
+
+/**
+ * 注入本 Realm 的标准字体族。传空值表示沿用 fixture 里的基线。
+ *
+ * @param {string | null} fontFamily
+ */
+export function configureStandardFontFamily(fontFamily) {
+  const value = `${fontFamily ?? ""}`;
+  fontSlot.get(globalThis).standardFontFamily = value === "" ? null : value;
+}
 
 /**
  * 计算值解析：UA 默认样式表 + 内联声明。
@@ -136,6 +162,12 @@ export function computedValueFor(localName, property, inlineDeclarations, kebabN
   }
   const override = CSS_TAG_OVERRIDES[localName]?.[property];
   if (override !== undefined) return override;
+  if (property === "fontFamily") {
+    // 只覆盖**基线**值。标签级 override（如 `<pre>` 的 monospace）优先，
+    // 因为那与 locale 无关——实测八个 locale 下 `<pre>` 一律 monospace。
+    const configured = fontSlot.get(globalThis).standardFontFamily;
+    if (configured !== null) return configured;
+  }
   return CSS_INITIAL_VALUES[property] ?? "";
 }
 
