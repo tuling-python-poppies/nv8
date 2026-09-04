@@ -21,7 +21,14 @@
 |---|---|---|---|
 | Baseline | NV8 上一次录制 | 重构引入的回归 | 3 套 fixture |
 | 形状对等 | 真实 Edge 的名字与 descriptor | 存在性、descriptor 形状 | 全局 99.68%、成员 963/966 |
-| 行为对等 | 真实 Edge 的运行结果 | 同一段代码跑出什么 | 116 探针 / 12 类 |
+| 行为对等 | 真实 Edge 的运行结果 | 同一段代码跑出什么 | 144 探针 / 16 类 |
+
+**后来补了第四条轴，但它不是新的职责层**：`window-surface-order-test.js` 比的是
+`Object.getOwnPropertyNames(window)` 的**顺序**与 window 自身 own property 的
+descriptor flag。前三层比的都是集合，不是顺序——「集合对、顺序错」是形状层此前的
+盲区，首轮就抓到 3 个真问题（`FontFaceSet` 在 151 profile 下落在索引 61 而真实是
+517、`window.chrome` 被写成不可配置、Node 18/20 上 238 个全局排到 V8 内建之前）。
+它归在形状对等层里，参照物与产出都没变。
 
 三层互补，不能互相替代。**证据**：`CSSStyleDeclaration` 在形状层报 0 差异
 （双方原型都只有 10 个成员，CSS 属性是实例自有属性），而行为层挖出 6 处不一致

@@ -927,7 +927,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 ### 关于 `build:bundle`
 
-`RealmModuleLoader` 支持把 4005 个模块预打包成一个 JSON 以减少文件读取。
+`RealmModuleLoader` 支持把 4010 个模块预打包成一个 JSON 以减少文件读取。
 这个缓存**以绝对 `file://` URL 为键**，因此与生成它的机器路径绑定。
 
 仓库里曾提交过一份这样的包（3992 个键，全部以 `file:///D:/develop_software/Nv8/`
@@ -958,7 +958,7 @@ src/
 │   └── compat/        Node 版本兼容
 │
 ├── surface/           浏览器表面：只做「有什么 API、装在哪」
-│   ├── api/           API 实现，按规范域分目录（86 个域）
+│   ├── api/           API 实现，按规范域分目录（88 个域）
 │   └── install/       安装器（把 api 装到 Realm 的 globalThis 上）
 │
 ├── plugins/           装配策略：选哪些表面、依赖谁、声明什么能力
@@ -994,7 +994,8 @@ docs/                  设计文档与 ADR
 ```
 
 原来是 26 个顶层目录平铺，`api/`(3680 文件) 与 `network/`(1 文件) 并列。分层意图
-只存在于阅读者脑子里，目录本身不说话。现在容器名就是职责名。
+只存在于阅读者脑子里，目录本身不说话。现在容器名就是职责名——决策依据、执行方式与
+踩过的坑见 [ADR-0008](docs/adr/0008-source-layout-containers.md)。
 
 **两个命名相近的 protocol 被拉开了**：`backend/protocol/` 是宿主↔子进程的帧协议，
 `collection/request-protocol/` 是请求计划与适配器。它们从来不是一回事，
@@ -1199,7 +1200,7 @@ DOM 不变）。需要子 Realm 回调宿主。
 | [docs/state-scope.md](docs/state-scope.md) | 状态作用域规则 |
 | [docs/node-compatibility.md](docs/node-compatibility.md) | Node 18–24 兼容矩阵 |
 | [docs/rust-migration-map.json](docs/rust-migration-map.json) | Rust 原实现 → JS 实现对应关系 |
-| [docs/adr/](docs/adr/) | 架构决策记录（7 篇） |
+| [docs/adr/](docs/adr/) | 架构决策记录（8 篇） |
 | [REMAINING_TASKS.md](REMAINING_TASKS.md) | 完整待办 |
 | [sandbox_manual.md](sandbox_manual.md) | Sandbox 使用手册 |
 
@@ -1214,6 +1215,7 @@ DOM 不变）。需要子 Realm 回调宿主。
 | [0005](docs/adr/0005-machine-specific-values.md) | 机器特定值不得进入浏览器身份 |
 | [0006](docs/adr/0006-parity-layers.md) | 三层对齐职责不重叠 |
 | [0007](docs/adr/0007-parent-window-identity.md) | 同源 `parent` / `top` 交出真实父 window |
+| [0008](docs/adr/0008-source-layout-containers.md) | 顶层目录按职责容器归口 |
 
 ---
 

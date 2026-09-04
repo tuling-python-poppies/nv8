@@ -31,20 +31,29 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 
 `tests/edge-member-parity-test.js` — 比每个构造函数 `prototype` 上的成员名。
 
-966 个原型中 **949 个成员集完全一致**，13 个有差异。`fetch` 存在不代表
+966 个原型中 **963 个成员集完全一致**，缺失 0、多余 0；剩下 3 个是 NV8 完全没有的
+原型（只剩 `HTMLUserMediaElement` 未实现，另两个已补齐）。`fetch` 存在不代表
 `Response.prototype` 齐全，这一层才看得到。
 
 ### 三、行为
 
 `tests/edge-behavior-parity-test.js` — 跑同一段代码，比结果。
 
-**116 个探针分 12 类**：报错文案、`toString` 形态、类型标签、非法接收者、
+**144 个探针分 16 类**：报错文案、`toString` 形态、类型标签、非法接收者、
 构造器守卫、arity 元数据、Error 形态、集合语义、CSSOM、Canvas 形状、
-事件时序、跨 Realm 身份。
+音频指纹、Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL 解析。
 
-首轮 33 项发现 15 处不一致（已修完）；扩到 CSSOM 又挖出 6 处（已修完）；
-扩到跨 Realm 挖出 14 处，**全部同一个根因**——动态 iframe 的
-`contentWindow` 同步为 null，已登记为高优先级差异。
+扩探针的历史，每一轮都在「形状层报 0 差异」的地方挖到东西：
+
+| 轮次 | 新增探针 | 发现 |
+|---|---|---|
+| 首轮 | 33 | 15 处不一致，已修完 |
+| CSSOM | 22 | 6 处，已修完 |
+| 跨 Realm | 14 | **全部同一根因**——动态 iframe 的 `contentWindow` 同步为 null（ADR-0004 落地后可用 `limits.prewarmChildRealms` 关掉）|
+| 音频指纹 | 14 | **10 处**，含五处报错类型错、float32 极值被当 double 写死 |
+| Intl / 时区 + performance | 18 | 4 处，其中 2 处是宿主级（ICU 数据版本、V8 文案），已登记 |
+
+现状：**140 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。
 
 探针定义在 `src/infra/baseline/behavior-probes.js`，采集脚本与测试**共用同一份**——
 各写一份必然漂移，漂移后比较就没有意义。

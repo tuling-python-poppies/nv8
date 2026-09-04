@@ -90,6 +90,9 @@ function state() {
 
 ## 已迁移
 
+表格里的模块路径省略了容器前缀：`api/*` 与 `install/*` 在 `src/surface/` 下，
+`navigation/*` 在 `src/infra/` 下（见 [ADR-0008](adr/0008-source-layout-containers.md)）。
+
 | 模块 | 迁移前的模块级状态 |
 |------|-------------------|
 | `api/storage/storage-state.js` | `localStorage`、`sessionStorage`、两个初始数据 |

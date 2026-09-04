@@ -4,21 +4,25 @@
 
 | Node | 等级 | 说明 |
 |------|------|------|
-| 24.x | `supported` | 主要目标，开发基准 |
-| 22.x | `supported` | LTS |
-| 20.x | `supported` | LTS；`ArrayBuffer.transfer` 回退为复制 |
-| 18.18+ | `supported` | 最低版本；缺 Iterator helpers 和 `ArrayBuffer.transfer` |
+| 24.x | `supported` | 主要目标，开发基准；**指纹敏感场景的推荐版本** |
+| 22.x | `supported` | LTS；V8 内建段顺序与 Chromium 有 2 组差异 |
+| 20.x | `supported` | LTS；`ArrayBuffer.transfer` 回退为复制；**Window 全局枚举顺序无法对齐** |
+| 18.18+ | `supported` | 最低版本；缺 Iterator helpers 与 `ArrayBuffer.transfer`；同上 |
 | < 18.18 | 不支持 | 启动即拒绝 |
 
-四个版本均已在完整测试套件（283 项）上验证通过。本地复现：
+四个版本均已在完整测试套件（861 项）上验证通过。本地复现：
 
 ```
 npm run test:matrix          # 自动发现 nvm 已安装版本
 npm run test:matrix 18.20.8  # 指定版本
 ```
 
-`engines` 声明 `>=18.18.0`；`.node-version` 里的 `24.11.0` 是开发基准，
-不代表唯一支持版本。
+`engines` 声明 `>=18.18.0` 是**下限**；`.node-version` 里的 `24` 是开发基准，
+不代表唯一支持版本。两者语义不同，不是矛盾。
+
+（`.node-version` 曾经写 `24.11.0`，而 `package-lock.json` 的 `engines` 也被
+写成 `24.11.0`——那是生成 lock 时 `package.json` 的旧值。三处并列会让人误以为
+只支持 24。现在 lock 已重新生成，`.node-version` 改成 major-only。）
 
 等级语义：
 
@@ -232,6 +236,39 @@ bootstrap 失败。
   实验性状态决定的，不是 NV8 可以绕开的。
 - Node 18/20 上 `Iterator` helpers 和真正的 `ArrayBuffer` 分离不可用，
   相关 surface 与 Node 22+ 存在差异。
+- **Node 18/20 上 Window 全局的枚举顺序无法与真实 Edge 一致。** V8 10.x / 11.x 在
+  dictionary 模式的 global object 上把**可枚举键排在不可枚举键之前**，不按插入序
+  ——违反 `[[OwnPropertyKeys]]`。V8 12.x（Node 22）已修正。
+
+  裸 vm context 上的最小复现：先定义一个不可枚举属性、再定义一个可枚举属性，
+  `Object.getOwnPropertyNames(globalThis)` 给出的相对顺序是反的，且可枚举那个排到
+  了 `Object` 之前。
+
+  | Node | 插入 `h`(不可枚举) 再插入 `e`(可枚举) | 结论 |
+  |---|---|---|
+  | 18.20.8 | `e` → 0，`h` → 63，`Object` → 1 | 可枚举优先 |
+  | 20.20.2 | 同上 | 可枚举优先 |
+  | 22.23.2 | `h` → 63，`e` → 64 | 插入序 |
+  | 24.20.0 | 同上 | 插入序 |
+
+  NV8 靠「捕获 → 全部删除 → 按目标序重定义」复现真实 Edge 的枚举顺序
+  （`surface/install/finalize-window-surface-order.js`），这个前提在 18/20 上不成立：
+  实测 238 个全局排到了 V8 内建之前，`window` 落在索引 0 而真实 Edge 是 678。
+
+  **不可绕过**：`enumerable` 本身是要复现的契约值，不能为了顺序去改它。
+
+  探针是 `vm.global-property-order`（报 `broken`），`npm run capabilities` 可见。
+  `tests/window-surface-order-test.js` 在这两档上用**反向断言**豁免——宿主哪天修好了
+  会红，逼人删掉豁免。
+- **Node 18–22 的 V8 内建段自身的注册顺序与 Chromium 152 不同**，两组：
+  TypedArray 家族的组内次序（V8 12.4 是 `Float32 Float64 Uint8Clamped BigUint64
+  BigInt64`，Chromium 是 `BigUint64 BigInt64 Uint8Clamped Float32 Float64`），
+  以及 `Iterator` 的位置（V8 12.4 在 `console` 之后即索引 60，Chromium 与 Node 24
+  在 `Set` 之后即 44）。
+
+  那 61 项不由 NV8 安装也不由它重排。整段重排做不到——`undefined` / `NaN` /
+  `Infinity` 不可配置，删不掉。已在 `window-surface-order-test.js` 登记。
+  Node 24 与 Chromium 逐位一致。
 - **Node 22 之前，Realm 里的 `'X' in globalThis` 会调用 X 的 getter。**
   Node 22 才给 `vm` 的 contextified global 接上 `PropertyQueryCallback`；
   在那之前 `has` 查询是用 **getter** 实现的。实测：
@@ -254,7 +291,7 @@ bootstrap 失败。
 ## 测试
 
 ```
-tests/node-compat-test.js   32 项
+tests/node-compat-test.js   33 项
 ```
 
 覆盖三态探测、版本矩阵边界、前置检查、两条链接策略、降级 API 下的

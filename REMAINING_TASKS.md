@@ -737,13 +737,18 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 按照 `docs/架构改造计划.md` 第 29 节，以下决策可在实际使用中逐步形成：
 
-### 已完成 ✅（本轮补写）
-- **ADR-0004** 动态 iframe 的 `contentWindow` 时序（待决策，已列选项与实测）
+### 已完成 ✅
+- **ADR-0004** 动态 iframe 的 `contentWindow` 时序（选 A：opt-in 预热池，默认 0）
 - **ADR-0005** 机器相关值不进浏览器身份
   - 记录三次踩坑：WebGL renderer、hardwareConcurrency、CSS `fontFamily`
   - 推论：**每次扩大采集范围都要重新过一遍这个检查**，不能假设上次查过了
 - **ADR-0006** 对等性检查分三层，各层职责不重叠
   - 含「登记表机制」与四条已知方法论陷阱
+  - 后补的第四条轴（枚举顺序与 own-descriptor 形状）归在形状层里，不是新职责层
+- **ADR-0007** 同源 `parent` / `top` 交出真实父 window（选 A + C）
+- **ADR-0008** 顶层目录按职责容器归口
+  - 26 → 8，含程序化迁移方式、7 处语义路径、在 `install-error-stack-guard` 上
+    踩的那一次，以及三条「明确不做」
 
 ### Phase 1 (Core)
 - [ ] SDK `apiVersion` 格式和兼容性检查
@@ -1583,7 +1588,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - [x] **26 个顶层目录 → 8 项容器**。`api/`(3680 文件) 与 `network/`(1 文件) 原来并列
   在顶层，分层意图只存在于阅读者脑子里
   - `engine/` = core / realm / bootstrap / webidl / plugin-sdk / compat
-  - `surface/` = api / install
+  - `surface/` = api（88 域 / 3680 文件）/ install（320 文件）
   - `config/` = profiles / presets
   - `backend/` = controller / child / thread / **protocol**
   - `collection/` = collector / **request-protocol** / evidence
@@ -1633,7 +1638,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
 ### 明确不做（需要单独立项 + 你点头）
-- **给 `src/surface/api/<域>`（86 个）与 `src/surface/install/`（316 个）补 barrel**。api/install 是
+- **给 `src/surface/api/<域>`（88 个）与 `src/surface/install/`（320 个）补 barrel**。api/install 是
   生成体，barrel 与「是否生成」要一起决策，否则又多一类「声称生成却无生成器」
 - **按域把测试分进 `tests/{core,api,collector,...}/`**。自动发现已经解决了「新增
   测试要注册」的问题，分目录只影响人找文件的路径
@@ -1721,7 +1726,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 ## 📁 相关文档
 
-- **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
+- **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)（规划，非现状）
+- **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
 - **测试**: `npm test`（861 项 / 82 个文件，Node 18/20/22/24 四档全绿）
