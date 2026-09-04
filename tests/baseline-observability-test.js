@@ -18,7 +18,7 @@ import {
   normalizeNetworkRequests,
   normalizeTrace,
   summarizeObservability,
-} from '../src/baseline/observability.js';
+} from '../src/infra/baseline/observability.js';
 
 const fixture = JSON.parse(await readFile(
   new URL('../fixtures/baseline/observability.json', import.meta.url),

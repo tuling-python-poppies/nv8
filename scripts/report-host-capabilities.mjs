@@ -9,8 +9,8 @@ import {
   CAPABILITY_STATUS,
   detectHostCapabilities,
   resolveNodeSupport,
-} from '../src/core/host-capabilities.js';
-import { describeHostCompat } from '../src/compat/index.js';
+} from '../src/engine/core/host-capabilities.js';
+import { describeHostCompat } from '../src/engine/compat/index.js';
 
 const host = detectHostCapabilities();
 const support = resolveNodeSupport(host.nodeVersion);

@@ -27,7 +27,7 @@ const FIXTURE = fileURLToPath(
   new URL('../fixtures/fingerprint/edge-ua-defaults.json', import.meta.url)
 );
 const OUTPUT = fileURLToPath(
-  new URL('../src/api/css/css-ua-defaults.js', import.meta.url)
+  new URL('../src/surface/api/css/css-ua-defaults.js', import.meta.url)
 );
 const BASELINE_TAG = 'nv8unknown';
 

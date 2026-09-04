@@ -1,7 +1,7 @@
-import { installCrypto } from "../../install/install-crypto.js";
+import { installCrypto } from "../../surface/install/install-crypto.js";
 
 const CRYPTO_INSTALLER_URL = new URL(
-  "../../install/install-crypto.js",
+  "../../surface/install/install-crypto.js",
   import.meta.url,
 );
 

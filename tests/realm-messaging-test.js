@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createNv8 } from '../src/index.js';
-import { domPreset } from '../src/presets/index.js';
+import { domPreset } from '../src/config/presets/index.js';
 import { streamsPlugin } from '../src/plugins/streams/index.js';
 import { fetchPlugin } from '../src/plugins/fetch/index.js';
 import { xhrPlugin } from '../src/plugins/xhr/index.js';

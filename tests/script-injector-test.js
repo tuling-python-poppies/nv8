@@ -6,14 +6,14 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { createRealm } from '../src/core/realm-factory.js';
-import { createStateRegistry } from '../src/core/state-registry.js';
-import { createLogger } from '../src/utils/logger.js';
+import { createRealm } from '../src/engine/core/realm-factory.js';
+import { createStateRegistry } from '../src/engine/core/state-registry.js';
+import { createLogger } from '../src/infra/utils/logger.js';
 import { 
   ScriptInjector, 
   createScriptInjector, 
   SCRIPT_LOAD_STRATEGY 
-} from '../src/core/script-injector.js';
+} from '../src/engine/core/script-injector.js';
 import { drainTasks, waitUntil } from './helpers/async-wait.js';
 
 let testRealmCounter = 0;

@@ -1,0 +1,22 @@
+import { traceGetter } from "../../../infra/trace/trace-accessor.js";
+import { registerNativeFunction, registerNativeGetter } from "../../../engine/webidl/native-function.js";
+import { ownerURL } from "./html-reflection.js";
+import { requireInput } from "./html-input-element-state.js";
+
+const descriptor = Object.getOwnPropertyDescriptor({
+  get formAction() {
+    requireInput(this);
+    const raw = this.getAttribute("formaction");
+    const result = new URL(raw === null || raw === "" ? ownerURL(this) : raw, ownerURL(this)).href;
+    traceGetter("window.HTMLInputElement.prototype.formAction", "HTMLInputElement", result);
+    return result;
+  },
+  set formAction(value) {
+    requireInput(this);
+    this.setAttribute("formaction", `${value}`);
+  },
+}, "formAction");
+export const formAction = descriptor.get;
+export const setFormAction = descriptor.set;
+registerNativeGetter(formAction, "formAction");
+registerNativeFunction(setFormAction, "set formAction");

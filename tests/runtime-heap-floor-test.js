@@ -28,8 +28,8 @@ import {
   MINIMUM_RUNTIME_HEAP_MB,
   isRuntimeHeapClamped,
   resolveRuntimeHeapMegabytes,
-} from '../src/controller/runtime-heap-floor.js';
-import { ChildProcessConnection } from '../src/controller/child-process.js';
+} from '../src/backend/controller/runtime-heap-floor.js';
+import { ChildProcessConnection } from '../src/backend/controller/child-process.js';
 import { EdgeSandbox } from '../src/public/edge-sandbox.js';
 
 const MB = 1024 * 1024;

@@ -1,4 +1,0 @@
-import { defineConstructorBacklink,definePrototypeGetter,definePrototypeMethod,defineToStringTag } from "../webidl/descriptor.js";
-import { DOMRectList,installDOMRectListConstructor } from "../api/geometry/dom-rect-list-constructor.js";
-import { length } from "../api/geometry/dom-rect-list-length-getter.js"; import { item } from "../api/geometry/dom-rect-list-item.js"; import { values } from "../api/geometry/dom-rect-list-values.js";
-export function installDOMRectList(){installDOMRectListConstructor();definePrototypeGetter(DOMRectList.prototype,"length",length);definePrototypeMethod(DOMRectList.prototype,"item",item);defineConstructorBacklink(DOMRectList.prototype,DOMRectList);defineToStringTag(DOMRectList.prototype,"DOMRectList");Object.defineProperty(DOMRectList.prototype,Symbol.iterator,{value:values,writable:true,configurable:true});}

@@ -13,7 +13,7 @@ import {
   capturePublicGate0Baseline,
   compareGate0Baselines,
   baselineScenario,
-} from '../src/baseline/baseline.js';
+} from '../src/infra/baseline/baseline.js';
 
 const quietLogger = { info() {}, warn() {}, error() {}, trace() {} };
 const fixture = JSON.parse(await readFile(

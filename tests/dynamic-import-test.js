@@ -20,7 +20,7 @@ import {
   decodeDataModule,
   rejectDynamicImport,
   resolveModuleSpecifier,
-} from '../src/realm/dynamic-import.js';
+} from '../src/engine/realm/dynamic-import.js';
 
 const REFERRER = 'https://target.test/app/main.js';
 
@@ -348,7 +348,7 @@ test('dynamic import never reaches the real network', async () => {
 test('dynamic-import module imports no network or filesystem modules', async () => {
   const { readFile } = await import('node:fs/promises');
   const source = await readFile(
-    new URL('../src/realm/dynamic-import.js', import.meta.url),
+    new URL('../src/engine/realm/dynamic-import.js', import.meta.url),
     'utf8'
   );
   const specifiers = [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((m) => m[1]);

@@ -1,0 +1,11 @@
+import { traceCall } from "../../../infra/trace/trace-function.js";
+import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
+import { appendConsoleRecord } from "./console-state.js";
+
+export const table = {
+  table(...values) {
+    appendConsoleRecord("table", values);
+    traceCall("window.console.table", "console", values, undefined);
+  },
+}.table;
+registerNativeFunction(table, "table");

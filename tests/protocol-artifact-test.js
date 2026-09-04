@@ -34,7 +34,7 @@ import {
   isArtifactSchemaCompatible,
   protocolResultToJSON,
   serializeArtifact,
-} from '../src/request-protocol/index.js';
+} from '../src/collection/request-protocol/index.js';
 
 function artifact(overrides = {}) {
   return createRuntimeArtifact({
@@ -778,7 +778,7 @@ test('protocolResultToJSON produces a serializable audit record', () => {
 // ---------------------------------------------------------------- boundary
 
 test('protocol layer exposes no network capability', async () => {
-  const module = await import('../src/request-protocol/index.js');
+  const module = await import('../src/collection/request-protocol/index.js');
   const names = Object.keys(module);
   const forbidden = names.filter((name) => /fetch|request$|send|socket|http|agent|proxy/i.test(name));
   assert.deepEqual(forbidden, [], 'protocol exports must not include network primitives');
@@ -786,7 +786,7 @@ test('protocol layer exposes no network capability', async () => {
 
 test('protocol source does not import network or filesystem modules', async () => {
   const { readdir, readFile } = await import('node:fs/promises');
-  const directory = new URL('../src/request-protocol/', import.meta.url);
+  const directory = new URL('../src/collection/request-protocol/', import.meta.url);
   const files = (await readdir(directory)).filter((name) => name.endsWith('.js'));
   assert.ok(files.length >= 7);
   for (const file of files) {

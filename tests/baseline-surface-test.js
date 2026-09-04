@@ -11,7 +11,7 @@ import { workerPlugin } from '../src/plugins/worker/index.js';
 import {
   captureSurfaceSnapshot,
   summarizeSurfaceSnapshot,
-} from '../src/baseline/surface.js';
+} from '../src/infra/baseline/surface.js';
 
 const logger = { info() {}, warn() {}, error() {}, trace() {} };
 const fixture = JSON.parse(await readFile(

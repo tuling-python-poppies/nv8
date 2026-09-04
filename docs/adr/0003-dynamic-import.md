@@ -106,9 +106,9 @@ unavailable"。
 
 ## 影响的现有产物
 
-- `src/core/page-script-runner.js`：`importModuleDynamically` 改为走 replay
-- `src/realm/dynamic-import.js`：错误改为结构化，新增解析逻辑
-- `src/child/runtime-pool.js`：三处 `rejectUserImport` 改为共用解析
+- `src/engine/core/page-script-runner.js`：`importModuleDynamically` 改为走 replay
+- `src/engine/realm/dynamic-import.js`：错误改为结构化，新增解析逻辑
+- `src/backend/child/runtime-pool.js`：三处 `rejectUserImport` 改为共用解析
 - Worklet 路径：保持拒绝（Worklet 规范本身不支持动态 import）
 
 ## 验收标准
@@ -168,7 +168,7 @@ request for './right.js' can not be resolved on module
 `link()`，让 Node 自己遍历整图，linker 回调里只查表或新建实例。Node 内部的
 链接机制本身能处理循环。
 
-同一个坑在 `src/realm/module-loader.js` 的异步路径上也踩过——两处现在用了
+同一个坑在 `src/engine/realm/module-loader.js` 的异步路径上也踩过——两处现在用了
 同样的三阶段结构。
 
 ## 验收结果

@@ -27,11 +27,11 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
 /** 只审计这些前缀下的实现模块 */
 const AUDITED_PREFIXES = [
-  'src/api/',
-  'src/navigation/',
-  'src/scheduler/',
-  'src/webidl/',
-  'src/trace/',
+  'src/surface/api/',
+  'src/infra/navigation/',
+  'src/infra/scheduler/',
+  'src/engine/webidl/',
+  'src/infra/trace/',
 ];
 
 /**
@@ -41,13 +41,13 @@ const AUDITED_PREFIXES = [
  * 任何新增项都必须写明理由，而不是默默加进白名单。
  */
 const REVIEWED_PROCESS_LEVEL_STATE = new Map([
-  ['src/api/clone/structured-clone-algorithm.js:transferHandlers',
+  ['src/surface/api/clone/structured-clone-algorithm.js:transferHandlers',
     '扩展点注册表：由 install-* 在启动时注册类型处理器，属于能力声明而非运行时数据'],
-  ['src/api/crypto/hash.js:sha512Constants',
+  ['src/surface/api/crypto/hash.js:sha512Constants',
     'SHA-512 轮常量的惰性缓存：纯不可变数学常量，跨 Realm 共享无可观察差异'],
-  ['src/webidl/native-function-realm-safe.js:realmContexts',
+  ['src/engine/webidl/native-function-realm-safe.js:realmContexts',
     '按 Realm ID 索引的上下文注册表：它本身就是跨 Realm 管理器，隔离它会让其失去意义'],
-  ['src/webidl/native-function.js:currentContext',
+  ['src/engine/webidl/native-function.js:currentContext',
     '安装期的当前上下文指针：由 setNativeFunctionContext() 在 Realm 激活时设置并在安装后失效'],
 ]);
 
@@ -124,7 +124,7 @@ function audit() {
 
   for (const file of [...graph].sort()) {
     // 一律用正斜杠：AUDITED_PREFIXES 与 REVIEWED_PROCESS_LEVEL_STATE 的键都是
-    // `src/api/...` 形式。在 Windows 上 path.relative 给反斜杠，前缀判断会全部
+    // `src/surface/api/...` 形式。在 Windows 上 path.relative 给反斜杠，前缀判断会全部
     // 落空——审计于是**报 0 项待迁移**。比崩掉更糟：它谎报通过。
     const relative = path.relative(ROOT, file).replaceAll(path.sep, '/');
     if (!AUDITED_PREFIXES.some((prefix) => relative.startsWith(prefix))) continue;

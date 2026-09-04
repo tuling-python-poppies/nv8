@@ -145,15 +145,15 @@ import {
 | --- | --- |
 | `nv8/fingerprint/edge-150` | Edge 150 冻结指纹 |
 | `nv8/fingerprint/edge-151` | Edge 151 冻结指纹 |
-| `nv8/protocol` | 请求协议层（`src/request-protocol/`）|
-| `nv8/collector` | 采集层（`src/collector/`）|
+| `nv8/protocol` | 请求协议层（`src/collection/request-protocol/`）|
+| `nv8/collector` | 采集层（`src/collection/collector/`）|
 
 **指纹快照要从子路径拿**：`edge150Fingerprint` / `edge151Fingerprint` 不在顶层导出里。
 
 ### 2.3 第一次验证
 
 ```bash
-npm test                    # 全量，856 项（`node --test` 自动发现 tests/）
+npm test                    # 全量，861 项（`node --test` 自动发现 tests/）
 npm run test:matrix         # Node 18 / 20 / 22 / 24 四档
 ```
 
@@ -1481,7 +1481,7 @@ UA 不能包含 `Edg/`。
 1. 采集基准版本与 profile 一致——用 Edge 151 的 fixture 去比 150 的 profile，会把
    版本门控的成员误报成缺失（这个坑踩过两次）；
 2. 是否只在某个 Node 档出现——`Iterator` 需要 Node 22+ 之类的宿主缺口另有登记表
-   （`src/baseline/known-differences.js`）；
+   （`src/infra/baseline/known-differences.js`）；
 3. 是不是自己刚改的实现带来的，且新值有真实浏览器实测支撑。
 
 确认是预期变更后再 `--write`，并且**四档都要重录**（fixture 按 Node major 分档）。

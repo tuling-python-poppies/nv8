@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 856 项（`npm test`，81 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 861 项（`npm test`，82 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -12,12 +12,12 @@
 ## 一、Baseline 验收（行为基线）
 
 ### 已完成 ✅
-- **完整 surface/descriptor 快照** - `src/baseline/full-surface.js`
+- **完整 surface/descriptor 快照** - `src/infra/baseline/full-surface.js`
   - 枚举全部全局 own key + 各自原型成员（先前只覆盖精选 24 个）
   - fixture 存分组摘要，每全局压成一行 `type:members:symbols:digest16`（332KB）
   - 按**每个 Node major 逐档**存储（node18/20/22/24），四档均已录入并校验通过
   - 采集不触发 getter；Symbol key 只计数不展开，避免引擎顺序抖动
-- **差异清单机制** - `src/baseline/known-differences.js`
+- **差异清单机制** - `src/infra/baseline/known-differences.js`
   - 每条差异必须有 owner / severity / reason / expectation
   - `blocking` / `tracked` / `environmental` 三级
   - `validateDifferenceRegistry()` 校验清单自洽，防止空壳条目绕过门禁
@@ -67,7 +67,7 @@
 - 已自证：互换两个相邻安装调用能被精确定位到位序
 
 ### 已完成 ✅（observability golden fixture）
-- `src/baseline/observability.js` 归一化 trace / network / navigation
+- `src/infra/baseline/observability.js` 归一化 trace / network / navigation
 - 剔除非确定性字段：`sequence`、trace 参数值、`*Truncated`、body 内容、
   navigation `key`/`id`；header 名小写排序，`state` 降级为 `hasState`
 - 当前 golden：trace 33 / requests 1 / navigation 2，连续三次采集一致
@@ -89,16 +89,16 @@
 - 资源清理和诊断系统
 
 ### 已完成 ✅（本轮新增）
-- **Evidence 抽象接口** - `src/core/evidence-contract.js`（零依赖）
+- **Evidence 抽象接口** - `src/engine/core/evidence-contract.js`（零依赖）
   - `EvidenceSource` 8 方法契约，资源用不透明 id 标识
   - duck typing 校验，缺失方法全部列出
   - `TRUSTED_SCRIPT_POLICY` 归属 Core，含 `registered-only` 历史别名
   - `resolveTrustedScriptIds()` 统一策略解析，sandbox 与 runtime-pool 共用
-- **适配器层** - `src/evidence/evidence-source.js`
+- **适配器层** - `src/collection/evidence/evidence-source.js`
   - `createEvidenceSource(bundle)` 包装具体 Bundle
   - `createInMemoryEvidenceSource()` 无磁盘构造
 - **Core 零依赖 Evidence** - 源码扫描测试强制，不靠约定
-- **ScriptInjector 归位** - 迁至 `src/core/`（零 import、与格式无关）
+- **ScriptInjector 归位** - 迁至 `src/engine/core/`（零 import、与格式无关）
 
 ### 未完成项
 - [ ] 所有后端异常的句柄泄漏验证
@@ -182,7 +182,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 ```
 
 - 宿主图待迁移状态 **85 → 0**
-- `src/core/state-scope.js` 提供 realm/origin/sandbox 三种作用域槽
+- `src/engine/core/state-scope.js` 提供 realm/origin/sandbox 三种作用域槽
 - `tests/state-scope-test.js` 预算断言固定为 0，新增必须先迁移或显式登记豁免
 - 4 处审阅后保留为进程级（扩展点注册表、SHA-512 常量缓存、Realm 上下文注册表、
   安装期上下文指针），每项在审计脚本中写明理由，并有测试校验理由非空
@@ -195,7 +195,7 @@ Range / Selection **一个探针都没有**。真正的剩余工作在那里，�
 ## 五、Gate 4 验收 (Profile 和证据输入)
 
 ### 已完成 ✅
-- Profile 工厂系统 (`src/profiles/index.js`)
+- Profile 工厂系统 (`src/config/profiles/index.js`)
 - `minimal-fetch`、`dom-replay`、`legacy-full` 预设
 - Profile 继承、覆盖、能力声明
 - Evidence Bundle schema、loader、validator
@@ -416,14 +416,14 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 ## 八、Gate 5 验收 (Protocol 和 Collector 边界)
 
 ### 已完成 ✅
-- **Protocol 层接口定义** - `src/request-protocol/`
+- **Protocol 层接口定义** - `src/collection/request-protocol/`
   - `RuntimeArtifact` 契约：canonical JSON、schema 版本、摘要、过期语义
   - `ArtifactSet` 有界集合（数量/单体字节/总字节限制）
   - `RequestPlan` 归一化（header 小写、多值保序、CRLF 注入防护、摘要稳定）
   - 12 种声明式 `RequestTransform` + 跨适配器冲突检测
   - `defineProtocolAdapter()` 窄接口（context 只有 request/artifacts/now）
   - `ProtocolRegistry` 编排、transform 溯源、plan diff、协议 lock
-- **Collector 层** - `src/collector/`
+- **Collector 层** - `src/collection/collector/`
   - `NetworkPolicy` 默认拒绝、origin allowlist（含通配子域）、scheme/method 限制
   - 重定向策略（默认拒绝，跨 origin 需显式开启）
   - `CredentialStore` origin 精确绑定、脱敏、注入时机在策略检查之后
@@ -445,7 +445,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   这条原先与下面的 `[x]` 直接矛盾，属于早期清单没跟着实现更新
 - [x] **数据持久化** - 结果落地与增量去重完成（`result-sink.js`，23 项）。
   刻意不内置 DB 驱动，接口是 `write/flush/close`，见本节末「真实存储适配」
-- [x] **代理支持** - `src/collector/proxy.js`，44 项测试（含真实隧道）
+- [x] **代理支持** - `src/collection/collector/proxy.js`，44 项测试（含真实隧道）
   - **代理故障必须与目标故障分开**（本模块首要理由）：代理不通是我们这一侧的
     出口坏了。混在一起 → 一个代理挂掉 → 熔断器跳闸所有 origin → 运维看到
     "所有站点都挂了"，真实原因被完全掩盖。独立错误码 `PROXY_*`，
@@ -464,7 +464,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     分段解析已验证：CONNECT 响应头跨 TCP 段、SOCKS5 每步按需取字节
   - 半配凭据（只给用户名）是配置错误而非空密码——静默当空密码会让认证在远端
     失败、报成"代理不通"，把配置问题伪装成网络问题
-- [x] **代理接入 transport** - `src/collector/proxy-transport.js`，13 项测试
+- [x] **代理接入 transport** - `src/collection/collector/proxy-transport.js`，13 项测试
   - 基于 `node:http`/`node:https`，通过 `createConnection` 把隧道 socket 交给
     HTTP 客户端；HTTPS 目标在隧道内再叠一层 TLS，`servername` 必须是**目标**
     主机名（写成代理主机名会让 SNI 与证书都对不上）
@@ -480,7 +480,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     一旦分叉，同一个计划在两条路径上会发出不同请求，而这种差异极难察觉
     ——通过代理时成功、直连时失败，看起来像"代理有问题"
 - [x] **仓库死代码清理** - 死 JS 文件从 1504 降到 **0**（4237 个文件全部可达）
-  - **陈旧的机器特定构建产物**：`src/realm/module-bundle.json` 15.8MB，
+  - **陈旧的机器特定构建产物**：`src/engine/realm/module-bundle.json` 15.8MB，
     3992 个键全部以 `file:///D:/develop_software/Nv8/` 开头。加载器以绝对
     `file://` URL 为键，所以本机命中率**恒为 0**，却仍要每次启动
     `readFileSync` + `JSON.parse`。实测冷启动因此慢约 90ms（526 → 431ms）
@@ -490,7 +490,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - **1465 个纯 re-export 垫片**：`src/migration-targets/` 6.2MB，
     没有任何代码引用。折叠为单一清单 `docs/rust-migration-map.json`（231KB），
     1465 条映射一条不丢，文件数从 1465 降到 1
-  - **废弃的 `src/core/` 平行子包**：`plugin/`、`registry/`、`app/`、
+  - **废弃的 `src/engine/core/` 平行子包**：`plugin/`、`registry/`、`app/`、
     `scheduler/`、`trace/`、`legacy/`、`types/`、`index.js`、
     camelCase 重复文件、自带的 `package.json` 与 vendored `node_modules/semver`
     （项目零依赖，该 semver 只被这个死子包引用）
@@ -513,7 +513,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     fixture 在仓库里、生成它的代码不在。"声称是生成的但没有生成器"等于手写
     文件，只是看起来更可信
 - [ ] **WebSocket 采集** - 当前只支持 HTTP
-- [x] **熔断器** - 按 origin 的三态熔断（`src/collector/circuit-breaker.js`，22 项测试）
+- [x] **熔断器** - 按 origin 的三态熔断（`src/collection/collector/circuit-breaker.js`，22 项测试）
   - `CIRCUIT_OPEN` 错误码早就在 `errors.js` 里定义了但没实现——缺口是设计时
     就意识到的
   - **按 origin 而不是全局**：采集常同时打主站 + CDN + 验证码服务，
@@ -524,7 +524,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     一次配置失误把 origin 熔断掉，反过来掩盖真正的错误
   - 不计入的失败**也不当成成功**——否则配置错误会清零真实的连续失败计数
   - 熔断检查排在策略检查**之后**，保证违规请求先被挡掉
-- [x] **限流与并发控制** - 令牌桶 + 并发上限（`src/collector/rate-limiter.js`，18 项测试）
+- [x] **限流与并发控制** - 令牌桶 + 并发上限（`src/collection/collector/rate-limiter.js`，18 项测试）
   - 速率与并发是**两个独立维度**：只限速率，慢响应会堆积出无限并发；
     只限并发，快响应让速率无上限
   - **令牌桶而不是固定间隔**：真实浏览器加载页面会并发打十几个请求再安静几秒，
@@ -535,7 +535,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - `release` 幂等：调用方写在 finally 里，异常路径可能重复触发，
     重复归还会把 inFlight 减成负数、并发上限失效
   - 限流在每次**尝试**内取许可：放在 send() 外只会限"逻辑请求数"，重试就绕过了
-- [x] **分页调度** - `src/collector/pagination.js`，21 项测试
+- [x] **分页调度** - `src/collection/collector/pagination.js`，21 项测试
   - **拉取式**（async iterator）而不是回调式：调用方 `for await` 天然获得背压
     （处理完一页才要下一页），也能随时 `break` 提前停止。回调式要额外设计
     暂停/恢复协议
@@ -553,7 +553,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     `aborted`），环检测还报出**是哪个游标重复了**——诊断要能直接定位
   - **不做错误恢复**：collector 失败直接抛。重试是 RetryPolicy 的职责，
     在这里吞掉会让"少采一页"变成静默数据丢失
-- [x] **采集进度检查点** - `src/collector/checkpoint.js`，20 项测试
+- [x] **采集进度检查点** - `src/collection/collector/checkpoint.js`，20 项测试
   - **存储是注入的**，不内置数据库：Collector 层不该拥有 DB 驱动，那会把网络
     出口层变成数据层。只定义 `load/save/clear` 接口，附内存与文件两个实现
   - **任务指纹防错续**：查询条件变了却接着旧游标走，会产出混合两次查询的数据
@@ -567,7 +567,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     的 JSON，等于丢掉全部进度。有断言检查无 `.tmp` 残留
   - 损坏的检查点返回 null 而不是抛——应当导致"重新开始"，不该让整个任务起不来
   - jobId 清洗防目录穿越（`../../escape`），并附摘要防 `a/b` 与 `a_b` 撞名
-- [x] **结果落地与增量去重** - `src/collector/result-sink.js`，23 项测试
+- [x] **结果落地与增量去重** - `src/collection/collector/result-sink.js`，23 项测试
   - 与检查点配套：**续采一定重复交付条目**，落地端必须能幂等吸收
   - **按 key 去重不按整体相等**：条目常带易变字段（`fetchedAt`、排序分数、
     A/B 分桶），按整体相等去重等于不去重
@@ -596,11 +596,11 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - `preflightHostCheck()` 启动前置检查
   - `npm run capabilities` 输出当前宿主报告
 - **Node 支持矩阵** - `NODE_SUPPORT_MATRIX`（24/22 supported，20/18.18 best-effort）
-- **异步 ModuleLoader** - `src/realm/module-link-strategy.js`
+- **异步 ModuleLoader** - `src/engine/realm/module-link-strategy.js`
   - 屏蔽 `moduleRequests`/`linkRequests`/`instantiate`（24+）与 `link()`（18+）差异
   - `importUrlAsync()` 全版本可用；`importUrl()` 缺能力时抛错而非返回半初始化模块
   - 测试通过删除原型 API 模拟 Node 18–22，验证降级路径真实可用
-- **宿主回退层** - `src/compat/host-compat.js`
+- **宿主回退层** - `src/engine/compat/host-compat.js`
   - ArrayBuffer.transfer / structuredClone / asyncDispose / AbortSignal.timeout
   - 无法保证语义的情况显式抛错，不静默降级
 - **CI 矩阵** - `.github/workflows/ci.yml`（Node 4 版本 + 2 后端）
@@ -635,7 +635,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     但它在计数里、在报告里、在你以为已经覆盖了的地方
   - 「拖住退出」的担忧本身不成立：每个 sleep 都被 await，时长 0–2ms
 - **工具脚本的跨平台缺陷**（本轮修复，其中一个是**谎报通过**）
-  - `audit:state` 用 `path.relative()` 的结果去比 `src/api/` 前缀。Windows 上
+  - `audit:state` 用 `path.relative()` 的结果去比 `src/surface/api/` 前缀。Windows 上
     给的是反斜杠，前缀判断全部落空，审计报「0 项待迁移 / 0 项已审阅豁免」——
     看起来比真实情况更好。修好后立刻暴露 4 项豁免 + 1 项真实待迁移
   - 同一脚本 `execSync('ls src/plugins/*/index.js')`：依赖 POSIX `ls` 与 shell
@@ -805,7 +805,7 @@ opaque origin，拿不到 `parent`。这类探针走临时本地 HTTP 服务器�
 - WebGL **masked/unmasked 混淆**：`gl.VENDOR`/`gl.RENDERER` 是 Chromium
   固定值 `"WebKit"`/`"WebKit WebGL"`，GPU 信息只走
   `WEBGL_debug_renderer_info`。原实现把 GPU 串放在 masked 参数上
-- GPU 身份组合库（`src/fingerprint/gpu-profiles.js`）：5 套真实桌面 GPU，
+- GPU 身份组合库（`src/infra/fingerprint/gpu-profiles.js`）：5 套真实桌面 GPU，
   字段由「厂商+型号+驱动」推导而非手写，`validateGpuIdentity()` 挡住
   「WebGL 说 NVIDIA、WebGPU 说 Intel」这类矛盾
 
@@ -841,7 +841,7 @@ iframe 内导航:  ["window:beforeunload", "window:pagehide", "window:unload"]
 
 ### 行为层对等性 ✅ 首轮已建立
 
-方法论：探针定义放在 `src/baseline/behavior-probes.js`，采集脚本与测试
+方法论：探针定义放在 `src/infra/baseline/behavior-probes.js`，采集脚本与测试
 **共用同一份**（各写一份必然漂移）。准入条件三条：跨运行确定、与机器无关、
 可序列化。因此只取引擎固定产出的「结构性事实」——报错类型与文案、
 `toString` 形态、类型标签、非法接收者行为，不取 CPU 核数/屏幕/时区。
@@ -1082,7 +1082,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     更危险
   - 默认配置（0）下 `contentWindow` 仍同步为 `null`，
     `edge-behavior-parity-test.js` 的两条登记差异保持不变
-- [x] **子进程 SIGABRT 根因定位并修复** - `src/controller/runtime-heap-floor.js`，
+- [x] **子进程 SIGABRT 根因定位并修复** - `src/backend/controller/runtime-heap-floor.js`，
   6 项测试
   - 起因是那条被放过三次的偶发失败 `realm guard returns a structured error on
     child-process`。前几次归因"资源竞争"，这次**十路并发复现**（4/10 红），
@@ -1447,7 +1447,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     偏好顺序，不是「碰巧只有 Noto」。Windows 10 或没装中文语言支持的机器大概率会落到
     `Microsoft YaHei`，所以它是**可覆盖的字段**而不是硬编码，与 `gpu-profiles.js`
     同一个套路：值是**挑选**的，不是从开发机采下来就当真理
-  - 实现：`src/fingerprint/ua-default-fonts.js`（表 + 最长前缀查找 +
+  - 实现：`src/infra/fingerprint/ua-default-fonts.js`（表 + 最长前缀查找 +
     `validateLocaleFontPair()`）；`css-computed-value.js` 加 per-Realm 覆盖，
     只改基线不动标签级 override。做成覆盖而不是重新生成 fixture，
     因为 fixture 只能存一个 locale 的值，而这一维是运行时可变的
@@ -1493,8 +1493,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 ## 十三、结构与卫生（全量扫描后的一轮收敛）
 
 一次仓库级只读扫描（4251 个文件）出了一份清单，逐项核对后落地如下。**没做结构
-重构**——容器目录、barrel、测试分目录、大文件拆分都要动几千处 import，收益是主观
-可读性，风险和收益不成比例，理由见本节末。
+重构**——barrel、测试分目录、大文件拆分的理由见本节末。
+（**容器目录后来做了**，见下面「容器化重构（已落地）」。）
 
 ### 已修
 
@@ -1504,10 +1504,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 目录形式与 glob 形式在 Node 18/20 与 22+ 之间**不兼容**（前者只认目录、后者只认
     glob），无参数模式是唯一四档通用的写法。`test-matrix.sh` 也改成同一条命令
   - 代价是发现范围变成整个仓库，所以补了一条断言：**tests/ 之外不得有匹配 Node
-    测试文件名模式的文件**（`tests/test-hygiene-test.js`）。自证过：往 `src/utils/`
+    测试文件名模式的文件**（`tests/test-hygiene-test.js`）。自证过：往 `src/infra/utils/`
     扔一个 `stray-test.js` 立刻红
 - [x] **两份手写测试改用 `node:test`**
-  - plugin-sdk 那份（原在 `src/core/plugin-sdk/`，住在产品树、`console.log` 分段、
+  - plugin-sdk 那份（原在 `src/engine/plugin-sdk/`，住在产品树、`console.log` 分段、
     顶层断言、391 行）→ `tests/plugin-sdk-test.js`，16 项。断言逐条照搬
   - `tests/plugin-system-test.js`（15 个 `async function testXxx()` +
     `runTests()` 串行 + 自写 `assertEqual` + `process.exit(1)`）→ 15 个 `test()`
@@ -1553,13 +1553,13 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - `.node-version` 写 `24.11.0`，而本机 nvm 里根本没有这个版本 → 改成 `24`
     （major-only，工具自选最新 24.x）
 - [x] **宿主层 5 处 `console.error` 绕过 logger**
-  - `src/core/script-injector.js` 4 处 + `src/core/sandbox.js` 1 处。Core 层直接打
+  - `src/engine/core/script-injector.js` 4 处 + `src/engine/core/sandbox.js` 1 处。Core 层直接打
     stdout：调用方关不掉、诊断层收不到
   - `ScriptInjector` 加可选 `logger`；`injectEvidenceScripts` 把 sandbox 的 logger
     传进去。缺省 no-op，因为错误已经通过 `triggerErrorCallbacks` 与 `script.error`
     往上抛了一份
-  - `src/core/app.js` 与 `src/utils/logger.js` 里的 `console.*` **是 logger 自身的
-    实现**，不动。`src/api/**` 里的 `console` 是 Realm 内的浏览器 console，也不动
+  - `src/engine/core/app.js` 与 `src/infra/utils/logger.js` 里的 `console.*` **是 logger 自身的
+    实现**，不动。`src/surface/api/**` 里的 `console` 是 Realm 内的浏览器 console，也不动
 - [x] **`eventListenerRegistry.js` → `event-listener-registry.js`**。全 src 唯一一个
   非 kebab 文件名，只有 1 处引用
 - [x] **`.tmp-probe/` 进 `.gitignore`**。诊断时把真实 Edge 与 NV8 的输出落盘逐字比对
@@ -1571,19 +1571,69 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 ### 核对后判定为「不是问题」
 
-- **`src/core/sandbox.js` 用 `new URL('../install/...')` 引用上层**——清单判为
+- **`src/engine/core/sandbox.js` 用 `new URL('../install/...')` 引用上层**——清单判为
   「Core → 表面穿透」，实际是这套架构的**必要机制**：那些模块操作 Realm 的
   `globalThis`，必须由 Realm 自己的 moduleLoader 加载。改成静态 `import` 会把表面装到
   宿主进程。已在代码里写明理由
 - **`src/` 里没有死文件**。对 4158 个文件做可达性分析（含 `new URL` + moduleLoader
   这条动态边），从测试/脚本/入口出发**全部可达**，0 个孤儿
 
-### 明确不做（需要单独立项 + 你点头）
+### 容器化重构（已落地）
 
-- **容器目录**（`engine/` `surface/` `backend/` `infra/` `config/` 归口 26 个顶层
-  目录）。要改几千处 import 路径，收益是主观可读性，且会让所有历史 git blame /
-  文档路径引用失效。真要做应当一次一个容器、每批立刻跑四档矩阵
-- **给 `src/api/<域>`（86 个）与 `src/install/`（316 个）补 barrel**。api/install 是
+- [x] **26 个顶层目录 → 8 项容器**。`api/`(3680 文件) 与 `network/`(1 文件) 原来并列
+  在顶层，分层意图只存在于阅读者脑子里
+  - `engine/` = core / realm / bootstrap / webidl / plugin-sdk / compat
+  - `surface/` = api / install
+  - `config/` = profiles / presets
+  - `backend/` = controller / child / thread / **protocol**
+  - `collection/` = collector / **request-protocol** / evidence
+  - `infra/` = baseline / fingerprint / navigation / network / scheduler / trace / utils
+  - `plugins/` `public/` `index.js` 原位不动
+- [x] **`protocol` 与 `request-protocol` 的命名混淆顺带解决了**：一个进 `backend/`
+  （宿主↔子进程帧协议），一个进 `collection/`（请求计划与适配器）。它们从来不是
+  一回事，以前并列在顶层只能靠记。对外导出仍是 `nv8/protocol` → request-protocol
+- [x] **`plugin-sdk` 从 `core/` 提到 `engine/`**：它是横向能力，不属于 Sandbox 内核。
+  README 原来就把它画在 `src/plugins/plugin-sdk/`，那个位置从来不存在
+- [x] **执行方式**：全程程序化，没有手改 import
+  - 24 次 `git mv`（保留文件历史）
+  - 迁移器对 **2466 个文件、5244 处 specifier** 重算相对路径：在**旧文件树快照**里
+    解析每个 spec → 映射到新位置 → 重算相对路径。重跑 dry-run 为 0 处待改，幂等
+  - 46 处不可解析的按原样保留，逐条核对过：`fixtures/` 路径（不移动）、
+    测试内动态生成的 fixture 模块（`./a.js` 之类磁盘上不存在）、
+    以及 `new URL("./", script)` 这种运行时 URL 计算
+- [x] **7 处语义路径手改**（它们不指向具体文件，迁移器解析不到）
+  - `engine/realm/module-loader.js` 的 `SOURCE_ROOT`：模块加载器只放行这个前缀下的
+    `file:` URL。`"../"` 在新位置是 `src/engine/`，会把整个 `src/surface/` 挡在外面
+  - `engine/bootstrap/sanitize-stack.js`、`backend/controller/child-process.js` 的
+    仓库根（`"../../"` → `"../../../"`）
+  - `engine/core/capability-diagnostics.js` 读插件源码的候选路径
+  - `engine/bootstrap/install-error-stack-guard.js` 的 `internalSourceRoot`
+    ——**这处踩了一次**：原实现是 `import.meta.url.indexOf("/bootstrap/")` 字符串
+    截取，我改成 `new URL("../../", import.meta.url)`，引导阶段直接
+    `URL is not defined`。那个模块在 Realm 内求值，此刻 `hideNodeGlobals()` 已经删掉
+    Node 的 `URL`、`installURL()` 还没跑。看似脆弱的字符串写法是**有意避开 URL
+    构造器**的。现在按 `/src/` 定位，既不用 URL 也不依赖目录层数
+  - `tests/evidence-contract-test.js`、`tests/protocol-artifact-test.js` 的目录形 URL
+- [x] **配置与元数据同步**：`package.json` 的 4 个子路径导出、`.gitignore` 的
+  module-bundle 路径、`build-module-bundle.mjs` 的入口与输出、`audit-module-state.mjs`
+  的 5 个审计前缀与 4 条豁免键、`state-scope-test.js` 的 6 个被审计文件、
+  `docs/rust-migration-map.json` 的 1465 条 `implementationTarget`、CI 注释
+- [x] **文档同步**：14 份 md、120 处路径引用。规则是「映射后文件存在才改」——
+  这自动区分了「现存文件的新路径」与「已删除对象的历史记录」
+  （`src/core/test/*` 这类保留原样）。README 的目录树重画成带职责说明的容器视图
+- [x] **结构守卫**（`tests/source-layout-test.js`，5 项）：顶层只允许声明过的 8 项、
+  每项必须有一句职责说明、各容器只允许声明过的子目录，另外两条分层方向断言
+  ——`engine/`（bootstrap 除外）不静态 import `surface/`，`surface/` 不 import
+  `backend/` 与 `collection/`。自证过：新开一个顶层目录、或在 `engine/core/` 里
+  静态 import `surface/install/`，立刻红
+  - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
+    Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
+- [x] **验证**：861 项四档全绿；三份 baseline（bootstrap 顺序 340 步 / surface /
+  observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
+  `check:surface-order` 一致；`build:bundle` 4010 个模块正常
+
+### 明确不做（需要单独立项 + 你点头）
+- **给 `src/surface/api/<域>`（86 个）与 `src/surface/install/`（316 个）补 barrel**。api/install 是
   生成体，barrel 与「是否生成」要一起决策，否则又多一类「声称生成却无生成器」
 - **按域把测试分进 `tests/{core,api,collector,...}/`**。自动发现已经解决了「新增
   测试要注册」的问题，分目录只影响人找文件的路径
@@ -1591,9 +1641,9 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   1469、`edge-runtime-options.js` 1419、`behavior-probes.js` 1290）。拆分边界要按
   职责切，不是按行数切；没有明确的职责边界之前拆只是把一个大文件变成一堆互相
   import 的小文件
-- **`protocol` 与 `request-protocol` 改名**。两者职责不同（帧协议 vs 请求计划），
-  但名字太像。改名要动 `exports`（`./protocol` 指向 `request-protocol`），属于对外
-  接口变更
+- ~~**`protocol` 与 `request-protocol` 改名**~~ —— 容器化时**顺带解决了**：一个进
+  `backend/`、一个进 `collection/`，容器名已经把它们分开，不必改名，对外导出
+  （`nv8/protocol` → request-protocol）也不用动
 
 ---
 
@@ -1673,6 +1723,6 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
-- **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（856 项 / 81 个文件，Node 18/20/22/24 四档全绿）
+- **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
+- **测试**: `npm test`（861 项 / 82 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

@@ -1,17 +1,17 @@
-import { installPerformance } from "../../install/install-performance.js";
-import { installPerformanceEntry } from "../../install/install-performance-entry.js";
-import { installPerformanceLongtail } from "../../install/install-performance-longtail.js";
+import { installPerformance } from "../../surface/install/install-performance.js";
+import { installPerformanceEntry } from "../../surface/install/install-performance-entry.js";
+import { installPerformanceLongtail } from "../../surface/install/install-performance-longtail.js";
 
 const PERFORMANCE_INSTALLER_URL = new URL(
-  "../../install/install-performance.js",
+  "../../surface/install/install-performance.js",
   import.meta.url,
 );
 const PERFORMANCE_ENTRY_INSTALLER_URL = new URL(
-  "../../install/install-performance-entry.js",
+  "../../surface/install/install-performance-entry.js",
   import.meta.url,
 );
 const PERFORMANCE_LONGTAIL_INSTALLER_URL = new URL(
-  "../../install/install-performance-longtail.js",
+  "../../surface/install/install-performance-longtail.js",
   import.meta.url,
 );
 

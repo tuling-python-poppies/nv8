@@ -1,7 +1,7 @@
-import { installXMLHttpRequest } from "../../install/install-xml-http-request.js";
+import { installXMLHttpRequest } from "../../surface/install/install-xml-http-request.js";
 
 const XHR_INSTALLER_URL = new URL(
-  "../../install/install-xml-http-request.js",
+  "../../surface/install/install-xml-http-request.js",
   import.meta.url,
 );
 

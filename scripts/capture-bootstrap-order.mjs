@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 import {
   captureBootstrapOrderSnapshot,
   diffBootstrapSequence,
-} from '../src/baseline/bootstrap-order.js';
+} from '../src/infra/baseline/bootstrap-order.js';
 
 // fileURLToPath 而不是 `.pathname`：后者在 Windows 上是 `/C:/...`，
 // `path.resolve` 会拼成 `C:\C:\...`。

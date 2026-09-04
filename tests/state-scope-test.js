@@ -15,7 +15,7 @@ import {
   createRealmSlot,
   createSandboxSlot,
   createStateSlot,
-} from '../src/core/state-scope.js';
+} from '../src/engine/core/state-scope.js';
 
 function host() { return {}; }
 
@@ -103,12 +103,12 @@ test('state slot validates scope and initializer configuration', () => {
 
 test('migrated modules no longer declare the known singleton variables', async () => {
   const files = [
-    '../src/api/storage/storage-state.js',
-    '../src/api/window/window-messaging.js',
-    '../src/api/dom/cookie-state.js',
-    '../src/api/dom/html-element-constructor.js',
-    '../src/api/device/device-runtime.js',
-    '../src/api/indexed-db/indexed-db-runtime.js',
+    '../src/surface/api/storage/storage-state.js',
+    '../src/surface/api/window/window-messaging.js',
+    '../src/surface/api/dom/cookie-state.js',
+    '../src/surface/api/dom/html-element-constructor.js',
+    '../src/surface/api/device/device-runtime.js',
+    '../src/surface/api/indexed-db/indexed-db-runtime.js',
   ];
   const forbidden = [
     /^let localStorage\s*=/m,
@@ -142,7 +142,7 @@ test('migrated modules no longer declare the known singleton variables', async (
 
 test('state scope module has no Node or browser implementation dependencies', async () => {
   const source = await readFile(
-    new URL('../src/core/state-scope.js', import.meta.url),
+    new URL('../src/engine/core/state-scope.js', import.meta.url),
     'utf8'
   );
   assert.doesNotMatch(source, /^import\s/m);
@@ -230,8 +230,8 @@ test('audited files list stays sorted by severity for reviewability', () => {
  */
 test('timing profile and cursors are isolated per realm', async () => {
   const vm = await import('node:vm');
-  const { RealmModuleLoader } = await import('../src/realm/module-loader.js');
-  const url = new URL('../src/scheduler/monotonic-clock.js', import.meta.url);
+  const { RealmModuleLoader } = await import('../src/engine/realm/module-loader.js');
+  const url = new URL('../src/infra/scheduler/monotonic-clock.js', import.meta.url);
 
   const first = new RealmModuleLoader(vm.createContext({}));
   const second = new RealmModuleLoader(vm.createContext({}));
@@ -249,8 +249,8 @@ test('timing profile and cursors are isolated per realm', async () => {
 
 test('jitter sequence is reproducible for a fixed seed', async () => {
   const vm = await import('node:vm');
-  const { RealmModuleLoader } = await import('../src/realm/module-loader.js');
-  const url = new URL('../src/scheduler/monotonic-clock.js', import.meta.url);
+  const { RealmModuleLoader } = await import('../src/engine/realm/module-loader.js');
+  const url = new URL('../src/infra/scheduler/monotonic-clock.js', import.meta.url);
   const clock = (await new RealmModuleLoader(vm.createContext({})).importUrlAsync(url)).namespace;
 
   // 用极大的量子步长把真实时间漂移量化掉，使 jitter 成为序列的唯一变量。
@@ -281,8 +281,8 @@ test('jitter sequence is reproducible for a fixed seed', async () => {
 
 test('performance.now stays monotonic within a realm', async () => {
   const vm = await import('node:vm');
-  const { RealmModuleLoader } = await import('../src/realm/module-loader.js');
-  const url = new URL('../src/scheduler/monotonic-clock.js', import.meta.url);
+  const { RealmModuleLoader } = await import('../src/engine/realm/module-loader.js');
+  const url = new URL('../src/infra/scheduler/monotonic-clock.js', import.meta.url);
   const clock = (await new RealmModuleLoader(vm.createContext({})).importUrlAsync(url)).namespace;
 
   clock.configureTimingProfile({ timeOriginMs: Date.now(), performanceJitterMs: 5 });

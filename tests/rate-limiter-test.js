@@ -15,8 +15,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { RateLimiter, createUnlimitedRateLimiter } from '../src/collector/rate-limiter.js';
-import { CollectorErrorCode } from '../src/collector/errors.js';
+import { RateLimiter, createUnlimitedRateLimiter } from '../src/collection/collector/rate-limiter.js';
+import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 const URL_A = 'https://a.test/path';
 const URL_B = 'https://b.test/path';

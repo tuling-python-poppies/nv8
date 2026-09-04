@@ -1,7 +1,7 @@
-import { installFetch } from "../../install/install-fetch.js";
+import { installFetch } from "../../surface/install/install-fetch.js";
 
 const FETCH_INSTALLER_URL = new URL(
-  "../../install/install-fetch.js",
+  "../../surface/install/install-fetch.js",
   import.meta.url,
 );
 

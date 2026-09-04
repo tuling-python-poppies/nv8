@@ -1,0 +1,2 @@
+import { traceGetter } from "../../../infra/trace/trace-accessor.js";import { registerNativeGetter } from "../../../engine/webidl/native-function.js";import { requireElement } from "./element-state.js";
+export const currentCSSZoom=Object.getOwnPropertyDescriptor({get currentCSSZoom(){requireElement(this);const result=1;traceGetter("window.Element.prototype.currentCSSZoom","Element",result);return result;}},"currentCSSZoom").get;registerNativeGetter(currentCSSZoom,"currentCSSZoom");

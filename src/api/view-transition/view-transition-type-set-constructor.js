@@ -1,2 +1,0 @@
-import { defineGlobalConstructor } from "../../webidl/descriptor.js";import { registerNativeFunction } from "../../webidl/native-function.js";
-export function ViewTransitionTypeSet(){throw new TypeError("Illegal constructor");}registerNativeFunction(ViewTransitionTypeSet,"ViewTransitionTypeSet");export function installViewTransitionTypeSetConstructor(){delete ViewTransitionTypeSet.prototype.constructor;defineGlobalConstructor("ViewTransitionTypeSet",ViewTransitionTypeSet);}

@@ -1,0 +1,2 @@
+import { traceCall } from "../../../infra/trace/trace-function.js";import { registerNativeFunction } from "../../../engine/webidl/native-function.js";import { requireCSSStyleValue } from "./css-style-value-state.js";
+export const toString={toString(){const result=requireCSSStyleValue(this);traceCall("window.CSSStyleValue.prototype.toString","CSSStyleValue",[],result);return result;}}.toString;registerNativeFunction(toString,"toString");

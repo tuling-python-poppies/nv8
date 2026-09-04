@@ -1,30 +1,30 @@
-import { installHTMLElement } from "../../install/install-html-element.js";
-import { installHTMLUnknownElement } from "../../install/install-html-unknown-element.js";
-import { installHTMLDivElement } from "../../install/install-html-div-element.js";
-import { installHTMLSpanElement } from "../../install/install-html-span-element.js";
-import { installHTMLAnchorElement } from "../../install/install-html-anchor-element.js";
-import { installHTMLImageElement } from "../../install/install-html-image-element.js";
-import { installHTMLScriptElement } from "../../install/install-html-script-element.js";
-import { installHTMLLinkElement } from "../../install/install-html-link-element.js";
-import { installHTMLStyleElement } from "../../install/install-html-style-element.js";
-import { installHTMLMetaElement } from "../../install/install-html-meta-element.js";
-import { installHTMLHeadElement } from "../../install/install-html-head-element.js";
-import { installHTMLBodyElement } from "../../install/install-html-body-element.js";
-import { installHTMLFormElement } from "../../install/install-html-form-element.js";
-import { installHTMLInputElement } from "../../install/install-html-input-element.js";
-import { installHTMLButtonElement } from "../../install/install-html-button-element.js";
-import { installHTMLTextAreaElement } from "../../install/install-html-text-area-element.js";
-import { installHTMLSelectElement } from "../../install/install-html-select-element.js";
-import { installHTMLOptionElement } from "../../install/install-html-option-element.js";
-import { installHTMLIFrameElement } from "../../install/install-html-iframe-element.js";
-import { installHTMLCanvasElement } from "../../install/install-html-canvas-element.js";
+import { installHTMLElement } from "../../surface/install/install-html-element.js";
+import { installHTMLUnknownElement } from "../../surface/install/install-html-unknown-element.js";
+import { installHTMLDivElement } from "../../surface/install/install-html-div-element.js";
+import { installHTMLSpanElement } from "../../surface/install/install-html-span-element.js";
+import { installHTMLAnchorElement } from "../../surface/install/install-html-anchor-element.js";
+import { installHTMLImageElement } from "../../surface/install/install-html-image-element.js";
+import { installHTMLScriptElement } from "../../surface/install/install-html-script-element.js";
+import { installHTMLLinkElement } from "../../surface/install/install-html-link-element.js";
+import { installHTMLStyleElement } from "../../surface/install/install-html-style-element.js";
+import { installHTMLMetaElement } from "../../surface/install/install-html-meta-element.js";
+import { installHTMLHeadElement } from "../../surface/install/install-html-head-element.js";
+import { installHTMLBodyElement } from "../../surface/install/install-html-body-element.js";
+import { installHTMLFormElement } from "../../surface/install/install-html-form-element.js";
+import { installHTMLInputElement } from "../../surface/install/install-html-input-element.js";
+import { installHTMLButtonElement } from "../../surface/install/install-html-button-element.js";
+import { installHTMLTextAreaElement } from "../../surface/install/install-html-text-area-element.js";
+import { installHTMLSelectElement } from "../../surface/install/install-html-select-element.js";
+import { installHTMLOptionElement } from "../../surface/install/install-html-option-element.js";
+import { installHTMLIFrameElement } from "../../surface/install/install-html-iframe-element.js";
+import { installHTMLCanvasElement } from "../../surface/install/install-html-canvas-element.js";
 
 const HTML_ELEMENTS_INSTALLER_URL = new URL(
-  "../../install/install-html-elements.js",
+  "../../surface/install/install-html-elements.js",
   import.meta.url,
 );
 const IFRAME_REALMS_INSTALLER_URL = new URL(
-  "../../install/install-iframe-realms.js",
+  "../../surface/install/install-iframe-realms.js",
   import.meta.url,
 );
 

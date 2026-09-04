@@ -6,7 +6,7 @@ import {
   serializeUrl,
   updateUrlComponent,
   urlOrigin,
-} from '../src/navigation/url-record.js';
+} from '../src/infra/navigation/url-record.js';
 
 /**
  * URL 主机解析的校验与规范化。

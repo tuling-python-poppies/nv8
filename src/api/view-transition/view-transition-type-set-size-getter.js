@@ -1,1 +1,0 @@
-import { registerNativeGetter } from "../../webidl/native-function.js";import { requireViewTransitionTypeSet } from "./view-transition-type-set-state.js";export const size=Object.getOwnPropertyDescriptor({get size(){return requireViewTransitionTypeSet(this).size;}},"size").get;registerNativeGetter(size,"size");

@@ -42,7 +42,7 @@ import {
   STANDARD_FONT_BY_LOCALE,
   standardFontFamilyFor,
   validateLocaleFontPair,
-} from '../src/fingerprint/ua-default-fonts.js';
+} from '../src/infra/fingerprint/ua-default-fonts.js';
 
 const PAGE_HTML = '<!doctype html><html><head></head><body></body></html>';
 
@@ -64,7 +64,7 @@ const PROBE = `JSON.stringify((() => {
 
 async function probeWithLocale(locale) {
   const { createSandbox } = await import('../src/public/create-sandbox.js');
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
   const fingerprint = locale === null ? null : {
     ...edge151Fingerprint,
     browserMajorVersion: 151,

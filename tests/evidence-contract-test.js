@@ -20,11 +20,11 @@ import {
   isEvidenceSource,
   normalizeTrustedScriptPolicy,
   resolveTrustedScriptIds,
-} from '../src/core/evidence-contract.js';
+} from '../src/engine/core/evidence-contract.js';
 
-import { createInMemoryEvidenceSource } from '../src/evidence/evidence-source.js';
+import { createInMemoryEvidenceSource } from '../src/collection/evidence/evidence-source.js';
 
-const CORE_DIR = new URL('../src/core/', import.meta.url);
+const CORE_DIR = new URL('../src/engine/core/', import.meta.url);
 
 function source(overrides = {}) {
   return createInMemoryEvidenceSource({
@@ -254,9 +254,9 @@ test('Core source never imports a concrete Evidence implementation', async () =>
 // -------------------------------------------- Core 可被内存 source 驱动
 
 test('Core executes evidence scripts from an in-memory source with no bundle on disk', async () => {
-  const { createSandbox } = await import('../src/core/sandbox.js');
-  const { createPluginRegistry } = await import('../src/core/plugin-registry.js');
-  const { fullPreset } = await import('../src/presets/index.js');
+  const { createSandbox } = await import('../src/engine/core/sandbox.js');
+  const { createPluginRegistry } = await import('../src/engine/core/plugin-registry.js');
+  const { fullPreset } = await import('../src/config/presets/index.js');
 
   const silent = { info() {}, warn() {}, error() {}, debug() {} };
 
@@ -288,9 +288,9 @@ test('Core executes evidence scripts from an in-memory source with no bundle on 
 });
 
 test('deny-all prevents evidence scripts from running at all', async () => {
-  const { createSandbox } = await import('../src/core/sandbox.js');
-  const { createPluginRegistry } = await import('../src/core/plugin-registry.js');
-  const { fullPreset } = await import('../src/presets/index.js');
+  const { createSandbox } = await import('../src/engine/core/sandbox.js');
+  const { createPluginRegistry } = await import('../src/engine/core/plugin-registry.js');
+  const { fullPreset } = await import('../src/config/presets/index.js');
 
   const silent = { info() {}, warn() {}, error() {}, debug() {} };
 
@@ -318,9 +318,9 @@ test('deny-all prevents evidence scripts from running at all', async () => {
 });
 
 test('Core rejects an object that does not satisfy the contract', async () => {
-  const { createSandbox } = await import('../src/core/sandbox.js');
-  const { createPluginRegistry } = await import('../src/core/plugin-registry.js');
-  const { fullPreset } = await import('../src/presets/index.js');
+  const { createSandbox } = await import('../src/engine/core/sandbox.js');
+  const { createPluginRegistry } = await import('../src/engine/core/plugin-registry.js');
+  const { fullPreset } = await import('../src/config/presets/index.js');
 
   const registry = createPluginRegistry();
   for (const plugin of fullPreset) registry.register(plugin);

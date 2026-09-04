@@ -1,12 +1,12 @@
-import { installOfflineSocket } from "../../install/install-offline-socket.js";
-import { installGeneralEvents } from "../../install/install-general-events.js";
+import { installOfflineSocket } from "../../surface/install/install-offline-socket.js";
+import { installGeneralEvents } from "../../surface/install/install-general-events.js";
 
 const GENERAL_EVENTS_INSTALLER_URL = new URL(
-  "../../install/install-general-events.js",
+  "../../surface/install/install-general-events.js",
   import.meta.url,
 );
 const OFFLINE_SOCKET_INSTALLER_URL = new URL(
-  "../../install/install-offline-socket.js",
+  "../../surface/install/install-offline-socket.js",
   import.meta.url,
 );
 

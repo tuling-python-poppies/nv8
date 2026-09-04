@@ -1,7 +1,7 @@
-import { installStreams } from "../../install/install-streams.js";
+import { installStreams } from "../../surface/install/install-streams.js";
 
 const STREAMS_INSTALLER_URL = new URL(
-  "../../install/install-streams.js",
+  "../../surface/install/install-streams.js",
   import.meta.url,
 );
 

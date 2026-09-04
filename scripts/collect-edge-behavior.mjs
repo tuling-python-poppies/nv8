@@ -19,7 +19,7 @@ import { execFile } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 
-import { BEHAVIOR_PROBES, buildProbeExpression } from '../src/baseline/behavior-probes.js';
+import { BEHAVIOR_PROBES, buildProbeExpression } from '../src/infra/baseline/behavior-probes.js';
 
 const EDGE_CANDIDATES = [
   // 原生 Windows 路径放在最前：脚本原来只列了 WSL(/mnt/c) 与 Linux 路径，

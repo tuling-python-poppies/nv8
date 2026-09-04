@@ -5,20 +5,20 @@
  */
 
 import { Buffer } from 'node:buffer';
-import { createSandbox } from './core/sandbox.js';
-import { createPluginRegistry } from './core/plugin-registry.js';
-import { createStateRegistry } from './core/state-registry.js';
-import { createLogger } from './utils/logger.js';
-import { defaultPreset } from './presets/index.js';
-import { loadEvidenceBundle } from './evidence/loader.js';
-import { createEvidenceSource } from './evidence/evidence-source.js';
-import { normalizeTrustedScriptPolicy } from './core/evidence-contract.js';
-import { detectHostCapabilities } from './core/host-capabilities.js';
+import { createSandbox } from './engine/core/sandbox.js';
+import { createPluginRegistry } from './engine/core/plugin-registry.js';
+import { createStateRegistry } from './engine/core/state-registry.js';
+import { createLogger } from './infra/utils/logger.js';
+import { defaultPreset } from './config/presets/index.js';
+import { loadEvidenceBundle } from './collection/evidence/loader.js';
+import { createEvidenceSource } from './collection/evidence/evidence-source.js';
+import { normalizeTrustedScriptPolicy } from './engine/core/evidence-contract.js';
+import { detectHostCapabilities } from './engine/core/host-capabilities.js';
 import {
   assertPluginLockPlan,
   createPluginLockPlan,
-} from './core/plugin-lock-plan.js';
-import { createProfile } from './profiles/index.js';
+} from './engine/core/plugin-lock-plan.js';
+import { createProfile } from './config/profiles/index.js';
 import * as allPlugins from './plugins/index.js';
 
 /**
@@ -326,13 +326,13 @@ export {
   networkPreset,
   fullPreset,
   defaultPreset,
-} from './presets/index.js';
+} from './config/presets/index.js';
 export {
   createProfile,
   generateProfileLockPlan,
   validateLockPlan,
   profiles,
-} from './profiles/index.js';
+} from './config/profiles/index.js';
 
 /**
  * 导出所有插件（供高级用户自定义）
@@ -342,12 +342,12 @@ export * from './plugins/index.js';
 /**
  * Protocol 层：把运行时工件转成请求变换。不拥有网络出口。
  */
-export * as protocol from './request-protocol/index.js';
+export * as protocol from './collection/request-protocol/index.js';
 
 /**
  * Collector 层：唯一的真实网络出口，受 allowlist 和凭据策略约束。
  */
-export * as collector from './collector/index.js';
+export * as collector from './collection/collector/index.js';
 
 /**
  * TypeScript 类型定义

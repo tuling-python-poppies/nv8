@@ -41,7 +41,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
-import { BEHAVIOR_PROBES, buildProbeExpression } from '../src/baseline/behavior-probes.js';
+import { BEHAVIOR_PROBES, buildProbeExpression } from '../src/infra/baseline/behavior-probes.js';
 
 const FIXTURE_URL = new URL('../fixtures/fingerprint/edge-behavior.json', import.meta.url);
 const hasFixture = existsSync(FIXTURE_URL);
@@ -57,7 +57,7 @@ let probePromise = null;
 function runProbes() {
   probePromise ??= (async () => {
     const { createSandbox } = await import('../src/public/create-sandbox.js');
-    const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+    const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
     const sandbox = await createSandbox('https://behavior.test/page', {
       page: { html: '<!doctype html><html><head></head><body></body></html>' },
       // 采集基准是真实 Edge 151+，所以对比也必须用 151 profile——与
@@ -298,7 +298,7 @@ test('probe results are stable across repeated runs', async () => {
   const first = await runProbes();
 
   const { createSandbox } = await import('../src/public/create-sandbox.js');
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
   const sandbox = await createSandbox('https://behavior.test/page', {
     page: { html: '<!doctype html><html><head></head><body></body></html>' },
     // 必须与 runProbes() 用**同一个** profile，否则这条测的是「两个不同 profile

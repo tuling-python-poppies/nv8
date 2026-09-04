@@ -49,7 +49,7 @@ const PLANNING_DOCS = new Set(['docs/架构改造计划.md']);
  * `REMAINING_TASKS.md` 里记着「清理掉的孤儿测试」，那些路径本来就该不存在。
  */
 const PATH_EXEMPTIONS = new Set([
-  'src/realm/module-bundle.json', // 本机产物，见 .gitignore
+  'src/engine/realm/module-bundle.json', // 本机产物，见 .gitignore
   'src/plugins/webidl-foundation/test.js', // 已清理的孤儿测试（历史记录）
   'tests/profile-system-test.js', // 同上
 ]);
@@ -127,7 +127,7 @@ test('path exemptions stay justified', () => {
   // 豁免只对「不存在」有意义。一个豁免项如果其实存在，说明它已经过时——
   // 而过时的豁免会悄悄放过真问题。
   for (const relative of PATH_EXEMPTIONS) {
-    if (relative === 'src/realm/module-bundle.json') continue; // 本机产物，可能存在
+    if (relative === 'src/engine/realm/module-bundle.json') continue; // 本机产物，可能存在
     assert.equal(
       existsSync(new URL(relative, REPO_ROOT)),
       false,

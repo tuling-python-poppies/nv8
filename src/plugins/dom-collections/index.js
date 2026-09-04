@@ -1,10 +1,10 @@
-import { installNodeList } from "../../install/install-node-list.js";
-import { installHTMLCollection } from "../../install/install-html-collection.js";
-import { installNamedNodeMap } from "../../install/install-named-node-map.js";
-import { installDOMTokenList } from "../../install/install-dom-token-list.js";
+import { installNodeList } from "../../surface/install/install-node-list.js";
+import { installHTMLCollection } from "../../surface/install/install-html-collection.js";
+import { installNamedNodeMap } from "../../surface/install/install-named-node-map.js";
+import { installDOMTokenList } from "../../surface/install/install-dom-token-list.js";
 
 const DOM_COLLECTIONS_INSTALLER_URL = new URL(
-  "../../install/install-dom-collections.js",
+  "../../surface/install/install-dom-collections.js",
   import.meta.url,
 );
 

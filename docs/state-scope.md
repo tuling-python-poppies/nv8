@@ -3,7 +3,7 @@
 ## 一个需要先纠正的判断
 
 我此前把 `src/migration-targets/` 下的 90 个目录当成「90 个待迁移模块」，
-并按 `src/api/` 全目录扫出的 159 处模块级状态来估算工作量。这个口径是错的。
+并按 `src/surface/api/` 全目录扫出的 159 处模块级状态来估算工作量。这个口径是错的。
 
 两点更正：
 
@@ -57,7 +57,7 @@ npm run audit:state
 
 ## 迁移工具
 
-`src/core/state-scope.js`，零 import。
+`src/engine/core/state-scope.js`，零 import。
 
 ```js
 import { createRealmSlot } from '../../core/state-scope.js';
@@ -128,7 +128,7 @@ function state() {
 
 但用「共享模块变量」来实现这个一致性是错的手段——它会让任意 Realm 的
 `configureTimingProfile()` 逆向覆盖其他 Realm。一致性应该由调用方保证：
-`src/core/sandbox.js` 的所有 Realm 创建点都从同一份 `profile.timing` 取配置。
+`src/engine/core/sandbox.js` 的所有 Realm 创建点都从同一份 `profile.timing` 取配置。
 
 **运行时游标**（`timeOrigin`、`lastTimestamp`、`lastWallClock`、`jitterState`）
 必须 per-Realm：

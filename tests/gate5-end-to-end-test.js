@@ -26,13 +26,13 @@ import {
   getCookie,
   getHeader,
   protocolResultToJSON,
-} from '../src/request-protocol/index.js';
+} from '../src/collection/request-protocol/index.js';
 
 import {
   CollectorErrorCode,
   createCollector,
   createStubTransport,
-} from '../src/collector/index.js';
+} from '../src/collection/collector/index.js';
 
 import { createNv8 } from '../src/index.js';
 

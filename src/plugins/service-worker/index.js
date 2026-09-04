@@ -1,5 +1,5 @@
 const SERVICE_WORKER_INSTALLER_URL = new URL(
-  '../../install/install-service-worker-capabilities.js',
+  '../../surface/install/install-service-worker-capabilities.js',
   import.meta.url,
 );
 

@@ -1,15 +1,15 @@
-import { installNode } from "../../install/install-node.js";
-import { installElement } from "../../install/install-element.js";
-import { installDocument } from "../../install/install-document.js";
-import { installDocumentFragment } from "../../install/install-document-fragment.js";
-import { installAttr } from "../../install/install-attr.js";
-import { installCharacterData } from "../../install/install-character-data.js";
-import { installText } from "../../install/install-text.js";
-import { installComment } from "../../install/install-comment.js";
-import { installShadowRoot } from "../../install/install-shadow-root.js";
+import { installNode } from "../../surface/install/install-node.js";
+import { installElement } from "../../surface/install/install-element.js";
+import { installDocument } from "../../surface/install/install-document.js";
+import { installDocumentFragment } from "../../surface/install/install-document-fragment.js";
+import { installAttr } from "../../surface/install/install-attr.js";
+import { installCharacterData } from "../../surface/install/install-character-data.js";
+import { installText } from "../../surface/install/install-text.js";
+import { installComment } from "../../surface/install/install-comment.js";
+import { installShadowRoot } from "../../surface/install/install-shadow-root.js";
 
 const DOM_CORE_INSTALLER_URL = new URL(
-  "../../install/install-dom-core.js",
+  "../../surface/install/install-dom-core.js",
   import.meta.url,
 );
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Node 版本矩阵。tier 与 src/core/host-capabilities.js 的
+  # Node 版本矩阵。tier 与 src/engine/core/host-capabilities.js 的
   # NODE_SUPPORT_MATRIX 保持一致：
   #   supported   -> 失败即视为 bug，阻断合并
   #   best-effort -> 允许失败，失败按兼容性改进处理

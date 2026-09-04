@@ -21,12 +21,12 @@ import {
   CircuitBreaker,
   CircuitState,
   createDisabledCircuitBreaker,
-} from '../src/collector/circuit-breaker.js';
+} from '../src/collection/collector/circuit-breaker.js';
 import {
   CollectorError,
   CollectorErrorCode,
   CollectorPolicyError,
-} from '../src/collector/errors.js';
+} from '../src/collection/collector/errors.js';
 
 const URL_A = 'https://a.test/path';
 const URL_B = 'https://b.test/path';

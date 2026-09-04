@@ -26,13 +26,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SOURCE_ROOT = new URL('../src/', import.meta.url);
-const OUTPUT = fileURLToPath(new URL('../src/realm/module-bundle.json', import.meta.url));
+const OUTPUT = fileURLToPath(
+  new URL('../src/engine/realm/module-bundle.json', import.meta.url),
+);
 
 /** 引导入口。与 `module-loader.js` 的 `INTERNAL_MODULES` 保持一致。 */
 const ENTRIES = [
-  new URL('bootstrap/bootstrap-root.js', SOURCE_ROOT),
-  new URL('bootstrap/bootstrap-worker.js', SOURCE_ROOT),
-  new URL('bootstrap/bootstrap-worklet.js', SOURCE_ROOT),
+  new URL('engine/bootstrap/bootstrap-root.js', SOURCE_ROOT),
+  new URL('engine/bootstrap/bootstrap-worker.js', SOURCE_ROOT),
+  new URL('engine/bootstrap/bootstrap-worklet.js', SOURCE_ROOT),
 ];
 
 /**

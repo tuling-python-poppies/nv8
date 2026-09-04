@@ -21,9 +21,9 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import process from 'node:process';
 
-import { expectedMissingForNode } from '../src/baseline/known-differences.js';
-import { WINDOW_GLOBAL_ORDER } from '../src/install/window-surface-order.js';
-import { edge150Fingerprint } from '../src/fingerprint/edge-150.js';
+import { expectedMissingForNode } from '../src/infra/baseline/known-differences.js';
+import { WINDOW_GLOBAL_ORDER } from '../src/surface/install/window-surface-order.js';
+import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 
 const REAL_GLOBALS_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.meta.url);
 const SURFACE_URL = new URL('../fixtures/baseline/full-surface.json', import.meta.url);

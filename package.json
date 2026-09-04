@@ -32,10 +32,10 @@
   },
   "exports": {
     ".": "./src/index.js",
-    "./fingerprint/edge-150": "./src/fingerprint/edge-150.js",
-    "./fingerprint/edge-151": "./src/fingerprint/edge-151.js",
-    "./protocol": "./src/request-protocol/index.js",
-    "./collector": "./src/collector/index.js"
+    "./fingerprint/edge-150": "./src/infra/fingerprint/edge-150.js",
+    "./fingerprint/edge-151": "./src/infra/fingerprint/edge-151.js",
+    "./protocol": "./src/collection/request-protocol/index.js",
+    "./collector": "./src/collection/collector/index.js"
   },
   "license": "UNLICENSED"
 }

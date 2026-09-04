@@ -25,16 +25,16 @@ import {
   hostSupports,
   preflightHostCheck,
   resolveNodeSupport,
-} from '../src/core/host-capabilities.js';
+} from '../src/engine/core/host-capabilities.js';
 
 import {
   LINK_STRATEGY,
   detectLinkStrategy,
   readDependencySpecifiers,
   resetLinkStrategyCache,
-} from '../src/realm/module-link-strategy.js';
+} from '../src/engine/realm/module-link-strategy.js';
 
-import { RealmModuleLoader } from '../src/realm/module-loader.js';
+import { RealmModuleLoader } from '../src/engine/realm/module-loader.js';
 
 import {
   HAS_NATIVE_ARRAY_BUFFER_TRANSFER,
@@ -45,9 +45,9 @@ import {
   isArrayBufferDetached,
   structuredCloneCompat,
   transferArrayBuffer,
-} from '../src/compat/index.js';
+} from '../src/engine/compat/index.js';
 
-const SAMPLE_MODULE_URL = new URL('../src/webidl/descriptor.js', import.meta.url);
+const SAMPLE_MODULE_URL = new URL('../src/engine/webidl/descriptor.js', import.meta.url);
 
 /**
  * 在移除 Node 24 专有 vm module API 的环境下执行 fn，

@@ -1,7 +1,7 @@
-import { installHistory } from "../../install/install-history.js";
+import { installHistory } from "../../surface/install/install-history.js";
 
 const HISTORY_INSTALLER_URL = new URL(
-  "../../install/install-history.js",
+  "../../surface/install/install-history.js",
   import.meta.url,
 );
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createPluginRegistry } from '../src/core/plugin-registry.js';
+import { createPluginRegistry } from '../src/engine/core/plugin-registry.js';
 
 test('plugin resolution is deterministic regardless of registration order', () => {
   const make = id => ({

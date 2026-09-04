@@ -55,7 +55,7 @@
 
 ### 探针定义必须共享
 
-采集脚本与测试导入**同一份** `src/baseline/behavior-probes.js`。各写一份必然
+采集脚本与测试导入**同一份** `src/infra/baseline/behavior-probes.js`。各写一份必然
 漂移，漂移后比较就没有意义。
 
 ## 登记表机制
@@ -94,5 +94,5 @@
 
 - `tests/edge-surface-parity-test.js`(8) / `edge-member-parity-test.js`(9)
 - `tests/edge-behavior-parity-test.js`(24) / `webgl-parity-test.js`(8)
-- `src/baseline/behavior-probes.js` —— 探针定义，采集与测试共用
+- `src/infra/baseline/behavior-probes.js` —— 探针定义，采集与测试共用
 - `docs/edge-parity.md` —— 三层现状与采集命令

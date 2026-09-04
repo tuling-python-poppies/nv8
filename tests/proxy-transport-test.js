@@ -20,10 +20,10 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import net from 'node:net';
 
-import { createProxyTransport } from '../src/collector/proxy-transport.js';
-import { ProxyPool } from '../src/collector/proxy.js';
-import { createRequestPlan } from '../src/request-protocol/request-plan.js';
-import { CollectorErrorCode } from '../src/collector/errors.js';
+import { createProxyTransport } from '../src/collection/collector/proxy-transport.js';
+import { ProxyPool } from '../src/collection/collector/proxy.js';
+import { createRequestPlan } from '../src/collection/request-protocol/request-plan.js';
+import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 /** 起一个可控的目标服务。 */
 async function startTarget(handler) {

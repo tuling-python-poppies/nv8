@@ -102,6 +102,6 @@ bootstrap，而不必逐个插件化。
 
 ## 影响的现有产物
 
-- `src/baseline/known-differences.js`：`surface-coverage-gap` severity 改为 `tracked`
+- `src/infra/baseline/known-differences.js`：`surface-coverage-gap` severity 改为 `tracked`
 - `REMAINING_TASKS.md` 第十章「架构完成定义」的切换条件需重写
 - 新增待办：缺失能力诊断（见 ADR-0002）

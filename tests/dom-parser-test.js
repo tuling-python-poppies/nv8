@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseFragment } from '../src/api/dom/html-parser.js';
+import { parseFragment } from '../src/surface/api/dom/html-parser.js';
 
 const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
 

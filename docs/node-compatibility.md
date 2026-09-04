@@ -25,7 +25,7 @@ npm run test:matrix 18.20.8  # 指定版本
 - `supported` — CI 阻断式覆盖，失败视为 bug
 - `best-effort` — CI 允许失败，问题按兼容性改进处理
 
-矩阵定义在 `src/core/host-capabilities.js` 的 `NODE_SUPPORT_MATRIX`，
+矩阵定义在 `src/engine/core/host-capabilities.js` 的 `NODE_SUPPORT_MATRIX`，
 CI workflow 的 tier 标注与它一一对应。
 
 ## 能力探测：三态而非布尔
@@ -43,7 +43,7 @@ CI workflow 的 tier 标注与它一一对应。
 | `unavailable` | 不存在 |
 
 ```js
-import { detectHostCapabilities, hostSupports } from '../src/core/host-capabilities.js';
+import { detectHostCapabilities, hostSupports } from '../src/engine/core/host-capabilities.js';
 
 const host = detectHostCapabilities();
 host.capabilities['array-buffer.transfer'];
@@ -61,7 +61,7 @@ hostSupports(host, 'array-buffer.transfer');  // broken 也算 false
 ### 启动前置检查
 
 ```js
-import { preflightHostCheck } from '../src/core/host-capabilities.js';
+import { preflightHostCheck } from '../src/engine/core/host-capabilities.js';
 
 preflightHostCheck({ warn: (msg) => logger.warn(msg) });
 ```
@@ -126,7 +126,7 @@ await loader.importUrlAsync(url); // 所有版本可用
 
 ## 宿主 API 回退
 
-`src/compat/` 为内部实现补齐新版 API。原则：
+`src/engine/compat/` 为内部实现补齐新版 API。原则：
 
 - 优先原生实现，回退只在缺失时生效
 - 保持可观察语义一致；做不到的显式抛错，不静默降级
@@ -217,7 +217,7 @@ bootstrap 失败。
 `tests/modern-builtins-shim-test.js` 刻意不分版本，同一张表在 24 上验原生、
 在 18–22 上验 shim——分成两套期望值等于承认「shim 长什么样都行」。
 
-留空的那部分登记在 `src/baseline/known-differences.js` 的
+留空的那部分登记在 `src/infra/baseline/known-differences.js` 的
 `NODE_VERSION_DEPENDENT_MEMBERS`，由 `edge-member-parity` /
 `edge-surface-parity` 在比对时剔除。不剔除的话 Node 18/20 上会永久红若干项，
 而永久红的断言和没有断言等价。
@@ -247,7 +247,7 @@ bootstrap 失败。
   一次从未发生的属性读取）；抛错型 getter（严格能力诊断）会让 `in` 直接抛而
   不是返回 true。
 
-  标志位是 `HAS_VM_PROPERTY_QUERY_CALLBACK`（`src/compat/host-compat.js`）。
+  标志位是 `HAS_VM_PROPERTY_QUERY_CALLBACK`（`src/engine/compat/host-compat.js`）。
   **不要用 Proxy 包 globalThis 来抹平**——那会引入代理对象自身的可检测面，
   比这条差异危险得多。
 

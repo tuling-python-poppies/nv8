@@ -76,7 +76,7 @@ async function probeWithProfile(patch) {
 }
 
 async function enUsProfile() {
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
   return {
     ...edge151Fingerprint,
     browserMajorVersion: 151,

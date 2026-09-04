@@ -1,7 +1,7 @@
-import { installStorage } from "../../install/install-storage.js";
+import { installStorage } from "../../surface/install/install-storage.js";
 
 const STORAGE_INSTALLER_URL = new URL(
-  "../../install/install-storage.js",
+  "../../surface/install/install-storage.js",
   import.meta.url,
 );
 

@@ -27,7 +27,7 @@ import {
   hasCapability,
   createStateRegistry,
   createStateAccessor,
-} from '../src/core/plugin-sdk/index.js';
+} from '../src/engine/plugin-sdk/index.js';
 
 // 跨用例复用的固件。原文件里它们是顶层 const，被后面的段直接引用
 // （依赖解析那三个插件在「依赖验证」里又用了一次，状态注册表在「状态访问器」

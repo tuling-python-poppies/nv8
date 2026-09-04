@@ -4,7 +4,7 @@ Core 不依赖任何 Evidence Bundle 磁盘格式。它只依赖一个抽象接�
 
 ## 为什么
 
-原先 `src/core/sandbox.js` 直接 import 了 `TRUST_POLICIES`，并调用
+原先 `src/engine/core/sandbox.js` 直接 import 了 `TRUST_POLICIES`，并调用
 `bundle.getEntrypoints()`、`bundle.getScripts()`、`bundle.readFile()`。
 这带来三个问题：
 
@@ -48,7 +48,7 @@ Core 只 import 上面第一层。这一点由测试
 契约校验用 duck typing 而非 `instanceof`，因为实现可能来自独立包或测试替身：
 
 ```js
-import { assertEvidenceSource, isEvidenceSource } from '../src/core/evidence-contract.js';
+import { assertEvidenceSource, isEvidenceSource } from '../src/engine/core/evidence-contract.js';
 
 assertEvidenceSource(source);   // 缺方法时列出全部缺失项
 isEvidenceSource(source);       // 不抛错版本
@@ -137,10 +137,10 @@ await resolveTrustedScriptIds(source, {
 
 ## ScriptInjector 的归属
 
-`ScriptInjector` 已从 `src/evidence/` 迁到 `src/core/`。它零 import、
+`ScriptInjector` 已从 `src/collection/evidence/` 迁到 `src/engine/core/`。它零 import、
 与 Bundle 格式无关，本质是"按正确时序注入脚本"的运行时机制，属于 Core。
 
-`src/evidence/index.js` 保留转导出以兼容现有引用。
+`src/collection/evidence/index.js` 保留转导出以兼容现有引用。
 
 ## 测试
 

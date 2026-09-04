@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import {
   captureBootstrapOrderSnapshot,
   diffBootstrapSequence,
-} from '../src/baseline/bootstrap-order.js';
+} from '../src/infra/baseline/bootstrap-order.js';
 
 const expectedNames = {
   root: 'bootstrapRoot',

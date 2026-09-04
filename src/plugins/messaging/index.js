@@ -1,9 +1,9 @@
 const MESSAGING_INSTALLER_URL = new URL(
-  '../../install/install-messaging.js',
+  '../../surface/install/install-messaging.js',
   import.meta.url,
 );
 const MESSAGING_RUNTIME_URL = new URL(
-  '../../api/messaging/messaging-runtime.js',
+  '../../surface/api/messaging/messaging-runtime.js',
   import.meta.url,
 );
 

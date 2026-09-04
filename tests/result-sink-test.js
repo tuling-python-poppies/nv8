@@ -28,8 +28,8 @@ import {
   createNdjsonResultSink,
   keyByFields,
   readNdjsonKeys,
-} from '../src/collector/result-sink.js';
-import { CollectorErrorCode } from '../src/collector/errors.js';
+} from '../src/collection/collector/result-sink.js';
+import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 async function withTempDir(body) {
   const directory = await mkdtemp(path.join(tmpdir(), 'nv8-sink-'));

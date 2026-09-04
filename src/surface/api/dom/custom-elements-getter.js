@@ -1,0 +1,2 @@
+import { traceGetter } from "../../../infra/trace/trace-accessor.js";import { registerNativeGetter } from "../../../engine/webidl/native-function.js";import { defaultCustomElementRegistry } from "./custom-element-registry-state.js";
+export const customElements=Object.getOwnPropertyDescriptor({get customElements(){const result=defaultCustomElementRegistry();traceGetter("window.customElements","Window",result);return result;}},"customElements").get;registerNativeGetter(customElements,"customElements");

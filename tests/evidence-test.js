@@ -23,7 +23,7 @@ import {
   createNetworkReplay,
   MATCH_STRATEGY,
   REPLAY_RESULT,
-} from '../src/evidence/index.js';
+} from '../src/collection/evidence/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

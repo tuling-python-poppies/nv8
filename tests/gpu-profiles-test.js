@@ -19,7 +19,7 @@ import {
   DEFAULT_GPU_IDENTITY,
   gpuIdentityById,
   validateGpuIdentity,
-} from '../src/fingerprint/gpu-profiles.js';
+} from '../src/infra/fingerprint/gpu-profiles.js';
 
 // ------------------------------------------------- 内置组合自洽
 
@@ -86,7 +86,7 @@ test('gpuIdentityById rejects unknown ids with the known list', () => {
 // ------------------------------------------------- 与 profile 对齐
 
 test('the default identity matches the edge-150 rendering profile', async () => {
-  const { edge150Fingerprint } = await import('../src/fingerprint/edge-150.js');
+  const { edge150Fingerprint } = await import('../src/infra/fingerprint/edge-150.js');
   const rendering = edge150Fingerprint.rendering;
 
   assert.equal(DEFAULT_GPU_IDENTITY.webglVendor, rendering.webglVendor);
@@ -95,8 +95,8 @@ test('the default identity matches the edge-150 rendering profile', async () => 
 });
 
 test('shipped fingerprint profiles are internally consistent', async () => {
-  const { edge150Fingerprint } = await import('../src/fingerprint/edge-150.js');
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge150Fingerprint } = await import('../src/infra/fingerprint/edge-150.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
 
   for (const [name, fingerprint] of [
     ['edge-150', edge150Fingerprint],

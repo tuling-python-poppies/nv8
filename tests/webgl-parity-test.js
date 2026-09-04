@@ -147,9 +147,9 @@ test('the runtime fallback GPU matches the fingerprint profile', async () => {
   // 曾经运行时兜底是 RTX 3060 Ti 而 profile 是 RTX 5060：调用方传不传
   // profile 会拿到不同 GPU。同一个沙箱里 GPU 型号不该有两个来源。
   const runtimeSource = await readFile(
-    new URL('../src/api/webgl/webgl-runtime.js', import.meta.url), 'utf8'
+    new URL('../src/surface/api/webgl/webgl-runtime.js', import.meta.url), 'utf8'
   );
-  const { edge150Fingerprint } = await import('../src/fingerprint/edge-150.js');
+  const { edge150Fingerprint } = await import('../src/infra/fingerprint/edge-150.js');
 
   const vendor = edge150Fingerprint.rendering.webglVendor;
   const renderer = edge150Fingerprint.rendering.webglRenderer;

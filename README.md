@@ -146,10 +146,10 @@ node --experimental-vm-modules your-script.mjs
 ### 采集一个分页接口
 
 ```js
-import { Collector } from './src/collector/collector.js';
-import { createPaginationScheduler } from './src/collector/pagination.js';
-import { createNdjsonResultSink } from './src/collector/result-sink.js';
-import { createMemoryCheckpointStore } from './src/collector/checkpoint.js';
+import { Collector } from './src/collection/collector/collector.js';
+import { createPaginationScheduler } from './src/collection/collector/pagination.js';
+import { createNdjsonResultSink } from './src/collection/collector/result-sink.js';
+import { createMemoryCheckpointStore } from './src/collection/collector/checkpoint.js';
 
 const collector = new Collector({
   policy: { allowedOrigins: ['https://api.example.com'] },
@@ -359,7 +359,7 @@ descriptor 零差异，而 14 个新增行为探针里 **10 个不一致**——
 前面。这是宿主限制，不是 NV8 能修的，已做成 `vm.global-property-order` 能力探针；
 测试在这两档上用**反向断言**而不是跳过，宿主哪天修好了会红。
 
-顺序现在是一张数据表（`src/install/window-surface-order.js`，1175 行），
+顺序现在是一张数据表（`src/surface/install/window-surface-order.js`，1175 行），
 版本门控是一个字段：
 
 ```js
@@ -465,7 +465,7 @@ locale 下一律 `monospace`——标签级 override 与 locale 无关，覆盖�
 
 ## 采集层
 
-`src/collector/`。分层原则是**每一层只回答一个问题**：
+`src/collection/collector/`。分层原则是**每一层只回答一个问题**：
 
 ```
 PaginationScheduler   下一个请求是什么
@@ -564,7 +564,7 @@ FIFO 公平不是可选项：「谁抢到算谁的」会让高频调用方饿死
 - 批量写 + `close()` 必须冲干；`persist` 抛错时先清空缓冲，否则下次 flush
   会把同一批再写一遍。
 
-### 协议层（`src/request-protocol/`）
+### 协议层（`src/collection/request-protocol/`）
 
 把「一次请求」表达成可序列化、可校验、可比对的 `RequestPlan`，
 适配器返回**声明式变换列表**而不是直接改计划——这样变换可审计、可重放、可测试。
@@ -582,7 +582,7 @@ FIFO 公平不是可选项：「谁抢到算谁的」会让高频调用方饿死
 `edge-150`、`edge-151`。
 
 ```js
-import { createProfile } from './src/profiles/index.js';
+import { createProfile } from './src/config/profiles/index.js';
 
 const profile = createProfile('edge-151');
 ```
@@ -677,7 +677,7 @@ limits: { timeoutMs: 30_000 }
 
 给太低时 V8 在引导过程中 OOM 并 `abort()`——收到 SIGABRT，**没有任何结构化
 错误**，因为 abort 之后没有 JS 能再运行。所以 NV8 把 V8 上限钳制到 128MB 下限
-（`src/controller/runtime-heap-floor.js`），同时**容量守卫仍按你配置的值计算**，
+（`src/backend/controller/runtime-heap-floor.js`），同时**容量守卫仍按你配置的值计算**，
 两者走不同路径。
 
 ---
@@ -710,7 +710,7 @@ limits: { timeoutMs: 30_000 }
 
 ### 探针定义必须共享
 
-采集脚本与测试用**同一份**探针定义（`src/baseline/behavior-probes.js`）。
+采集脚本与测试用**同一份**探针定义（`src/infra/baseline/behavior-probes.js`）。
 各写一份必然漂移，而一旦漂移，比对就失去意义。
 
 ### 采集方法论上的坑
@@ -791,7 +791,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，856 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，861 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -863,7 +863,7 @@ npm run capabilities  # 宿主能力探测报告
 
 代价是发现范围变成整个仓库，所以补了一条断言：**`tests/` 之外不得有匹配 Node
 测试文件名模式的文件**。这条同时消掉了「测试住在产品树」——
-plugin-sdk 那份测试原来在 `src/core/` 下，用 `console.log` 分段、顶层断言，
+plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分段、顶层断言，
 既不在 `--test` 的计数里，第一项失败后面也全部不执行。
 
 ### 文档失步要靠断言，不靠 review
@@ -888,7 +888,7 @@ plugin-sdk 那份测试原来在 `src/core/` 下，用 `console.log` 分段、�
 
 审计与采集脚本自己也会坏，而且坏法通常是**谎报通过**：
 
-- `audit:state` 用 `path.relative()` 拼相对路径去比 `src/api/` 前缀。Windows 上
+- `audit:state` 用 `path.relative()` 拼相对路径去比 `src/surface/api/` 前缀。Windows 上
   `path.relative` 给反斜杠，前缀判断全部落空，审计于是报「0 项待迁移」——
   比崩掉危险得多。
 - 同一个脚本还 `execSync('ls src/plugins/*/index.js')`，在 Windows 上直接
@@ -912,7 +912,7 @@ plugin-sdk 那份测试原来在 `src/core/` 下，用 `console.log` 分段、�
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（856 项 / 81 个文件，自动发现） |
+| `npm test` | 全量测试（861 项 / 82 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -942,40 +942,69 @@ plugin-sdk 那份测试原来在 `src/core/` 下，用 `console.log` 分段、�
 
 ## 目录结构
 
+`src/` 顶层只有 8 项，**每一项就是一个职责**：
+
 ```
 src/
-├── public/            对外入口（EdgeSandbox、选项归一化）
 ├── index.js           createNv8 / nv8Eval 入口
-├── api/               浏览器 API 实现，按规范域分目录
-├── install/           表面安装器（把 api 装到 Realm 上）
-├── bootstrap/         Realm 引导（root / worker / worklet）
-├── realm/             Realm 创建、模块加载、动态 import
-├── webidl/            WebIDL 转换、原生函数伪装、跨 Realm 方法
-├── plugins/           插件：装配策略（选哪些表面、依赖、能力声明）
-├── profiles/          Profile 工厂、注册表、内置 Profile
-├── presets/           插件预设组合
-├── controller/        进程/线程后端与资源上限
-├── child/ thread/     子进程与工作线程入口
-├── protocol/          宿主↔子进程帧协议
-├── request-protocol/  RequestPlan、适配器、声明式变换、canonical JSON
-├── collector/         采集层（15 个模块）
-├── evidence/          Evidence Bundle 与离线回放
-├── baseline/          基线快照与行为探针
-├── fingerprint/       GPU 等指纹身份
-├── core/              Sandbox、插件注册表、状态作用域、诊断、plugin-sdk/
-└── compat/            Node 版本兼容
+├── public/            对外入口（EdgeSandbox、选项归一化）
+│
+├── engine/            运行时管道：不含任何浏览器 API 实现
+│   ├── core/          Sandbox、插件注册表、状态作用域、诊断
+│   ├── realm/         Realm 创建、模块加载、动态 import
+│   ├── bootstrap/     Realm 引导（root / worker / worklet）
+│   ├── webidl/        WebIDL 转换、原生函数伪装、跨 Realm 方法
+│   ├── plugin-sdk/    插件定义与能力匹配
+│   └── compat/        Node 版本兼容
+│
+├── surface/           浏览器表面：只做「有什么 API、装在哪」
+│   ├── api/           API 实现，按规范域分目录（86 个域）
+│   └── install/       安装器（把 api 装到 Realm 的 globalThis 上）
+│
+├── plugins/           装配策略：选哪些表面、依赖谁、声明什么能力
+│
+├── config/            身份与组合
+│   ├── profiles/      Profile 工厂、注册表、内置 Profile
+│   └── presets/       插件预设组合
+│
+├── backend/           进程/线程边界
+│   ├── controller/    后端选择与资源上限
+│   ├── child/         子进程入口与运行时池
+│   ├── thread/        工作线程入口
+│   └── protocol/      宿主↔子进程帧协议
+│
+├── collection/        采集链路：证据进、请求出
+│   ├── collector/     采集层（15 个模块）
+│   ├── request-protocol/  RequestPlan、适配器、声明式变换、canonical JSON
+│   └── evidence/      Evidence Bundle 与离线回放
+│
+└── infra/             横向基础设施
+    ├── baseline/      基线快照与行为探针
+    ├── fingerprint/   GPU 等指纹身份
+    ├── navigation/    URL 记录与导航
+    ├── network/       请求捕获
+    ├── scheduler/     任务调度
+    ├── trace/         API 调用追踪
+    └── utils/         logger
 
-tests/                 81 个测试文件
+tests/                 82 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
 ```
 
-### `api/` 与 `plugins/` 有 18 个同名域，它们不是一回事
+原来是 26 个顶层目录平铺，`api/`(3680 文件) 与 `network/`(1 文件) 并列。分层意图
+只存在于阅读者脑子里，目录本身不说话。现在容器名就是职责名。
 
-`api/<域>` 是**实现**，`install/install-<域>.js` 把实现装到 Realm 的 globalThis 上，
-`plugins/<域>` 是**装配策略**——声明这个域提供哪些能力、依赖谁、以及在 Realm 里
-调哪个安装器。两条路径共用同一份 `api/` 与 `install/`：
+**两个命名相近的 protocol 被拉开了**：`backend/protocol/` 是宿主↔子进程的帧协议，
+`collection/request-protocol/` 是请求计划与适配器。它们从来不是一回事，
+以前并列在顶层只能靠记。对外导出仍是 `nv8/protocol` → `request-protocol`。
+
+### `surface/api/` 与 `plugins/` 有 18 个同名域，它们不是一回事
+
+`surface/api/<域>` 是**实现**，`surface/install/install-<域>.js` 把实现装到 Realm 的
+globalThis 上，`plugins/<域>` 是**装配策略**——声明这个域提供哪些能力、依赖谁、
+以及在 Realm 里调哪个安装器。两条路径共用同一份 `api/` 与 `install/`：
 
 ```
 legacy 模式   bootstrap-root.js  ──→ install-* ──→ api/*
@@ -1032,7 +1061,7 @@ css-ua-defaults.js），现在都有了脚本。
 ### 三层对齐的剩余缺口
 
 - **1 个全局名缺失**：`HTMLUserMediaElement`。已在
-  `src/install/window-surface-order.js` 里登记为 `pending`，位置保留——实现后
+  `src/surface/install/window-surface-order.js` 里登记为 `pending`，位置保留——实现后
   删掉那个字段就自动落在正确的枚举索引上。
   （`InteractionContentfulPaint` / `PerformanceSoftNavigation` 已实现。）
 - **原型成员的枚举顺序有 22 处不一致**。963 个共有原型里 941 个顺序一致；

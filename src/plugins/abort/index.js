@@ -1,7 +1,7 @@
-import { installAbort } from '../../install/install-abort.js';
+import { installAbort } from '../../surface/install/install-abort.js';
 
 const ABORT_INSTALLER_URL = new URL(
-  '../../install/install-abort.js',
+  '../../surface/install/install-abort.js',
   import.meta.url,
 );
 

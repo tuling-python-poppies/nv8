@@ -46,7 +46,7 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 扩到跨 Realm 挖出 14 处，**全部同一个根因**——动态 iframe 的
 `contentWindow` 同步为 null，已登记为高优先级差异。
 
-探针定义在 `src/baseline/behavior-probes.js`，采集脚本与测试**共用同一份**——
+探针定义在 `src/infra/baseline/behavior-probes.js`，采集脚本与测试**共用同一份**——
 各写一份必然漂移，漂移后比较就没有意义。
 
 准入条件三条：**跨运行确定**、**与机器无关**、**可序列化**。因此只取引擎固定
@@ -244,7 +244,7 @@ masked 参数在任何机器上都相同，GPU 信息只通过 `WEBGL_debug_rend
 ## GPU 身份的内部一致性
 
 单一硬编码 GPU 让所有 NV8 实例声称使用同一块显卡——指纹在群体里唯一，就
-失去了混入人群的意义。`src/fingerprint/gpu-profiles.js` 提供 5 套真实桌面
+失去了混入人群的意义。`src/infra/fingerprint/gpu-profiles.js` 提供 5 套真实桌面
 GPU 组合（选取 Steam 硬件调查份额较高的型号，冷门型号反而突出）。
 
 更隐蔽的问题是一块 GPU 的身份散落在多个字段：

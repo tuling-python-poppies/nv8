@@ -1,8 +1,8 @@
-import { edge150Fingerprint } from "../fingerprint/edge-150.js";
+import { edge150Fingerprint } from "../infra/fingerprint/edge-150.js";
 import {
   TRUSTED_SCRIPT_POLICY,
   TRUSTED_SCRIPT_POLICY_ALIASES,
-} from "../core/evidence-contract.js";
+} from "../engine/core/evidence-contract.js";
 
 // 接受契约策略名与历史别名（如 registered-only）
 const ACCEPTED_TRUST_POLICIES = Object.freeze([

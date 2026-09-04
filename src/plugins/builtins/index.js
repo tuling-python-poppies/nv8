@@ -1,6 +1,6 @@
-import { installModernBuiltins } from "../../install/install-modern-builtins.js";
-import { installDateProfile } from "../../install/install-date-profile.js";
-import { installIntlV8BreakIterator } from "../../install/install-intl-v8-break-iterator.js";
+import { installModernBuiltins } from "../../surface/install/install-modern-builtins.js";
+import { installDateProfile } from "../../surface/install/install-date-profile.js";
+import { installIntlV8BreakIterator } from "../../surface/install/install-intl-v8-break-iterator.js";
 
 /**
  * @nv8/plugin-builtins

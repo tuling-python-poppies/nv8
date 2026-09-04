@@ -7,8 +7,8 @@ Baseline 的作用是让**行为变化必须被解释**。如果每次差异就�
 
 | 快照 | 覆盖 | 用途 |
 |------|------|------|
-| `src/baseline/surface.js` | 精选 24 全局 + 10 原型 | 快速冒烟 |
-| `src/baseline/full-surface.js` | 全部全局 own key + 各自原型成员 | 默认模式切换的前置验收 |
+| `src/infra/baseline/surface.js` | 精选 24 全局 + 10 原型 | 快速冒烟 |
+| `src/infra/baseline/full-surface.js` | 全部全局 own key + 各自原型成员 | 默认模式切换的前置验收 |
 
 分两层的原因：精选快照跑得快，适合每次提交；完整快照会暴露真实覆盖差距，
 适合作为门禁。
@@ -84,7 +84,7 @@ fixture 按**每个 Node major 单独一档**，而不是粗分「新/旧」两�
 
 ## 差异清单
 
-`src/baseline/known-differences.js`。每条必须有四个字段：
+`src/infra/baseline/known-differences.js`。每条必须有四个字段：
 
 | 字段 | 含义 |
 |------|------|
@@ -122,7 +122,7 @@ node --experimental-vm-modules scripts/capture-full-surface.mjs --full    # 导�
 校验时 Node 版本造成的缺失会被自动豁免（查 `expectedMissingForNode()`），
 其余缺失、新增和变更都会报错并提示：
 
-> 差异必须先解释：登记到 `src/baseline/known-differences.js`，
+> 差异必须先解释：登记到 `src/infra/baseline/known-differences.js`，
 > 或确认是预期变更后运行 `--write` 更新 fixture。
 
 ## 采集实现的两个约束

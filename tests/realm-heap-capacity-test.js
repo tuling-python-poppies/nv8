@@ -26,7 +26,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { heapSafeRealmLimitFor } from '../src/child/runtime-pool.js';
+import { heapSafeRealmLimitFor } from '../src/backend/child/runtime-pool.js';
 
 const MB = 1024 * 1024;
 

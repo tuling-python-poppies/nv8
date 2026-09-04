@@ -22,8 +22,8 @@ import {
   captureFullSurface,
   summarizeFullSurface,
   diffFullSurface,
-} from '../src/baseline/full-surface.js';
-import { expectedMissingForNode } from '../src/baseline/known-differences.js';
+} from '../src/infra/baseline/full-surface.js';
+import { expectedMissingForNode } from '../src/infra/baseline/known-differences.js';
 
 // fileURLToPath 而不是 `.pathname`：后者在 Windows 上是 `/C:/...`，
 // `path.resolve` 会拼成 `C:\C:\...`。

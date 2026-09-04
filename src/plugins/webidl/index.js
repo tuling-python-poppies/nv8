@@ -1,5 +1,5 @@
-import { getNativeFunctionContext, removeNativeFunctionContext } from "../../webidl/native-function-realm-safe.js";
-import { setNativeFunctionContext } from "../../webidl/native-function.js";
+import { getNativeFunctionContext, removeNativeFunctionContext } from "../../engine/webidl/native-function-realm-safe.js";
+import { setNativeFunctionContext } from "../../engine/webidl/native-function.js";
 
 /**
  * @nv8/plugin-webidl

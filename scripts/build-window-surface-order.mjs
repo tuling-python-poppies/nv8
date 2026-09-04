@@ -34,7 +34,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { WINDOW_GLOBAL_SHAPES } from '../src/install/window-surface-order.js';
+import { WINDOW_GLOBAL_SHAPES } from '../src/surface/install/window-surface-order.js';
 
 /**
  * V8 引擎自己提供的全局，按真实 Edge 的枚举顺序。
@@ -232,7 +232,7 @@ export function renderOrderTable({ rows, header }) {
 
 // ------------------------------------------------------------------ CLI
 
-const TABLE_URL = new URL('../src/install/window-surface-order.js', import.meta.url);
+const TABLE_URL = new URL('../src/surface/install/window-surface-order.js', import.meta.url);
 const FIXTURE_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.meta.url);
 
 async function main() {

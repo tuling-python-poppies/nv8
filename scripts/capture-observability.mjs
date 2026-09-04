@@ -19,8 +19,8 @@ import { fileURLToPath } from 'node:url';
 import {
   diffObservability,
   summarizeObservability,
-} from '../src/baseline/observability.js';
-import { baselineScenario } from '../src/baseline/baseline.js';
+} from '../src/infra/baseline/observability.js';
+import { baselineScenario } from '../src/infra/baseline/baseline.js';
 
 // fileURLToPath 而不是 `.pathname`：后者在 Windows 上是 `/C:/...`，
 // `path.resolve` 会拼成 `C:\C:\...`。

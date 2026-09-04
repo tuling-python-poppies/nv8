@@ -233,9 +233,9 @@ postMessage」与「我自己在调」——正是 C 要解决的那个问题。
 
 ## 相关
 
-- `src/api/window/window-messaging.js`：`configureWindowMessaging()`、
+- `src/surface/api/window/window-messaging.js`：`configureWindowMessaging()`、
   `createSameOriginParentFacade()`、`windowParent()`、`windowTop()`
-- `src/api/dom/html-iframe-element-realm-state.js`：`parentPostMessage` 闭包
+- `src/surface/api/dom/html-iframe-element-realm-state.js`：`parentPostMessage` 闭包
   （子 → 父的正确路由已经在这里，按 element 一个）
 - `docs/adr/0004-dynamic-iframe-timing.md`：动态 iframe 的 `contentWindow`。
   本 ADR 的四处不符在**静态** iframe 上就复现，两者独立；但 ADR-0004 落地后

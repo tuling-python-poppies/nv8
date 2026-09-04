@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createApp } from '../src/core/app.js';
+import { createApp } from '../src/engine/core/app.js';
 
 test('Core App aggregates bounded lifecycle and diagnostics', async () => {
   const app = createApp({

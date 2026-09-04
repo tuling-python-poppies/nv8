@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createNv8, minimalPreset } from '../src/index.js';
-import { detectHostCapabilities, hostSupports } from '../src/core/host-capabilities.js';
-import { PLUGIN_LOCK_SCHEMA } from '../src/core/plugin-lock-plan.js';
+import { detectHostCapabilities, hostSupports } from '../src/engine/core/host-capabilities.js';
+import { PLUGIN_LOCK_SCHEMA } from '../src/engine/core/plugin-lock-plan.js';
 
 const logger = { info() {}, warn() {}, error() {}, trace() {} };
 

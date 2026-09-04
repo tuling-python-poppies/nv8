@@ -19,7 +19,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
-import { edge150Fingerprint } from '../src/fingerprint/edge-150.js';
+import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 
 const REAL_FIXTURE_URL = new URL('../fixtures/fingerprint/edge-real.json', import.meta.url);
 const hasRealFixture = existsSync(REAL_FIXTURE_URL);
@@ -44,7 +44,7 @@ const PROFILES = [
 // ------------------------------------------------------------- 自洽性
 
 test('every profile declares the Edg/ token', async () => {
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
   const profiles = [...PROFILES, ['edge-151', edge151Fingerprint]];
 
   for (const [name, fingerprint] of profiles) {
@@ -60,7 +60,7 @@ test('every profile declares the Edg/ token', async () => {
 });
 
 test('Chrome and Edg major versions agree within a profile', async () => {
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
   for (const [name, fingerprint] of [...PROFILES, ['edge-151', edge151Fingerprint]]) {
     const userAgent = fingerprint.navigator.userAgent;
     assert.equal(
@@ -72,7 +72,7 @@ test('Chrome and Edg major versions agree within a profile', async () => {
 });
 
 test('appVersion is the userAgent without the Mozilla/ prefix', async () => {
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
   for (const [name, fingerprint] of [...PROFILES, ['edge-151', edge151Fingerprint]]) {
     const { userAgent, appVersion } = fingerprint.navigator;
     if (appVersion === undefined) continue;
@@ -87,8 +87,8 @@ test('appVersion is the userAgent without the Mozilla/ prefix', async () => {
 // --------------------------------------------------- brands 结构一致性
 
 test('brand list order matches real Edge', async () => {
-  const { lowEntropyUaData } = await import('../src/api/navigator/navigator-ua-data-state.js');
-  const { configureNavigatorProfile } = await import('../src/api/navigator/navigator-state.js');
+  const { lowEntropyUaData } = await import('../src/surface/api/navigator/navigator-ua-data-state.js');
+  const { configureNavigatorProfile } = await import('../src/surface/api/navigator/navigator-state.js');
 
   configureNavigatorProfile(
     edge150Fingerprint.navigator.userAgent,
@@ -108,7 +108,7 @@ test('brand list order matches real Edge', async () => {
 });
 
 test('the GREASE brand matches the current Chromium form', async () => {
-  const { lowEntropyUaData } = await import('../src/api/navigator/navigator-ua-data-state.js');
+  const { lowEntropyUaData } = await import('../src/surface/api/navigator/navigator-ua-data-state.js');
   const brands = lowEntropyUaData().brands;
   // 真实是 `Not=A?Brand` / `99`；`Not A;Brand` / `8` 是更早 Chromium 的形态
   assert.equal(brands[0].brand, 'Not=A?Brand');
@@ -116,7 +116,7 @@ test('the GREASE brand matches the current Chromium form', async () => {
 });
 
 test('brand versions agree with the userAgent major', async () => {
-  const { lowEntropyUaData } = await import('../src/api/navigator/navigator-ua-data-state.js');
+  const { lowEntropyUaData } = await import('../src/surface/api/navigator/navigator-ua-data-state.js');
   const brands = lowEntropyUaData().brands;
   const major = chromeMajor(edge150Fingerprint.navigator.userAgent);
   for (const entry of brands) {
@@ -130,9 +130,9 @@ test('brand versions agree with the userAgent major', async () => {
 });
 
 test('fullVersionList gives Edge and Chromium distinct builds', async () => {
-  const { highEntropyUaData } = await import('../src/api/navigator/navigator-ua-data-state.js');
-  const { configureNavigatorProfile } = await import('../src/api/navigator/navigator-state.js');
-  const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+  const { highEntropyUaData } = await import('../src/surface/api/navigator/navigator-ua-data-state.js');
+  const { configureNavigatorProfile } = await import('../src/surface/api/navigator/navigator-state.js');
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
 
   configureNavigatorProfile(
     edge151Fingerprint.navigator.userAgent,
@@ -189,11 +189,11 @@ test('profile brand order and names match the real browser', () => {
 });
 
 test('the registered build number matches the real browser', async () => {
-  const { highEntropyUaData } = await import('../src/api/navigator/navigator-ua-data-state.js');
+  const { highEntropyUaData } = await import('../src/surface/api/navigator/navigator-ua-data-state.js');
   const realMajor = String(chromeMajor(realFingerprint.navigator.userAgent));
   const realFull = realFingerprint.userAgentData.highEntropy.uaFullVersion;
 
-  const { configureNavigatorProfile } = await import('../src/api/navigator/navigator-state.js');
+  const { configureNavigatorProfile } = await import('../src/surface/api/navigator/navigator-state.js');
   configureNavigatorProfile(
     realFingerprint.navigator.userAgent,
     'Win32',

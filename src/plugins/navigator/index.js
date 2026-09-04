@@ -1,7 +1,7 @@
-import { installNavigator } from "../../install/install-navigator.js";
+import { installNavigator } from "../../surface/install/install-navigator.js";
 
 const NAVIGATOR_INSTALLER_URL = new URL(
-  "../../install/install-navigator.js",
+  "../../surface/install/install-navigator.js",
   import.meta.url,
 );
 

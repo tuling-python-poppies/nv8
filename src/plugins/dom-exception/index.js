@@ -1,7 +1,7 @@
-import { installDOMException } from "../../install/install-dom-exception.js";
+import { installDOMException } from "../../surface/install/install-dom-exception.js";
 
 const DOM_EXCEPTION_INSTALLER_URL = new URL(
-  "../../install/install-dom-exception.js",
+  "../../surface/install/install-dom-exception.js",
   import.meta.url,
 );
 

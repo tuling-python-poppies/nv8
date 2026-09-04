@@ -1,5 +1,5 @@
-import { installErrorStackGuard } from "../../bootstrap/install-error-stack-guard.js";
-import { installErrorObjects } from "../../install/install-error-objects.js";
+import { installErrorStackGuard } from "../../engine/bootstrap/install-error-stack-guard.js";
+import { installErrorObjects } from "../../surface/install/install-error-objects.js";
 
 /**
  * @nv8/plugin-errors

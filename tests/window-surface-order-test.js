@@ -33,7 +33,7 @@ import { readFile } from 'node:fs/promises';
 import {
   WINDOW_GLOBAL_ORDER,
   WINDOW_GLOBAL_SHAPES,
-} from '../src/install/window-surface-order.js';
+} from '../src/surface/install/window-surface-order.js';
 import {
   V8_BUILTIN_PREFIX,
   buildOrderRows,
@@ -41,15 +41,15 @@ import {
   renderOrderTable,
   shapeNameOf,
 } from '../scripts/build-window-surface-order.mjs';
-import { edge150Fingerprint } from '../src/fingerprint/edge-150.js';
-import { edge151Fingerprint } from '../src/fingerprint/edge-151.js';
+import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
+import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
 import {
   CAPABILITY_STATUS,
   detectHostCapabilities,
-} from '../src/core/host-capabilities.js';
+} from '../src/engine/core/host-capabilities.js';
 
 const FIXTURE_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.meta.url);
-const TABLE_URL = new URL('../src/install/window-surface-order.js', import.meta.url);
+const TABLE_URL = new URL('../src/surface/install/window-surface-order.js', import.meta.url);
 
 const fixture = JSON.parse(await readFile(FIXTURE_URL, 'utf8'));
 const tableSource = await readFile(TABLE_URL, 'utf8');

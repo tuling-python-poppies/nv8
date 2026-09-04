@@ -78,7 +78,7 @@ masked 参数上。
 
 ## 相关实现
 
-- `src/fingerprint/gpu-profiles.js` —— 5 套真实 GPU 组合，字段由
+- `src/infra/fingerprint/gpu-profiles.js` —— 5 套真实 GPU 组合，字段由
   「厂商 + 型号 + 驱动」推导；`validateGpuIdentity()` 挡住内部矛盾
 - `scripts/collect-edge-ua-defaults.mjs` —— 锁定 `--lang=en-US`
 - `tests/fingerprint-calibration-test.js` —— 断言机器特征与采集机器不同

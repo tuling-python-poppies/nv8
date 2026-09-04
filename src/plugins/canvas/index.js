@@ -1,5 +1,5 @@
 const CANVAS_2D_INSTALLER_URL = new URL(
-  "../../install/install-canvas-2d.js",
+  "../../surface/install/install-canvas-2d.js",
   import.meta.url,
 );
 

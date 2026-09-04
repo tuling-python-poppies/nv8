@@ -28,9 +28,9 @@ import {
   createMemoryCheckpointStore,
   inspectCheckpoint,
   jobFingerprint,
-} from '../src/collector/checkpoint.js';
-import { PaginationScheduler, PaginationStop } from '../src/collector/pagination.js';
-import { CollectorErrorCode } from '../src/collector/errors.js';
+} from '../src/collection/collector/checkpoint.js';
+import { PaginationScheduler, PaginationStop } from '../src/collection/collector/pagination.js';
+import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 const PAGES = Object.freeze({
   start: { items: ['a', 'b'], next: 'c2' },

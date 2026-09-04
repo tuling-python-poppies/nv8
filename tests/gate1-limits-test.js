@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EdgeSandbox } from '../src/public/edge-sandbox.js';
-import { DiagnosticsCollector } from '../src/core/diagnostics/collector.js';
-import { createDiagnosticError, ErrorCode } from '../src/core/diagnostics/errors.js';
+import { DiagnosticsCollector } from '../src/engine/core/diagnostics/collector.js';
+import { createDiagnosticError, ErrorCode } from '../src/engine/core/diagnostics/errors.js';
 
 const logger = { info() {}, warn() {}, error() {}, trace() {} };
 

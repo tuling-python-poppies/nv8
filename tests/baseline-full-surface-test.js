@@ -18,7 +18,7 @@ import {
   captureFullSurface,
   diffFullSurface,
   summarizeFullSurface,
-} from '../src/baseline/full-surface.js';
+} from '../src/infra/baseline/full-surface.js';
 import {
   LEGACY_PLUGIN_DIFFERENCES,
   NODE_VERSION_DEPENDENT_GLOBALS,
@@ -26,7 +26,7 @@ import {
   blockingDifferences,
   expectedMissingForNode,
   validateDifferenceRegistry,
-} from '../src/baseline/known-differences.js';
+} from '../src/infra/baseline/known-differences.js';
 
 const fixture = JSON.parse(await readFile(
   new URL('../fixtures/baseline/full-surface.json', import.meta.url),

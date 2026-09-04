@@ -26,8 +26,8 @@ import {
   PaginationScheduler,
   PaginationStop,
   createPaginationScheduler,
-} from '../src/collector/pagination.js';
-import { CollectorErrorCode } from '../src/collector/errors.js';
+} from '../src/collection/collector/pagination.js';
+import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 /**
  * 假 collector：按 URL 的 cursor 参数返回预设页面。

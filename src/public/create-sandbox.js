@@ -1,5 +1,5 @@
 import { EdgeSandbox } from "./edge-sandbox.js";
-import { drainWorkerThreadPool } from "../controller/worker-thread-pool.js";
+import { drainWorkerThreadPool } from "../backend/controller/worker-thread-pool.js";
 
 /**
  * Convenience wrapper — makes EdgeSandbox as easy to use as iv8.

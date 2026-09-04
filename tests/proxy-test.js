@@ -24,9 +24,9 @@ import {
   isProxyError,
   parseProxy,
   redactUrl,
-} from '../src/collector/proxy.js';
-import { CircuitBreaker } from '../src/collector/circuit-breaker.js';
-import { CollectorErrorCode } from '../src/collector/errors.js';
+} from '../src/collection/collector/proxy.js';
+import { CircuitBreaker } from '../src/collection/collector/circuit-breaker.js';
+import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 // ------------------------------------------------------ 配置解析
 

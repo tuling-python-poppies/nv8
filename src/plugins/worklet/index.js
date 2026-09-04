@@ -1,5 +1,5 @@
 const WORKLET_INSTALLER_URL = new URL(
-  '../../install/install-worklet-capabilities.js',
+  '../../surface/install/install-worklet-capabilities.js',
   import.meta.url,
 );
 

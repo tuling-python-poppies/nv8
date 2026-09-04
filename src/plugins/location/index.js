@@ -1,7 +1,7 @@
-import { installLocation } from "../../install/install-location.js";
+import { installLocation } from "../../surface/install/install-location.js";
 
 const LOCATION_INSTALLER_URL = new URL(
-  "../../install/install-location.js",
+  "../../surface/install/install-location.js",
   import.meta.url,
 );
 

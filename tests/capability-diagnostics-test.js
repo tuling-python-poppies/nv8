@@ -21,8 +21,8 @@ import {
   parseReservedSurfaces,
   removeStrictCapabilityDiagnostics,
   suggestPluginsFor,
-} from '../src/core/capability-diagnostics.js';
-import { HAS_VM_PROPERTY_QUERY_CALLBACK } from '../src/compat/host-compat.js';
+} from '../src/engine/core/capability-diagnostics.js';
+import { HAS_VM_PROPERTY_QUERY_CALLBACK } from '../src/engine/compat/host-compat.js';
 
 const sampleMap = new Map([
   ['document', { plugin: '@nv8/plugin-dom-core', capability: 'dom.document' }],
@@ -309,7 +309,7 @@ test('suggestPluginsFor deduplicates plugins covering several globals', () => {
 // ------------------------------------------------------- 真实插件映射
 
 test('the real plugin set yields a substantial surface map', async () => {
-  const { fullPreset } = await import('../src/presets/index.js');
+  const { fullPreset } = await import('../src/config/presets/index.js');
   const map = await collectGlobalSurfaceMap(fullPreset);
 
   assert.ok(map.size > 140, `expected a populated map, got ${map.size}`);
@@ -337,7 +337,7 @@ test('member-style globals are exempt from diagnostics', () => {
 });
 
 test('every plugin-provided global is either registered or explicitly exempt', async () => {
-  const { captureFullSurface } = await import('../src/baseline/full-surface.js');
+  const { captureFullSurface } = await import('../src/infra/baseline/full-surface.js');
   const { createNv8, fullPreset, minimalPreset } = await import('../src/index.js');
   const silent = { info() {}, warn() {}, error() {}, trace() {} };
 

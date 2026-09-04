@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EdgeSandbox } from '../src/public/edge-sandbox.js';
-import { encodeValue } from '../src/protocol/value-encoder.js';
-import { decodeValue } from '../src/protocol/value-decoder.js';
+import { encodeValue } from '../src/backend/protocol/value-encoder.js';
+import { decodeValue } from '../src/backend/protocol/value-decoder.js';
 
 for (const backend of ['child-process', 'worker-thread']) {
   test(`frame queue limit is enforced on ${backend}`, async () => {

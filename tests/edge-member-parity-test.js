@@ -25,8 +25,8 @@ import {
   NODE_VERSION_DEPENDENT_MEMBERS,
   expectedMissingForNode,
   expectedMissingMemberForNode,
-} from '../src/baseline/known-differences.js';
-import { WINDOW_GLOBAL_ORDER } from '../src/install/window-surface-order.js';
+} from '../src/infra/baseline/known-differences.js';
+import { WINDOW_GLOBAL_ORDER } from '../src/surface/install/window-surface-order.js';
 
 const REAL_MEMBERS_URL = new URL('../fixtures/fingerprint/edge-members.json', import.meta.url);
 
@@ -122,9 +122,9 @@ let capturePromise = null;
 function captureNv8Surface() {
   if (capturePromise === null) {
     capturePromise = (async () => {
-      const { captureFullSurface } = await import('../src/baseline/full-surface.js');
+      const { captureFullSurface } = await import('../src/infra/baseline/full-surface.js');
       const { createSandbox } = await import('../src/public/create-sandbox.js');
-      const { edge151Fingerprint } = await import('../src/fingerprint/edge-151.js');
+      const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
       const sandbox = await createSandbox('https://baseline.test/', {
         page: { html: '<!doctype html><html><head></head><body></body></html>' },
         // 采集基准是真实 Edge **151**，所以对比也必须用 151 profile。

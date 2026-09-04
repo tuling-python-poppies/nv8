@@ -24,9 +24,9 @@ import {
   readRetryAfter,
   redactCookies,
   redactHeaders,
-} from '../src/collector/index.js';
+} from '../src/collection/collector/index.js';
 
-import { createRequestPlan } from '../src/request-protocol/index.js';
+import { createRequestPlan } from '../src/collection/request-protocol/index.js';
 
 const ORIGIN = 'https://target.test';
 

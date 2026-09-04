@@ -1,7 +1,7 @@
-import { installWindow } from "../../install/install-window.js";
+import { installWindow } from "../../surface/install/install-window.js";
 
 const WINDOW_INSTALLER_URL = new URL(
-  "../../install/install-window.js",
+  "../../surface/install/install-window.js",
   import.meta.url,
 );
 

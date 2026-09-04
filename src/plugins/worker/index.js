@@ -1,17 +1,17 @@
 const WORKER_INSTALLER_URL = new URL(
-  '../../install/install-worker-capabilities.js',
+  '../../surface/install/install-worker-capabilities.js',
   import.meta.url,
 );
 const WORKER_GLOBAL_INSTALLER_URL = new URL(
-  '../../install/install-worker-global.js',
+  '../../surface/install/install-worker-global.js',
   import.meta.url,
 );
 const WORKER_RUNTIME_URL = new URL(
-  '../../api/worker/worker-runtime.js',
+  '../../surface/api/worker/worker-runtime.js',
   import.meta.url,
 );
 const SHARED_WORKER_RUNTIME_URL = new URL(
-  '../../api/worker/shared-worker-runtime.js',
+  '../../surface/api/worker/shared-worker-runtime.js',
   import.meta.url,
 );
 

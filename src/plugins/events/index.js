@@ -1,9 +1,9 @@
-import { installEventTarget } from "../../install/install-event-target.js";
-import { installEvent } from "../../install/install-event.js";
-import { installCustomEvent } from "../../install/install-custom-event.js";
+import { installEventTarget } from "../../surface/install/install-event-target.js";
+import { installEvent } from "../../surface/install/install-event.js";
+import { installCustomEvent } from "../../surface/install/install-custom-event.js";
 
 const EVENTS_INSTALLER_URL = new URL(
-  "../../install/install-events.js",
+  "../../surface/install/install-events.js",
   import.meta.url,
 );
 
