@@ -18,9 +18,10 @@
 
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+
+import { edgeTempDir, toBrowserUrl } from './edge-temp-dir.mjs';
 
 /** WSL 下 Windows Edge 的常见位置 */
 const EDGE_CANDIDATES = [
@@ -132,14 +133,6 @@ function findEdge(explicit) {
  *
  * `msedge.exe` 是 Windows 进程，收到 `/tmp/...` 会找不到文件。
  */
-function toBrowserUrl(filePath) {
-  if (filePath.startsWith('/mnt/')) {
-    const [, , drive, ...rest] = filePath.split('/');
-    return `file:///${drive.toUpperCase()}:/${rest.join('/')}`;
-  }
-  return `file://${filePath}`;
-}
-
 /**
  * 把 headless UA 还原为有头模式。
  *
@@ -152,8 +145,7 @@ function normalizeHeadlessUserAgent(userAgent) {
 
 function collect(edgePath) {
   // 采集页必须落在 Windows 可见的位置
-  const isWindowsEdge = edgePath.startsWith('/mnt/');
-  const baseDir = isWindowsEdge ? '/mnt/c/temp' : tmpdir();
+  const baseDir = edgeTempDir(edgePath);
   const workDir = mkdtempSync(path.join(baseDir, 'nv8-fp-'));
   const pagePath = path.join(workDir, 'collect.html');
 

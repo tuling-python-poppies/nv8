@@ -11,9 +11,10 @@
 
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+
+import { edgeTempDir, toBrowserUrl } from './edge-temp-dir.mjs';
 
 const EDGE_CANDIDATES = [
   // 原生 Windows 路径放在最前：脚本原来只列了 WSL(/mnt/c) 与 Linux 路径，
@@ -27,16 +28,39 @@ const EDGE_CANDIDATES = [
   '/usr/bin/microsoft-edge-stable',
 ];
 
-// 采集时不排序。实测真实 Edge 的 Object.getOwnPropertyNames(globalThis)
-// 本身就近似字母序（WebIDL 接口按字母序注册），因此排序不丢信息；
-// 但保留原始顺序才能在将来顺序变化时被发现。
+// 采集时不排序。**顺序本身就是数据**：`src/install/window-surface-order.js`
+// 直接照抄这份序列，NV8 靠它复现 `Object.getOwnPropertyNames(window)`。
+// 实测 Edge 151 → 152 有 9 个已有全局挪了位置，所以排序会丢真信息。
+//
+// `descriptors` 同时采下每一项的 descriptor flag。缺了它，新增全局的形状只能靠
+// 猜——而 window 上 1175 个 own property 的 flag 分五种，猜错不会报错，只会变成
+// 一处可探测偏差（`chrome` 被写成 configurable: false 就是这么来的）。
+//
+// 整段包在 IIFE 里：经典脚本的顶层 `var` 会变成 globalThis 的 own property，
+// 直接把 4 个采集变量掺进结果（实测 1239 → 1243）。
 const PAGE = `<!doctype html><html><head><meta charset="utf-8"></head><body>
 <pre id="out">pending</pre>
 <script>
-document.getElementById('out').textContent = JSON.stringify({
-  userAgent: navigator.userAgent,
-  globals: Object.getOwnPropertyNames(globalThis),
-});
+document.getElementById('out').textContent = (function () {
+  var names = Object.getOwnPropertyNames(globalThis);
+  var descriptors = {};
+  for (var i = 0; i < names.length; i++) {
+    var entry = Object.getOwnPropertyDescriptor(globalThis, names[i]);
+    descriptors[names[i]] = {
+      kind: ('get' in entry || 'set' in entry) ? 'accessor' : 'value',
+      writable: 'writable' in entry ? entry.writable : null,
+      enumerable: entry.enumerable,
+      configurable: entry.configurable,
+      hasGet: 'get' in entry ? (typeof entry.get === 'function') : null,
+      hasSet: 'set' in entry ? (typeof entry.set === 'function') : null,
+    };
+  }
+  return JSON.stringify({
+    userAgent: navigator.userAgent,
+    globals: names,
+    descriptors: descriptors,
+  });
+})();
 </` + `script></body></html>`;
 
 function findEdge(explicit) {
@@ -51,20 +75,12 @@ function findEdge(explicit) {
   throw new Error('Edge not found; pass --edge <path>');
 }
 
-function toBrowserUrl(filePath) {
-  if (filePath.startsWith('/mnt/')) {
-    const [, , drive, ...rest] = filePath.split('/');
-    return `file:///${drive.toUpperCase()}:/${rest.join('/')}`;
-  }
-  return `file://${filePath}`;
-}
-
 const args = process.argv.slice(2);
 const edgeIndex = args.indexOf('--edge');
 const outIndex = args.indexOf('--out');
 const edgePath = findEdge(edgeIndex === -1 ? null : args[edgeIndex + 1]);
 
-const baseDir = edgePath.startsWith('/mnt/') ? '/mnt/c/temp' : tmpdir();
+const baseDir = edgeTempDir(edgePath);
 const workDir = mkdtempSync(path.join(baseDir, 'nv8-globals-'));
 const pagePath = path.join(workDir, 'globals.html');
 

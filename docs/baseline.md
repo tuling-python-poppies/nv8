@@ -158,7 +158,7 @@ tests/baseline-full-surface-test.js   11 项
 
 | bootstrap | 步数 | 首 → 末 |
 |-----------|------|---------|
-| root | 337 | `hideNodeGlobals` → `finalizeWindowSurfaceOrder` |
+| root | 340 | `hideNodeGlobals` → `finalizeWindowSurfaceOrder` |
 | worker | 109 | `hideNodeGlobals` → `finalizeWorkerSurfaceOrder` |
 | worklet | 13 | `hideNodeGlobals` → `installRegistration` |
 

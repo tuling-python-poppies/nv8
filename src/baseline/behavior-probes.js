@@ -921,14 +921,25 @@ export const BEHAVIOR_PROBES = Object.freeze([
   {
     id: 'intl/date-tostring-shape',
     category: 'intl',
-    // 只报**形状**，不报内容。第一版把偏移与时区名替换成占位符就以为够了，
-    // 结果时间部分（`08:00:00`）仍然跟着采集机的时区走——把机器时区烙进了
-    // fixture。改成正则匹配 + 各段长度，彻底与时区无关。
+    // 只报**形状**，不报内容。这条探针的期望值前后错了两次，错法一样：
+    //
+    // 第一版把偏移与时区名替换成占位符就以为够了，结果时间部分（`08:00:00`）
+    // 仍然跟着采集机的时区走。
+    //
+    // 第二版改成正则 + `split(' ').length`，注释还写着「彻底与时区无关」——
+    // 但**段数把时区名的词数算了进来**，而词数取决于渲染语言：中文系统是
+    // `(中国标准时间)` 1 个词，英文系统是 `(China Standard Time)` 3 个词。
+    // fixture 于是记下 7，在英文环境的机器上跑出 9。采集机的系统语言又一次
+    // 被烙进了契约——与 ADR-0005 的 `fontFamily` 是同一个坑。
+    //
+    // 现在只数括号**之前**那段（恒为 6）。整体形状——括号内非空、GMT±HHMM
+    // ——由正则守。
     expression: `() => {
       const value = new Date(0).toString();
       const pattern = /^[A-Z][a-z]{2} [A-Z][a-z]{2} \\d{2} \\d{4} \\d{2}:\\d{2}:\\d{2} GMT[+-]\\d{4} \\(.+\\)$/;
+      const head = value.slice(0, value.indexOf(' ('));
       return 'matches=' + pattern.test(value)
-        + '|segments=' + value.split(' ').length;
+        + '|headSegments=' + head.split(' ').length;
     }`,
   },
   {

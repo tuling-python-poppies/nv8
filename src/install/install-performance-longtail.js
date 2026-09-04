@@ -31,9 +31,23 @@ import * as install_task_attribution_timing from "../api/performance/longtail-me
 import * as install_visibility_state_entry from "../api/performance/longtail-members/visibility-state-entry.js";
 import * as install_performance_navigation from "../api/performance/longtail-members/performance-navigation.js";
 import * as install_performance_timing from "../api/performance/longtail-members/performance-timing.js";
+import * as install_interaction_contentful_paint from "../api/performance/longtail-members/interaction-contentful-paint.js";
+import * as install_performance_soft_navigation from "../api/performance/longtail-members/performance-soft-navigation.js";
 import * as performanceRuntime from "../api/performance/performance-longtail-runtime.js";
 
-export function installPerformanceLongtail() {
+/**
+ * @param {boolean} [edge151Surface] Edge 151 新增的两个条目类型是否暴露。
+ *
+ *   `InteractionContentfulPaint` / `PerformanceSoftNavigation` 只在 151+ 存在。
+ *   它们的枚举位置由 `window-surface-order.js` 的 `{ since: 151 }` 控制，
+ *   两边必须同时放行：`finalizeWindowSurfaceOrder` 对门控排除却存在的全局
+ *   会抛错，对放行却缺失的也会抛错。
+ *
+ *   Worker 不传：真实 Edge 的 DedicatedWorker 没有这两个全局。
+ *   既然不需要，就不装——而不是像旧 window-only 全局那样装了再删，
+ *   因为 worker 的删除名单同样是一份生成文件，里面没有这两个名字。
+ */
+export function installPerformanceLongtail(edge151Surface = false) {
   install_visibility_state_entry.installGlobal();
   install_task_attribution_timing.installGlobal();
   install_performance_script_timing.installGlobal();
@@ -274,6 +288,28 @@ export function installPerformanceLongtail() {
   install_event_counts.installConstructorBacklink();
   install_event_counts.installTag();
   install_event_counts.installIterator();
+  if (edge151Surface) {
+    // 成员顺序 = 真实 Edge 152 实测的原型枚举顺序。`constructor` 夹在
+    // toJSON / getLargest… 之后、paintTime 之前，不是排在末尾。
+    install_interaction_contentful_paint.installGlobal();
+    install_performance_soft_navigation.installGlobal();
+    install_interaction_contentful_paint.installRelation();
+    install_performance_soft_navigation.installRelation();
+    install_interaction_contentful_paint.installOwnedMember0();
+    install_interaction_contentful_paint.installOwnedMember1();
+    install_interaction_contentful_paint.installOwnedMember2();
+    install_interaction_contentful_paint.installConstructorBacklink();
+    install_interaction_contentful_paint.installOwnedMember3();
+    install_interaction_contentful_paint.installOwnedMember4();
+    install_interaction_contentful_paint.installTag();
+    install_performance_soft_navigation.installOwnedMember0();
+    install_performance_soft_navigation.installOwnedMember1();
+    install_performance_soft_navigation.installOwnedMember2();
+    install_performance_soft_navigation.installConstructorBacklink();
+    install_performance_soft_navigation.installOwnedMember3();
+    install_performance_soft_navigation.installOwnedMember4();
+    install_performance_soft_navigation.installTag();
+  }
   Object.defineProperty(
     performanceRuntime.PerformanceObserver,
     "supportedEntryTypes",

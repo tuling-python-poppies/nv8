@@ -8,7 +8,7 @@
         "globalCount": 1231,
         "symbolGlobalCount": 0,
         "memberTotal": 8869,
-        "digest": "68709a76633f4a9b953657aba9f25873e034bc3dccc8161eb64e5f30a049ada8",
+        "digest": "5ce9ebd415ec7cb62d292880b37c216b3e6b45b1c3cee14ac0ce66a5a9b2f9d0",
         "groups": {
           "AbortController": "function:3:1:66f6b013dd7639e6",
           "AbortSignal": "function:5:1:44aa8309798017e3",
@@ -988,7 +988,7 @@
           "cancelAnimationFrame": "function:0:0:a41e3d5336720a1f",
           "cancelIdleCallback": "function:0:0:a41e3d5336720a1f",
           "captureEvents": "function:0:0:a41e3d5336720a1f",
-          "chrome": "object:0:0:2a0e6d0be11f4696",
+          "chrome": "object:0:0:f6f757303cb68e2b",
           "clearInterval": "function:0:0:a41e3d5336720a1f",
           "clearTimeout": "function:0:0:a41e3d5336720a1f",
           "clientInformation": "object:0:0:7b6c1f1fc1b51887",
@@ -1404,7 +1404,7 @@
         "globalCount": 1231,
         "symbolGlobalCount": 0,
         "memberTotal": 8879,
-        "digest": "2952eb44c4b568bed8bd8224b4f3e1922781a7f9fef585e509fca2fe002419fa",
+        "digest": "b87ee56e6e4e8e52ef9ff2e8e81e91ac389002a7527a8ad0a37e4c853c802ebb",
         "groups": {
           "AbortController": "function:3:1:66f6b013dd7639e6",
           "AbortSignal": "function:5:1:44aa8309798017e3",
@@ -2384,7 +2384,7 @@
           "cancelAnimationFrame": "function:0:0:a41e3d5336720a1f",
           "cancelIdleCallback": "function:0:0:a41e3d5336720a1f",
           "captureEvents": "function:0:0:a41e3d5336720a1f",
-          "chrome": "object:0:0:2a0e6d0be11f4696",
+          "chrome": "object:0:0:f6f757303cb68e2b",
           "clearInterval": "function:0:0:a41e3d5336720a1f",
           "clearTimeout": "function:0:0:a41e3d5336720a1f",
           "clientInformation": "object:0:0:7b6c1f1fc1b51887",
@@ -2794,13 +2794,13 @@
       }
     },
     "node22": {
-      "capturedOnNode": "22.22.2",
+      "capturedOnNode": "22.23.2",
       "legacy": {
         "schema": "nv8/surface/full@1",
         "globalCount": 1232,
         "symbolGlobalCount": 0,
         "memberTotal": 8901,
-        "digest": "72fb0fe0c52f2c87c0080a2c665b0913a9a11f915e23e0eba51bc1f03289e5e2",
+        "digest": "baba79833367546bf9191aa6c260fdfd6b00636d2eec3c3dc7d474045f839a6f",
         "groups": {
           "AbortController": "function:3:1:66f6b013dd7639e6",
           "AbortSignal": "function:5:1:44aa8309798017e3",
@@ -3781,7 +3781,7 @@
           "cancelAnimationFrame": "function:0:0:a41e3d5336720a1f",
           "cancelIdleCallback": "function:0:0:a41e3d5336720a1f",
           "captureEvents": "function:0:0:a41e3d5336720a1f",
-          "chrome": "object:0:0:2a0e6d0be11f4696",
+          "chrome": "object:0:0:f6f757303cb68e2b",
           "clearInterval": "function:0:0:a41e3d5336720a1f",
           "clearTimeout": "function:0:0:a41e3d5336720a1f",
           "clientInformation": "object:0:0:7b6c1f1fc1b51887",
@@ -4192,13 +4192,13 @@
       }
     },
     "node24": {
-      "capturedOnNode": "24.18.0",
+      "capturedOnNode": "24.20.0",
       "legacy": {
         "schema": "nv8/surface/full@1",
         "globalCount": 1232,
         "symbolGlobalCount": 0,
         "memberTotal": 8901,
-        "digest": "67638874e92990db1bce63277c8a7cdab726b52534a72360035053d505c9825a",
+        "digest": "0a779cbb3ea86008c67b38d51190999eefaa05f3f068dc74cc41219e1aa04c5c",
         "groups": {
           "AbortController": "function:3:1:66f6b013dd7639e6",
           "AbortSignal": "function:5:1:44aa8309798017e3",
@@ -5179,7 +5179,7 @@
           "cancelAnimationFrame": "function:0:0:a41e3d5336720a1f",
           "cancelIdleCallback": "function:0:0:a41e3d5336720a1f",
           "captureEvents": "function:0:0:a41e3d5336720a1f",
-          "chrome": "object:0:0:2a0e6d0be11f4696",
+          "chrome": "object:0:0:f6f757303cb68e2b",
           "clearInterval": "function:0:0:a41e3d5336720a1f",
           "clearTimeout": "function:0:0:a41e3d5336720a1f",
           "clientInformation": "object:0:0:7b6c1f1fc1b51887",

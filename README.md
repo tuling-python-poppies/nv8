@@ -85,6 +85,23 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
 - 必须带 `--experimental-vm-modules` 启动（所有 Node 版本都需要）
 - 零运行时依赖，`npm install` 不装任何包
 
+**指纹敏感场景请用 Node 22+。** Node 18/20 的 V8（10.x / 11.x）在 dictionary
+模式的 global object 上把**可枚举键排在不可枚举键之前**，不按插入序——违反
+`[[OwnPropertyKeys]]`。后果是 `Object.getOwnPropertyNames(window)` 的顺序无法与真实
+Edge 一致（实测 238 个全局排到了 V8 内建之前，`window` 落在索引 0 而真实 Edge
+是 678）。而 `enumerable` 本身是要复现的契约值，不能为了顺序去改，所以这不是能
+绕过去的实现问题。V8 12.x（Node 22）已修正。
+
+`npm run capabilities` 会把这一项报成 `broken`：
+
+```
+- vm.global-property-order  broken  global keys are not in insertion order …
+```
+
+Node 18–22 还有一处更窄的差异：V8 内建段自身的注册顺序与 Chromium 152 不同
+（TypedArray 家族的组内次序、`Iterator` 的位置）。那一段不由 NV8 安装也不由它
+重排，已在 `tests/window-surface-order-test.js` 登记；Node 24 与 Chromium 逐位一致。
+
 ### 跑一段脚本
 
 ```js
@@ -275,6 +292,8 @@ await sandbox.evaluate('typeof require');   // "undefined"
 |---|---|
 | 覆盖率 | **99.68%** |
 | 多余项 | **0**（硬断言） |
+| 枚举顺序 | 与真实 Edge **逐字一致**（Node 22+） |
+| own-descriptor 形状 | 1175 项，**0** 处不符 |
 
 **多余项比缺失项严重。** 缺失只是功能不全；多余是宿主特征泄漏——一个
 `AsyncIterator`（Node 24 的 V8 特性）出现在 window 上，就足够证明这不是浏览器。
@@ -316,6 +335,41 @@ descriptor 零差异，而 14 个新增行为探针里 **10 个不一致**——
 `undefined`、destination 通道数是 2 而真实是 1、五处报错类型是 `RangeError` 而真实
 是 `NotSupportedError` / `IndexSizeError`、`frequency.minValue` 是 float32 极值而真实
 是 ±nyquist。形状完整、行为未验证，是最容易出「看起来对但算出来不一样」的地方。
+
+### 顺序也是一维：Window 全局的枚举序
+
+`Object.getOwnPropertyNames(window)` 的**序列**在真实 Edge 里是确定的。前三层谁都
+没比过它，也没比过 window 自身那 1175 个 own property 的 descriptor flag。
+`tests/window-surface-order-test.js`（27 项）补上这一维，首轮就抄出三个真问题：
+
+**1. 版本门控的全局错位。** `FontFaceSet` 只在 `browserMajorVersion >= 151` 暴露，
+而旧实现是一份 1.5 万行生成代码、表达不了版本门控，于是它落在**索引 61**
+（紧随 V8 内建之后），真实 Edge 是 **517**——其后 1171 个全局的索引全部偏移一位。
+**只测默认 150 profile 永远是绿的**，因为 150 下这一项本来就不应存在——与 locale
+那两条是同一类陷阱，所以测试同时断言 150 与 151 两个 profile。
+
+**2. `window.chrome` 被写成了不可配置。** 1171 项里唯一一个 `configurable: false`
+的数据属性。实测真实 Edge 152 是 `configurable: true`，且 WebIDL 没有任何机制产生
+不可配置的数据属性（`[LegacyUnforgeable]` 产生的是访问器）。孤例 + 无规范依据 +
+实测反证。后果不是形状好看不好看：`delete window.chrome` 返回 false、
+`Object.defineProperty(window, 'chrome', …)` 抛 TypeError——而改写 `window.chrome`
+正是反爬脚本常做的事。
+
+**3. Node 18/20 上顺序根本对不上。** 见上面「环境要求」——V8 < 12 把可枚举键排在
+前面。这是宿主限制，不是 NV8 能修的，已做成 `vm.global-property-order` 能力探针；
+测试在这两档上用**反向断言**而不是跳过，宿主哪天修好了会红。
+
+顺序现在是一张数据表（`src/install/window-surface-order.js`，1175 行），
+版本门控是一个字段：
+
+```js
+["FontFaceSet", VALUE_HIDDEN, { since: 151 }],
+["HTMLUserMediaElement", VALUE_HIDDEN, { since: 151, pending: "…" }],
+```
+
+`{ pending }` 是「已登记的缺口」的**单一来源**：两份 parity 测试都从这张表读，
+不各自维护名单。而且位置信息只有这张表有——实现好了只需删掉 `pending`，
+全局就自动落在正确的索引上。
 
 ### Intl 的天花板：ICU 数据不是同一份
 
@@ -679,6 +733,17 @@ limits: { timeoutMs: 30_000 }
 - **采集脚本必须能在开发机上直接跑**。7 个 collector 原来只列了 WSL(`/mnt/c`) 与
   Linux 的 Edge 路径，在原生 Windows 上必须每次手动 `--edge`。而「基准跟随本机
   Edge」要成为常规做法，就不能依赖手动传参——已补上 Windows 候选路径。
+- **临时目录不能硬编码 `/mnt/c/temp`**。三个用临时 HTML 页的 collector 各自写了
+  这个路径——而它在 Windows 上**不是标准目录**，本机就没有，`mkdtempSync` 直接
+  ENOENT。WSL 下 Windows 版 Edge 看不见 `/tmp`，所以确实需要一个 `/mnt/c` 下的
+  目录，但得探测而不是假设（`scripts/edge-temp-dir.mjs`）。这类错误的特征是
+  **在某个平台上从没跑过**，不是跑坏了。
+- **采集页的顶层 `var` 会掺进结果**。经典脚本里顶层 `var` 会变成 globalThis 的
+  own property：给 `collect-edge-globals.mjs` 加 descriptor 采集时，四个临时变量把
+  1239 抬到了 1243。整段包在 IIFE 里。
+- **形状也要采，不能猜**。window 上 1175 个 own property 的 descriptor flag 分五种，
+  猜错不会报错，只会变成一处可探测偏差——`chrome` 被写成 `configurable: false`
+  就是这么来的。`edge-globals.json` 现在带 `descriptors` 字段。
 
 ### 已测出的 151 → 152 差异
 
@@ -700,17 +765,33 @@ limits: { timeoutMs: 30_000 }
 - **brands 不只是版本号变了**，GREASE 品牌串与数组顺序都变。这类字段照抄才安全，
   按规律推导会错（ADR-0005 同一条铁律）。
 
-换基准的阻塞项不在采集，而在 `finalize-window-surface-order.js` **没有生成器**：
-新增全局要在那份 1.5 万行文件里手改三处（capture / delete / redefine）且顺序敏感。
-这与「3 个全局名缺失待版本门控」是同一个阻塞，应当一并解决，否则换基准只会把
-缺失全局从 3 涨到 6、把棘轮往上推而没有还债。
+换基准的阻塞项（`finalize-window-surface-order.js` 没有生成器、新增全局要在那份
+1.5 万行文件里手改三处）**已解除**：顺序与 descriptor 形状变成了数据表，
+版本门控是一个字段。现在换基准是两步：
+
+```bash
+npm run fingerprint:globals        # 采顺序 + descriptor 形状
+npm run check:surface-order        # 先看差异（不一致则非零退出）
+node scripts/build-window-surface-order.mjs --write
+```
+
+已用真实 Edge 152 做过 dry-run：3 个新增全局自动带上形状，门控保留，1167 项位置
+发生变化。同时验证了现表 1175 项的形状与真实 152 **零不一致**。
+
+**顺序不是「旧顺序 + 追加新增项」**：实测 151 → 152 有 9 个已有全局挪了位置
+（`FeaturePolicy` 523 → 69、`PerformanceLongAnimationFrameTiming` 333 → 1191，
+`WebAssembly` / `XSLTProcessor` / `RTCDataChannel` / `PageRevealEvent` /
+`onpagereveal` / `PerformanceScriptTiming` / `PerformanceTimingConfidence` 亦然）。
+换基准必须整表重采，而这在 1.5 万行代码里等于重新生成整个文件。
+
+剩下的真阻塞只有一项：`HTMLUserMediaElement` 还没实现（已在表里 `pending`）。
 
 ---
 
 ## 测试
 
 ```bash
-npm test              # 全量，791 项
+npm test              # 全量，819 项
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -795,7 +876,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（791 项 / 78 个文件） |
+| `npm test` | 全量测试（819 项 / 79 个文件） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -804,6 +885,7 @@ npm run capabilities  # 宿主能力探测报告
 | `npm run capabilities` | 宿主能力三态报告 |
 | `npm run build:bundle` | 生成 Realm 模块预打包缓存（本机产物） |
 | `npm run check:bundle` | 校验缓存是否属于本机 |
+| `npm run check:surface-order` | 校验 Window 全局顺序表与采集 fixture 一致 |
 | `npm run build:css-defaults` | 从 fixture 重新生成 UA 默认样式表 |
 | `npm run fingerprint:*` | 见[指纹采集脚本](#指纹采集脚本) |
 
@@ -893,16 +975,24 @@ css-ua-defaults.js），现在都有了脚本。
 
 ### 三层对齐的剩余缺口
 
-- **3 个全局名缺失**：`HTMLUserMediaElement`、`InteractionContentfulPaint`、
-  `PerformanceSoftNavigation`。需要表面生成器支持按 `browserMajorVersion` 门控。
+- **1 个全局名缺失**：`HTMLUserMediaElement`。已在
+  `src/install/window-surface-order.js` 里登记为 `pending`，位置保留——实现后
+  删掉那个字段就自动落在正确的枚举索引上。
+  （`InteractionContentfulPaint` / `PerformanceSoftNavigation` 已实现。）
+- **原型成员的枚举顺序有 22 处不一致**。963 个共有原型里 941 个顺序一致；
+  剩下 22 个需逐个核对是 151 → 152 的版本差异还是实现偏差，未括进测试。
+- **Node 18/20 上全局枚举顺序做不到一致**（宿主限制，见「环境要求」）；
+  Node 18–22 的 V8 内建段自身顺序也与 Chromium 不同。Node 24 逐位一致。
 - **2 个行为探针不一致**，已登记（都是动态 iframe 时序）。
+- **`illegalConstructor` 对不带 `new` 的调用多了接口名**：真实 Edge 只报
+  `Illegal constructor`，带名字的只在 `new X()` 时。影响几百处调用点，已登记。
 - **2 项刻意不探**（`UNPROBED_KNOWN_GAPS`，断言恰好为 2）：
   - CSS 属性描述符形状（访问器 vs 可写数据属性）。纯 JS 无法复制 V8 的
     命名属性拦截器。选访问器是因为读写语义正确性（自动同步 `cssText` 与
     `style` 属性）比描述符形状更重要——脚本天天读 `el.style.display`，
     几乎从不检查它的描述符。
   - 10 个布局相关计算值。
-- **未覆盖的探针类别**：字体度量、Intl/时区格式化、时间精度。
+- **未覆盖的探针类别**：字体度量。（Intl / 时区、时间精度已补。）
 
 ### 布局相关
 

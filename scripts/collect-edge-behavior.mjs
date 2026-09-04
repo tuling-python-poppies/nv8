@@ -56,7 +56,10 @@ async function collectOnce(edgePath) {
 <pre id="out">pending</pre>
 <script>
 try {
-  document.getElementById('out').textContent = ${JSON.stringify('')} + (${buildProbeExpression()});
+  document.getElementById('out').textContent = JSON.stringify({
+    __userAgent: navigator.userAgent,
+    results: JSON.parse((${buildProbeExpression()})),
+  });
 } catch (error) {
   document.getElementById('out').textContent = JSON.stringify({ __error: String(error && error.message) });
 }
@@ -104,30 +107,34 @@ const edgePath = findEdge(edgeIndex === -1 ? null : args[edgeIndex + 1]);
 const first = await collectOnce(edgePath);
 const second = await collectOnce(edgePath);
 
-const unstable = Object.keys(first).filter(
-  id => JSON.stringify(first[id]) !== JSON.stringify(second[id]),
+const unstable = Object.keys(first.results).filter(
+  id => JSON.stringify(first.results[id]) !== JSON.stringify(second.results[id]),
 );
 if (unstable.length > 0) {
   console.error('这些探针在两轮采集间结果不同，不能作为行为契约：');
   for (const id of unstable) {
     console.error(`  ${id}`);
-    console.error(`    1: ${JSON.stringify(first[id])}`);
-    console.error(`    2: ${JSON.stringify(second[id])}`);
+    console.error(`    1: ${JSON.stringify(first.results[id])}`);
+    console.error(`    2: ${JSON.stringify(second.results[id])}`);
   }
   process.exit(1);
 }
 
-const missing = BEHAVIOR_PROBES.filter(entry => first[entry.id] === undefined);
+const missing = BEHAVIOR_PROBES.filter(entry => first.results[entry.id] === undefined);
 if (missing.length > 0) {
   console.error(`采集结果缺少 ${missing.length} 个探针：`);
   for (const entry of missing) console.error(`  ${entry.id}`);
   process.exit(1);
 }
 
+// 记下采集用的 UA。这份 fixture 原来只有 `collectedAt`——版本无从考证，而
+// 「采集基准版本必须与 profile 一致」这个坑已经踩过两次，靠时间戳倒推版本
+// 是下一次踩坑的入口。
 const payload = {
   collectedAt: new Date().toISOString(),
+  userAgent: first.__userAgent,
   probeCount: BEHAVIOR_PROBES.length,
-  results: first,
+  results: first.results,
 };
 
 if (outIndex === -1) {

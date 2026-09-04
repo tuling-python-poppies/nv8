@@ -1256,7 +1256,7 @@ export function bootstrapRoot(
   installPerformanceEntry(browserMajorVersion >= 151);
   installPerformanceMark();
   installPerformanceMeasure();
-  installPerformanceLongtail();
+  installPerformanceLongtail(browserMajorVersion >= 151);
   installPerformance({ edge151Surface: browserMajorVersion >= 151 });
   installWindowTimers();
   installScreenOrientation();
@@ -1300,7 +1300,7 @@ export function bootstrapRoot(
   parsePageHTML(pageHtml);
   installEdgeStaticFunctions();
   installEdgeAccessorSemantics();
-  finalizeWindowSurfaceOrder();
+  finalizeWindowSurfaceOrder(browserMajorVersion);
 }
 
 function installWindowSelfReferences() {

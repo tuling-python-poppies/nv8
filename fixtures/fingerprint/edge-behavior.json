@@ -1,5 +1,6 @@
 {
-  "collectedAt": "2026-09-03T05:48:59.383Z",
+  "collectedAt": "2026-09-04T05:42:52.983Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
   "probeCount": 144,
   "results": {
     "toString/addEventListener": {
@@ -473,7 +474,7 @@
     },
     "intl/date-tostring-shape": {
       "threw": false,
-      "value": "matches=true|segments=7"
+      "value": "matches=true|headSegments=6"
     },
     "intl/date-toutcstring": {
       "threw": false,

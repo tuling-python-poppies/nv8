@@ -33,8 +33,8 @@ export const CAPABILITY_STATUS = Object.freeze({
 export const NODE_SUPPORT_MATRIX = Object.freeze([
   Object.freeze({ range: [24, 0], tier: 'supported', notes: 'primary target' }),
   Object.freeze({ range: [22, 0], tier: 'supported', notes: 'LTS' }),
-  Object.freeze({ range: [20, 0], tier: 'supported', notes: 'LTS; ArrayBuffer.transfer falls back to a copy' }),
-  Object.freeze({ range: [18, 18], tier: 'supported', notes: 'minimum; Iterator helpers and ArrayBuffer.transfer are absent' }),
+  Object.freeze({ range: [20, 0], tier: 'supported', notes: 'LTS; ArrayBuffer.transfer falls back to a copy; Window global enumeration order cannot match real Edge (V8 < 12 sorts enumerable keys first)' }),
+  Object.freeze({ range: [18, 18], tier: 'supported', notes: 'minimum; Iterator helpers and ArrayBuffer.transfer are absent; Window global enumeration order cannot match real Edge (V8 < 12 sorts enumerable keys first)' }),
 ]);
 
 /** Core 声明的最低 Node 版本 */
@@ -167,6 +167,45 @@ const CAPABILITY_PROBES = Object.freeze({
   'weak-ref': () => typeof WeakRef === 'function' && typeof FinalizationRegistry === 'function',
 
   'abort-signal.timeout': () => typeof AbortSignal?.timeout === 'function',
+
+  'vm.global-property-order': () => {
+    // `Object.getOwnPropertyNames(window)` 的**顺序**是指纹的一维，NV8 靠
+    // 「捕获 → 全部删除 → 按目标序重定义」复现它（`finalize-window-surface-order.js`）。
+    // 这要求 global 的字符串键按插入序枚举，也就是 [[OwnPropertyKeys]] 的规范要求。
+    //
+    // V8 10.x / 11.x（Node 18 / 20）在 dictionary 模式的 global object 上
+    // **把可枚举键排在不可枚举键之前**，不按插入序。V8 12.x（Node 22）已修正。
+    //
+    // 这不是能绕过去的：`enumerable` 本身是要复现的契约值，不能为了顺序而改。
+    // 实测后果是 Node 18/20 上 238 个全局排到 V8 内建之前，`window` 落在索引 0
+    // 而真实 Edge 是 678。形状层完全看不到——名字、descriptor、原型成员全都对。
+    //
+    // 报 `broken` 而不是 `unavailable`：能力存在（属性能定义、能删），只是行为
+    // 不符合规范，而这正是 `broken` 与 `unavailable` 要区分开的场景。
+    const context = vm.createContext({});
+    const verdict = vm.runInContext(`(() => {
+      Object.defineProperty(globalThis, '__nv8hidden', {
+        value: 1, writable: true, enumerable: false, configurable: true });
+      Object.defineProperty(globalThis, '__nv8shown', {
+        value: 1, writable: true, enumerable: true, configurable: true });
+      const names = Object.getOwnPropertyNames(globalThis);
+      const hidden = names.indexOf('__nv8hidden');
+      const shown = names.indexOf('__nv8shown');
+      const builtin = names.indexOf('Object');
+      return (hidden > builtin && shown > hidden)
+        ? 'insertion-order'
+        : 'enumerable-first (hidden=' + hidden + ' shown=' + shown
+          + ' Object=' + builtin + ')';
+    })()`, context);
+    return verdict === 'insertion-order'
+      ? true
+      : {
+        status: CAPABILITY_STATUS.BROKEN,
+        reason: `global keys are not in insertion order: ${verdict}. `
+          + 'The Window global enumeration order cannot match real Edge on this '
+          + 'runtime; use Node 22+ for fingerprint-sensitive work.',
+      };
+  },
 });
 
 /**

@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 791 项（`npm test`，78 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 819 项（`npm test`，79 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -1240,13 +1240,89 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     （`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一）。这类字段必须照抄，
     按规律推导会错——ADR-0005 同一条铁律
   - **行为层零变化**是个好消息：探针可以跨 major 迁移，扩探针不必等特定版本
-  - **阻塞项不在采集，在 `finalize-window-surface-order.js` 没有生成器**：
-    新增全局要在那份 1.5 万行文件里手改三处（capture / delete / redefine）
-    且顺序敏感。成员可以在 install 层按 `browserMajorVersion >= N` 门控
-    （已有约 20 处这种用法），全局不行
-  - 与「3 个全局名缺失待版本门控」是**同一个阻塞**，应当一并解决。单独换基准只会
-    把缺失全局从 3 涨到 6、把 `edge-surface-parity` 的棘轮往上推而没有还债
-    ——那正是这套棘轮要防的事
+  - **架构阻塞已解除**（见下一条）。换基准现在是两步：
+    `npm run fingerprint:globals` → `build-window-surface-order.mjs --write`。
+    已用真实 Edge 152 做过 dry-run：3 个新增全局自动带上形状、门控保留、
+    1167 项位置发生变化
+  - 剩下的前置条件只有 `HTMLUserMediaElement`（表里已 `pending`），以及
+    `AbstractRange.startContainer` / `endContainer` 要改成 `< 152` 门控
+- [x] **全局的版本门控能力已做出来**（原架构阻塞）
+  - `finalize-window-surface-order.js` 从 1.5 万行生成代码（638KB）改成
+    **数据表 + 45 行解释器**（`window-surface-order.js`，1175 行 / 52KB）。
+    生成它的工具 `tools/generate-window-surface-order.mjs` 从来没进版本库
+  - 门控是一个字段：`{ since: 151 }` / `{ before: 152 }` / `{ pending: "理由" }`。
+    `pending` 是「已登记缺口」的**单一来源**——`edge-surface-parity-test.js` 与
+    `edge-member-parity-test.js` 都从表里读，不再各自维护名单（原来同一份账目
+    抄在三处）
+  - 校验脚本 `scripts/build-window-surface-order.mjs`（`npm run check:surface-order`）：
+    顺序权威来源是 `fixtures/fingerprint/edge-globals.json`，形状来源是同一份
+    fixture 新增的 `descriptors` 字段，门控从现表按名字继承。
+    fixture 里少了一个已有全局会**报错**而不是静默删除
+  - 实测收益不在性能（冷启动 414ms → 410ms，在噪声内），在于顺序整表可替换：
+    151 → 152 有 **9 个已有全局挪了位置**，换基准必须整表重采，而这在 1.5 万行
+    代码里等于重新生成整个文件
+- [x] **`FontFaceSet` 在 151 profile 下错位已修**
+  - 它只在 `browserMajorVersion >= 151` 暴露，而旧实现表达不了门控，于是落在
+    **索引 61**（紧随 V8 内建之后），真实 Edge 是 **517**——其后 1171 个全局的
+    索引全部偏移一位
+  - **只测默认 150 profile 永远是绿的**（150 下这一项本来就不该存在）。与 `Intl`
+    默认 locale、UA 默认字体族是同一类陷阱，所以新测试同时断言 150 与 151
+- [x] **`window.chrome` 的 `configurable` 已按实测改**
+  - 旧生成文件把它写成 `configurable: false`——1171 项里唯一的不可配置数据属性。
+    实测真实 Edge 152 是 `true`，且 WebIDL 没有任何机制产生不可配置的数据属性
+    （`[LegacyUnforgeable]` 产生的是访问器）。孤例 + 无规范依据 + 实测反证
+  - 后果不是形状好看不好看：`delete window.chrome` 返回 false、
+    `Object.defineProperty(window, 'chrome', …)` 抛 TypeError——而改写
+    `window.chrome` 正是反爬脚本常做的事
+- [x] **`InteractionContentfulPaint` / `PerformanceSoftNavigation` 已实现**
+  - 构造函数早就在 `performance-longtail-runtime.js`，缺的是 6 个原型成员与接线。
+    继承链、`length`、`toStringTag`、`prototype` descriptor、非法构造/调用文案
+    全部按真实 Edge 152 实测值对齐
+  - 成员安装顺序按真实原型枚举顺序接线（`constructor` 夹在中间，不是排末尾）
+- [ ] **Node 18/20 上全局枚举顺序做不到与真实 Edge 一致**（宿主级，新发现）
+  - V8 10.x / 11.x 在 dictionary 模式的 global object 上把**可枚举键排在不可枚举
+    键之前**，不按插入序，违反 `[[OwnPropertyKeys]]`。V8 12.x（Node 22）已修正
+  - 实测后果：238 个全局排到 V8 内建之前，`window` 落在索引 0 而真实 Edge 是 678。
+    **旧实现同样如此**，只是从来没有测试看这一维
+  - 不可绕过：`enumerable` 本身是要复现的契约值，不能为了顺序去改。裸 vm context
+    上的最小复现已做（定义一个可枚举属性就会把它排到 `Object` 之前）
+  - 已做成宿主能力探针 `vm.global-property-order`（报 `broken`），
+    `npm run capabilities` 可见；`NODE_SUPPORT_MATRIX` 的 notes 也已写入。
+    测试用**反向断言**豁免——宿主哪天修好了会红，逼人删掉豁免
+  - 结论写进 README「环境要求」：**指纹敏感场景请用 Node 22+**
+- [ ] **Node 18–22 的 V8 内建段顺序与 Chromium 不同**（宿主级，新发现）
+  - TypedArray 家族的组内次序：V8 12.4 是
+    `Float32 Float64 Uint8Clamped BigUint64 BigInt64`，Chromium 152 是
+    `BigUint64 BigInt64 Uint8Clamped Float32 Float64`
+  - `Iterator` 的位置：V8 12.4 在 `console` 之后（索引 60），Chromium 与 Node 24
+    在 `Set` 之后（44）
+  - 那 61 项不由 NV8 安装也不由它重排。抹平需要把重排起点从 `Option` 前移到
+    TypedArray 段；**整段重排做不到**——`undefined` / `NaN` / `Infinity` 不可配置，
+    删不掉。已在 `window-surface-order-test.js` 登记，Node 24 逐位一致
+- [ ] **原型成员的枚举顺序有 22 处与真实 Edge 不同**（新发现的检测面）
+  - `edge-member-parity-test.js` 比的是成员**集合**（fixture 里已排序），谁都没比
+    过顺序。实测 963 个共有原型里 941 个顺序一致、**22 个不一致**
+    （3 个仅 `constructor` 位置错，19 个有其他错位）
+  - 根因之一是「先装完所有成员再装 constructor backlink」的惯例，而 Chromium 里
+    `paintTime` / `presentationTime` 这类是后置注册的：
+
+    ```
+    LargestContentfulPaint
+      真实：… toJSON, constructor, paintTime, presentationTime
+      NV8 ：… toJSON, paintTime, presentationTime, constructor
+    ```
+
+  - 另一类是成员本身的相对次序不同（`Response` 的 `bytes` / `textStream`、
+    `Request` 的 `body` / `targetAddressSpace`、`SVGAElement` 的一整段）。
+    这 22 处需要逐个核对是 151 → 152 的版本差异还是实现偏差
+  - 本轮只给新实现的两个 151 接口加了顺序断言，**没有**把 22 处一并括进测试
+    ——永久红的断言和没有断言等价
+- [ ] **`illegalConstructor` 对不带 `new` 的调用文案多了接口名**（新发现）
+  - 实测真实 Edge：`new InteractionContentfulPaint()` 报
+    `Failed to construct 'InteractionContentfulPaint': Illegal constructor`，
+    而 `InteractionContentfulPaint()`（不带 `new`）只报 `Illegal constructor`
+  - NV8 两种都带接口名。这是全项目一致的既有行为（几百处调用点），
+    修它要在 `illegalConstructor` 里区分 `new.target`，单独立项
 - [x] **音频指纹探针已补**（14 项，第一梯队第一项）
   - 补之前**一个探针都没有**，而 surface 里 `AudioContext` /
     `OfflineAudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer`
@@ -1391,17 +1467,20 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     就是没锁 locale 把采集机的中文系统语言烙进 fixture）、`performance.now()`
     精度与钳制。IndexedDB / Range / Selection / SVG / Web Animations / Observers
     极少被用来算签名，给它们写探针是在刷覆盖率
-  - 形状层已经到顶（多余 0、缺失 0、963/966 原型一致），继续投形状层收益递减；
-    行为层是唯一还能发现真问题的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
+  - 「形状层已经到顶」这个判断**已被推翻一半**：多余 0、缺失 0、963/966 原型成员
+    集合一致都是真的，但那两个数字都只覆盖**集合**，不覆盖**顺序**与 window 自身的
+    descriptor。新增第四层后首轮就抓到 3 个真问题（`FontFaceSet` 错位、
+    `window.chrome` 不可配置、Node 18/20 的顺序错乱），另外量出 22 个原型的成员
+    顺序不一致。形状层还有没测过的维度，不是到顶
+  - 行为层依然是发现真问题最多的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
     行为层却查出 6 处
-  - **当前被环境卡住**：本机 Edge 是 152.0.4191.53，fixture 基准是 151。
-    但实测 151 → 152 的**行为层零变化**（112 项全部一致），说明探针本身可以跨
-    major 迁移。真正的阻塞是 `finalize-window-surface-order.js` 没有生成器
-    ——见上一条。所以第一步不是「搞 151 环境」，而是把全局的版本门控能力做出来，
-    然后基准跟随本机 Edge
+  - **换基准的阻塞已解除**（见上文「全局的版本门控能力已做出来」）。本机 Edge 是
+    152.0.4191.53，fixture 基准仍是 151；实测 151 → 152 行为层零变化，探针可以跨
+    major 迁移，所以扩探针不必等换基准
 
-**测试**：`tests/edge-surface-parity-test.js`(8)、
-`tests/edge-member-parity-test.js`(10)、`tests/webgl-parity-test.js`(8)、
+**测试**：`tests/edge-surface-parity-test.js`(9)、
+`tests/edge-member-parity-test.js`(10)、`tests/window-surface-order-test.js`(27)、
+`tests/webgl-parity-test.js`(8)、
 `tests/gpu-profiles-test.js`(13)、`tests/fingerprint-calibration-test.js`(12)、
 `tests/event-handler-attribute-test.js`(14)、
 `tests/lifecycle-event-targets-test.js`(13)、
@@ -1424,9 +1503,13 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 | 层 | 状态 |
 |---|---|
-| 全局名存在性 | 覆盖真实 Edge 99.68%，多余 **0** —— 基本到顶 |
-| 原型成员与描述符 | **963/966** 完全一致，缺失 0，多余 0 —— 基本到顶 |
-| 运行时行为 | 112 探针 / 13 类 —— **剩余工作几乎全在这里** |
+| 全局名存在性 | 覆盖真实 Edge 99.68%，多余 **0** —— 集合层到顶 |
+| 原型成员与描述符 | **963/966** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
+| 枚举顺序与 own-descriptor | 数据表管的 1175 项**逐字一致**（Node 22+）；原型成员顺序 **22 处**待核 |
+| 运行时行为 | 144 探针 / 16 类 —— **剩余工作大头仍在这里** |
+
+「基本到顶」这个说法要限定在**集合**上。新增第四层（`window-surface-order-test.js`）
+首轮就在已经报 0 差异的地方抓到 3 个真问题——集合对、顺序错，是形状层此前的盲区。
 
 ### 优先级
 
@@ -1452,12 +1535,12 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 5. **堆容量守卫已修**（§12）：原公式放行数超过堆能装下的数量，溢出是 SIGABRT
    而不是结构化错误。剩余的是「容量拒绝派发 error 事件」这条可检测面
 
-**P2 最大的质量缺口，被采集环境卡住**
+**P2 最大的质量缺口**
 
-6. ~~固定 Edge 151 的采集环境~~ —— **重新定性**：151 → 152 实测行为层零变化，
-   探针可以跨 major 迁移。真正的阻塞是 `finalize-window-surface-order.js` 没有
-   生成器（新增全局要手改 1.5 万行文件的三处且顺序敏感），与「3 个全局名缺失待
-   版本门控」是同一件事。先做全局版本门控能力，再让基准跟随本机 Edge（§12）
+6. ~~固定 Edge 151 的采集环境~~、~~全局的版本门控能力~~ —— **均已完成**。
+   顺序与 descriptor 形状变成数据表，门控是一个字段；换基准现在是
+   `npm run fingerprint:globals` + `--write` 两步，已用真实 Edge 152 dry-run 验证。
+   剩余前置条件只有 `HTMLUserMediaElement` 与两个 `< 152` 门控的成员（§12）
 7. 行为探针第一梯队**三项全部完成**：音频指纹（14 项，10 处偏差）、
    Intl / 时区（13 项）、`performance.now()` 精度（5 项，共 4 处偏差、
    2 处宿主级已登记）。剩余领域按「反爬真正读什么」判断价值不高，明确延后（§12 末）
@@ -1474,7 +1557,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 9. Bundle 签名与版本兼容、受信任脚本策略（§5）；信任边界可测试与安全边界文档、
    API 文档、示例代码（§9、§10）
 10. 剩余功能缺口：legacy 整文档替换、畸形 URL 的错误页文档、
-    3 个需要版本门控的全局名（§12）
+    1 个未实现的全局名 `HTMLUserMediaElement`（§12，表里已 `pending`）
 11. 刻意不做的两项（CSS descriptor 形状、10 个布局相关计算值）保持登记
 
 ---
@@ -1484,5 +1567,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（791 项 / 78 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（819 项 / 79 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

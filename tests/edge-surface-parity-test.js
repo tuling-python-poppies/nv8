@@ -22,6 +22,8 @@ import { existsSync } from 'node:fs';
 import process from 'node:process';
 
 import { expectedMissingForNode } from '../src/baseline/known-differences.js';
+import { WINDOW_GLOBAL_ORDER } from '../src/install/window-surface-order.js';
+import { edge150Fingerprint } from '../src/fingerprint/edge-150.js';
 
 const REAL_GLOBALS_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.meta.url);
 const SURFACE_URL = new URL('../fixtures/baseline/full-surface.json', import.meta.url);
@@ -40,19 +42,38 @@ function surfaceTier() {
 /**
  * 已登记的缺失全局。
  *
- * 每条都要说明为什么还没补——「没注意到」不是理由。
+ * **不在这份文件里维护**：名单住在 `src/install/window-surface-order.js`，
+ * 因为那张表同时拿着**位置**信息——实现好了只需删掉 `pending` 字段，
+ * 全局就自动落在正确的枚举索引上。在这里再拄一份名单必然漂移。
+ *
+ * @type {Map<string, string>} 全局名 → 为什么还没补
  */
-const KNOWN_MISSING = Object.freeze({
-  // 采集基准是真实 Edge 151，而 baseline 用的是默认 150 profile。
-  // FontFaceSet 在 151 profile 下**是存在的**（`browserMajorVersion >= 151`
-  // 才暴露），所以它属于版本差异而非缺口。
-  FontFaceSet: '151 profile 下已暴露；150 profile 刻意不暴露（Edge 150 尚无此接口）',
-  HTMLUserMediaElement: 'Edge 151 新增元素接口；暴露它需要 finalize 生成器'
-    + '支持按 browserMajorVersion 门控',
-  InteractionContentfulPaint: '构造函数已在 performance-longtail-runtime.js 就绪，'
-    + '但暴露为全局需要 finalize 生成器支持版本门控',
-  PerformanceSoftNavigation: '同上：构造函数已就绪，等生成器支持版本门控',
-});
+const PENDING_GLOBALS = new Map(
+  WINDOW_GLOBAL_ORDER
+    .filter((entry) => entry[2]?.pending !== undefined)
+    .map((entry) => [entry[0], entry[2].pending])
+);
+
+/**
+ * baseline 用默认 profile 采，而 fixture 采自真实 Edge 151。
+ *
+ * 差一个 major 就会把版本门控的全局误报成缺失——这个坑踩过两次，
+ * `FontFaceSet` 就是这么进登记表的。门控进了数据表后这类差异能自动解释，
+ * 不需要人工登记。
+ */
+const BASELINE_MAJOR = edge150Fingerprint.browserMajorVersion;
+
+/** 表里因版本门控而在 baseline profile 下不存在的全局。 */
+const VERSION_GATED_GLOBALS = new Set(
+  WINDOW_GLOBAL_ORDER
+    .filter((entry) => {
+      const gate = entry[2];
+      if (gate === undefined || gate.pending !== undefined) return false;
+      if (gate.since !== undefined && BASELINE_MAJOR < gate.since) return true;
+      return gate.before !== undefined && BASELINE_MAJOR >= gate.before;
+    })
+    .map((entry) => entry[0])
+);
 
 /**
  * 已登记的多余全局。
@@ -131,18 +152,19 @@ test('every missing global is registered with a reason', () => {
     // 与 baseline 共用同一份。不剔除的话 Node 18/20 上会永久红一项——
     // 而永久红的断言和没有断言等价。
     .filter((name) => expectedMissingForNode(name) === null)
-    .filter((name) => KNOWN_MISSING[name] === undefined);
+    .filter((name) => !PENDING_GLOBALS.has(name))
+    .filter((name) => !VERSION_GATED_GLOBALS.has(name));
 
   assert.deepEqual(
     unregistered,
     [],
-    'add these to KNOWN_MISSING with a reason, or implement them: '
+    '把这些实现掉，或者在 src/install/window-surface-order.js 里给它们加 pending 理由：'
     + unregistered.join(', ')
   );
 });
 
 test('registered reasons are substantive', () => {
-  for (const [name, reason] of Object.entries(KNOWN_MISSING)) {
+  for (const [name, reason] of PENDING_GLOBALS) {
     assert.ok(
       reason.length > 10,
       `${name} needs a real explanation, not a placeholder`
@@ -150,11 +172,23 @@ test('registered reasons are substantive', () => {
   }
 });
 
+test('registered gaps name globals that real Edge actually has', () => {
+  // 登记一个真实 Edge 都没有的名字意味着登记过时或拼错，而它看上去就像
+  // 「已知缺口」，会一直赖在账上。
+  for (const name of [...PENDING_GLOBALS.keys(), ...VERSION_GATED_GLOBALS]) {
+    assert.ok(realGlobals.has(name), `${name} 不在采集结果里，这条登记已过时`);
+  }
+});
+
 test('the missing list stays small enough to be meaningful', () => {
-  const count = Object.keys(KNOWN_MISSING).length;
+  const count = PENDING_GLOBALS.size;
   // 上限只允许下调。它不是"当前很完美"的证明，而是防止差异悄悄扩大。
+  //
+  // 历史：旧名单 4 项。其中 `FontFaceSet` 其实只是版本差异被误计为缺口（现在
+  // 由数据表的门控自动解释），`InteractionContentfulPaint` /
+  // `PerformanceSoftNavigation` 已实现。只剩 `HTMLUserMediaElement`。
   assert.ok(
-    count <= 4,
+    count <= 1,
     `missing globals grew to ${count}; implement some before registering more`
   );
 });

@@ -26,6 +26,7 @@ import {
   expectedMissingForNode,
   expectedMissingMemberForNode,
 } from '../src/baseline/known-differences.js';
+import { WINDOW_GLOBAL_ORDER } from '../src/install/window-surface-order.js';
 
 const REAL_MEMBERS_URL = new URL('../fixtures/fingerprint/edge-members.json', import.meta.url);
 
@@ -65,12 +66,18 @@ const KNOWN_MISSING_MEMBERS = Object.freeze({});
  */
 const KNOWN_EXTRA_MEMBERS = Object.freeze({});
 
-/** NV8 完全没有的原型，理由见 edge-surface-parity-test.js 的 KNOWN_MISSING。 */
-const KNOWN_MISSING_PROTOTYPES = Object.freeze([
-  'HTMLUserMediaElement',
-  'InteractionContentfulPaint',
-  'PerformanceSoftNavigation',
-]);
+/**
+ * NV8 完全没有的原型。
+ *
+ * 从 `src/install/window-surface-order.js` 的 `pending` 字段读，不在这里另列
+ * 一份名单——旧版本这里写死三个名字并注“理由见 edge-surface-parity-test.js”，
+ * 那就是同一份账目拄在三处。
+ */
+const KNOWN_MISSING_PROTOTYPES = Object.freeze(
+  WINDOW_GLOBAL_ORDER
+    .filter((entry) => entry[2]?.pending !== undefined)
+    .map((entry) => entry[0])
+);
 
 /**
  * 剔除由宿主 Node 版本造成的缺口。

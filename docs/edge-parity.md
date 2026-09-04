@@ -13,9 +13,13 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 | Baseline | NV8 上一次的录制 | 重构引入的回归 |
 | Edge 对等性 | 真实 Edge 151 采集结果 | 与真实浏览器的固有偏差 |
 
-## 三个层级
+## 层级划分
 
 对等性检查按精细度分层。层级越深，能发现的问题越具体。
+
+[ADR-0006](adr/0006-parity-layers.md) 定的是前三层的**职责划分**（存在性 / 成员 /
+行为，互不可代替）。第四节不是新的职责层，是**形状层里一个此前没测过的维度**：
+前两层比的都是集合，不是顺序。
 
 ### 一、全局名存在性
 
@@ -52,7 +56,75 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 刻意不测的：`measureText` 字形宽度取决于已安装字体、`width`/`height` 取决于
 视口与排版——它们是机器指纹或需要布局引擎，不属于行为契约。
 
-仍未覆盖：字体度量、Intl/时区格式化、时间精度。
+仍未覆盖：字体度量。
+
+### 四、枚举顺序与 own-descriptor 形状
+
+`tests/window-surface-order-test.js`（27 项）— 比
+`Object.getOwnPropertyNames(window)` 的**序列**，以及 window 自身 1175 个
+own property 的 descriptor flag。
+
+前三层谁都没比过这两个：第一层比的是名字集合（且 fixture 里成员已排序），
+第二层比的是**原型**成员的 descriptor，不是 window 自身的。
+
+首轮抄到三个真问题：
+
+| 发现 | 形状层能看到吗 |
+|---|---|
+| `FontFaceSet` 在 151 profile 下落在索引 61（真实 517）| 不能，名字存在性是绿的 |
+| `window.chrome` 被写成 `configurable: false` | 不能，window 自身的 descriptor 从未比过 |
+| Node 18/20 上 238 个全局排到 V8 内建之前 | 不能，名字 / descriptor / 成员全都对 |
+
+#### Window own-descriptor 形状
+
+1175 项的 flag 只有五种组合，已逐条与真实 Edge 152 实测对齐（零不一致）：
+
+| 形状 | flag | 数量 | 对应 |
+|---|---|---|---|
+| `VALUE_HIDDEN` | value, writable, 不可枚举, 可配置 | 932 | WebIDL interface object（规范要求非枚举）|
+| `VALUE_ENUMERABLE` | value, writable, 可枚举, 可配置 | 50 | 49 个 Window operation 加 `chrome` |
+| `ACCESSOR` | get/set, 可枚举, 可配置 | 184 | Window attribute |
+| `ACCESSOR_LOCKED` | get/set, 可枚举, 不可配置 | 4 | `window` / `document` / `location` / `top` |
+| `ACCESSOR_HIDDEN` | get/set, 不可枚举, 可配置 | 1 | `offscreenBuffering` |
+
+get/set 取捕获值而不在表里写死：真实 Edge 有 26 项只有 getter
+（`document` / `navigator` / `crypto` / `localStorage` …），实测 NV8 零差异。
+
+#### 为什么必须同时断言多个 profile 版本
+
+`FontFaceSet` 那个 bug **只在 profile 版本 ≠ 数据表默认版本时可见**。只测默认
+150 profile 永远是绿的，因为 150 下这一项本来就不应存在。这与 `Intl` 默认 locale、
+UA 默认字体族那两个 bug 是同一类陷阱：在与 profile 同维度的默认值上测试，
+看不见跟随失败。
+
+#### 宿主级限制
+
+- **Node 18/20：顺序做不到**。V8 10.x / 11.x 在 dictionary 模式的 global object 上
+  把可枚举键排在不可枚举键之前，不按插入序。而 `enumerable` 本身是要复现的契约
+  值，不能为了顺序去改。探针：`vm.global-property-order`（报 `broken`）。
+- **Node 18–22：V8 内建段自身的注册顺序与 Chromium 不同**——TypedArray 家族的
+  组内次序、`Iterator` 的位置。那 61 项不由 NV8 安装也不由它重排（`undefined` /
+  `NaN` / `Infinity` 不可配置，整段重排做不到），已登记。Node 24 逐位一致。
+
+两条的豁免都用**反向断言**而不是 `return` 跳过：宿主哪天修好了，反向断言会红，
+逼人删掉豁免。沉默跳过的分支和不存在的断言等价。
+
+#### 原型成员的枚举顺序：新发现的缺口
+
+同一条道理向下一层：原型成员的顺序也是一维，而 `edge-members.json` 里成员是
+排过序的，谁都没比过。实测（NV8 151 profile vs 真实 Edge 152）：963 个共有
+原型里 **941 个顺序一致、22 个不一致**（3 个仅 `constructor` 位置错）。典型例：
+
+```
+LargestContentfulPaint
+  真实：… toJSON, constructor, paintTime, presentationTime
+  NV8 ：… toJSON, paintTime, presentationTime, constructor
+```
+
+根因是「先装完所有成员再装 constructor backlink」的惯例，而 Chromium 里
+`paintTime` / `presentationTime` 是后置注册的。本轮新实现的两个 151 接口已按真实
+顺序接线并有断言守住；那 22 处登记为独立项，本轮不一并括进测试——永久红的断言
+和没有断言等价。
 
 ## 差异的严重程度不对称
 

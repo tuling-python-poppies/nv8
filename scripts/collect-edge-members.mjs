@@ -13,9 +13,10 @@
 
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
+
+import { edgeTempDir, toBrowserUrl } from './edge-temp-dir.mjs';
 
 const EDGE_CANDIDATES = [
   // 原生 Windows 路径放在最前：脚本原来只列了 WSL(/mnt/c) 与 Linux 路径，
@@ -75,20 +76,12 @@ function findEdge(explicit) {
   throw new Error('Edge not found; pass --edge <path>');
 }
 
-function toBrowserUrl(filePath) {
-  if (filePath.startsWith('/mnt/')) {
-    const [, , drive, ...rest] = filePath.split('/');
-    return `file:///${drive.toUpperCase()}:/${rest.join('/')}`;
-  }
-  return `file://${filePath}`;
-}
-
 const args = process.argv.slice(2);
 const edgeIndex = args.indexOf('--edge');
 const outIndex = args.indexOf('--out');
 const edgePath = findEdge(edgeIndex === -1 ? null : args[edgeIndex + 1]);
 
-const baseDir = edgePath.startsWith('/mnt/') ? '/mnt/c/temp' : tmpdir();
+const baseDir = edgeTempDir(edgePath);
 const workDir = mkdtempSync(path.join(baseDir, 'nv8-members-'));
 const pagePath = path.join(workDir, 'members.html');
 
