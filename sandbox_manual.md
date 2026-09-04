@@ -6,7 +6,8 @@
 
 当前运行基线：
 
-- 支持 Node.js `>=18.20.0`；手册中的直接 Node 命令均带 `--experimental-vm-modules`。
+- 支持 Node.js `>=18.18.0`（在 18/20/22/24 四档均有测试；**指纹敏感场景请用 Node 22+**，
+  原因见 README「环境要求」）；手册中的直接 Node 命令均带 `--experimental-vm-modules`。
 - 默认环境 profile：`edge-compat`，默认指纹目标为 Edge 150。
 - 默认执行后端：`child-process`。
 - Node 18/20 使用异步 VM module linker；Node 22/24 使用批量链接快速路径。两条路径对公共行为等价。
@@ -40,7 +41,9 @@
 
 ### 1.1 Node.js 版本与 VM Modules
 
-运行时要求 Node.js `18.20.0` 或更高版本。当前兼容路径覆盖 Node 18、20、22 和 24；不需要把 PATH 固定到某一个 major version。
+运行时要求 Node.js `18.18.0` 或更高版本。当前兼容路径覆盖 Node 18、20、22 和 24；不需要把 PATH 固定到某一个 major version。
+**指纹敏感场景请用 Node 22+**：Node 18/20 的 V8 做不到让 Window 全局按插入序枚举，
+枚举顺序无法与真实 Edge 一致（详见 README「环境要求」）。
 
 确认当前版本：
 
@@ -60,7 +63,7 @@ nvm use 24
 Nv8 使用 `vm.SourceTextModule`。所有 `npm` 测试和构建脚本已经带有 `--experimental-vm-modules`；手动调用 Node 运行 Core、测试或 bundle 构建时必须显式添加该 flag：
 
 ```powershell
-node --experimental-vm-modules --test tests/core/*.test.js
+node --experimental-vm-modules --test tests/node-compat-test.js
 node --experimental-vm-modules tools/build-module-bundle.mjs
 ```
 
@@ -124,47 +127,49 @@ import {
 } from "nv8";
 ```
 
-顶层 `nv8` 导出包含沙箱、指纹与 Core API：
+顶层 `nv8` 的导出：
 
 | 导出 | 作用 |
 | --- | --- |
-| `EdgeSandbox` / `createSandbox` | 创建和控制隔离沙箱 |
-| `edge150Fingerprint` / `edge151Fingerprint` | 冻结的浏览器指纹快照 |
-| `ExecutionCore` / `createExecutionCore` | 可信代码使用的进程内最小执行 Core |
-| `definePlugin` / `resolvePluginPlan` | 插件定义与依赖解析 |
-| `edgeCompatPlugin` / `edgeCompatPlugins` / `edgeCompatDomainProfiles` / `edgeCompatProfile` | 完整 Edge 兼容 facade、capability plugins 与 profile 描述对象 |
+| `EdgeSandbox` / `createSandbox` | 创建和控制隔离沙箱（子进程边界）|
+| `createNv8` / `nv8Eval` | 面向可裁剪装配的进程内入口 |
+| `minimalPreset` / `basicPreset` / `domPreset` / `networkPreset` / `fullPreset` | 插件组合 |
+| `*Plugin`（`domCorePlugin`、`fetchPlugin` …）| 单个内置插件 |
+| `profiles` / `createProfile` | 内置 profile 与自定义 profile 构造 |
+| `generateProfileLockPlan` / `validateLockPlan` | 插件装配的锁定计划 |
+| `collector` / `protocol` | 采集层与请求协议层 |
 
-包还提供明确的子路径边界：
+子路径导出（与 `package.json` 的 `exports` 一一对应）：
 
 | 导入路径 | 内容 |
 | --- | --- |
-| `nv8/core` | `ExecutionCore` 与 `createExecutionCore` |
-| `nv8/plugin-sdk` | `definePlugin`、`resolvePluginPlan`、`assertPlugin` |
-| `nv8/plugins` | 内置插件、能力目录与插件组合 |
-| `nv8/profiles` | 内置 profile 描述与插件组合 |
 | `nv8/fingerprint/edge-150` | Edge 150 冻结指纹 |
+| `nv8/fingerprint/edge-151` | Edge 151 冻结指纹 |
+| `nv8/protocol` | 请求协议层（`src/request-protocol/`）|
+| `nv8/collector` | 采集层（`src/collector/`）|
+
+**指纹快照要从子路径拿**：`edge150Fingerprint` / `edge151Fingerprint` 不在顶层导出里。
 
 ### 2.3 第一次验证
 
-建议先运行 Core 与公开隔离门禁：
-
-```powershell
-npm run test:core
-npm run test:phase1
+```bash
+npm test                    # 全量，856 项（`node --test` 自动发现 tests/）
+npm run test:matrix         # Node 18 / 20 / 22 / 24 四档
 ```
 
 也可以直接运行单个测试文件：
 
-```powershell
-node --experimental-vm-modules --test tests/behavior/fingerprint-timing-profile.test.js
+```bash
+node --experimental-vm-modules --test tests/fingerprint-calibration-test.js
 ```
 
-当前 WSL 副本已经包含审计所需的 evidence，完整验证命令为：
+其余校验入口：
 
-```powershell
-npm test
-npm run audit
-npm pack --dry-run
+```bash
+npm run audit:state         # 模块级可变状态审计
+npm run check:surface-order  # Window 全局顺序表与采集 fixture 一致
+npm run capabilities        # 宿主能力三态报告
+npm run baseline            # 重新生成基线快照
 ```
 
 项目只保留通用离线 replay、网络捕获和浏览器兼容性验证。
@@ -259,32 +264,43 @@ await sandbox.close();
 
 `close()` 可以重复调用。关闭后不能再次执行脚本、替换页面、读取 Trace 或读取请求日志。
 
-### 3.8 最小 Core 与插件 API
+### 3.8 进程内入口与插件装配
 
-`EdgeSandbox` 仍是运行不可信代码的入口。`ExecutionCore` 是用于可信插件开发、表面验证或结构实验的进程内 API，不提供 child-process 安全边界：
+`EdgeSandbox` 是运行不可信代码的入口（子进程边界）。`createNv8` 是进程内 API，
+用于可信插件开发、表面验证或结构实验，**不提供 child-process 安全边界**：
 
 ```js
-import { createExecutionCore } from "nv8/core";
-import { edgeCompatPlugins } from "nv8/plugins";
+import { createNv8, domPreset } from "nv8";
 
-const core = await createExecutionCore({
-  pageUrl: "https://sandbox.test/",
-  plugins: edgeCompatPlugins,
-  pluginOptions: {
-    "nv8/edge-compat": {
-      pageHtml: "<!doctype html><main>ready</main>",
-    },
+const nv8 = await createNv8({
+  plugins: domPreset,
+  profile: {
+    id: "manual-demo",
+    version: "1.0.0",
+    name: "Manual demo",
+    url: "https://sandbox.test/",
+    pageHtml: "<!doctype html><main>ready</main>",
   },
 });
 
 try {
-  console.log(await core.evaluate("document.body.textContent"));
+  const realm = await nv8.sandbox.createRealm({ type: "root" });
+  console.log(realm.evaluate("document.body.textContent"));
 } finally {
-  await core.close();
+  await nv8.destroy();
 }
 ```
 
-插件在 Realm 启动前按声明的依赖关系拓扑排序。每个插件必须提供唯一 `id`、`moduleSpecifier`、`moduleUrl`、支持的 `realms` 和 `install()` 导出；外部插件若导入自身目录中的模块，还必须通过 `pluginRoots` 显式允许该源码根。Realm 启动后不能再注入插件或修改其安装顺序。
+插件在 Realm 启动前按声明的依赖关系拓扑排序。每个插件提供唯一 `id`、`version`、
+`capabilities`、`dependencies`，以及 `install(sandbox, registry, config)` 与
+（需要往 Realm 里装表面时）`activate(context)`。
+
+**`install` 与 `activate` 的分工是硬约束**：`install-*` 函数操作的是宿主的
+`globalThis`，在 Realm 建立之前跑会污染宿主进程。所以三参数签名的 `install` 会被
+判为 legacy 并**跳过执行**，真正装表面必须在 `activate` 里经
+`context.moduleLoader.importUrlAsync()` 完成。`plugins/canvas` 曾经把安装写在
+`install` 里，结果整个插件是个空壳（加不加它 surface 一模一样），而它还声明了
+`canvas.base` 能力。
 
 ## 4. 最小可运行示例
 
@@ -1338,65 +1354,58 @@ Remove-Item Env:EDGE_SANDBOX_CHILD_STDERR -ErrorAction SilentlyContinue
 
 ## 17. 测试和审计
 
-### 17.1 可移植回归门禁
+### 17.1 四档 Node 回归
 
-以下门禁不依赖 Windows 路径或开发 evidence 文件，应在每个支持的 Node 版本运行：
+同一套测试在四个支持的 Node 版本上跑：
 
-```powershell
-cd <nv8-root>
-npm run test:core
-npm run test:phase1
-node --experimental-vm-modules --test tests/behavior/iframe-window-facade-behavior.test.js
+```bash
+npm run test:matrix        # 等价于逐档 node --experimental-vm-modules --test
 ```
 
-它们分别覆盖插件/Core、协议与隔离公开 API，以及同步 iframe Realm、低堆 Realm 限制与跨源 facade。
+`npm test` 与矩阵用的是**同一条命令**（`--test` 不带参数，自动发现 `tests/`）。
+目录形式与 glob 形式在 Node 18/20 与 22+ 之间不兼容，所以两处都用无参数模式。
 
-最新验证矩阵：
+Node 18 生成的 module bundle 已在 Node 24 上验证。版本元数据不匹配时，加载器会忽略
+`cachedData` 并从源码加载，而不是使用错误 V8 版本的字节码。
 
-| Node.js | Core、插件与导出 | Phase 1 | iframe Realm |
-| --- | ---: | ---: | ---: |
-| `18.20.8` | `13/13` | `27/27` | `5/5` |
-| `20.20.2` | `13/13` | `27/27` | `5/5` |
-| `22.23.2` | `13/13` | `27/27` | `5/5` |
-| `24.18.0` | `13/13` | `27/27` | `5/5` |
+**Node 18/20 有一处宿主限制**：Window 全局的枚举顺序做不到与真实 Edge 一致
+（V8 < 12 把可枚举键排在不可枚举键之前）。指纹敏感场景请用 Node 22+，
+详见 README「环境要求」与 `npm run capabilities` 里的 `vm.global-property-order`。
 
-Node 18 生成的 module bundle 已在 Node 24 上验证。版本元数据不匹配时，加载器会忽略 `cachedData` 并从源码加载，而不是使用错误 V8 版本的字节码。
+### 17.2 单独跑某一类
 
-### 17.2 完整测试与证据输入
-
-```powershell
-npm test
+```bash
+node --experimental-vm-modules --test tests/fingerprint-calibration-test.js
+node --experimental-vm-modules --test tests/window-surface-order-test.js
+node --experimental-vm-modules --test tests/baseline-isolation-test.js
 ```
 
-当前 WSL 副本已经包含完整 `evidence/` 与重建产物；最近一次 Node `24.18.0` 全量结果为 `481/481`。仓库不再包含业务专用验证工具或外部业务 fixture；四个 Node 版本的可移植性判断以第 17.1 节门禁为准。
+手动运行 `node --test` 时必须自己加 `--experimental-vm-modules`；
+通过 `npm test` / `npm run test:matrix` 时 flag 由 package script 提供。
 
-单独运行指纹或隔离测试时也必须保留 VM Modules flag：
+### 17.3 审计与基线
 
-```powershell
-node --experimental-vm-modules --test tests/behavior/fingerprint-timing-profile.test.js
-node --experimental-vm-modules --test tests/isolation/timeout.test.js
-node --experimental-vm-modules --test tests/isolation/node-leak.test.js
+```bash
+npm run audit:state          # 模块级可变状态：哪些状态还没按 Realm 作用域隔离
+npm run check:surface-order   # Window 全局顺序表 vs 采集 fixture
+npm run check:bundle          # module bundle 是否属于本机（键是绝对 file:// URL）
+npm run capabilities          # 宿主能力三态报告（available / broken / unavailable）
+npm run baseline              # 重新生成 bootstrap 顺序 / surface / observability 基线
 ```
 
-### 17.3 审计
+与真实 Edge 的对等性检查在测试里，不在单独的审计脚本里：`edge-surface-parity`、
+`edge-member-parity`、`window-surface-order`、`edge-behavior-parity`。差异必须
+**登记**（`KNOWN_MISSING` / `KNOWN_BEHAVIOR_DIFFERENCES` / `UNPROBED_KNOWN_GAPS`
+或顺序表里的 `pending`），数量上限只允许下调。
 
-运行时代码、evidence、迁移账本和完整表面审计均可在当前 WSL 副本运行：
+### 17.4 性能基准
 
-```powershell
-npm run audit
+```bash
+npm run benchmark
 ```
 
-它会依次运行 forbidden runtime、implementation rules、supply-chain、migration ledger、DOM factory、Window surface、function semantics、interface relations 和 Worker surface。当前结果为全部阶段通过；function semantics 在 Node/V8 与原始捕获环境不同步时会报告摘要警告。只有在捕获基线上设置 `NV8_STRICT_FUNCTION_SURFACE=1` 才会将该摘要差异升级为失败。不要伪造或清空 evidence 来绕过门禁。
-
-### 17.4 Worker Thread benchmark
-
-如需测试 Worker Thread 的 cold/warm 执行开销：
-
-```powershell
-npm run benchmark:ips-threads
-```
-
-该 benchmark 仍然使用离线网络边界，不会真实发包。Worker Thread 后端只适合性能比较，不改变默认 child-process 安全边界。
+报冷启动、热复用、Realm 创建销毁与常驻内存。上界断言取多次采样的**最小值**——
+竞争只会让采样变大，最小值受污染最少。
 
 ## 18. 常见问题
 
@@ -1406,10 +1415,10 @@ npm run benchmark:ips-threads
 
 ```powershell
 node --version
-node --experimental-vm-modules --test tests/core/*.test.js
+node --experimental-vm-modules --test tests/node-compat-test.js
 ```
 
-Node 必须是 `18.20.0` 或更新版本。通过 `npm run test:core`、`npm run test:phase1` 或 `npm run build:bundle` 时 flag 已由 package script 提供；手动运行 `node --test`、Core runner 或 bundle 工具时必须自己加上 `--experimental-vm-modules`。
+Node 必须是 `18.18.0` 或更新版本。通过 `npm test`、`npm run test:matrix` 或 `npm run build:bundle` 时 flag 已由 package script 提供；手动运行 `node --test` 或 bundle 工具时必须自己加上 `--experimental-vm-modules`。
 
 不要用早期 Node 的 `moduleRequests`、`linkRequests()` 或 `hasTopLevelAwait()` API 可用性作为版本要求。加载器会根据当前 VM API 选择异步或批量链接路径。
 
@@ -1464,17 +1473,18 @@ UA 不能包含 `Edg/`。
 
 对应传感器未提供确定性 profile，或显式配置为 `null`。为它提供 `x/y/z/frequency` 或 orientation quaternion。
 
-### 18.8 审计提示默认 function digest 变化
+### 18.8 baseline 报出 surface 差异
 
-不要直接修改审计期望值。先确认：
+`npm run baseline` 或 `baseline-full-surface-test` 报差异时，**不要直接改期望值**。
+先确认差异是有意的：
 
-1. 运行的是证据捕获对应的 Node/V8/ICU 基线；
-2. 默认 profile 没有被改成自定义 timing；
-3. 没有在默认运行路径安装临时 wrapper；
-4. 所需 evidence 文件和基线样本都存在；
-5. `npm run audit:functions` 的行数和 digest 是否与该基线一致。
+1. 采集基准版本与 profile 一致——用 Edge 151 的 fixture 去比 150 的 profile，会把
+   版本门控的成员误报成缺失（这个坑踩过两次）；
+2. 是否只在某个 Node 档出现——`Iterator` 需要 Node 22+ 之类的宿主缺口另有登记表
+   （`src/baseline/known-differences.js`）；
+3. 是不是自己刚改的实现带来的，且新值有真实浏览器实测支撑。
 
-函数 rows/digest 是证据对齐门禁，不是 Node 18--24 兼容性测试。默认 `npm run audit:functions` 始终硬校验公开不变量、样本形状、Window surface 和 interface relations；不同 Node/V8 或 probe 版本造成的函数 rows/digest 差异会报告警告。只有在证据捕获所用的 Node/V8 基线上才使用严格摘要校验：`NV8_STRICT_FUNCTION_SURFACE=1 npm run audit:functions`。多版本运行时兼容性应使用第 17.1 节的 Core、Phase 1 与 iframe 门禁。
+确认是预期变更后再 `--write`，并且**四档都要重录**（fixture 按 Node major 分档）。
 
 ### 18.9 运行很慢或超时
 
@@ -1523,7 +1533,7 @@ UA 不能包含 `Edg/`。
 
 ## 发布前检查清单
 
-- [ ] 使用 Node `18.20.0` 或更新版本，并在直接 Node 命令中提供 `--experimental-vm-modules`；
+- [ ] 使用 Node `18.18.0` 或更新版本（指纹敏感场景用 22+），并在直接 Node 命令中提供 `--experimental-vm-modules`；
 - [ ] 默认不受信任代码使用 `child-process`；
 - [ ] 所有外部脚本、Worker 和接口数据都有明确 replay；
 - [ ] 没有把 sandbox `fetch()` 当作真实 HTTP；
@@ -1532,6 +1542,6 @@ UA 不能包含 `Edg/`。
 - [ ] 没有修改冻结的 `edge150Fingerprint`；
 - [ ] 使用 `try/finally` 调用 `sandbox.close()`；
 - [ ] 生产运行没有设置 `EDGE_SANDBOX_DISABLE_TIMEOUT`；
-- [ ] 第 17.1 节的 Core、Phase 1 和 iframe 门禁在目标 Node 版本通过；
-- [x] 当前 evidence 完整，`npm test` 与 `npm run audit` 已通过；
+- [ ] `npm run test:matrix` 在四档 Node 全绿；
+- [x] `npm test` 与 `npm run audit:state` 已通过；
 - [ ] 明确记录了本地兼容层与真实 Chromium/Edge 的差异。

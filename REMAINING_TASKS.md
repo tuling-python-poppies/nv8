@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 819 项（`npm test`，79 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 856 项（`npm test`，81 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -1490,6 +1490,113 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 ---
 
+## 十三、结构与卫生（全量扫描后的一轮收敛）
+
+一次仓库级只读扫描（4251 个文件）出了一份清单，逐项核对后落地如下。**没做结构
+重构**——容器目录、barrel、测试分目录、大文件拆分都要动几千处 import，收益是主观
+可读性，风险和收益不成比例，理由见本节末。
+
+### 已修
+
+- [x] **测试入口不再手写路径**。`package.json` 的 `test` 从 78 条手写路径改成
+  `node --experimental-vm-modules --test`（无参数自动发现）。新增测试不注册就静默
+  不跑，是「修掉沉默失效的 36 项测试」的同类隐患
+  - 目录形式与 glob 形式在 Node 18/20 与 22+ 之间**不兼容**（前者只认目录、后者只认
+    glob），无参数模式是唯一四档通用的写法。`test-matrix.sh` 也改成同一条命令
+  - 代价是发现范围变成整个仓库，所以补了一条断言：**tests/ 之外不得有匹配 Node
+    测试文件名模式的文件**（`tests/test-hygiene-test.js`）。自证过：往 `src/utils/`
+    扔一个 `stray-test.js` 立刻红
+- [x] **两份手写测试改用 `node:test`**
+  - plugin-sdk 那份（原在 `src/core/plugin-sdk/`，住在产品树、`console.log` 分段、
+    顶层断言、391 行）→ `tests/plugin-sdk-test.js`，16 项。断言逐条照搬
+  - `tests/plugin-system-test.js`（15 个 `async function testXxx()` +
+    `runTests()` 串行 + 自写 `assertEqual` + `process.exit(1)`）→ 15 个 `test()`
+  - 两者原来都不在 `--test` 的计数里：791 项从来没包含它们的 26 段。而顶层断言
+    意味着第一项失败后面全部不执行，一次只能看见一个问题
+  - 顺带把 10 处内联的 silent logger 收敛成一个常量
+- [x] **`plugins/canvas` 是空壳且谎报能力**
+  - `install()` 里只有「Canvas 实现待补充」，却声明 `canvas.base`。实测加不加这个
+    插件 surface 一模一样——纯死代码，而 ADR-0002 那套缺失能力诊断因此看不见这个洞
+  - 根因是**装错了钩子**：三参数 `install()` 会被 `normalizePlugin` 判为 legacy，
+    `installPlugin` 直接跳过（因为 `install-*` 操作宿主 globalThis，Realm 建立前跑
+    会污染宿主进程）。真正装表面必须在 `activate` 里经 `moduleLoader.importUrlAsync`
+  - 修复后 plugin 模式下：`typeof CanvasRenderingContext2D` 从 `"undefined"` 变
+    `"function"`，`String(ctx)` 从 `"[object Object]"` 变
+    `"[object CanvasRenderingContext2D]"`（两者都是可检测特征）
+  - `reserveGlobalSurface` 必须逐个写**字面量**：`collectGlobalSurfaceMap` 靠静态
+    正则扫这些调用，循环里的变量参数解析不到
+  - `plugins/dom` 与 `plugins/html` 的空 `install()` 是**有意的聚合门面**
+    （能力由 `dom-core` + `dom-collections` / `html-elements` 实际提供），不是同类问题
+- [x] **`sandbox_manual.md`（1537 行）描述了一套不存在的 API**
+  - `ExecutionCore` / `createExecutionCore` / `edgeCompatPlugins` /
+    `edgeCompatProfile` / `resolvePluginPlan` / `assertPlugin` 全部不存在；
+    四个 `nv8/` 子路径（`core`、`plugins`、`plugin-sdk`、`profiles`）也不在
+    `exports` 里
+  - 第 17 节描述了九阶段审计，用到 5 个 npm 脚本（`audit`、`audit:functions`、
+    `test:core`、`test:phase1`、`benchmark:ips-threads`）——**一个都没有**，
+    还配了一句「不要伪造或清空 evidence 来绕过门禁」
+  - 全部改成实际存在的入口。`docs/evidence-contract.md` /
+    `docs/node-compatibility.md` 里三处从 `nv8/` 的 `core` 子路径导入的示例同样修掉
+- [x] **文档失步做成断言**（`tests/docs-contract-test.js`，5 项）
+  - 扫全部 md，校验三类可机械核对的引用：`npm run <script>` 在 `scripts` 里、
+    `nv8/<subpath>` 在 `exports` 里、`src|tests|scripts|docs|fixtures/...` 路径存在
+  - `docs/架构改造计划.md` 显式豁免——它是**规划**文档，描述目标结构是它的职责。
+    豁免理由写在测试里，并在该文档头部标明「这是规划，不是现状」
+  - 豁免项自身有过时检查：一个「允许不存在」的路径如果其实存在，说明豁免过时了
+- [x] **配置自相矛盾**
+  - `package.json` description 是「Edge 150 Node.js compatibility sandbox」而代码/
+    文档目标是 150/151 双 profile、fixture 基准 151、本机 Edge 152 → 改成
+    `Edge-compatible browser runtime for Node.js (profiles: Edge 150 / 151)`
+  - `exports` 只暴露 `./fingerprint/edge-150`，而 `edge-151.js` 存在且被测试用 → 补上
+  - `package-lock.json` 的 `engines` 是 `24.11.0`（生成 lock 时 package.json 的旧值），
+    与 `>=18.18.0` 矛盾 → 重新生成
+  - `.node-version` 写 `24.11.0`，而本机 nvm 里根本没有这个版本 → 改成 `24`
+    （major-only，工具自选最新 24.x）
+- [x] **宿主层 5 处 `console.error` 绕过 logger**
+  - `src/core/script-injector.js` 4 处 + `src/core/sandbox.js` 1 处。Core 层直接打
+    stdout：调用方关不掉、诊断层收不到
+  - `ScriptInjector` 加可选 `logger`；`injectEvidenceScripts` 把 sandbox 的 logger
+    传进去。缺省 no-op，因为错误已经通过 `triggerErrorCallbacks` 与 `script.error`
+    往上抛了一份
+  - `src/core/app.js` 与 `src/utils/logger.js` 里的 `console.*` **是 logger 自身的
+    实现**，不动。`src/api/**` 里的 `console` 是 Realm 内的浏览器 console，也不动
+- [x] **`eventListenerRegistry.js` → `event-listener-registry.js`**。全 src 唯一一个
+  非 kebab 文件名，只有 1 处引用
+- [x] **`.tmp-probe/` 进 `.gitignore`**。诊断时把真实 Edge 与 NV8 的输出落盘逐字比对
+  会产生几百 KB 中间文件，属于当次调查
+- [x] **`docs/架构改造计划.md` 的 `最后更新：2026-01-XX`**。`XX` 是字面占位符
+- [x] **`docs/rust-migration-map.json` 的 `generatedFrom` 指向已删目录**。
+  1465 条映射与 90 个 `implementationTarget` 全部有效，只是元数据没说清那个目录已经
+  不在了
+
+### 核对后判定为「不是问题」
+
+- **`src/core/sandbox.js` 用 `new URL('../install/...')` 引用上层**——清单判为
+  「Core → 表面穿透」，实际是这套架构的**必要机制**：那些模块操作 Realm 的
+  `globalThis`，必须由 Realm 自己的 moduleLoader 加载。改成静态 `import` 会把表面装到
+  宿主进程。已在代码里写明理由
+- **`src/` 里没有死文件**。对 4158 个文件做可达性分析（含 `new URL` + moduleLoader
+  这条动态边），从测试/脚本/入口出发**全部可达**，0 个孤儿
+
+### 明确不做（需要单独立项 + 你点头）
+
+- **容器目录**（`engine/` `surface/` `backend/` `infra/` `config/` 归口 26 个顶层
+  目录）。要改几千处 import 路径，收益是主观可读性，且会让所有历史 git blame /
+  文档路径引用失效。真要做应当一次一个容器、每批立刻跑四档矩阵
+- **给 `src/api/<域>`（86 个）与 `src/install/`（316 个）补 barrel**。api/install 是
+  生成体，barrel 与「是否生成」要一起决策，否则又多一类「声称生成却无生成器」
+- **按域把测试分进 `tests/{core,api,collector,...}/`**。自动发现已经解决了「新增
+  测试要注册」的问题，分目录只影响人找文件的路径
+- **拆大文件**（`sandbox.js` 1903 行、`runtime-pool.js` 1563、`bootstrap-root.js`
+  1469、`edge-runtime-options.js` 1419、`behavior-probes.js` 1290）。拆分边界要按
+  职责切，不是按行数切；没有明确的职责边界之前拆只是把一个大文件变成一堆互相
+  import 的小文件
+- **`protocol` 与 `request-protocol` 改名**。两者职责不同（帧协议 vs 请求计划），
+  但名字太像。改名要动 `exports`（`./protocol` 指向 `request-protocol`），属于对外
+  接口变更
+
+---
+
 ## 总结与优先级
 
 原来这一节列的三项「高优先级」（Protocol/Collector 边界、Evidence Loader 解耦、
@@ -1567,5 +1674,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构改造计划**: [docs/架构改造计划.md](./docs/架构改造计划.md)
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/baseline/baseline.js](./src/baseline/baseline.js)
-- **测试**: `npm test`（819 项 / 79 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（856 项 / 81 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

@@ -18,8 +18,6 @@ if [ ${#VERSIONS[@]} -eq 0 ]; then
   exit 1
 fi
 
-FILES=$(node -e "console.log(require('./package.json').scripts.test.match(/tests\/[a-z0-9-]+\.js/g).join(' '))")
-
 failed=0
 for v in "${VERSIONS[@]}"; do
   BIN="$HOME/.nvm/versions/node/v$v/bin/node"
@@ -28,7 +26,9 @@ for v in "${VERSIONS[@]}"; do
     continue
   fi
 
-  out=$(timeout 600 "$BIN" --experimental-vm-modules --test $FILES 2>&1)
+  # 与 `npm test` 同一条命令：`--test` 不带参数在四档 Node 上都是自动发现，
+  # 而目录/glob 形式在 18/20 与 22+ 之间不兼容（前者只认目录，后者只认 glob）。
+  out=$(timeout 900 "$BIN" --experimental-vm-modules --test 2>&1)
   summary=$(echo "$out" | grep -E '^(#|ℹ) (pass|fail)' | tr '\n' ' ')
   if echo "$out" | grep -qE '^(#|ℹ) fail [1-9]'; then
     printf '  %-10s FAIL  %s\n' "$v" "$summary"

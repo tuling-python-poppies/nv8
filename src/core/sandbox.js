@@ -16,7 +16,7 @@ import { createWorkletRealm } from '../realm/create-worklet-realm.js';
 import { destroyRealm as destroyWorkletRealm } from '../realm/destroy-realm.js';
 import { createStateAccessor } from './plugin-sdk/state-registry.js';
 import { createNativeFunctionRegistry } from './native-function-registry.js';
-import { createEventListenerRegistry } from './eventListenerRegistry.js';
+import { createEventListenerRegistry } from './event-listener-registry.js';
 import { createObjectURLRegistry } from './object-url-registry.js';
 import { createLifecycleRecorder } from './lifecycle-events.js';
 import { hasRealmValue } from './realm-probe.js';
@@ -32,6 +32,14 @@ import {
 
 let sandboxIdCounter = 0;
 let evidenceBridgeCounter = 0;
+
+// 下面四个常量看起来像「Core 穿透到 api / install 层」，实际上是这套架构的
+// **必要机制**：这些模块操作的是 Realm 的 `globalThis`，必须由 Realm 自己的
+// moduleLoader 加载（`importUrlSyncCached` / `importUrlAsync`）。改成顶部静态 `import`
+// 会把表面装到**孿主进程**的 globalThis 上——那是污染，不是分层。
+//
+// 同一条约束解释了为什么插件的三参数 `install()` 会被当成 legacy 跳过，
+// 而真正装表面得在 `activate(context)` 里经 `context.moduleLoader` 做。
 const PAGE_LIFECYCLE_URL = new URL(
   '../install/install-page-lifecycle.js',
   import.meta.url,
@@ -520,6 +528,7 @@ export async function createSandbox(config) {
         evidenceSource,
         evidence,
         targetUrl,
+        logger,
       );
       evidenceResources.set(replacement.id, resource);
     }
@@ -1005,6 +1014,7 @@ export async function createSandbox(config) {
           evidenceSource,
           evidence,
           pageUrl,
+          logger,
         );
         evidenceResources.set(realm.id, resource);
       }
@@ -1460,7 +1470,7 @@ async function completePageLifecycle(realm) {
   }
 }
 
-async function injectEvidenceScripts(realm, source, evidence, pageUrl) {
+async function injectEvidenceScripts(realm, source, evidence, pageUrl, logger) {
   // 策略解析完全交给契约层，Core 不再判断具体策略常量
   const scriptIds = await resolveTrustedScriptIds(source, evidence);
 
@@ -1477,6 +1487,7 @@ async function injectEvidenceScripts(realm, source, evidence, pageUrl) {
   const injector = createScriptInjector(realm, {
     strategy: SCRIPT_LOAD_STRATEGY.ASYNC,
     lifecycle,
+    logger,
   });
   const bridgeName = `__nv8EvidenceScriptBridge${++evidenceBridgeCounter}`;
   const document = realm.global.document;
@@ -1493,7 +1504,12 @@ async function injectEvidenceScripts(realm, source, evidence, pageUrl) {
             element,
           });
         })
-        .catch(error => console.error(error));
+        // 原来是 `console.error(error)`：Core 层直接打 stdout 会绕过宿主的
+        // logger，调用方关不掉、诊断层也收不到。
+        .catch(error => logger?.error?.(
+          `[Sandbox] Evidence script injection failed: ${sourceUrl}`,
+          error,
+        ));
     };
     observer = realm.evaluate(`(() => {
       const bridge = globalThis[${JSON.stringify(bridgeName)}];

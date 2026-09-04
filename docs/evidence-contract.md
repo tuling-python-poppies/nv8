@@ -48,7 +48,7 @@ Core 只 import 上面第一层。这一点由测试
 契约校验用 duck typing 而非 `instanceof`，因为实现可能来自独立包或测试替身：
 
 ```js
-import { assertEvidenceSource, isEvidenceSource } from 'nv8/core';
+import { assertEvidenceSource, isEvidenceSource } from '../src/core/evidence-contract.js';
 
 assertEvidenceSource(source);   // 缺方法时列出全部缺失项
 isEvidenceSource(source);       // 不抛错版本

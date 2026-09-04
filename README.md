@@ -791,7 +791,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，819 项
+npm test              # 全量，856 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -848,6 +848,42 @@ npm run capabilities  # 宿主能力探测报告
 一次），那不是每次建沙箱都要付的成本。拿它去比 `benchmark` 报的 490ms，
 比的是两件不同的事。
 
+### 测试入口不许手写路径
+
+`package.json` 的 `test` 原来手写了 78 条测试路径。**新增测试不注册就静默不跑**
+——与「修掉沉默失效的 36 项测试」同一类隐患：一个从不执行的断言，和它不存在没有
+区别，但它在计数里、在报告里、在你以为已经覆盖了的地方。
+
+现在是 `node --experimental-vm-modules --test`（不带参数，自动发现）。
+
+为什么是无参数而不是 `--test tests/` 或 `--test 'tests/**/*-test.js'`：**两种形式
+在四档之间不兼容**。Node 18/20 的位置参数只认目录，Node 22+ 只认 glob
+（`--test tests/` 在 Node 24 上会去 `require('/path/tests')` 然后
+`MODULE_NOT_FOUND`）。无参数模式是唯一四档通用的写法，`test-matrix.sh` 用的也是它。
+
+代价是发现范围变成整个仓库，所以补了一条断言：**`tests/` 之外不得有匹配 Node
+测试文件名模式的文件**。这条同时消掉了「测试住在产品树」——
+plugin-sdk 那份测试原来在 `src/core/` 下，用 `console.log` 分段、顶层断言，
+既不在 `--test` 的计数里，第一项失败后面也全部不执行。
+
+### 文档失步要靠断言，不靠 review
+
+`sandbox_manual.md` 有 1537 行，其中一整节介绍 `ExecutionCore` /
+`createExecutionCore` / `edgeCompatPlugins` 与四个 `nv8/` 子路径——**全部不存在**。
+第 17 节还描述了一套九阶段审计，用到 5 个 npm 脚本，一个都没有，并配了一句
+「不要伪造或清空 evidence 来绕过门禁」。
+
+这类问题读一遍就能发现，但没人会为了 review 去逐条核对 1500 行手册。所以
+`tests/docs-contract-test.js` 把三类**可机械核对**的引用变成断言：
+
+- `npm run <script>` 必须在 `package.json` 的 `scripts` 里；
+- `nv8/<subpath>` 必须在 `exports` 里；
+- `src|tests|scripts|docs|fixtures/...` 的路径必须存在。
+
+`docs/架构改造计划.md` 显式豁免路径检查——它是**规划**文档，描述目标结构就是它的
+职责。豁免理由写在测试里，并且豁免项自身有过时检查：一个「允许不存在」的路径如果
+其实存在，说明豁免过时了。
+
 ### 工具脚本必须跨平台
 
 审计与采集脚本自己也会坏，而且坏法通常是**谎报通过**：
@@ -876,7 +912,7 @@ npm run capabilities  # 宿主能力探测报告
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（819 项 / 79 个文件） |
+| `npm test` | 全量测试（856 项 / 81 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -915,8 +951,7 @@ src/
 ├── bootstrap/         Realm 引导（root / worker / worklet）
 ├── realm/             Realm 创建、模块加载、动态 import
 ├── webidl/            WebIDL 转换、原生函数伪装、跨 Realm 方法
-├── plugins/           插件（约 30 个域）
-├── plugin-sdk/        插件定义与能力匹配
+├── plugins/           插件：装配策略（选哪些表面、依赖、能力声明）
 ├── profiles/          Profile 工厂、注册表、内置 Profile
 ├── presets/           插件预设组合
 ├── controller/        进程/线程后端与资源上限
@@ -927,14 +962,35 @@ src/
 ├── evidence/          Evidence Bundle 与离线回放
 ├── baseline/          基线快照与行为探针
 ├── fingerprint/       GPU 等指纹身份
-├── core/              Sandbox、插件注册表、状态作用域、诊断
+├── core/              Sandbox、插件注册表、状态作用域、诊断、plugin-sdk/
 └── compat/            Node 版本兼容
 
-tests/                 78 个测试文件
+tests/                 81 个测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
 ```
+
+### `api/` 与 `plugins/` 有 18 个同名域，它们不是一回事
+
+`api/<域>` 是**实现**，`install/install-<域>.js` 把实现装到 Realm 的 globalThis 上，
+`plugins/<域>` 是**装配策略**——声明这个域提供哪些能力、依赖谁、以及在 Realm 里
+调哪个安装器。两条路径共用同一份 `api/` 与 `install/`：
+
+```
+legacy 模式   bootstrap-root.js  ──→ install-* ──→ api/*
+plugin 模式   plugins/<域>.activate ──┘
+```
+
+**`install` 与 `activate` 的分工是硬约束。** `install-*` 函数操作宿主的
+`globalThis`，在 Realm 建立之前跑会污染宿主进程。所以 `install(sandbox, registry,
+config)` 这种三参数签名会被判为 legacy 并**跳过执行**，真正装表面必须在
+`activate(context)` 里经 `context.moduleLoader.importUrlAsync()` 完成。
+
+`plugins/canvas` 曾经把安装写在 `install` 里，于是整个插件是个空壳（加不加它
+surface 一模一样），而它还声明了 `canvas.base` 能力——ADR-0002 那套缺失能力诊断
+因此看不见这个洞。`plugins/dom` 与 `plugins/html` 则是**有意的聚合门面**：
+它们的能力由 `dom-core` + `dom-collections` / `html-elements` 实际提供。
 
 ---
 

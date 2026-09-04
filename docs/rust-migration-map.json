@@ -1,7 +1,7 @@
 {
  "schema": "nv8-migration-map/1.0",
- "note": "Rust 原始实现 → JS 实现的对应关系。原先由 1465 个纯 re-export 垫片文件承载，没有任何代码引用它们；现折叠为单一清单，信息不丢而文件数从 1465 降到 1。",
- "generatedFrom": "src/migration-targets/**/*.js",
+ "note": "Rust 原始实现 → JS 实现的对应关系。原先由 1465 个纯 re-export 垫片文件承载，没有任何代码引用它们；现折叠为单一清单，信息不丢而文件数从 1465 降到 1。 `generatedFrom` 记的是原始来源，那个目录现在不存在——保留它是为了说明这 1465 条映射从哪来，不是指还能从那里重新生成。",
+ "generatedFrom": "src/migration-targets/**/*.js（该目录在折叠为本清单时已删除）",
  "entryCount": 1465,
  "distinctImplementations": 90,
  "entries": [

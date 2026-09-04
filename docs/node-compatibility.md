@@ -43,7 +43,7 @@ CI workflow 的 tier 标注与它一一对应。
 | `unavailable` | 不存在 |
 
 ```js
-import { detectHostCapabilities, hostSupports } from 'nv8/core';
+import { detectHostCapabilities, hostSupports } from '../src/core/host-capabilities.js';
 
 const host = detectHostCapabilities();
 host.capabilities['array-buffer.transfer'];
@@ -61,7 +61,7 @@ hostSupports(host, 'array-buffer.transfer');  // broken 也算 false
 ### 启动前置检查
 
 ```js
-import { preflightHostCheck } from 'nv8/core';
+import { preflightHostCheck } from '../src/core/host-capabilities.js';
 
 preflightHostCheck({ warn: (msg) => logger.warn(msg) });
 ```

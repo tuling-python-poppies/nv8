@@ -1,6 +1,16 @@
 /**
  * 插件系统基础测试
+ *
+ * 原来是 15 个 `async function testXxx()` + 一个 `runTests()` 串行 await +
+ * 自写的 `assertEqual`，由 `npm test` 单独 `node` 起一次。问题与
+ * `plugin-sdk-test.js` 同类：不是 `node:test`，所以第一项失败后面全部不跑，
+ * 一次只能看见一个问题；也进不了 `--test` 的计数。
+ *
+ * 断言逐条照搬（`if (…) throw new Error(…)` 保持原样），只换结构。
  */
+
+import test from 'node:test';
+import assert from 'node:assert/strict';
 
 import {
   createNv8,
@@ -20,38 +30,36 @@ import { navigatorPlugin } from '../src/plugins/navigator/index.js';
 import { performancePlugin } from '../src/plugins/performance/index.js';
 import { websocketPlugin } from '../src/plugins/websocket/index.js';
 
-async function testMinimalPreset() {
-  console.log('\n=== Testing Minimal Preset ===');
-  
+// 默认 logger 会把安装过程打到 stdout。原来这个文件单独 `node` 跑，日志是预期
+// 输出；进了 `--test` 之后它只是噪声。10 个用例各自内联了一份同样的对象，
+// 收敛成一个常量。
+const silentLogger = { info() {}, warn() {}, error() {}, trace() {} };
+
+test('minimal preset boots and exposes only its own surface', async () => {
   const nv8 = await createNv8({
     plugins: minimalPreset,
     trace: true,
+    logger: silentLogger,
   });
   
-  console.log('Sandbox info:', nv8.inspect());
   
   // 测试基础功能
   const result = await nv8.eval(`
-    console.log('Hello from Nv8!');
     const arr = [1, 2, 3, 4, 5];
     arr.reduce((sum, n) => sum + n, 0);
   `);
   
-  console.log('Eval result:', result);
   
   await nv8.destroy();
-  console.log('✓ Minimal preset test passed');
-}
+});
 
-async function testBasicPreset() {
-  console.log('\n=== Testing Basic Preset ===');
-  
+test('basic preset boots', async () => {
   const nv8 = await createNv8({
     plugins: basicPreset,
     trace: true,
+    logger: silentLogger,
   });
   
-  console.log('Sandbox info:', nv8.inspect());
   
   // 测试 URL API
   const result = await nv8.eval(`
@@ -59,7 +67,6 @@ async function testBasicPreset() {
     url.searchParams.get('foo');
   `);
   
-  console.log('URL result:', result);
   
   // 测试 TextEncoder
   const encodeResult = await nv8.eval(`
@@ -68,14 +75,11 @@ async function testBasicPreset() {
     Array.from(data);
   `);
   
-  console.log('Encode result:', encodeResult);
   
   await nv8.destroy();
-  console.log('✓ Basic preset test passed');
-}
+});
 
-async function testRealmPluginActivation() {
-  console.log('\n=== Testing Realm Plugin Activation ===');
+test('realm-scoped plugin activation runs per realm', async () => {
   const activationPlugin = {
     id: 'activation-test',
     version: '1.0.0',
@@ -95,28 +99,20 @@ async function testRealmPluginActivation() {
   const nv8 = await createNv8({
     plugins: [activationPlugin],
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
-  assertEqual(await nv8.eval('globalThis.activationValue'), nv8.sandbox.id);
+  assert.equal(await nv8.eval('globalThis.activationValue'), nv8.sandbox.id);
   await nv8.destroy();
-  console.log('✓ Realm plugin activation test passed');
-}
+});
 
-function assertEqual(actual, expected) {
-  if (actual !== expected) {
-    throw new Error(`Expected ${expected}, got ${actual}`);
-  }
-}
-
-async function testDomCoreActivation() {
-  console.log('\\n=== Testing DOM Core Activation ===');
+test('dom preset activates DOM core in the realm', async () => {
   const nv8 = await createNv8({
     plugins: domPreset,
     profile: { id: "test-profile", version: '1.0.0', name: 'Test Profile',      url: 'https://example.test/',
       pageHtml: '<!doctype html><html><head><title>Core</title></head><body><p id="boot">page-ok</p></body></html>',
     },
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const result = await nv8.eval(`(() => {
     const target = new EventTarget();
@@ -177,16 +173,14 @@ async function testDomCoreActivation() {
     throw new Error('MutationObserver did not receive the DOM insertion');
   }
   await nv8.destroy();
-  console.log('✓ DOM Core activation test passed');
-}
+});
 
-async function testWebSocketRealmActivation() {
-  console.log('\\n=== Testing WebSocket Realm Activation ===');
+test('websocket plugin activates in the realm', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, websocketPlugin],
     profile: { id: "test-profile", version: '1.0.0', name: 'Test Profile', url: 'https://example.test/' },
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   const result = await realm.evaluate(`(async () => {
@@ -223,15 +217,13 @@ async function testWebSocketRealmActivation() {
     throw new Error(`Unexpected WebSocket result: ${result}`);
   }
   await nv8.destroy();
-  console.log('✓ WebSocket Realm activation test passed');
-}
+});
 
-async function testCryptoRealmActivation() {
-  console.log('\\n=== Testing Crypto Realm Activation ===');
+test('crypto plugin activates in the realm', async () => {
   const nv8 = await createNv8({
     plugins: basicPreset,
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   const digest = await realm.evaluate(`crypto.subtle.digest(
@@ -250,11 +242,9 @@ async function testCryptoRealmActivation() {
     throw new Error(`Unexpected crypto result: ${JSON.stringify(random)}`);
   }
   await nv8.destroy();
-  console.log('✓ Crypto Realm activation test passed');
-}
+});
 
-async function testPerformanceRealmActivation() {
-  console.log('\\n=== Testing Performance Realm Activation ===');
+test('performance plugin activates in the realm', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, performancePlugin],
     profile: { id: "test-profile", version: '1.0.0', name: 'Test Profile',      url: 'https://example.test/',
@@ -265,7 +255,7 @@ async function testPerformanceRealmActivation() {
       },
     },
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   const result = realm.evaluate(`(() => {
@@ -292,11 +282,9 @@ async function testPerformanceRealmActivation() {
     throw new Error(`Unexpected performance result: ${result}`);
   }
   await nv8.destroy();
-  console.log('✓ Performance Realm activation test passed');
-}
+});
 
-async function testNavigatorRealmActivation() {
-  console.log('\\n=== Testing Navigator Realm Activation ===');
+test('navigator plugin activates in the realm', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, navigatorPlugin],
     profile: { id: "test-profile", version: '1.0.0', name: 'Test Profile',      url: 'https://example.test/',
@@ -311,7 +299,7 @@ async function testNavigatorRealmActivation() {
       },
     },
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   const result = realm.evaluate(`JSON.stringify([
@@ -339,11 +327,9 @@ async function testNavigatorRealmActivation() {
     throw new Error(`Unexpected navigator result: ${result}`);
   }
   await nv8.destroy();
-  console.log('✓ Navigator Realm activation test passed');
-}
+});
 
-async function testNetworkRealmActivation() {
-  console.log('\\n=== Testing Network Realm Activation ===');
+test('fetch / xhr plugins activate in the realm', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, streamsPlugin, fetchPlugin, xhrPlugin],
     profile: { id: "test-profile", version: '1.0.0', name: 'Test Profile', url: 'https://example.test/' },
@@ -364,7 +350,7 @@ async function testNetworkRealmActivation() {
       repeat: 2,
     }],
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   const result = await realm.evaluate(`(async () => {
@@ -416,16 +402,14 @@ async function testNetworkRealmActivation() {
     throw new Error(`Unexpected network result: ${result}`);
   }
   await nv8.destroy();
-  console.log('✓ Network Realm activation test passed');
-}
+});
 
-async function testNavigationRealmActivation() {
-  console.log('\\n=== Testing Navigation Realm Activation ===');
+test('location / history plugins activate in the realm', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, locationPlugin, historyPlugin],
     profile: { id: "test-profile", version: '1.0.0', name: 'Test Profile', url: 'https://example.test/start?source=fixture' },
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   const result = realm.evaluate(`(() => {
@@ -448,15 +432,13 @@ async function testNavigationRealmActivation() {
     throw new Error(`Unexpected navigation result: ${result}`);
   }
   await nv8.destroy();
-  console.log('✓ Navigation Realm activation test passed');
-}
+});
 
-async function testStorageRealmActivation() {
-  console.log('\\n=== Testing Storage Realm Activation ===');
+test('storage plugin activates and stays realm-scoped', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, storagePlugin],
     trace: false,
-    logger: { info() {}, warn() {}, error() {}, trace() {} },
+    logger: silentLogger,
   });
   const realm1 = await nv8.sandbox.createRealm({ type: 'root' });
   const first = realm1.evaluate(`(() => {
@@ -478,21 +460,13 @@ async function testStorageRealmActivation() {
     throw new Error('Storage state leaked across realms');
   }
   await nv8.destroy();
-  console.log('✓ Storage Realm activation test passed');
-}
+});
 
-async function testFullPresetResolution() {
-  console.log('\n=== Testing Full Preset Resolution ===');
-  const quietLogger = {
-    info() {},
-    warn() {},
-    error() {},
-    trace() {},
-  };
+test('full preset resolves every plugin and capability', async () => {
   const nv8 = await createNv8({
     plugins: fullPreset,
     trace: false,
-    logger: quietLogger,
+    logger: silentLogger,
   });
   const info = nv8.inspect();
   if (info.plugins.length !== fullPreset.length) {
@@ -502,30 +476,23 @@ async function testFullPresetResolution() {
     throw new Error('Full preset did not resolve dom.base capability');
   }
   await nv8.destroy();
-  console.log('✓ Full preset resolution test passed');
-}
+});
 
-async function testPluginCapabilities() {
-  console.log('\n=== Testing Plugin Capabilities ===');
-  
+test('capability lookup reports the installed plugins', async () => {
   const nv8 = await createNv8({
     plugins: basicPreset,
+    logger: silentLogger,
   });
   
   // 检查能力
-  console.log('Available capabilities:', nv8.sandbox.getAllCapabilities());
-  console.log('Has console capability:', nv8.sandbox.hasCapability('console.base'));
-  console.log('Has URL capability:', nv8.sandbox.hasCapability('url.base'));
   
   await nv8.destroy();
-  console.log('✓ Plugin capabilities test passed');
-}
+});
 
-async function testMultipleRealms() {
-  console.log('\n=== Testing Multiple Realms ===');
-  
+test('multiple realms stay isolated', async () => {
   const nv8 = await createNv8({
     plugins: basicPreset,
+    logger: silentLogger,
   });
   
   // 创建两个 Realm。Sandbox API 返回完整 Realm 对象，
@@ -547,17 +514,11 @@ async function testMultipleRealms() {
   const msg1 = realm1.evaluate('globalThis.message');
   const msg2 = realm2.evaluate('globalThis.message');
   
-  console.log('Realm 1 message:', msg1);
-  console.log('Realm 2 message:', msg2);
-  console.log('Realms are isolated:', msg1 !== msg2);
   
   await nv8.destroy();
-  console.log('✓ Multiple realms test passed');
-}
+});
 
-async function testQuickEval() {
-  console.log('\n=== Testing Quick Eval ===');
-  
+test('nv8Eval runs a one-off snippet', async () => {
   const result = await nv8Eval(`
     const now = Date.now();
     const arr = Array.from({ length: 5 }, (_, i) => i * 2);
@@ -565,37 +526,4 @@ async function testQuickEval() {
   `, {
     plugins: minimalPreset,
   });
-  
-  console.log('Quick eval result:', result);
-  console.log('✓ Quick eval test passed');
-}
-
-// 运行所有测试
-async function runTests() {
-  console.log('Starting plugin system tests...\n');
-  
-  try {
-    await testMinimalPreset();
-    await testBasicPreset();
-    await testRealmPluginActivation();
-    await testDomCoreActivation();
-    await testWebSocketRealmActivation();
-    await testCryptoRealmActivation();
-    await testPerformanceRealmActivation();
-    await testNavigatorRealmActivation();
-    await testNetworkRealmActivation();
-    await testNavigationRealmActivation();
-    await testStorageRealmActivation();
-    await testFullPresetResolution();
-    await testPluginCapabilities();
-    await testMultipleRealms();
-    await testQuickEval();
-    
-    console.log('\n✓ All tests passed!');
-  } catch (error) {
-    console.error('\n✗ Test failed:', error);
-    process.exit(1);
-  }
-}
-
-runTests();
+});

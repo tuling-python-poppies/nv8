@@ -14,6 +14,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 
 const TESTS_DIR = new URL('./', import.meta.url);
+const REPO_ROOT = new URL('../', import.meta.url);
 
 /** 允许出现固定延时的文件——助手模块自身实现轮询，必须能用 setTimeout */
 const EXEMPT_PATHS = new Set([
@@ -84,5 +85,53 @@ test('async-wait helpers are actually adopted by the suite', async () => {
   assert.ok(
     importers >= 4,
     `expected multiple suites to use the shared helpers, found ${importers}`
+  );
+});
+
+/**
+ * Node 默认的测试文件名模式。`node --test`（不带参数）按这些模式递归发现。
+ *
+ * 参见 Node 文档 “Test runner execution model”。只列当前仓库会用到的那几种。
+ */
+function looksLikeTestFile(name) {
+  return /(^|[.\-_])test\.(js|mjs|cjs)$/.test(name)
+    || /^test-.*\.(js|mjs|cjs)$/.test(name);
+}
+
+async function collectStrayTestFiles(dir, prefix = '') {
+  const skip = new Set(['node_modules', '.git', 'tests', '.tmp-probe', 'fixtures']);
+  const entries = await readdir(dir, { withFileTypes: true });
+  const strays = [];
+  for (const entry of entries) {
+    if (skip.has(entry.name)) continue;
+    if (entry.isDirectory()) {
+      strays.push(...await collectStrayTestFiles(
+        new URL(`${entry.name}/`, dir),
+        `${prefix}${entry.name}/`,
+      ));
+    } else if (looksLikeTestFile(entry.name)) {
+      strays.push(`${prefix}${entry.name}`);
+    }
+  }
+  return strays;
+}
+
+test('no test file lives outside tests/', async () => {
+  // `npm test` 现在是 `node --experimental-vm-modules --test`，不再手写 80 条
+  // 路径——新增测试不用注册就能跑（原来不注册就静默不跑，与「修掉沉默失效的
+  // 36 项测试」同类隐患）。
+  //
+  // 代价是发现范围变成了整个仓库：产品树里任何一个叫 `*-test.js` /
+  // `test.js` / `test-*.js` 的文件都会被当测试跑。`src/core/plugin-sdk/test.js`
+  // 就是这样一份：住在 `src/`、用 `console.log` 手写断言、不在 `--test` 的计数
+  // 里（已移到 `tests/plugin-sdk-test.js` 并改用 `node:test`）。
+  //
+  // 这条断言把「测试只住在 tests/」从约定变成强制。
+  const strays = await collectStrayTestFiles(REPO_ROOT);
+  assert.deepEqual(
+    strays,
+    [],
+    '这些文件会被 `node --test` 自动当成测试跑，但不在 tests/ 下：'
+    + strays.join(', ')
   );
 });

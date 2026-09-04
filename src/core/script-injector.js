@@ -27,9 +27,19 @@ export class ScriptInjector {
     this.realm = realm;
     this.strategy = options.strategy || SCRIPT_LOAD_STRATEGY.ASYNC;
     this.lifecycle = options.lifecycle || null;
+    // 脚本加载/执行失败原来直接 `console.error`，那会绕过宿主的 logger 打到
+    // stdout：调用方关不掉、诊断层收不到，而 `logger` 才是 Core 约定的出口。
+    // 缺省 no-op 是因为这些错误已经通过 `triggerErrorCallbacks` 与
+    // `script.error` 往上抛了一份，日志只是补充。
+    this.logger = options.logger ?? null;
     this.pendingScripts = [];
     this.loadedScripts = new Set();
     this.scriptCallbacks = new Map(); // URL -> [callbacks]
+  }
+
+  /** @param {string} message @param {unknown} error */
+  reportError(message, error) {
+    this.logger?.error?.(message, error);
   }
   
   /**
@@ -85,7 +95,7 @@ export class ScriptInjector {
             void this.registerScriptElement(script, sourceResolver, options)
               .catch(error => {
                 const url = script?.getAttribute?.('src') || script?.src || '<inline-script>';
-                console.error(`Error loading script ${url}:`, error);
+                this.reportError(`Error loading script ${url}:`, error);
                 this.triggerErrorCallbacks(url, error);
               });
           }
@@ -163,7 +173,7 @@ export class ScriptInjector {
         try {
           callback();
         } catch (error) {
-          console.error(`Error in script callback for ${url}:`, error);
+          this.reportError(`Error in script callback for ${url}:`, error);
         }
       }, 0);
     }
@@ -206,7 +216,7 @@ export class ScriptInjector {
     } catch (error) {
       script.error = error;
       this.triggerErrorCallbacks(script.url, error);
-      console.error(`Error executing script ${script.url}:`, error);
+      this.reportError(`Error executing script ${script.url}:`, error);
     } finally {
       if (this.lifecycle !== null && script.element !== null) {
         this.lifecycle.clearCurrentScript?.();
@@ -241,7 +251,7 @@ export class ScriptInjector {
         try {
           callback();
         } catch (error) {
-          console.error(`Error in script callback for ${url}:`, error);
+          this.reportError(`Error in script callback for ${url}:`, error);
         }
       }, 0);
     }
