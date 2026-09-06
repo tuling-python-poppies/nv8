@@ -6,6 +6,15 @@
  * 提供能力：
  * - timers.base: setTimeout, setInterval 等
  */
+const WINDOW_MESSAGING_URL = new URL(
+  "../../surface/api/window/window-messaging.js",
+  import.meta.url,
+);
+const NATIVE_FUNCTION_URL = new URL(
+  "../../engine/webidl/native-function.js",
+  import.meta.url,
+);
+
 export const timersPlugin = {
   id: "@nv8/plugin-timers",
   version: "1.0.0",
@@ -21,11 +30,55 @@ export const timersPlugin = {
   },
   
   async activate(context) {
-    const { global } = context;
+    const { global, moduleLoader } = context;
+    const messaging = await moduleLoader.importUrlAsync(WINDOW_MESSAGING_URL);
+    const nativeFunctions = await moduleLoader.importUrlAsync(NATIVE_FUNCTION_URL);
+    const capture = messaging?.namespace?.captureScheduledCallbackIncumbent;
+    const notify = messaging?.namespace?.notifyScheduledCallbackIncumbent;
+    if (typeof capture !== "function" || typeof notify !== "function") {
+      throw new Error("Realm module loader cannot install timer incumbent bridge");
+    }
+    const disguise = nativeFunctions?.namespace?.registerNativeFunction;
+    const nativeSetTimeout = global.setTimeout;
+    const nativeSetInterval = global.setInterval;
+    const nativeQueueMicrotask = global.queueMicrotask;
+    const nativeClearTimeout = global.clearTimeout;
+    const nativeClearInterval = global.clearInterval;
+    const wrap = nativeSchedule => function (handler, delay, ...args) {
+      if (typeof handler !== "function") {
+        return Reflect.apply(nativeSchedule, this, [handler, delay, ...args]);
+      }
+      const source = capture();
+      return Reflect.apply(nativeSchedule, this, [
+        function (...callbackArgs) {
+          notify(source);
+          return Reflect.apply(handler, this, callbackArgs);
+        },
+        delay,
+        ...args,
+      ]);
+    };
+    const setTimeout = wrap(nativeSetTimeout, "setTimeout");
+    const setInterval = wrap(nativeSetInterval, "setInterval");
+    const queueMicrotask = function (handler) {
+      if (typeof handler !== "function") {
+        return Reflect.apply(nativeQueueMicrotask, this, [handler]);
+      }
+      const source = capture();
+      return Reflect.apply(nativeQueueMicrotask, this, [
+        () => {
+          notify(source);
+          handler();
+        },
+      ]);
+    };
+    disguise?.(setTimeout, "setTimeout");
+    disguise?.(setInterval, "setInterval");
+    disguise?.(queueMicrotask, "queueMicrotask");
     global.setTimeout = setTimeout;
-    global.clearTimeout = clearTimeout;
+    global.clearTimeout = nativeClearTimeout;
     global.setInterval = setInterval;
-    global.clearInterval = clearInterval;
+    global.clearInterval = nativeClearInterval;
     global.queueMicrotask = queueMicrotask;
     context.exports.setTimeout = global.setTimeout;
   },

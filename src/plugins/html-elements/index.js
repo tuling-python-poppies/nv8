@@ -110,7 +110,7 @@ export const htmlElementsPlugin = {
     );
     iframeInstaller?.namespace?.installIFrameRealms?.(
       context.runtime?.childRealmFactory ?? null,
-      context.pageUrl,
+      context.runtime?.documentBaseUrl ?? context.pageUrl,
     );
     context.exports.htmlElements = true;
   },

@@ -895,6 +895,9 @@ export function bootstrapRoot(
   timingProfile = null,
   navigatorMetadata = null,
   frameElement = null,
+  realmOrigin = null,
+  documentBaseUrl = null,
+  serviceWorkerPageUrl = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -947,13 +950,14 @@ export function bootstrapRoot(
   // 这个钩子完全在 Realm 内完成，不需要宿主往返；而**整文档替换**仍未接
   // （需要子 Realm 回调宿主），所以取消路径可用、真正的文档替换还没有。
   configureNavigation(pageUrl, {
+    origin: realmOrigin,
     beforeNavigate: () => {
       const proceed = dispatchBeforeUnload();
       if (proceed) dispatchPageHideAndUnload();
       return proceed;
     },
   });
-  configureIFrameRealms(childRealmFactory, pageUrl);
+  configureIFrameRealms(childRealmFactory, documentBaseUrl ?? pageUrl);
   configureNavigatorProfile(
     navigatorUserAgent,
     navigatorPlatform,
@@ -966,7 +970,7 @@ export function bootstrapRoot(
   );
   configureServiceWorkers(
     serviceWorkerFactory,
-    pageUrl,
+    serviceWorkerPageUrl ?? pageUrl,
     capabilitiesProfile?.serviceWorker,
   );
   configureWorklets(workletFactory, pageUrl);
@@ -1296,7 +1300,7 @@ export function bootstrapRoot(
   installServiceWorker();
   installWindowSelfReferences();
   configureWindowMessaging(
-    new URL(pageUrl).origin,
+    realmOrigin ?? new URL(pageUrl).origin,
     parentWindow,
     topWindow,
     parentOrigin,
@@ -1460,9 +1464,16 @@ export function reparentRealm(
   parentPostMessage = null,
   parentSameOrigin = false,
   frameElement = null,
+  documentUrl = null,
+  documentOrigin = null,
 ) {
+  if (documentUrl !== null) {
+    configureNavigation(documentUrl, {
+      origin: documentOrigin,
+    });
+  }
   configureWindowMessaging(
-    currentOriginForReparent(),
+    documentOrigin ?? currentOriginForReparent(),
     parentWindow,
     topWindow ?? parentWindow,
     parentOrigin,

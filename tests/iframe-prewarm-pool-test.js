@@ -131,8 +131,8 @@ test('the pool closes the cross-realm identity probe', async () => {
   // 那两条探针在默认配置下登记为已知差异（池关着，contentWindow 为 null）；
   // 开池后必须逐字等于真实 Edge 151 的采集值。
   //
-  // 唯一的例外是 `href`：空白 iframe 的 location.href 仍是父页面 URL 而非
-  // about:blank，那是独立的 origin/URL 解耦改造，与池无关。
+  // 空白 iframe 的 `href` 与 origin 已解耦：URL 是 `about:blank`，origin 仍继承
+  // 父页面。这条和预热池本身无关，但池位重配时也必须保持这一契约。
   await withSandbox({ prewarmChildRealms: 1 }, async (sandbox) => {
     const observed = JSON.parse(await sandbox.run(`JSON.stringify((() => {
       const frame = document.createElement('iframe');

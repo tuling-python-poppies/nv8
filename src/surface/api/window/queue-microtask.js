@@ -1,6 +1,10 @@
 import { traceCall } from "../../../infra/trace/trace-function.js";
 import { defineGlobalFunction } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
+import {
+  captureScheduledCallbackIncumbent,
+  notifyScheduledCallbackIncumbent,
+} from "./window-messaging.js";
 
 export const queueMicrotask = {
   queueMicrotask(callback) {
@@ -14,7 +18,9 @@ export const queueMicrotask = {
         "Failed to execute 'queueMicrotask' on 'Window': parameter 1 is not of type 'Function'.",
       );
     }
+    const incumbentSource = captureScheduledCallbackIncumbent();
     Promise.resolve().then(() => {
+      notifyScheduledCallbackIncumbent(incumbentSource);
       callback();
     }).catch(() => {
       // Browser hosts report microtask exceptions through their error channel.

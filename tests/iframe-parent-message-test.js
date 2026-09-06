@@ -39,6 +39,30 @@ test('same-origin iframe parent.postMessage preserves child source', async () =>
   }
 });
 
+test('same-origin iframe aliases retain child source across scheduled callbacks', async () => {
+  const nv8 = await createRuntime();
+  try {
+    const realm = await nv8.sandbox.createRealm({ type: 'root' });
+    const result = await realm.evaluate(`new Promise(resolve => {
+      const frame = document.createElement('iframe');
+      window.addEventListener('message', event => resolve(JSON.stringify([
+        event.data,
+        event.source === frame.contentWindow,
+        event.source === window,
+      ])), { once: true });
+      frame.addEventListener('load', () => {
+        frame.contentWindow.eval(\"const p = parent; setTimeout(() => p.postMessage('from-alias', '*'), 0);\");
+      }, { once: true });
+      frame.srcdoc = '<!doctype html><html><body>child</body></html>';
+      document.body.appendChild(frame);
+    })`);
+    assert.deepEqual(JSON.parse(result), ['from-alias', true, false]);
+    await nv8.sandbox.destroyRealm(realm.id);
+  } finally {
+    await nv8.destroy();
+  }
+});
+
 test('same-origin iframe parent bridge enforces targetOrigin', async () => {
   const nv8 = await createRuntime();
   try {

@@ -285,7 +285,10 @@ export class RuntimePool {
     if (this.idlePrewarmedHandles.length === 0) return null;
     if (options.blankDocument !== true) return null;
     if (options.sameOrigin !== true) return null;
-    if (`${options.pageUrl}` !== `${this.page.url}`) return null;
+    const parentOrigin = new URL(this.page.url).origin;
+    if ((options.origin ?? new URL(`${options.pageUrl}`).origin) !== parentOrigin) {
+      return null;
+    }
 
     const handle = this.idlePrewarmedHandles.pop();
     if (handle.realm.destroyed) return null;
@@ -296,6 +299,8 @@ export class RuntimePool {
       options.parentPostMessage ?? null,
       true,
       options.frameElement ?? null,
+      options.pageUrl ?? "about:blank",
+      options.origin ?? parentOrigin,
     );
     options.onContext?.(handle.window);
     return handle;
@@ -502,6 +507,10 @@ export class RuntimePool {
   async buildChildRealm(options) {
     const generation = this.captureGeneration();
     const pageUrl = new URL(`${options.pageUrl}`);
+    const childOrigin = options.origin ?? pageUrl.origin;
+    const serviceWorkerPageUrl = new URL(
+      `${options.serviceWorkerPageUrl ?? pageUrl.href}`,
+    );
     const replayDocument = options.navigationSource === "src"
       ? resolveDocumentReplay(pageUrl.href, this.options.replay)
       : null;
@@ -512,13 +521,15 @@ export class RuntimePool {
         label: `edge-child-window-${this.childRealms.size + 1}`,
         browserMajorVersion: this.options.fingerprint.browserMajorVersion,
         timingProfile: this.options.fingerprint.timing,
-        origin: pageUrl.origin,
+        origin: childOrigin,
         pageUrl: pageUrl.href,
+        documentBaseUrl: options.documentBaseUrl ?? pageUrl.href,
+        serviceWorkerPageUrl: serviceWorkerPageUrl.href,
         traceEnabled: this.traceEnabled,
         maxTraceEntries: this.options.proxyTrace.maxEntries,
         screenProfile: this.options.fingerprint.screen,
         navigatorProfile: this.options.fingerprint.navigator,
-        localStorageData: this.localStorageByOrigin.get(pageUrl.origin) ?? "",
+        localStorageData: this.localStorageByOrigin.get(childOrigin) ?? "",
         sessionStorageData: "",
         cookieData: "",
         pageHtml: replayDocument?.body ?? `${options.pageHtml ?? ""}`,
@@ -528,7 +539,7 @@ export class RuntimePool {
         replay: this.options.replay,
         networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
           kind: "window",
-          url: pageUrl.href,
+          url: serviceWorkerPageUrl.href,
           topLevel: false,
         }),
         childRealmFactory: childOptions => this.createChildRealm(childOptions),
@@ -545,7 +556,7 @@ export class RuntimePool {
         serviceWorkerFactory: workerOptions =>
           this.createServiceWorker(workerOptions),
         workletFactory: workerOptions => this.createWorkletModule(workerOptions),
-        broadcastConnector: this.createBroadcastConnector(pageUrl.origin),
+        broadcastConnector: this.createBroadcastConnector(childOrigin),
         renderingProfile: this.options.fingerprint.rendering,
         capabilitiesProfile: this.options.fingerprint.capabilities,
         nativeFunctionRegistry: this.nativeFunctionRegistry,
@@ -563,17 +574,17 @@ export class RuntimePool {
       throw this.lifecycleError();
     }
     this.childRealms.add(realm);
-    return this.createChildWindowHandle(realm, pageUrl);
+    return this.createChildWindowHandle(realm, pageUrl, childOrigin);
   }
 
-  createChildWindowHandle(realm, pageUrl) {
+  createChildWindowHandle(realm, pageUrl, childOrigin = pageUrl.origin) {
     const pool = this;
     const window = vm.runInContext("globalThis", realm.context);
     return {
       window,
       // 池位领走时要按 realm 重配父子关系，也要能判断它是否已被销毁
       realm,
-      origin: pageUrl.origin,
+      origin: childOrigin,
       deliverParentMessage(message, origin, targetOriginOrOptions, transfer) {
         if (realm.destroyed) return;
         realm.bootstrap.receiveParentMessage(

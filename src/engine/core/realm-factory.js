@@ -194,6 +194,7 @@ export async function createRealm(config) {
     trace,
     logger,
     pageUrl = 'https://example.com/',
+    origin = null,
     pageHtml = '<!doctype html><html><head></head><body></body></html>',
     replay = [],
     navigatorProfile = {},
@@ -208,9 +209,10 @@ export async function createRealm(config) {
   
   // 1. 创建 vm.Context
   const page = new URL(pageUrl);
+  const realmOrigin = origin ?? page.origin;
   const context = vm.createContext({}, {
     name: realmId,
-    origin: page.origin,
+    origin: realmOrigin,
     codeGeneration: {
       strings: true,
       wasm: true,
@@ -241,6 +243,7 @@ export async function createRealm(config) {
     throw new Error('Realm module loader cannot install navigation state');
   }
   navigationModule.namespace.installCoreNavigation(page.href, {
+    origin: realmOrigin,
     beforeNavigate: runtime.beforeNavigate,
     onNavigate: runtime.onNavigate,
   });

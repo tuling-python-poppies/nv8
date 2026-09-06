@@ -1100,20 +1100,17 @@ css-ua-defaults.js），现在都有了脚本。
   默认关闭是刻意的（每个池位 254ms + 占一个子 Realm 的堆额度），且池深 N 只覆盖建
   ≤N 个 iframe 的目标——**缓解不是根治**。
   实测依据与选项对比见 [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)。
-- **空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`**。
-  已重新定性：`about:blank` 是第一个 **URL 与 origin 必须分离**的场合
-  （URL 不透明、origin 继承父页面），而 NV8 目前把文档 origin 从页面 URL 推导，
-  至少四处要解耦，是独立的改造。`srcdoc` 同理（真实是 `about:srcdoc`）。
-- **`event.source` 在别名跨任务写法下退化**。同源子帧直写
-  `parent.postMessage(x, '*')` 的 `event.source` 是精确的（靠 `parent` getter
-  兼作 incumbent 标记）；写成 `const p = parent; setTimeout(() => p.postMessage(...))`
-  会退化成父窗口自己。要精确需要真正的 incumbent 栈，见
-  [ADR-0007](docs/adr/0007-parent-window-identity.md)。
-- **容量拒绝在 iframe 上派发 `error` 事件**。真实浏览器的 iframe 导航失败从不派发
-  `error`；容量拒绝是 NV8 内部条件、没有浏览器对应物，但派 `error` 仍是可检测的
-  （脚本连建多个 iframe 就能看到）。堆容量守卫本身已修：原公式
-  `floor(maxHeapBytes / 36MB)` 把根 Realm 也按 36MB 算，实测放行数超过堆能装下的
-  数量，溢出是 **SIGABRT** 而不是结构化错误（128MB 安全上限 1 个、原放行 2 个）。
+- **空白 iframe 的 URL/origin 已解耦**：`location.href` 和 `document.URL` 为
+  `about:blank`，`location.origin` 继承父页面；`srcdoc` 对应 `about:srcdoc`，
+  同样继承父页面 origin。该行为已由 `tests/iframe-about-blank-test.js` 覆盖。
+- **`event.source` 的别名跨任务路径已补齐**。同源子帧直写或先保存
+  `const p = parent` 再通过 `setTimeout`、`setInterval`、`requestAnimationFrame`、
+  `queueMicrotask` 调用时，均保留发送子窗口；定时器入口保存并恢复 Realm incumbent，
+  不改变页面可见的 `parent` 对象身份。
+- **iframe 容量拒绝不再暴露为 DOM `error` 事件**。容量拒绝是 NV8 内部宿主条件，
+  现在以导航结算的 `load` 结束，避免页面通过 `error` 事件探测实现配额；堆容量守卫
+  仍返回结构化 `QuotaExceededError`，不会再触发子进程 **SIGABRT**（128MB 安全上限
+  1 个子 Realm）。
   现为 `floor((maxHeapBytes - 90MB) / 36MB)`，默认 512MB 的能力不变。
 - **被顶掉的导航仍会建出子 Realm 再关掉**：真实浏览器压根不会开始。是 CPU
   浪费而非可观察偏差——导航合并本身是正确的（同一同步块内的多次属性变更只
@@ -1153,8 +1150,8 @@ IPv4 点分十进制的数值归一化。三者都无探针覆盖。
 
 ### legacy 导航
 
-beforeunload / unload 事件已到位，但导航仍不替换文档（`location.href` 更新，
-DOM 不变）。需要子 Realm 回调宿主。
+beforeunload / unload 事件和整文档替换已到位：导航获准后会销毁旧 Realm、重建根
+Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 

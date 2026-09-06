@@ -38,7 +38,7 @@ export const serviceWorkerPlugin = {
     }
     installer.namespace.installServiceWorkerCapabilities({
       serviceWorkerFactory: context.runtime?.serviceWorkerFactory ?? null,
-      pageUrl: context.pageUrl,
+      pageUrl: context.runtime?.serviceWorkerPageUrl ?? context.pageUrl,
       profile: context.runtime?.serviceWorkerProfile ?? null,
     });
     context.exports.serviceWorker = true;

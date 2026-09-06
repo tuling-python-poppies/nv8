@@ -16,6 +16,7 @@ const navigationSlot = createRealmSlot(() => ({
   nextNavigationEntryId: 0,
   beforeNavigateHook: null,
   navigateHook: null,
+  originOverride: null,
 }), "navigation-state");
 
 function nav() {
@@ -47,6 +48,9 @@ export function configureNavigation(initialUrl, options = {}) {
   })];
   state.currentIndex = 0;
   state.scrollRestoration = "auto";
+  state.originOverride = typeof options.origin === "string"
+    ? options.origin
+    : null;
   if ("beforeNavigate" in options) {
     state.beforeNavigateHook = typeof options.beforeNavigate === "function"
       ? options.beforeNavigate
@@ -69,7 +73,7 @@ export function currentHref() {
 }
 
 export function currentOrigin() {
-  return urlOrigin(currentUrlRecord());
+  return nav().originOverride ?? urlOrigin(currentUrlRecord());
 }
 
 export function setLocationComponent(component, value) {
@@ -195,6 +199,9 @@ function navigateToRecord(url, mode, state, title) {
   ) {
     return false;
   }
+  const originOverride = needsDocumentReplacement
+    ? null
+    : scope.originOverride;
   if (mode === "replace") {
     scope.entries[scope.currentIndex] = {
       ...scope.entries[scope.currentIndex],
@@ -202,11 +209,13 @@ function navigateToRecord(url, mode, state, title) {
       state,
       title,
     };
+    scope.originOverride = originOverride;
     if (needsDocumentReplacement) scope.navigateHook?.({ url: targetHref, mode });
     return true;
   }
   scope.entries.splice(scope.currentIndex + 1);
   scope.entries.push(createNavigationEntry({ url, state, title }));
+  scope.originOverride = originOverride;
   scope.currentIndex = scope.entries.length - 1;
   if (needsDocumentReplacement) scope.navigateHook?.({ url: targetHref, mode });
   return true;

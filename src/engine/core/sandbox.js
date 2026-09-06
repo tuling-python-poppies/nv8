@@ -317,7 +317,9 @@ export async function createSandbox(config) {
       throw error;
     }
     const childUrl = new URL(options.pageUrl || profile.url || 'https://example.com/');
-    const serviceWorkerController = findServiceWorkerController(childUrl.href);
+    const childOrigin = options.origin ?? childUrl.origin;
+    const serviceWorkerPageUrl = options.serviceWorkerPageUrl ?? childUrl.href;
+    const serviceWorkerController = findServiceWorkerController(serviceWorkerPageUrl);
     let pageHtml = options.pageHtml
       ?? '<!doctype html><html><head></head><body></body></html>';
     if (options.navigationSource === 'src') {
@@ -341,6 +343,9 @@ export async function createSandbox(config) {
       trace,
       logger,
       pageUrl: childUrl.href,
+      origin: childOrigin,
+      documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
+      serviceWorkerPageUrl,
       pageHtml,
       replay: options.replay ?? replay,
       navigatorProfile: options.navigatorProfile ?? profile.navigator ?? {},
@@ -348,6 +353,8 @@ export async function createSandbox(config) {
       runtime: {
         ...runtime,
         ...(options.runtime || {}),
+        serviceWorkerPageUrl,
+        documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
         childRealmFactory: createIframeChildRealm,
         workerFactory: createDedicatedWorker,
         sharedWorkerFactory: createSharedWorkerConnection,
@@ -365,7 +372,7 @@ export async function createSandbox(config) {
           },
         },
         windowContext: {
-          origin: childUrl.origin,
+          origin: childOrigin,
           parentWindow: options.parentWindow ?? null,
           topWindow: options.topWindow ?? options.parentWindow ?? null,
           parentOrigin: options.parentOrigin ?? new URL(profile.url || childUrl.href).origin,
@@ -379,7 +386,7 @@ export async function createSandbox(config) {
     windowClients.set(childRealm.id, {
       id: clientId,
       realmId: childRealm.id,
-      url: childUrl.href,
+      url: serviceWorkerPageUrl,
       frameType: 'nested',
       visibilityState: 'visible',
       focused: false,
@@ -392,7 +399,7 @@ export async function createSandbox(config) {
     options.onContext?.(childWindow);
     return {
       window: childWindow,
-      origin: childUrl.origin,
+      origin: childOrigin,
       deliverParentMessage(message, origin, targetOriginOrOptions, transfer) {
         if (childRealm.destroyed) return;
         const module = childRealm.moduleLoader.importUrlSyncCached(WINDOW_CONTEXT_URL);

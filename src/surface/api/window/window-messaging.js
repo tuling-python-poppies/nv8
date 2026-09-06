@@ -39,17 +39,11 @@ function messagingState() {
  * `.postMessage` 并调用，中间不可能插入其他 Realm 的代码（单线程）。所以 getter
  * 顺手登记「现在是我」，父侧的 `postMessage` 消费一次即清。
  *
- * **失效边界（刻意记下来，不要指望它总是精确）**：
+ * 页面可见的 `parent` 对象仍是真实父 global；NV8 自有调度器会在注册和
+ * callback-entry 两个位置传递 source，因此别名 + 跨任务写法也能保持发送方。
+ * 外部宿主异步 API 不经过这套调度器，仍按「用后即清」处理。
  *
- * ```js
- * const p = parent;                      // 这里登记
- * setTimeout(() => p.postMessage(x));    // 这里已经清掉了
- * ```
- *
- * 别名 + 跨任务的写法会退化成「父窗口自己」，也就是不做这套机制时的行为。
- * 退化方向是安全的（不会把 A 的消息记成 B 的），但不精确。
- *
- * 为此除了「用后即清」还要**在微任务末清空**：只读了 `parent` 却没发消息时，
+ * 除了「用后即清」还要**在微任务末清空**：只读了 `parent` 却没发消息时，
  * 残留的登记不能让之后一次父窗口自发的 `window.postMessage` 被误记成来自子帧。
  */
 const incumbentSlot = createRealmSlot(() => ({
@@ -110,10 +104,9 @@ function consumeIncumbentSource() {
  * 对协议恢复来说这是最坏的一类失败：脚本跑完、吐出格式正常的 token，只是算错了
  * 输入，本地零信号。相比之下 `event.source` 不对会让应答收不到，是能定位的停止。
  *
- * 代价（已实测、已登记）：子 → 父的 `parent.postMessage()` 现在走父 Realm 自己的
- * `postMessage`，`event.source` 变成父窗口自己而不是子窗口。`event.origin`
- * **两者相同**——同源场景父子 origin 本来一样，facade 在 origin 上并没有换来额外
- * 正确性。详见 `docs/adr/0007-parent-window-identity.md`。
+ * 子 → 父的 `parent.postMessage()` 仍然走父 Realm 的真实 `postMessage`，但
+ * incumbent bridge 会把正确的子窗口交给消息事件；`event.origin` 两者相同，
+ * 因为同源场景父子 origin 本来一样。详见 `docs/adr/0007-parent-window-identity.md`。
  *
  * 跨源父窗口仍走 `createWindowFacade()`：那条路径本来就只暴露规范允许的成员，
  * 不依赖原型委托，所以没有同一个问题。
@@ -176,10 +169,21 @@ export function windowTop() {
  *
  * 顶层窗口没有 `parentPostMessage`，这里整体是 no-op。
  */
-function notifyParentIncumbent() {
+function notifyParentIncumbent(source = null) {
   const bridge = messagingState().parentPostMessage;
-  if (bridge === null) return;
-  bridge.notifyIncumbent?.();
+  if (bridge === null) return null;
+  return bridge.notifyIncumbent?.(source) ?? null;
+}
+
+// 在调度 API 被调用时保存发送方；callback 进入时再把同一个对象交给父 Realm。
+// 这覆盖 `const p = parent; setTimeout(() => p.postMessage(...))`，而不改变
+// 页面可见的 parent 对象身份。
+export function captureScheduledCallbackIncumbent() {
+  return notifyParentIncumbent();
+}
+
+export function notifyScheduledCallbackIncumbent(source = null) {
+  notifyParentIncumbent(source);
 }
 
 export function createWindowFacade(options) {
@@ -301,7 +305,7 @@ export function windowPostMessage(target, message, targetOriginOrOptions, transf
     // 同源子帧调 `parent.postMessage()` 走到的就是这里（`parent` 现在是真实的父
     // global，所以 `target === globalThis`）。`source` 优先取 incumbent，
     // 取不到才退回 `globalThis`——那既是父窗口自发 `window.postMessage()` 的
-    // 正确答案，也是别名写法下可接受的退化值。
+    // 正确答案，也是外部宿主异步回调未提供 incumbent 时的保守退化值。
     enqueueWindowMessage(
       message,
       state.localOrigin,

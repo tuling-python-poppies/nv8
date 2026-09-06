@@ -33,7 +33,7 @@ test('Core iframe creates same-origin child Realm and contentDocument', async ()
     })`);
     // 最后两项原先写的是 `false, false`——那是把缺陷当成契约。同源子帧的
     // `parent` / `top` 在真实浏览器里就是父窗口**本身**，见 ADR-0007。
-    assert.deepEqual(JSON.parse(result), [true, 'https://example.test/', 'complete', true, true]);
+    assert.deepEqual(JSON.parse(result), [true, 'about:srcdoc', 'complete', true, true]);
     assert.equal(nv8.sandbox.inspect().realms.length, 2);
     await nv8.sandbox.destroyRealm(realm.id);
   } finally {
@@ -64,16 +64,26 @@ test('Core iframe malformed src dispatches load, not error', async () => {
       frame.srcdoc = '<!doctype html><html><body><main id="old">old</main></body></html>';
       let staged = false;
       frame.addEventListener('load', () => {
-        if (staged) { resolve('load'); return; }
+        if (staged) {
+          resolve(JSON.stringify({
+            text: frame.contentDocument.body.textContent,
+            url: frame.contentDocument.URL,
+            error: false,
+          }));
+          return;
+        }
         staged = true;
-        frame.addEventListener('error', () => resolve('error'), { once: true });
+        frame.addEventListener('error', () => resolve(JSON.stringify({ error: true })), { once: true });
         frame.removeAttribute('srcdoc');
         frame.setAttribute('src', 'http://%');
       });
       document.body.appendChild(frame);
     })`);
-    // 真实浏览器给 load。文档是否被替换成错误页是另一条已登记差距。
-    assert.equal(result, 'load');
+    assert.deepEqual(JSON.parse(result), {
+      text: '',
+      url: 'about:blank',
+      error: false,
+    });
   } finally {
     await nv8.sandbox.destroyRealm(realm.id);
     await nv8.destroy();

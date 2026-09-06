@@ -224,12 +224,12 @@ postMessage」与「我自己在调」——正是 C 要解决的那个问题。
 
 763 项在 Node 18 / 20 / 22 / 24 四档全绿。
 
-## 未决（留给后续）
+## 后续修订
 
-- 别名 + 跨任务写法的 `event.source` 仍退化。要精确需要真正的 incumbent 栈，
-  依赖宿主侧介入，与 ADR-0004 的池位账目是同一类架构工作
-- 空白 iframe 的 `location.href` 仍是父页面 URL 而非 `about:blank`：那是
-  origin/URL 解耦改造，单独立项
+- 别名 + 跨任务写法已通过定时器与微任务 callback-entry 桥接恢复 source；
+  该实现是 NV8 调度器范围内的 incumbent 近似，未宣称覆盖外部宿主异步 API
+- 空白 iframe 的 URL/origin 已解耦：URL 为 `about:blank`，origin 继承父页面；
+  `srcdoc` 对应 `about:srcdoc`，见 `tests/iframe-about-blank-test.js`
 
 ## 相关
 

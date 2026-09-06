@@ -318,8 +318,9 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     scheme 都派 `error`，这是可检测偏差
   - 已修：不支持的 scheme 导航整体中止、不派发事件、不动当前文档；
     畸形 URL 改派 `load`
-- [ ] **畸形 URL 未替换为错误页文档** - 真实浏览器提交错误页并替换旧文档，
-  NV8 只派发 `load` 而保留旧文档。需要一份错误页 HTML 与新的子 Realm
+- [x] **畸形 URL 替换为独立错误文档** - 真实浏览器提交错误页并替换旧文档；
+  NV8 现在关闭旧 Realm、创建 `about:blank` 空白错误文档并派发 `load`，不派发
+  `error`，同时保留父页面 origin。
 - [x] **`new URL()` 校验与规范化** - 8 项探针全部一致
   - 关键发现：主机字符必须分**三类**而不是两类。原实现只有「合法/非法」两类，
     所以无论怎么调都错——全放过则 `http://%` 不抛，全拒绝则 `https://a b/` 误抛
@@ -363,10 +364,11 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 这一组不存在「浏览器与规范打架」的情况（不像主机里的空格），按规范实现即可
   - 这也是把空白 iframe 的 `location.href` 修成 `about:blank` 的前置条件——
     在此之前 `new URL('about:blank')` 直接抛
-- [x] **iframe 畸形 URL 现在走 malformedUrl 分支** - 顺带修好
-  - `html-iframe-element-realm-state.js` 早就写好了 `malformedUrl` 分支，
-    但 `new URL('http://%')` 从不抛，所以那条分支**从未执行过**——
-    iframe 反而拿 `http://%/` 建了个真的子 Realm。现在 URL 会抛，分支才真正生效
+- [x] **iframe 畸形 URL 现在走独立错误文档替换**
+  - `new URL('http://%')` 现在进入 malformed 分支，关闭旧子 Realm、创建新的
+    空白错误文档并派发 `load`，不会派发 `error`；新文档 URL 为 `about:blank`，
+    origin 仍继承父页面
+  - `tests/iframe-realm-test.js` 锁住旧文档被替换、URL 和事件结果
 - [x] **iframe 导航合并** - 原记为差距，**重测后不成立**，已改为锁住现状
   - 原记录：「NV8 对每次属性变更立即导航，会先派发一次中间 blank 的 `load`」
   - 实测四个场景（`tests/iframe-navigation-coalescing-test.js`，4 项）：
@@ -1005,9 +1007,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     `BeforeUnloadEvent` 与 `onbeforeunload`，降级到普通 `Event` 后
     `returnValue` 是旧 IE 的**布尔**语义（赋 falsy 值 = preventDefault），
     与 beforeunload 的字符串语义正好相反
-- [ ] **legacy 模式的整文档替换** - `beforeunload` 与卸载事件已就位，但导航
-  通过后仍不替换文档（`location.href` 更新、DOM 不变）。需要让 legacy 子 Realm
-  回调宿主替换文档，是独立的架构工作
+- [x] **legacy 模式的整文档替换** - `beforeunload` 通过后由 `onNavigate` 回调宿主，
+  销毁旧 Realm、重新创建根 Realm、保留 WindowClient identity，并重新执行页面文档
+  生命周期；`tests/root-window-client-navigation-test.js` 与 `tests/window-client-lifecycle-test.js`
+  覆盖 assign/replace、iframe client navigate 和取消路径
 - [x] **行为探针扩到 11 类 102 项** - 全部一致
   - 新增 `cssom`(22) / `canvas`(9) / `eventTiming`(9)。Canvas 与事件时序**本来就全对**；
     CSSOM 挖出 6 项不一致，已修
@@ -1138,10 +1141,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 测试 6 项（`tests/realm-heap-capacity-test.js`）：公式层三个档位不得超过实测
     安全上限、不得保守超过 1 个、默认档行为不变、单调性；端到端一项验证低堆下给
     结构化拒绝而不是崩
-- [ ] **容量拒绝在 iframe 上派发 `error` 事件** - 真实浏览器的 iframe 导航失败
-  从不派发 `error`（见本节前文）。容量拒绝是 NV8 内部条件、没有浏览器对应物，
-  但派 `error` 仍是可检测的：脚本连建多个 iframe 就能看到。宿主侧目前也看不到
-  结构化错误（拒绝在 Realm 内被消化）
+- [x] **容量拒绝不再派发 iframe `error` 事件** - Realm 配额是 NV8 宿主条件，
+  现在以 `load` 结算失败导航，不把内部限制暴露成可检测的 DOM error；结构化
+  `QuotaExceededError` 仍在宿主容量守卫处保留。端到端测试覆盖 128MB 下的多 iframe
+  创建（`tests/realm-heap-capacity-test.js`）
 - [x] **`parent.document` 静默返回子文档已修**（ADR-0007 选 A + C）
   - 症状（修复前，在子 Realm 内部实测）：
 
@@ -1186,10 +1189,12 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     弄坏一条本来正确的路径。A′ 塌进了 C
   - 测试只锁**方向安全**（一个子帧的消息永不记到兄弟头上），刻意不锁别名写法退化
     到哪个具体值——那取决于微任务与宏任务的相对时序
-- [ ] **`event.source` 在别名跨任务写法下仍退化**
-  - `const p = parent; setTimeout(() => p.postMessage(...))` 会退化成父窗口自己
-  - 退化方向安全（不会记错兄弟），但不精确。要精确需要真正的 incumbent 栈，
-    依赖宿主侧介入，与 ADR-0004 的池位账目是同一类架构工作
+- [x] **`event.source` 已覆盖别名跨任务写法**
+  - `const p = parent; setTimeout(() => p.postMessage(...))` 现在仍返回发送子窗口；
+    `setInterval`、`requestAnimationFrame` 和 `queueMicrotask` 也在 callback-entry
+    保存/恢复 incumbent source
+  - plugin 模式使用 Realm 动态模块桥接，legacy 模式使用同一套窗口 messaging 状态；
+    测试见 `tests/iframe-parent-message-test.js`
 - [x] **`window.frameElement` 已实现**（legacy 模式）。原先是硬编码 `() => null`
   - 这不只是「少一个值」：广告与反爬代码常用它判断「我是不是被嵌在别人页面里」，
     恒为 null 等于声称自己是顶层窗口，而同时 `parent !== window`
@@ -1204,22 +1209,14 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     （surface fixture 的 plugin 档是 ABSENT，按 ADR-0001 是按需组装的结果）。
     加一个必然无效的配置调用就是「看起来可配置但实际不可配置」
   - 测试 4 项（`tests/iframe-frame-element-test.js`）
-- [ ] **空白 iframe 的 `location.href` 不是一行改动**（重新定性为 origin/URL 解耦）
-  - 原以为把 `html-iframe-element-realm-state.js` 里的默认 URL 从
-    `parentPageUrl` 改成 `about:blank` 就行。前置条件（URL 支持 opaque path）
-    已完成，但真正的障碍在别处：**NV8 目前把文档 origin 从页面 URL 推导出来**，
-    而 `about:blank` 是第一个 URL 与 origin 必须分离的场合
-    （URL 不透明、origin 继承父页面）
-  - 至少四处要解耦：宿主侧 `runtime-pool` 用 `pageUrl.origin` 当 localStorage 键 /
-    网络记录器 / broadcast 连接器；Realm 内 `configureNavigation(pageUrl)` 决定
-    `location.origin`、`configureWindowMessaging(new URL(pageUrl).origin, ...)`
-    决定 postMessage 的 origin
-  - 直接改会让 `childOrigin` 变成 `"null"`，`current.sameOrigin` 判假，
-    同源 iframe 退化成跨源门面——把一处 href 偏差换成整条同源链路失效
-  - 实测确认当前 `origin` 是**正确继承**的，所以改 href 时不能改坏它
-  - 顺带发现同一处的第二个偏差：`srcdoc` iframe 的 `href` 真实是
-    `about:srcdoc`，NV8 也给父页面 URL
-  - 结论：这是一次 origin/URL 解耦改造，应当单独立项
+- [x] **空白 iframe 的 URL/origin 已解耦**
+  - 空白 iframe 的 `location.href` / `document.URL` 是 `about:blank`，但
+    `location.origin` 继承父页面；`srcdoc` 对应 `about:srcdoc`，同样继承父页面
+    origin。
+  - Realm 创建、导航记录、Window messaging、Storage 和预热池均显式传递
+    document URL 与安全 origin 两个字段。
+  - 测试覆盖普通静态 iframe 与 opt-in 预热池：
+    `tests/iframe-about-blank-test.js`。
 - [x] **采集脚本已能在原生 Windows 直接跑** - 7 个 collector 原来只列了
   WSL(`/mnt/c`) 与 Linux 的 Edge 路径
   - `collect-edge-lengths.mjs` 更糟：路径**直接写成 `execFile` 的第一个实参**，
@@ -1687,7 +1684,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
    `appendChild` 里同步卡 106ms，那是真实浏览器（微秒级）没有的时序特征。
    默认关闭直接化解了上次 59 项红的账目问题（§12）
 5. **堆容量守卫已修**（§12）：原公式放行数超过堆能装下的数量，溢出是 SIGABRT
-   而不是结构化错误。剩余的是「容量拒绝派发 error 事件」这条可检测面
+   而不是结构化错误；容量拒绝暴露为 DOM `error` 的可检测面也已消除
 
 **P2 最大的质量缺口**
 
@@ -1709,8 +1706,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 9. Bundle 签名与版本兼容、受信任脚本策略（§5）；信任边界可测试与安全边界文档、
    API 文档、示例代码（§9、§10）
-10. 剩余功能缺口：legacy 整文档替换、畸形 URL 的错误页文档、
-    Edge 152 新增的 `NodeRange`、`OpaqueRange`、`PermissionsPolicy` 和
+10. 剩余功能缺口：Edge 152 新增的 `NodeRange`、`OpaqueRange`、`PermissionsPolicy` 和
     `HTMLUserMediaElement` 均已实现；剩余项见本节后续清单
 11. 刻意不做的两项（CSS descriptor 形状、10 个布局相关计算值）保持登记
 

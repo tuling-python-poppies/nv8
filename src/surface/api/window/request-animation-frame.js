@@ -2,6 +2,10 @@ import { traceCall } from "../../../infra/trace/trace-function.js";
 import { defineGlobalFunction } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { reserveAnimationFrame } from "../../../infra/scheduler/timer-state.js";
+import {
+  captureScheduledCallbackIncumbent,
+  notifyScheduledCallbackIncumbent,
+} from "./window-messaging.js";
 
 export const requestAnimationFrame = {
   requestAnimationFrame(callback) {
@@ -15,7 +19,12 @@ export const requestAnimationFrame = {
         "Failed to execute 'requestAnimationFrame' on 'Window': parameter 1 is not of type 'Function'.",
       );
     }
-    const id = reserveAnimationFrame(callback);
+    const incumbentSource = captureScheduledCallbackIncumbent();
+    const scheduledHandler = function (...args) {
+      notifyScheduledCallbackIncumbent(incumbentSource);
+      return Reflect.apply(callback, this, args);
+    };
+    const id = reserveAnimationFrame(scheduledHandler);
     traceCall("window.requestAnimationFrame", "Window", [callback], id);
     return id;
   },

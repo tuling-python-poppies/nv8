@@ -149,7 +149,8 @@ Realm、不占额度、但仍要参与关闭清理。那是一次跨 `runtime-po
 2. **iframe 的父子链与 URL 有四处不符**，静态 iframe 也一样：
    `contentWindow.parent === window` 为 false、`top` 同样、
    `frameElement` 恒为 `null`（`window-state-globals-runtime.js` 里硬编码）、
-   空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`。
+   空白 iframe 的 `location.href` 是父页面 URL 而非 `about:blank`。前 3 项已由
+   ADR-0007 和 frameElement 修复，最后一项随后通过 URL/origin 解耦修复。
 
 第 2 条说明"接上池"只是第一步——即使 `contentWindow` 可用了，父子链仍然
 对不上。
@@ -258,10 +259,9 @@ frameElementMatches  true        ← 靠 frameElement 那一轮
 nativeToString       function addEventListener() { [native code] }
 ```
 
-`realm/identity-bundle` 的 16 个子项现在与真实 Edge 151 **逐字相同**（唯一不含的是
-`href`：空白 iframe 的 `location.href` 仍是父页面 URL 而非 `about:blank`，那是独立
-的 origin/URL 解耦改造）。这验证了排序判断——ADR-0007 与 `frameElement` 必须先做，
-否则池落地了那条经典探针照样过不去。
+`realm/identity-bundle` 的 16 个子项现在与真实 Edge 151 **逐字相同**。这验证了
+排序判断——ADR-0007 与 `frameElement` 必须先做，否则池落地了那条经典探针照样
+过不去。空白 iframe 的 URL/origin 解耦另有 `tests/iframe-about-blank-test.js` 覆盖。
 
 测试 8 项（`tests/iframe-prewarm-pool-test.js`）。777 项在 Node 18/20/22/24 四档全绿。
 
@@ -271,7 +271,7 @@ nativeToString       function addEventListener() { [native code] }
   有专门断言把它写死——以为「iframe 已经修好了」比知道自己在赌更危险
 - 默认配置（0）下 `contentWindow` 仍同步为 `null`，
   `edge-behavior-parity-test.js` 的两条登记差异保持不变
-- 空白 iframe 的 `location.href`：独立立项
+- 预热池深 N 只覆盖建不超过 N 个 iframe，超出后回到默认异步行为
 
 ## 附：复现
 

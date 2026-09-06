@@ -116,12 +116,12 @@ test('a low heap rejects extra iframes instead of aborting the child', async () 
 
     assert.equal(events.length, 3, `only ${events.length} of 3 iframes settled`);
     assert.equal(
-      events.filter((value) => value === 'load').length, 1,
-      '128MB fits exactly one child Realm',
+      events.filter((value) => value === 'load').length, 3,
+      'capacity rejection settles iframe navigation without exposing an error event',
     );
     assert.equal(
-      events.filter((value) => value === 'error').length, 2,
-      'the rest must be rejected, not built',
+      events.filter((value) => value === 'error').length, 0,
+      'host capacity must not surface as a DOM error event',
     );
   } finally {
     // 崩溃过的子进程连 close 都会抛；能干净关闭本身就是断言的一部分

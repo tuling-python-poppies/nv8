@@ -14,6 +14,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
 
 const state = new WeakMap();
+const MALFORMED_NAVIGATION_HTML = "<!doctype html><html><head></head><body></body></html>";
 
 // 子 Realm 工厂、父页面 URL 与 frame 索引集合原先是模块级状态，
 // 会让宿主图上不同 Realm 的 iframe 相互串扰。
@@ -101,7 +102,10 @@ function navigate(element) {
   const version = current.version + 1;
   const srcdoc = getAttributeValue(element, "srcdoc");
   const source = getAttributeValue(element, "src");
-  let url = iframeScope().parentPageUrl;
+  const parentPageUrl = iframeScope().parentPageUrl;
+  const parentOrigin = new URL(parentPageUrl).origin;
+  const isBlankDocument = srcdoc === null && source === null;
+  let url = parentPageUrl;
   // 「解析不出来」与「scheme 不支持」在真实浏览器里行为**不同**，不能合并。
   //
   // 实测真实 Edge（先用 srcdoc 载入一个文档，再改 src）：
@@ -126,21 +130,13 @@ function navigate(element) {
       malformedUrl = true;
     }
   }
+  const childOrigin = isBlankDocument || srcdoc !== null || malformedUrl
+    ? parentOrigin
+    : new URL(url).origin;
   if (unsupportedScheme) {
     // 导航整体中止：不派发事件、不动当前文档。
     // 不推进 version——当前 Realm 保持有效。
     state.set(element, current);
-    return;
-  }
-  if (malformedUrl) {
-    // 真实浏览器提交一个错误页并派发 load。NV8 目前只做到「派发 load」，
-    // 尚未替换成错误页文档（需要一份错误页 HTML 与新的子 Realm），
-    // 这条差距登记在 REMAINING_TASKS。
-    current.version = version;
-    state.set(element, current);
-    current.loading = Promise.resolve().then(() => {
-      if (current.version === version) dispatch(element, "load");
-    });
     return;
   }
   if (current.handle?.canNavigate?.() === false) {
@@ -153,8 +149,6 @@ function navigate(element) {
   current.pendingWindow = null;
   clearFacadeFrameIndices(current.facade);
   state.set(element, current);
-  const parentOrigin = new URL(iframeScope().parentPageUrl).origin;
-  const childOrigin = new URL(url).origin;
   current.sameOrigin = parentOrigin === childOrigin;
   if (!current.sameOrigin && current.facade === null) {
     current.facade = createWindowFacade({
@@ -180,8 +174,18 @@ function navigate(element) {
       },
     });
   }
-  const html = srcdoc ?? "<!doctype html><html><head></head><body></body></html>";
-
+  const html = malformedUrl
+    ? MALFORMED_NAVIGATION_HTML
+    : srcdoc ?? "<!doctype html><html><head></head><body></body></html>";
+  const documentUrl = malformedUrl
+    ? "about:blank"
+    : isBlankDocument
+      ? "about:blank"
+      : srcdoc !== null
+        ? "about:srcdoc"
+        : url;
+  // about:blank/about:srcdoc 的文档 URL 与安全 origin 是两个独立维度：
+  // URL 继承规则给出不透明 URL，origin 则继承嵌入页面。
   const parentPostMessage = function (
     message,
     targetOriginOrOptions,
@@ -205,18 +209,27 @@ function navigate(element) {
   // 挂在函数对象上而不是新加一个透传参数：`bootstrapRoot()` 已经有 40+ 个位置
   // 参数，再穿一个只会更容易漏；而这两个能力属于同一段父子关系。
   // 页面脚本拿不到这个函数（只存在子 Realm 的模块状态里），不构成可检测面。
-  parentPostMessage.notifyIncumbent = () => {
-    registerIncumbentSource(() => iframeContentWindow(element));
+  parentPostMessage.notifyIncumbent = source => {
+    const incumbentSource = source ?? iframeContentWindow(element);
+    registerIncumbentSource(() => incumbentSource);
+    return incumbentSource;
   };
   const scope = iframeScope();
   const created = scope.createChildRealm({
-    pageUrl: url,
+    pageUrl: documentUrl,
+    origin: childOrigin,
+    documentBaseUrl: url,
+    serviceWorkerPageUrl: url,
     pageHtml: html,
-    navigationSource: srcdoc === null ? "src" : "srcdoc",
+    navigationSource: malformedUrl
+      ? "error"
+      : srcdoc === null
+        ? "src"
+        : "srcdoc",
     // 空白 iframe（既无 src 也无 srcdoc）才能领预热池位：池位的文档就是空白骨架。
     // 带 src / srcdoc 的需要不同的文档，重建文档和新建一个 Realm 没有区别。
-    blankDocument: srcdoc === null && (source === null || source.trim() === ""),
-    pageReferrer: scope.parentPageUrl,
+    blankDocument: isBlankDocument,
+    pageReferrer: parentPageUrl,
     pageContentType: "text/html",
     parentWindow: globalThis,
     topWindow: globalThis.top,
@@ -274,6 +287,14 @@ function navigate(element) {
     return handle;
   }, error => {
     if (current.version !== version) return;
+    // Realm 容量是 NV8 宿主限制，不是浏览器导航错误。不能把内部配额
+    // 暴露成 iframe 的 DOM error 事件；真实浏览器的导航失败路径也不派发它。
+    if (error?.nv8Code === "LIMIT_HEAP_BYTES"
+      || error?.nv8Code === "LIMIT_REALM_CAPACITY"
+      || error?.code === "LIMIT_REALM_CAPACITY") {
+      dispatch(element, "load");
+      return;
+    }
     dispatch(element, "error");
   });
 }

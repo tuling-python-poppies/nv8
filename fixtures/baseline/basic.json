@@ -31,7 +31,7 @@
       "worker": "baseline-worker",
       "iframe": {
         "sameOrigin": true,
-        "url": "https://example.test/",
+        "url": "about:srcdoc",
         "text": "iframe",
         "defaultView": true
       }

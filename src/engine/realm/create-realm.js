@@ -78,6 +78,8 @@ export function activateRealmShell(shell, options) {
     nativeFunctionRegistry = null,
     objectURLRegistry = null,
     frameElement = null,
+    documentBaseUrl = null,
+    serviceWorkerPageUrl = null,
     onContext = null,
   } = options;
   const { context, moduleLoader, bootstrap } = shell;
@@ -130,6 +132,9 @@ export function activateRealmShell(shell, options) {
     timingProfile,
     navigatorProfile,
     frameElement,
+    origin,
+    documentBaseUrl,
+    serviceWorkerPageUrl,
   );
   if (typeof onContext === "function") onContext(context);
   auditRealmGlobals(context);
