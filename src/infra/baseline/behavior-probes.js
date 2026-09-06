@@ -914,6 +914,141 @@ export const BEHAVIOR_PROBES = Object.freeze([
     }`,
   },
 
+  // ---------------------------------------------- XHR 初始状态与输入校验
+  {
+    id: 'xhr/initial-state',
+    category: 'xhr',
+    expression: `() => {
+      const xhr = new XMLHttpRequest();
+      return [
+        Object.prototype.toString.call(xhr),
+        xhr.readyState,
+        xhr.status,
+        xhr.statusText,
+        xhr.responseType,
+        xhr.responseURL,
+        xhr.withCredentials,
+        xhr.timeout,
+        Object.prototype.toString.call(xhr.upload),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'xhr/open-normalizes-request',
+    category: 'xhr',
+    expression: `() => {
+      const xhr = new XMLHttpRequest();
+      const events = [];
+      xhr.addEventListener('readystatechange', () => events.push(xhr.readyState));
+      xhr.open('post', '/api/items', false);
+      return [xhr.readyState, xhr.responseURL, xhr.responseType, events.join(',')].join('|');
+    }`,
+  },
+  {
+    id: 'xhr/send-before-open-error',
+    category: 'xhr',
+    expression: `() => {
+      try { new XMLHttpRequest().send(); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+  {
+    id: 'xhr/header-before-open-error',
+    category: 'xhr',
+    expression: `() => {
+      try { new XMLHttpRequest().setRequestHeader('X-Test', '1'); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+
+  // ---------------------------------------------- WebSocket 离线初始状态
+  // 不触发真实连接：只验证构造器 URL 规范化、初始状态和同步输入错误。
+  {
+    id: 'websocket/initial-state',
+    category: 'websocket',
+    expression: `() => {
+      const socket = new WebSocket('ws://example.test/chat');
+      return [
+        Object.prototype.toString.call(socket),
+        socket.url,
+        socket.readyState,
+        socket.protocol,
+        socket.extensions,
+        socket.bufferedAmount,
+        socket.binaryType,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'websocket/send-before-open-error',
+    category: 'websocket',
+    expression: `() => {
+      const socket = new WebSocket('wss://example.test/chat');
+      try { socket.send('x'); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+  {
+    id: 'websocket/https-scheme-normalization',
+    category: 'websocket',
+    expression: `() => new WebSocket('https://example.test/chat').url`,
+  },
+  {
+    id: 'websocket/invalid-close-code-error',
+    category: 'websocket',
+    expression: `() => {
+      const socket = new WebSocket('ws://example.test/chat');
+      try { socket.close(1001); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+
+  // ---------------------------------------------- IndexedDB 同步契约
+  {
+    id: 'indexeddb/factory-shape',
+    category: 'indexedDB',
+    expression: `() => [
+      Object.prototype.toString.call(indexedDB),
+      indexedDB === indexedDB,
+      typeof indexedDB.open,
+      typeof indexedDB.deleteDatabase,
+      typeof indexedDB.cmp,
+      Object.prototype.toString.call(IDBKeyRange),
+    ].join('|')`,
+  },
+  {
+    id: 'indexeddb/key-range-bound',
+    category: 'indexedDB',
+    expression: `() => {
+      const range = IDBKeyRange.bound(1, 10, true, false);
+      return [
+        Object.prototype.toString.call(range),
+        range.lower,
+        range.upper,
+        range.lowerOpen,
+        range.upperOpen,
+        range.includes(1),
+        range.includes(10),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'indexeddb/key-range-only',
+    category: 'indexedDB',
+    expression: `() => {
+      const range = IDBKeyRange.only('key');
+      return [range.lower, range.upper, range.lowerOpen, range.upperOpen, range.includes('key')].join('|');
+    }`,
+  },
+  {
+    id: 'indexeddb/invalid-key-error',
+    category: 'indexedDB',
+    expression: `() => {
+      try { indexedDB.cmp({}, 1); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+
   // ---------------------------------------------- 音频指纹
   //
   // 音频是排得上前五的真实指纹向量，此前**一个探针都没有**——而 surface 里

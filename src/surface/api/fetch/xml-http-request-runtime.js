@@ -126,7 +126,10 @@ export function xhrOverrideMimeType(xhr, mime) {
 export function xhrSend(xhr, body = null) {
   const record = requireXHR(xhr);
   if (record.readyState !== 1 || record.sent) {
-    throw new DOMException("The object's state must be OPENED.", "InvalidStateError");
+    throw new DOMException(
+      "Failed to execute 'send' on 'XMLHttpRequest': The object's state must be OPENED.",
+      "InvalidStateError",
+    );
   }
   record.sent = true;
   record.operation += 1;
@@ -160,7 +163,10 @@ export function xhrSend(xhr, body = null) {
 export function xhrSetRequestHeader(xhr, name, value) {
   const record = requireXHR(xhr);
   if (record.readyState !== 1 || record.sent) {
-    throw new DOMException("The object's state must be OPENED.", "InvalidStateError");
+    throw new DOMException(
+      "Failed to execute 'setRequestHeader' on 'XMLHttpRequest': The object's state must be OPENED.",
+      "InvalidStateError",
+    );
   }
   headersAppend(record.requestHeaders, name, value);
 }

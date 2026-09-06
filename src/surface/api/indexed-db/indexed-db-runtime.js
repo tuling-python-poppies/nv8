@@ -153,7 +153,7 @@ export function createKeyRange(kind, args) {
 
 function factoryOperation(name, args) {
   const runtime = indexedDBState();
-  if (name === "cmp") return compareKeys(args[0], args[1]);
+  if (name === "cmp") return compareKeys(args[0], args[1], "cmp", "IDBFactory");
   if (name === "databases") {
     return Promise.resolve(
       [...runtime.databases.values()]
@@ -787,9 +787,9 @@ function limitEntries(entries, inputLimit) {
   return entries.slice(0, limit);
 }
 
-function compareKeys(left, right) {
-  validateKey(left);
-  validateKey(right);
+function compareKeys(left, right, operation = null, interfaceName = null) {
+  validateKey(left, operation, interfaceName);
+  validateKey(right, operation, interfaceName);
   const leftRank = keyRank(left);
   const rightRank = keyRank(right);
   if (leftRank !== rightRank) return leftRank < rightRank ? -1 : 1;
@@ -826,7 +826,7 @@ function keyRank(value) {
   return 5;
 }
 
-function validateKey(value) {
+function validateKey(value, operation = null, interfaceName = null) {
   const valid = (typeof value === "number" && Number.isFinite(value))
     || typeof value === "string"
     || (value instanceof Date && Number.isFinite(value.getTime()))
@@ -835,7 +835,12 @@ function validateKey(value) {
     || (Array.isArray(value) && value.every(item => {
       try { validateKey(item); return true; } catch { return false; }
     }));
-  if (!valid) throw domError("Invalid IndexedDB key", "DataError");
+  if (!valid) {
+    const message = operation === null
+      ? "Invalid IndexedDB key"
+      : `Failed to execute '${operation}' on '${interfaceName}': The parameter is not a valid key.`;
+    throw domError(message, "DataError");
+  }
 }
 
 function encodeKey(value) {

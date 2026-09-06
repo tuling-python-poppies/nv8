@@ -7,7 +7,7 @@ const state = new WeakMap();
 
 export function WebSocket(url) {
   requireNew(new.target, "WebSocket");
-  const normalized = socketURL(url, ["ws:", "wss:"]);
+  const normalized = socketURL(url, ["ws:", "wss:"], true);
   initializeEventTarget(this);
   state.set(this, {
     kind: "webSocket",
@@ -49,7 +49,7 @@ export function WebSocketError() {
 }
 export function WebSocketStream(url) {
   requireNew(new.target, "WebSocketStream");
-  const normalized = socketURL(url, ["ws:", "wss:"]);
+  const normalized = socketURL(url, ["ws:", "wss:"], true);
   let resolveClosed;
   const error = new WebSocketError("Network sockets are disabled", {
     closeCode: 1006,
@@ -104,7 +104,10 @@ export function offlineSocketOperation(value, name, args) {
   const record = requireRecord(value);
   if (record.kind === "webSocket") {
     if (name === "send") {
-      throw new DOMException("The WebSocket is not open.", "InvalidStateError");
+      throw new DOMException(
+        "Failed to execute 'send' on 'WebSocket': Still in CONNECTING state.",
+        "InvalidStateError",
+      );
     }
     if (name === "close") {
       closeSocket(record, Number(args[0] ?? 1000), `${args[1] ?? ""}`);
@@ -135,7 +138,10 @@ function scheduleUnavailable(record) {
 function closeSocket(record, code, reason) {
   if (record.readyState === 3) return;
   if (code !== 1000 && (code < 3000 || code > 4999)) {
-    throw new DOMException("Invalid WebSocket close code.", "InvalidAccessError");
+    throw new DOMException(
+      `Failed to execute 'close' on 'WebSocket': The close code must be either 1000, or between 3000 and 4999. ${code} is neither.`,
+      "InvalidAccessError",
+    );
   }
   record.readyState = 3;
   record.closeCode = code;
@@ -156,12 +162,15 @@ function emit(record, type, handlerName) {
   if (handler !== null) Reflect.apply(handler, record.object, [event]);
 }
 
-function socketURL(value, schemes) {
-  const normalized = new URL(`${value}`, globalThis.location?.href).href;
-  if (!schemes.includes(new URL(normalized).protocol)) {
+function socketURL(value, schemes, upgradeHttp = false) {
+  const parsed = new URL(`${value}`, globalThis.location?.href);
+  if (upgradeHttp && (parsed.protocol === "http:" || parsed.protocol === "https:")) {
+    parsed.protocol = parsed.protocol === "http:" ? "ws:" : "wss:";
+  }
+  if (!schemes.includes(parsed.protocol)) {
     throw new DOMException("The URL scheme is unsupported.", "SyntaxError");
   }
-  return normalized;
+  return parsed.href;
 }
 
 function handlers(names) {

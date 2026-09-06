@@ -1,7 +1,7 @@
 {
-  "collectedAt": "2026-09-06T09:31:42.387Z",
+  "collectedAt": "2026-09-06T11:04:16.066Z",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-  "probeCount": 166,
+  "probeCount": 178,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -459,6 +459,54 @@
     "crypto/random-values-limit-error": {
       "threw": false,
       "value": "QuotaExceededError:Failed to execute 'getRandomValues' on 'Crypto': The ArrayBufferView's byte length (65537) exceeds the number of bytes of entropy available via this API (65536)."
+    },
+    "xhr/initial-state": {
+      "threw": false,
+      "value": "[object XMLHttpRequest]|0|0||||false|0|[object XMLHttpRequestUpload]"
+    },
+    "xhr/open-normalizes-request": {
+      "threw": false,
+      "value": "1|||1"
+    },
+    "xhr/send-before-open-error": {
+      "threw": false,
+      "value": "InvalidStateError:Failed to execute 'send' on 'XMLHttpRequest': The object's state must be OPENED."
+    },
+    "xhr/header-before-open-error": {
+      "threw": false,
+      "value": "InvalidStateError:Failed to execute 'setRequestHeader' on 'XMLHttpRequest': The object's state must be OPENED."
+    },
+    "websocket/initial-state": {
+      "threw": false,
+      "value": "[object WebSocket]|ws://example.test/chat|0|||0|blob"
+    },
+    "websocket/send-before-open-error": {
+      "threw": false,
+      "value": "InvalidStateError:Failed to execute 'send' on 'WebSocket': Still in CONNECTING state."
+    },
+    "websocket/https-scheme-normalization": {
+      "threw": false,
+      "value": "wss://example.test/chat"
+    },
+    "websocket/invalid-close-code-error": {
+      "threw": false,
+      "value": "InvalidAccessError:Failed to execute 'close' on 'WebSocket': The close code must be either 1000, or between 3000 and 4999. 1001 is neither."
+    },
+    "indexeddb/factory-shape": {
+      "threw": false,
+      "value": "[object IDBFactory]|true|function|function|function|[object Function]"
+    },
+    "indexeddb/key-range-bound": {
+      "threw": false,
+      "value": "[object IDBKeyRange]|1|10|true|false|false|true"
+    },
+    "indexeddb/key-range-only": {
+      "threw": false,
+      "value": "key|key|false|false|true"
+    },
+    "indexeddb/invalid-key-error": {
+      "threw": false,
+      "value": "DataError:Failed to execute 'cmp' on 'IDBFactory': The parameter is not a valid key."
     },
     "audio/offline-context-shape": {
       "threw": false,

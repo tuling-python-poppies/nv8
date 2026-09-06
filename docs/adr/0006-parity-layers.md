@@ -21,7 +21,7 @@
 |---|---|---|---|
 | Baseline | NV8 上一次录制 | 重构引入的回归 | 3 套 fixture |
 | 形状对等 | 真实 Edge 的名字与 descriptor | 存在性、descriptor 形状 | 全局 99.68%、成员 963/966 |
-| 行为对等 | 真实 Edge 的运行结果 | 同一段代码跑出什么 | 166 探针 / 21 类 |
+| 行为对等 | 真实 Edge 的运行结果 | 同一段代码跑出什么 | 178 探针 / 24 类 |
 
 **后来补了第四条轴，但它不是新的职责层**：`window-surface-order-test.js` 比的是
 `Object.getOwnPropertyNames(window)` 的**顺序**与 window 自身 own property 的
