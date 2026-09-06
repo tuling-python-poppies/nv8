@@ -16,10 +16,10 @@ function coordinationState() {
   return coordinationSlot.get(globalThis);
 }
 
-export function Lock() { illegalConstructor("Lock"); }
-export function LockManager() { illegalConstructor("LockManager"); }
-export function WakeLock() { illegalConstructor("WakeLock"); }
-export function WakeLockSentinel() { illegalConstructor("WakeLockSentinel"); }
+export function Lock() { illegalConstructor("Lock", new.target); }
+export function LockManager() { illegalConstructor("LockManager", new.target); }
+export function WakeLock() { illegalConstructor("WakeLock", new.target); }
+export function WakeLockSentinel() { illegalConstructor("WakeLockSentinel", new.target); }
 export const coordinationConstructors = Object.freeze([
   Lock, LockManager, WakeLock, WakeLockSentinel,
 ]);
@@ -191,11 +191,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

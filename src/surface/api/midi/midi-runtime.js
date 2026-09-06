@@ -13,12 +13,12 @@ function midiState() {
 
 const state = new WeakMap();
 
-export function MIDIAccess() { illegalConstructor("MIDIAccess"); }
-export function MIDIPort() { illegalConstructor("MIDIPort"); }
-export function MIDIInput() { illegalConstructor("MIDIInput"); }
-export function MIDIOutput() { illegalConstructor("MIDIOutput"); }
-export function MIDIInputMap() { illegalConstructor("MIDIInputMap"); }
-export function MIDIOutputMap() { illegalConstructor("MIDIOutputMap"); }
+export function MIDIAccess() { illegalConstructor("MIDIAccess", new.target); }
+export function MIDIPort() { illegalConstructor("MIDIPort", new.target); }
+export function MIDIInput() { illegalConstructor("MIDIInput", new.target); }
+export function MIDIOutput() { illegalConstructor("MIDIOutput", new.target); }
+export function MIDIInputMap() { illegalConstructor("MIDIInputMap", new.target); }
+export function MIDIOutputMap() { illegalConstructor("MIDIOutputMap", new.target); }
 export const midiConstructors = Object.freeze([
   MIDIAccess,
   MIDIPort,
@@ -142,11 +142,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

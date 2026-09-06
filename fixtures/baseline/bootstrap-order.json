@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 343,
-      "callSequenceSha256": "67b12f98533dca750fe8b18568a7caed5d9162ac224b1a0243e21abd35e2d066",
+      "callCount": 344,
+      "callSequenceSha256": "ccc8eb534af966083722ab1cee3bf0e3dd7419c870ce8ecee5ed44157163a506",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -351,12 +351,13 @@
         "configure:configureDocument",
         "install:installEdgeStaticFunctions",
         "install:installEdgeAccessorSemantics",
+        "finalize:finalizePrototypeSurfaceOrder",
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "bea63cab3df1a3e4634a429bb6a3baae60cac9e57f21221345c4e16ea7194277",
-        "functionStartLine": 847,
-        "functionEndLine": 1312
+        "sourceSha256": "5edc88daa9e38cc70f101b651090061fb6489644463f828991557dd322c4c875",
+        "functionStartLine": 850,
+        "functionEndLine": 1316
       }
     },
     "worker": {

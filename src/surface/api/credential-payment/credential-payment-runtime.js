@@ -17,8 +17,8 @@ function credentialPaymentState() {
   return credentialPaymentSlot.get(globalThis);
 }
 
-export function Credential() { illegalConstructor("Credential"); }
-export function CredentialsContainer() { illegalConstructor("CredentialsContainer"); }
+export function Credential() { illegalConstructor("Credential", new.target); }
+export function CredentialsContainer() { illegalConstructor("CredentialsContainer", new.target); }
 export function FederatedCredential(data) {
   requireNew(new.target, "FederatedCredential");
   requireObject(data, "FederatedCredential");
@@ -48,15 +48,15 @@ export function PasswordCredential(data) {
     iconURL: `${data.iconURL ?? ""}`,
   });
 }
-export function AuthenticatorAssertionResponse() { illegalConstructor("AuthenticatorAssertionResponse"); }
-export function AuthenticatorAttestationResponse() { illegalConstructor("AuthenticatorAttestationResponse"); }
-export function AuthenticatorResponse() { illegalConstructor("AuthenticatorResponse"); }
-export function PublicKeyCredential() { illegalConstructor("PublicKeyCredential"); }
-export function DigitalCredential() { illegalConstructor("DigitalCredential"); }
-export function IdentityCredential() { illegalConstructor("IdentityCredential"); }
-export function IdentityCredentialError() { illegalConstructor("IdentityCredentialError"); }
-export function OTPCredential() { illegalConstructor("OTPCredential"); }
-export function PaymentAddress() { illegalConstructor("PaymentAddress"); }
+export function AuthenticatorAssertionResponse() { illegalConstructor("AuthenticatorAssertionResponse", new.target); }
+export function AuthenticatorAttestationResponse() { illegalConstructor("AuthenticatorAttestationResponse", new.target); }
+export function AuthenticatorResponse() { illegalConstructor("AuthenticatorResponse", new.target); }
+export function PublicKeyCredential() { illegalConstructor("PublicKeyCredential", new.target); }
+export function DigitalCredential() { illegalConstructor("DigitalCredential", new.target); }
+export function IdentityCredential() { illegalConstructor("IdentityCredential", new.target); }
+export function IdentityCredentialError() { illegalConstructor("IdentityCredentialError", new.target); }
+export function OTPCredential() { illegalConstructor("OTPCredential", new.target); }
+export function PaymentAddress() { illegalConstructor("PaymentAddress", new.target); }
 export function PaymentRequest(methodData) {
   requireNew(new.target, "PaymentRequest");
   const details = arguments[1];
@@ -90,8 +90,8 @@ export function PaymentRequestUpdateEvent(type) {
     updatePromise: null,
   });
 }
-export function PaymentResponse() { illegalConstructor("PaymentResponse"); }
-export function PaymentManager() { illegalConstructor("PaymentManager"); }
+export function PaymentResponse() { illegalConstructor("PaymentResponse", new.target); }
+export function PaymentManager() { illegalConstructor("PaymentManager", new.target); }
 export function PaymentMethodChangeEvent(type) {
   const init = arguments[1] ?? {};
   initializePaymentEvent(this, type, init, "paymentMethodChangeEvent", {
@@ -325,11 +325,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

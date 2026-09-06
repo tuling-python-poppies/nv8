@@ -15,8 +15,8 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 const state = new WeakMap();
 let singleton = null;
 
-export function Navigation() { illegalConstructor("Navigation"); }
-export function NavigationHistoryEntry() { illegalConstructor("NavigationHistoryEntry"); }
+export function Navigation() { illegalConstructor("Navigation", new.target); }
+export function NavigationHistoryEntry() { illegalConstructor("NavigationHistoryEntry", new.target); }
 export function NavigationCurrentEntryChangeEvent(type, init) {
   requireNew(new.target, "NavigationCurrentEntryChangeEvent");
   initializeNavigationEvent(this, type, init, {
@@ -28,10 +28,10 @@ export function NavigateEvent(type, init) {
   requireNew(new.target, "NavigateEvent");
   initializeNavigateEvent(this, type, init);
 }
-export function NavigationDestination() { illegalConstructor("NavigationDestination"); }
-export function NavigationTransition() { illegalConstructor("NavigationTransition"); }
-export function NavigationActivation() { illegalConstructor("NavigationActivation"); }
-export function NavigationPrecommitController() { illegalConstructor("NavigationPrecommitController"); }
+export function NavigationDestination() { illegalConstructor("NavigationDestination", new.target); }
+export function NavigationTransition() { illegalConstructor("NavigationTransition", new.target); }
+export function NavigationActivation() { illegalConstructor("NavigationActivation", new.target); }
+export function NavigationPrecommitController() { illegalConstructor("NavigationPrecommitController", new.target); }
 
 export const navigationAPIConstructors = Object.freeze([
   Navigation, NavigationHistoryEntry, NavigationCurrentEntryChangeEvent,
@@ -333,11 +333,11 @@ function requireNew(newTarget, name) {
   if (newTarget === undefined) throw new TypeError(`Failed to construct '${name}': use new`);
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

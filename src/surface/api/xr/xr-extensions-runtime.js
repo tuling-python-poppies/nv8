@@ -11,8 +11,8 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 
 const state = new WeakMap();
 
-export function XRDOMOverlayState() { illegalConstructor("XRDOMOverlayState"); }
-export function XRLayer() { illegalConstructor("XRLayer"); }
+export function XRDOMOverlayState() { illegalConstructor("XRDOMOverlayState", new.target); }
+export function XRLayer() { illegalConstructor("XRLayer", new.target); }
 export function XRWebGLBinding(session, context) {
   requireNew(new.target, "XRWebGLBinding");
   requireSession(session);
@@ -25,15 +25,15 @@ export function XRWebGLBinding(session, context) {
     usesDepthValues: false,
   });
 }
-export function XRAnchor() { illegalConstructor("XRAnchor"); }
-export function XRAnchorSet() { illegalConstructor("XRAnchorSet"); }
-export function XRCPUDepthInformation() { illegalConstructor("XRCPUDepthInformation"); }
-export function XRCamera() { illegalConstructor("XRCamera"); }
-export function XRDepthInformation() { illegalConstructor("XRDepthInformation"); }
-export function XRHand() { illegalConstructor("XRHand"); }
-export function XRHitTestResult() { illegalConstructor("XRHitTestResult"); }
-export function XRHitTestSource() { illegalConstructor("XRHitTestSource"); }
-export function XRInputSource() { illegalConstructor("XRInputSource"); }
+export function XRAnchor() { illegalConstructor("XRAnchor", new.target); }
+export function XRAnchorSet() { illegalConstructor("XRAnchorSet", new.target); }
+export function XRCPUDepthInformation() { illegalConstructor("XRCPUDepthInformation", new.target); }
+export function XRCamera() { illegalConstructor("XRCamera", new.target); }
+export function XRDepthInformation() { illegalConstructor("XRDepthInformation", new.target); }
+export function XRHand() { illegalConstructor("XRHand", new.target); }
+export function XRHitTestResult() { illegalConstructor("XRHitTestResult", new.target); }
+export function XRHitTestSource() { illegalConstructor("XRHitTestSource", new.target); }
+export function XRInputSource() { illegalConstructor("XRInputSource", new.target); }
 export function XRInputSourceEvent(type, init) {
   initializeXREvent(this, type, init, "inputSourceEvent", {
     frame: init?.frame ?? null,
@@ -47,13 +47,13 @@ export function XRInputSourcesChangeEvent(type, init) {
     removed: Object.freeze([...(init?.removed ?? [])]),
   });
 }
-export function XRJointPose() { illegalConstructor("XRJointPose"); }
-export function XRJointSpace() { illegalConstructor("XRJointSpace"); }
-export function XRLightEstimate() { illegalConstructor("XRLightEstimate"); }
-export function XRLightProbe() { illegalConstructor("XRLightProbe"); }
-export function XRTransientInputHitTestResult() { illegalConstructor("XRTransientInputHitTestResult"); }
-export function XRTransientInputHitTestSource() { illegalConstructor("XRTransientInputHitTestSource"); }
-export function XRWebGLDepthInformation() { illegalConstructor("XRWebGLDepthInformation"); }
+export function XRJointPose() { illegalConstructor("XRJointPose", new.target); }
+export function XRJointSpace() { illegalConstructor("XRJointSpace", new.target); }
+export function XRLightEstimate() { illegalConstructor("XRLightEstimate", new.target); }
+export function XRLightProbe() { illegalConstructor("XRLightProbe", new.target); }
+export function XRTransientInputHitTestResult() { illegalConstructor("XRTransientInputHitTestResult", new.target); }
+export function XRTransientInputHitTestSource() { illegalConstructor("XRTransientInputHitTestSource", new.target); }
+export function XRWebGLDepthInformation() { illegalConstructor("XRWebGLDepthInformation", new.target); }
 export function XRWebGLLayer(session, context) {
   requireNew(new.target, "XRWebGLLayer");
   requireSession(session);
@@ -73,21 +73,21 @@ export function XRWebGLLayer(session, context) {
     framebuffer: context.createFramebuffer(),
   });
 }
-export function XRCompositionLayer() { illegalConstructor("XRCompositionLayer"); }
-export function XRProjectionLayer() { illegalConstructor("XRProjectionLayer"); }
-export function XRCubeLayer() { illegalConstructor("XRCubeLayer"); }
-export function XRCylinderLayer() { illegalConstructor("XRCylinderLayer"); }
-export function XREquirectLayer() { illegalConstructor("XREquirectLayer"); }
+export function XRCompositionLayer() { illegalConstructor("XRCompositionLayer", new.target); }
+export function XRProjectionLayer() { illegalConstructor("XRProjectionLayer", new.target); }
+export function XRCubeLayer() { illegalConstructor("XRCubeLayer", new.target); }
+export function XRCylinderLayer() { illegalConstructor("XRCylinderLayer", new.target); }
+export function XREquirectLayer() { illegalConstructor("XREquirectLayer", new.target); }
 export function XRLayerEvent(type, init) {
   initializeXREvent(this, type, init, "layerEvent", {
     layer: init?.layer ?? null,
   });
 }
-export function XRQuadLayer() { illegalConstructor("XRQuadLayer"); }
-export function XRSubImage() { illegalConstructor("XRSubImage"); }
-export function XRWebGLSubImage() { illegalConstructor("XRWebGLSubImage"); }
-export function XRPlane() { illegalConstructor("XRPlane"); }
-export function XRPlaneSet() { illegalConstructor("XRPlaneSet"); }
+export function XRQuadLayer() { illegalConstructor("XRQuadLayer", new.target); }
+export function XRSubImage() { illegalConstructor("XRSubImage", new.target); }
+export function XRWebGLSubImage() { illegalConstructor("XRWebGLSubImage", new.target); }
+export function XRPlane() { illegalConstructor("XRPlane", new.target); }
+export function XRPlaneSet() { illegalConstructor("XRPlaneSet", new.target); }
 export function XRVisibilityMaskChangeEvent(type, init) {
   initializeXREvent(this, type, init, "visibilityMaskEvent", {
     session: init?.session ?? null,
@@ -378,11 +378,11 @@ function requireNew(newTarget, name) {
   if (newTarget === undefined) throw new TypeError(`Failed to construct '${name}': use new`);
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

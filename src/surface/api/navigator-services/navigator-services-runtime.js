@@ -15,14 +15,14 @@ function navServicesState() {
 
 const state = new WeakMap();
 
-export function NetworkInformation() { illegalConstructor("NetworkInformation"); }
-export function BatteryManager() { illegalConstructor("BatteryManager"); }
-export function Keyboard() { illegalConstructor("Keyboard"); }
-export function KeyboardLayoutMap() { illegalConstructor("KeyboardLayoutMap"); }
-export function VirtualKeyboard() { illegalConstructor("VirtualKeyboard"); }
-export function WindowControlsOverlay() { illegalConstructor("WindowControlsOverlay"); }
-export function DevicePosture() { illegalConstructor("DevicePosture"); }
-export function NavigatorManagedData() { illegalConstructor("NavigatorManagedData"); }
+export function NetworkInformation() { illegalConstructor("NetworkInformation", new.target); }
+export function BatteryManager() { illegalConstructor("BatteryManager", new.target); }
+export function Keyboard() { illegalConstructor("Keyboard", new.target); }
+export function KeyboardLayoutMap() { illegalConstructor("KeyboardLayoutMap", new.target); }
+export function VirtualKeyboard() { illegalConstructor("VirtualKeyboard", new.target); }
+export function WindowControlsOverlay() { illegalConstructor("WindowControlsOverlay", new.target); }
+export function DevicePosture() { illegalConstructor("DevicePosture", new.target); }
+export function NavigatorManagedData() { illegalConstructor("NavigatorManagedData", new.target); }
 export function WindowControlsOverlayGeometryChangeEvent(type, init) {
   initializeGeometryEvent(this, new.target, type, init, {
     kind: "windowControlsOverlayGeometryChangeEvent",
@@ -35,12 +35,12 @@ export function VirtualKeyboardGeometryChangeEvent(type) {
     kind: "virtualKeyboardGeometryChangeEvent",
   });
 }
-export function PluginArray() { illegalConstructor("PluginArray"); }
-export function Plugin() { illegalConstructor("Plugin"); }
-export function MimeTypeArray() { illegalConstructor("MimeTypeArray"); }
-export function MimeType() { illegalConstructor("MimeType"); }
-export function BarProp() { illegalConstructor("BarProp"); }
-export function External() { illegalConstructor("External"); }
+export function PluginArray() { illegalConstructor("PluginArray", new.target); }
+export function Plugin() { illegalConstructor("Plugin", new.target); }
+export function MimeTypeArray() { illegalConstructor("MimeTypeArray", new.target); }
+export function MimeType() { illegalConstructor("MimeType", new.target); }
+export function BarProp() { illegalConstructor("BarProp", new.target); }
+export function External() { illegalConstructor("External", new.target); }
 
 export const navigatorServiceConstructors = Object.freeze([
   NetworkInformation,
@@ -381,11 +381,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

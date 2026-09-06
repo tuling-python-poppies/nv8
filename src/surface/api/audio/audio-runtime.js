@@ -10,7 +10,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 
 const state = new WeakMap();
 
-export function BaseAudioContext() { illegalConstructor("BaseAudioContext"); }
+export function BaseAudioContext() { illegalConstructor("BaseAudioContext", new.target); }
 export function AudioContext() {
   requireNew(new.target, "AudioContext");
   initializeAudioContext(this, arguments[0] ?? {}, false);
@@ -23,15 +23,15 @@ export function AudioBuffer(options) {
   requireNew(new.target, "AudioBuffer");
   initializeAudioBuffer(this, options);
 }
-export function AudioNode() { illegalConstructor("AudioNode"); }
-export function AudioDestinationNode() { illegalConstructor("AudioDestinationNode"); }
-export function AudioListener() { illegalConstructor("AudioListener"); }
-export function AudioParam() { illegalConstructor("AudioParam"); }
-export function AudioScheduledSourceNode() { illegalConstructor("AudioScheduledSourceNode"); }
-export function AudioParamMap() { illegalConstructor("AudioParamMap"); }
-export function AudioSinkInfo() { illegalConstructor("AudioSinkInfo"); }
-export function AudioPlaybackStats() { illegalConstructor("AudioPlaybackStats"); }
-export function ScriptProcessorNode() { illegalConstructor("ScriptProcessorNode"); }
+export function AudioNode() { illegalConstructor("AudioNode", new.target); }
+export function AudioDestinationNode() { illegalConstructor("AudioDestinationNode", new.target); }
+export function AudioListener() { illegalConstructor("AudioListener", new.target); }
+export function AudioParam() { illegalConstructor("AudioParam", new.target); }
+export function AudioScheduledSourceNode() { illegalConstructor("AudioScheduledSourceNode", new.target); }
+export function AudioParamMap() { illegalConstructor("AudioParamMap", new.target); }
+export function AudioSinkInfo() { illegalConstructor("AudioSinkInfo", new.target); }
+export function AudioPlaybackStats() { illegalConstructor("AudioPlaybackStats", new.target); }
+export function ScriptProcessorNode() { illegalConstructor("ScriptProcessorNode", new.target); }
 
 export function AudioBufferSourceNode(context) {
   requireNew(new.target, "AudioBufferSourceNode");
@@ -1235,11 +1235,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

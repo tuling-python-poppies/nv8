@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { createSandbox } from "../src/public/create-sandbox.js";
+import { edge150Fingerprint } from "../src/infra/fingerprint/edge-150.js";
 import { edge151Fingerprint } from "../src/infra/fingerprint/edge-151.js";
 import { edge152Fingerprint } from "../src/infra/fingerprint/edge-152.js";
 
@@ -17,6 +18,49 @@ async function withSandbox(fingerprint, callback) {
     createSandbox.drain();
   }
 }
+
+test("Edge 150, 151 and 152 gates do not leak across profiles", async () => {
+  const observe = sandbox => sandbox.run(`JSON.stringify({
+    node: typeof NodeRange,
+    opaque: typeof OpaqueRange,
+    permissions: typeof PermissionsPolicy,
+    interaction: typeof InteractionContentfulPaint,
+    cpu: typeof navigator.cpuPerformance,
+    inputRange: typeof document.createElement("input").createValueRange,
+    rangeParent: Object.getPrototypeOf(Range.prototype).constructor.name,
+  })`);
+  const v150 = JSON.parse(await withSandbox(edge150Fingerprint, observe));
+  const v151 = JSON.parse(await withSandbox(edge151Fingerprint, observe));
+  const v152 = JSON.parse(await withSandbox(edge152Fingerprint, observe));
+
+  assert.deepEqual(v150, {
+    node: "undefined",
+    opaque: "undefined",
+    permissions: "undefined",
+    interaction: "undefined",
+    cpu: "undefined",
+    inputRange: "undefined",
+    rangeParent: "AbstractRange",
+  });
+  assert.deepEqual(v151, {
+    node: "undefined",
+    opaque: "undefined",
+    permissions: "undefined",
+    interaction: "function",
+    cpu: "undefined",
+    inputRange: "undefined",
+    rangeParent: "AbstractRange",
+  });
+  assert.deepEqual(v152, {
+    node: "function",
+    opaque: "function",
+    permissions: "function",
+    interaction: "function",
+    cpu: "number",
+    inputRange: "function",
+    rangeParent: "NodeRange",
+  });
+});
 
 test("Edge 152-only globals and Range inheritance are gated", async () => {
   const old = await withSandbox(edge151Fingerprint, sandbox => sandbox.run(`JSON.stringify({

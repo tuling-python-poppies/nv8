@@ -11,8 +11,8 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 const state = new WeakMap();
 let storageSingleton = null;
 
-export function Cache() { illegalConstructor("Cache"); }
-export function CacheStorage() { illegalConstructor("CacheStorage"); }
+export function Cache() { illegalConstructor("Cache", new.target); }
+export function CacheStorage() { illegalConstructor("CacheStorage", new.target); }
 export const cacheConstructors = Object.freeze([Cache, CacheStorage]);
 for (const Constructor of cacheConstructors) registerNativeFunction(Constructor, Constructor.name);
 
@@ -154,11 +154,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

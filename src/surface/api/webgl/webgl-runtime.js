@@ -34,24 +34,24 @@ const defaultProfile = Object.freeze({
   webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)",
 });
 
-export function WebGLRenderingContext() { illegalConstructor("WebGLRenderingContext"); }
-export function WebGL2RenderingContext() { illegalConstructor("WebGL2RenderingContext"); }
-export function WebGLObject() { illegalConstructor("WebGLObject"); }
-export function WebGLBuffer() { illegalConstructor("WebGLBuffer"); }
-export function WebGLFramebuffer() { illegalConstructor("WebGLFramebuffer"); }
-export function WebGLProgram() { illegalConstructor("WebGLProgram"); }
-export function WebGLQuery() { illegalConstructor("WebGLQuery"); }
-export function WebGLRenderbuffer() { illegalConstructor("WebGLRenderbuffer"); }
-export function WebGLSampler() { illegalConstructor("WebGLSampler"); }
-export function WebGLShader() { illegalConstructor("WebGLShader"); }
-export function WebGLSync() { illegalConstructor("WebGLSync"); }
-export function WebGLTexture() { illegalConstructor("WebGLTexture"); }
-export function WebGLTransformFeedback() { illegalConstructor("WebGLTransformFeedback"); }
-export function WebGLUniformLocation() { illegalConstructor("WebGLUniformLocation"); }
-export function WebGLVertexArrayObject() { illegalConstructor("WebGLVertexArrayObject"); }
-export function WebGLActiveInfo() { illegalConstructor("WebGLActiveInfo"); }
+export function WebGLRenderingContext() { illegalConstructor("WebGLRenderingContext", new.target); }
+export function WebGL2RenderingContext() { illegalConstructor("WebGL2RenderingContext", new.target); }
+export function WebGLObject() { illegalConstructor("WebGLObject", new.target); }
+export function WebGLBuffer() { illegalConstructor("WebGLBuffer", new.target); }
+export function WebGLFramebuffer() { illegalConstructor("WebGLFramebuffer", new.target); }
+export function WebGLProgram() { illegalConstructor("WebGLProgram", new.target); }
+export function WebGLQuery() { illegalConstructor("WebGLQuery", new.target); }
+export function WebGLRenderbuffer() { illegalConstructor("WebGLRenderbuffer", new.target); }
+export function WebGLSampler() { illegalConstructor("WebGLSampler", new.target); }
+export function WebGLShader() { illegalConstructor("WebGLShader", new.target); }
+export function WebGLSync() { illegalConstructor("WebGLSync", new.target); }
+export function WebGLTexture() { illegalConstructor("WebGLTexture", new.target); }
+export function WebGLTransformFeedback() { illegalConstructor("WebGLTransformFeedback", new.target); }
+export function WebGLUniformLocation() { illegalConstructor("WebGLUniformLocation", new.target); }
+export function WebGLVertexArrayObject() { illegalConstructor("WebGLVertexArrayObject", new.target); }
+export function WebGLActiveInfo() { illegalConstructor("WebGLActiveInfo", new.target); }
 export function WebGLShaderPrecisionFormat() {
-  illegalConstructor("WebGLShaderPrecisionFormat");
+  illegalConstructor("WebGLShaderPrecisionFormat", new.target);
 }
 
 export function WebGLContextEvent(type) {
@@ -994,6 +994,10 @@ function dimension(value) {
   return Math.max(0, Math.min(0xffffffff, Number(value) >>> 0));
 }
 
-function illegalConstructor(name) {
-  throw new TypeError(`Failed to construct '${name}': Illegal constructor`);
+function illegalConstructor(name, newTarget) {
+  throw new TypeError(
+    newTarget === undefined
+      ? "Illegal constructor"
+      : `Failed to construct '${name}': Illegal constructor`,
+  );
 }

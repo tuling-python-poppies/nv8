@@ -1067,13 +1067,13 @@ css-ua-defaults.js），现在都有了脚本。
 
 - **Edge 152 基准下全局名缺失为 0**：`NodeRange`、`OpaqueRange`、
   `PermissionsPolicy`、`HTMLUserMediaElement` 均已实现。
-- **原型成员的枚举顺序有 22 处不一致**。963 个共有原型里 941 个顺序一致；
-  剩下 22 个需逐个核对是 151 → 152 的版本差异还是实现偏差，未括进测试。
+- **Edge 152 原型成员的枚举顺序已对齐**。采集器保留真实顺序，27 个存在实现差异
+  的原型由专用顺序表校正，并由 `tests/prototype-order-parity-test.js` 锁定。
 - **Node 18/20 上全局枚举顺序做不到一致**（宿主限制，见「环境要求」）；
   Node 18–22 的 V8 内建段自身顺序也与 Chromium 不同。Node 24 逐位一致。
 - **4 个行为探针差异**，已登记：2 个动态 iframe 时序差异、2 个 Node/Chromium ICU 差异。
-- **`illegalConstructor` 对不带 `new` 的调用多了接口名**：真实 Edge 只报
-  `Illegal constructor`，带名字的只在 `new X()` 时。影响几百处调用点，已登记。
+- **`illegalConstructor` 文案已对齐**：真实 Edge 只在 `new X()` 时带接口名，裸调用
+  只报 `Illegal constructor`；28 个 runtime 模块已统一传递 `new.target`。
 - **2 项刻意不探**（`UNPROBED_KNOWN_GAPS`，断言恰好为 2）：
   - CSS 属性描述符形状（访问器 vs 可写数据属性）。纯 JS 无法复制 V8 的
     命名属性拦截器。选访问器是因为读写语义正确性（自动同步 `cssText` 与

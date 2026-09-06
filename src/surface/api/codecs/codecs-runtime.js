@@ -74,8 +74,8 @@ export function ImageDecoder(init) {
   initializeImageDecoder(this, init);
 }
 
-export function ImageTrack() { illegalConstructor("ImageTrack"); }
-export function ImageTrackList() { illegalConstructor("ImageTrackList"); }
+export function ImageTrack() { illegalConstructor("ImageTrack", new.target); }
+export function ImageTrackList() { illegalConstructor("ImageTrackList", new.target); }
 
 export const codecsConstructors = Object.freeze([
   AudioData,
@@ -681,11 +681,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

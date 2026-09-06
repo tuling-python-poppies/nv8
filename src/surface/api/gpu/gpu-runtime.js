@@ -68,36 +68,36 @@ const defaultProfile = Object.freeze({
   }),
 });
 
-export function GPU() { illegalConstructor("GPU"); }
-export function GPUAdapter() { illegalConstructor("GPUAdapter"); }
-export function GPUAdapterInfo() { illegalConstructor("GPUAdapterInfo"); }
-export function GPUBuffer() { illegalConstructor("GPUBuffer"); }
-export function GPUCanvasContext() { illegalConstructor("GPUCanvasContext"); }
-export function GPUDevice() { illegalConstructor("GPUDevice"); }
-export function GPUDeviceLostInfo() { illegalConstructor("GPUDeviceLostInfo"); }
-export function GPUQueue() { illegalConstructor("GPUQueue"); }
-export function GPUShaderModule() { illegalConstructor("GPUShaderModule"); }
-export function GPUSupportedFeatures() { illegalConstructor("GPUSupportedFeatures"); }
-export function GPUSupportedLimits() { illegalConstructor("GPUSupportedLimits"); }
-export function GPUTexture() { illegalConstructor("GPUTexture"); }
-export function GPUTextureView() { illegalConstructor("GPUTextureView"); }
-export function GPUBindGroup() { illegalConstructor("GPUBindGroup"); }
-export function GPUBindGroupLayout() { illegalConstructor("GPUBindGroupLayout"); }
-export function GPUCommandBuffer() { illegalConstructor("GPUCommandBuffer"); }
-export function GPUCommandEncoder() { illegalConstructor("GPUCommandEncoder"); }
-export function GPUComputePassEncoder() { illegalConstructor("GPUComputePassEncoder"); }
-export function GPUComputePipeline() { illegalConstructor("GPUComputePipeline"); }
-export function GPUError() { illegalConstructor("GPUError"); }
-export function GPUPipelineLayout() { illegalConstructor("GPUPipelineLayout"); }
-export function GPUQuerySet() { illegalConstructor("GPUQuerySet"); }
-export function GPURenderBundle() { illegalConstructor("GPURenderBundle"); }
-export function GPURenderBundleEncoder() { illegalConstructor("GPURenderBundleEncoder"); }
-export function GPURenderPassEncoder() { illegalConstructor("GPURenderPassEncoder"); }
-export function GPURenderPipeline() { illegalConstructor("GPURenderPipeline"); }
-export function GPUSampler() { illegalConstructor("GPUSampler"); }
-export function GPUExternalTexture() { illegalConstructor("GPUExternalTexture"); }
-export function GPUCompilationInfo() { illegalConstructor("GPUCompilationInfo"); }
-export function GPUCompilationMessage() { illegalConstructor("GPUCompilationMessage"); }
+export function GPU() { illegalConstructor("GPU", new.target); }
+export function GPUAdapter() { illegalConstructor("GPUAdapter", new.target); }
+export function GPUAdapterInfo() { illegalConstructor("GPUAdapterInfo", new.target); }
+export function GPUBuffer() { illegalConstructor("GPUBuffer", new.target); }
+export function GPUCanvasContext() { illegalConstructor("GPUCanvasContext", new.target); }
+export function GPUDevice() { illegalConstructor("GPUDevice", new.target); }
+export function GPUDeviceLostInfo() { illegalConstructor("GPUDeviceLostInfo", new.target); }
+export function GPUQueue() { illegalConstructor("GPUQueue", new.target); }
+export function GPUShaderModule() { illegalConstructor("GPUShaderModule", new.target); }
+export function GPUSupportedFeatures() { illegalConstructor("GPUSupportedFeatures", new.target); }
+export function GPUSupportedLimits() { illegalConstructor("GPUSupportedLimits", new.target); }
+export function GPUTexture() { illegalConstructor("GPUTexture", new.target); }
+export function GPUTextureView() { illegalConstructor("GPUTextureView", new.target); }
+export function GPUBindGroup() { illegalConstructor("GPUBindGroup", new.target); }
+export function GPUBindGroupLayout() { illegalConstructor("GPUBindGroupLayout", new.target); }
+export function GPUCommandBuffer() { illegalConstructor("GPUCommandBuffer", new.target); }
+export function GPUCommandEncoder() { illegalConstructor("GPUCommandEncoder", new.target); }
+export function GPUComputePassEncoder() { illegalConstructor("GPUComputePassEncoder", new.target); }
+export function GPUComputePipeline() { illegalConstructor("GPUComputePipeline", new.target); }
+export function GPUError() { illegalConstructor("GPUError", new.target); }
+export function GPUPipelineLayout() { illegalConstructor("GPUPipelineLayout", new.target); }
+export function GPUQuerySet() { illegalConstructor("GPUQuerySet", new.target); }
+export function GPURenderBundle() { illegalConstructor("GPURenderBundle", new.target); }
+export function GPURenderBundleEncoder() { illegalConstructor("GPURenderBundleEncoder", new.target); }
+export function GPURenderPassEncoder() { illegalConstructor("GPURenderPassEncoder", new.target); }
+export function GPURenderPipeline() { illegalConstructor("GPURenderPipeline", new.target); }
+export function GPUSampler() { illegalConstructor("GPUSampler", new.target); }
+export function GPUExternalTexture() { illegalConstructor("GPUExternalTexture", new.target); }
+export function GPUCompilationInfo() { illegalConstructor("GPUCompilationInfo", new.target); }
+export function GPUCompilationMessage() { illegalConstructor("GPUCompilationMessage", new.target); }
 
 export function GPUInternalError(message) {
   constructGPUError(this, new.target, message, "GPUInternalError");
@@ -905,11 +905,11 @@ function requireDescriptor(args, name) {
   return args[0];
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

@@ -155,7 +155,7 @@ export function Touch(init) {
     force: Number(init.force ?? 0),
   });
 }
-export function TouchList() { illegalConstructor("TouchList"); }
+export function TouchList() { illegalConstructor("TouchList", new.target); }
 export function InputDeviceCapabilities() {
   requireNew(new.target, "InputDeviceCapabilities");
   const init = arguments[0] ?? {};
@@ -175,8 +175,8 @@ export function DataTransfer() {
     dragImage: null,
   });
 }
-export function DataTransferItem() { illegalConstructor("DataTransferItem"); }
-export function DataTransferItemList() { illegalConstructor("DataTransferItemList"); }
+export function DataTransferItem() { illegalConstructor("DataTransferItem", new.target); }
+export function DataTransferItemList() { illegalConstructor("DataTransferItemList", new.target); }
 export function ClipboardEvent(type) {
   requireNew(new.target, "ClipboardEvent");
   const init = arguments[1] ?? {};
@@ -467,11 +467,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

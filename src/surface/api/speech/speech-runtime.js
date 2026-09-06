@@ -9,7 +9,7 @@ let profileLanguage = "en-US";
 let singleton = null;
 
 export function SpeechSynthesis() {
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 
 export function SpeechSynthesisEvent(type, init) {
@@ -48,7 +48,7 @@ export function SpeechSynthesisUtterance(text = "") {
 }
 
 export function SpeechSynthesisVoice() {
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 
 export const speechConstructors = Object.freeze([
@@ -349,11 +349,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

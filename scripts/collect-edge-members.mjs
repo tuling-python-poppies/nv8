@@ -53,7 +53,9 @@ const PAGE_BODY = `
     try { value = globalThis[name]; } catch { continue; }
     if (typeof value !== 'function' || !value.prototype) continue;
     const prototype = value.prototype;
-    const keys = Object.getOwnPropertyNames(prototype).sort();
+    // 顺序本身也是指纹维度；成员对等性测试会按名称比较集合，
+    // 但顺序测试需要保留 Chromium 的原生枚举顺序。
+    const keys = Object.getOwnPropertyNames(prototype);
     out[name] = {
       members: keys.map(key => ({ name: key, descriptor: describe(prototype, key) })),
       symbolCount: Object.getOwnPropertySymbols(prototype).length,

@@ -3,11 +3,11 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 const state = new WeakMap();
 let singleton = null;
 
-export function TrustedTypePolicyFactory() { illegalConstructor("TrustedTypePolicyFactory"); }
-export function TrustedTypePolicy() { illegalConstructor("TrustedTypePolicy"); }
-export function TrustedHTML() { illegalConstructor("TrustedHTML"); }
-export function TrustedScript() { illegalConstructor("TrustedScript"); }
-export function TrustedScriptURL() { illegalConstructor("TrustedScriptURL"); }
+export function TrustedTypePolicyFactory() { illegalConstructor("TrustedTypePolicyFactory", new.target); }
+export function TrustedTypePolicy() { illegalConstructor("TrustedTypePolicy", new.target); }
+export function TrustedHTML() { illegalConstructor("TrustedHTML", new.target); }
+export function TrustedScript() { illegalConstructor("TrustedScript", new.target); }
+export function TrustedScriptURL() { illegalConstructor("TrustedScriptURL", new.target); }
 
 export const trustedTypeConstructors = Object.freeze([
   TrustedTypePolicyFactory,
@@ -155,11 +155,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

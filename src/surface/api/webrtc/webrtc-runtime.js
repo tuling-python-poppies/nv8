@@ -26,7 +26,7 @@ export function RTCTrackEvent(type, init) {
     transceiver: init?.transceiver ?? null,
   });
 }
-export function RTCStatsReport() { illegalConstructor("RTCStatsReport"); }
+export function RTCStatsReport() { illegalConstructor("RTCStatsReport", new.target); }
 export function RTCSessionDescription(init = {}) {
   requireNew(new.target, "RTCSessionDescription");
   state.set(this, {
@@ -35,10 +35,10 @@ export function RTCSessionDescription(init = {}) {
     sdp: `${init.sdp ?? ""}`,
   });
 }
-export function RTCSctpTransport() { illegalConstructor("RTCSctpTransport"); }
-export function RTCRtpTransceiver() { illegalConstructor("RTCRtpTransceiver"); }
-export function RTCRtpSender() { illegalConstructor("RTCRtpSender"); }
-export function RTCRtpReceiver() { illegalConstructor("RTCRtpReceiver"); }
+export function RTCSctpTransport() { illegalConstructor("RTCSctpTransport", new.target); }
+export function RTCRtpTransceiver() { illegalConstructor("RTCRtpTransceiver", new.target); }
+export function RTCRtpSender() { illegalConstructor("RTCRtpSender", new.target); }
+export function RTCRtpReceiver() { illegalConstructor("RTCRtpReceiver", new.target); }
 export function RTCPeerConnectionIceEvent(type, init = {}) {
   eventRecord(this, type, init, "iceEvent", {
     candidate: init.candidate === null || init.candidate === undefined
@@ -60,7 +60,7 @@ export function RTCPeerConnection(configuration = {}) {
   requireNew(new.target, "RTCPeerConnection");
   initializePeer(this, configuration);
 }
-export function RTCIceTransport() { illegalConstructor("RTCIceTransport"); }
+export function RTCIceTransport() { illegalConstructor("RTCIceTransport", new.target); }
 export function RTCIceCandidate(init = {}) {
   requireNew(new.target, "RTCIceCandidate");
   initializeIceCandidate(this, init);
@@ -94,7 +94,7 @@ export function RTCEncodedAudioFrame(original) {
   requireNew(new.target, "RTCEncodedAudioFrame");
   initializeEncodedFrame(this, "encodedAudioFrame", original, false);
 }
-export function RTCDtlsTransport() { illegalConstructor("RTCDtlsTransport"); }
+export function RTCDtlsTransport() { illegalConstructor("RTCDtlsTransport", new.target); }
 export function RTCDataChannelEvent(type, init) {
   eventRecord(this, type, init, "dataChannelEvent", {
     channel: init?.channel ?? null,
@@ -105,9 +105,9 @@ export function RTCDTMFToneChangeEvent(type, init) {
     tone: `${init?.tone ?? ""}`,
   });
 }
-export function RTCDTMFSender() { illegalConstructor("RTCDTMFSender"); }
-export function RTCCertificate() { illegalConstructor("RTCCertificate"); }
-export function RTCDataChannel() { illegalConstructor("RTCDataChannel"); }
+export function RTCDTMFSender() { illegalConstructor("RTCDTMFSender", new.target); }
+export function RTCCertificate() { illegalConstructor("RTCCertificate", new.target); }
+export function RTCDataChannel() { illegalConstructor("RTCDataChannel", new.target); }
 export function RTCRtpScriptTransform(worker) {
   requireNew(new.target, "RTCRtpScriptTransform");
   if (worker === null || (typeof worker !== "object" && typeof worker !== "function")) {
@@ -1001,11 +1001,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

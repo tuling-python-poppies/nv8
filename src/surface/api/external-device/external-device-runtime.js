@@ -14,18 +14,18 @@ function externalDeviceState() {
   return externalDeviceSlot.get(globalThis);
 }
 
-export function Bluetooth() { illegalConstructor("Bluetooth"); }
-export function BluetoothCharacteristicProperties() { illegalConstructor("BluetoothCharacteristicProperties"); }
-export function BluetoothDevice() { illegalConstructor("BluetoothDevice"); }
-export function BluetoothRemoteGATTCharacteristic() { illegalConstructor("BluetoothRemoteGATTCharacteristic"); }
-export function BluetoothRemoteGATTDescriptor() { illegalConstructor("BluetoothRemoteGATTDescriptor"); }
-export function BluetoothRemoteGATTServer() { illegalConstructor("BluetoothRemoteGATTServer"); }
-export function BluetoothRemoteGATTService() { illegalConstructor("BluetoothRemoteGATTService"); }
-export function HID() { illegalConstructor("HID"); }
+export function Bluetooth() { illegalConstructor("Bluetooth", new.target); }
+export function BluetoothCharacteristicProperties() { illegalConstructor("BluetoothCharacteristicProperties", new.target); }
+export function BluetoothDevice() { illegalConstructor("BluetoothDevice", new.target); }
+export function BluetoothRemoteGATTCharacteristic() { illegalConstructor("BluetoothRemoteGATTCharacteristic", new.target); }
+export function BluetoothRemoteGATTDescriptor() { illegalConstructor("BluetoothRemoteGATTDescriptor", new.target); }
+export function BluetoothRemoteGATTServer() { illegalConstructor("BluetoothRemoteGATTServer", new.target); }
+export function BluetoothRemoteGATTService() { illegalConstructor("BluetoothRemoteGATTService", new.target); }
+export function HID() { illegalConstructor("HID", new.target); }
 export function HIDConnectionEvent(type, init) {
   initializeConnectionEvent(this, type, init, "hidConnectionEvent");
 }
-export function HIDDevice() { illegalConstructor("HIDDevice"); }
+export function HIDDevice() { illegalConstructor("HIDDevice", new.target); }
 export function HIDInputReportEvent() {
   const type = arguments[0];
   const init = arguments[1] ?? {};
@@ -37,59 +37,59 @@ export function HIDInputReportEvent() {
       : new DataView(new ArrayBuffer(0)),
   });
 }
-export function Serial() { illegalConstructor("Serial"); }
-export function SerialPort() { illegalConstructor("SerialPort"); }
-export function USB() { illegalConstructor("USB"); }
+export function Serial() { illegalConstructor("Serial", new.target); }
+export function SerialPort() { illegalConstructor("SerialPort", new.target); }
+export function USB() { illegalConstructor("USB", new.target); }
 export function USBAlternateInterface(device, alternateSetting) {
   void device;
   void alternateSetting;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBConfiguration(device, configurationValue) {
   void device;
   void configurationValue;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBConnectionEvent(type, init) {
   initializeConnectionEvent(this, type, init, "usbConnectionEvent");
 }
-export function USBDevice() { illegalConstructor("USBDevice"); }
+export function USBDevice() { illegalConstructor("USBDevice", new.target); }
 export function USBEndpoint(device, endpointNumber, direction) {
   void device;
   void endpointNumber;
   void direction;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBInTransferResult(status) {
   void status;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBInterface(device, interfaceNumber) {
   void device;
   void interfaceNumber;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBIsochronousInTransferPacket(status) {
   void status;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBIsochronousInTransferResult(packets) {
   void packets;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBIsochronousOutTransferPacket(status) {
   void status;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBIsochronousOutTransferResult(packets) {
   void packets;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
 export function USBOutTransferResult(status) {
   void status;
-  illegalConstructor();
+  illegalConstructor(undefined, new.target);
 }
-export function BluetoothUUID() { illegalConstructor("BluetoothUUID"); }
+export function BluetoothUUID() { illegalConstructor("BluetoothUUID", new.target); }
 
 export const externalDeviceConstructors = Object.freeze([
   Bluetooth, BluetoothCharacteristicProperties, BluetoothDevice,
@@ -375,11 +375,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

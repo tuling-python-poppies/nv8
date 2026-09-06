@@ -35,10 +35,10 @@ function mediaAgencyState() {
   return mediaAgencySlot.get(globalThis);
 }
 
-export function MediaDeviceInfo() { illegalConstructor("MediaDeviceInfo"); }
-export function InputDeviceInfo() { illegalConstructor("InputDeviceInfo"); }
-export function MediaDevices() { illegalConstructor("MediaDevices"); }
-export function MediaCapabilities() { illegalConstructor("MediaCapabilities"); }
+export function MediaDeviceInfo() { illegalConstructor("MediaDeviceInfo", new.target); }
+export function InputDeviceInfo() { illegalConstructor("InputDeviceInfo", new.target); }
+export function MediaDevices() { illegalConstructor("MediaDevices", new.target); }
+export function MediaCapabilities() { illegalConstructor("MediaCapabilities", new.target); }
 export function MediaEncryptedEvent(type) {
   requireNew(new.target, "MediaEncryptedEvent");
   const init = arguments[1] ?? {};
@@ -61,10 +61,10 @@ export function MediaKeyMessageEvent(type, init) {
     message: copyBuffer(init.message),
   });
 }
-export function MediaKeySession() { illegalConstructor("MediaKeySession"); }
-export function MediaKeyStatusMap() { illegalConstructor("MediaKeyStatusMap"); }
-export function MediaKeySystemAccess() { illegalConstructor("MediaKeySystemAccess"); }
-export function MediaKeys() { illegalConstructor("MediaKeys"); }
+export function MediaKeySession() { illegalConstructor("MediaKeySession", new.target); }
+export function MediaKeyStatusMap() { illegalConstructor("MediaKeyStatusMap", new.target); }
+export function MediaKeySystemAccess() { illegalConstructor("MediaKeySystemAccess", new.target); }
+export function MediaKeys() { illegalConstructor("MediaKeys", new.target); }
 export function MediaMetadata() {
   requireNew(new.target, "MediaMetadata");
   const init = arguments[0] ?? {};
@@ -80,7 +80,7 @@ export function MediaMetadata() {
     chapters: normalizeChapters(init.chapterInfo),
   });
 }
-export function MediaSession() { illegalConstructor("MediaSession"); }
+export function MediaSession() { illegalConstructor("MediaSession", new.target); }
 export function CaptureController() {
   requireNew(new.target, "CaptureController");
   initializeEventTarget(this);
@@ -98,7 +98,7 @@ export function ImageCapture(track) {
   }
   state.set(this, { kind: "imageCapture", track });
 }
-export function BrowserCaptureMediaStreamTrack() { illegalConstructor("BrowserCaptureMediaStreamTrack"); }
+export function BrowserCaptureMediaStreamTrack() { illegalConstructor("BrowserCaptureMediaStreamTrack", new.target); }
 export function MediaStreamTrackGenerator(init) {
   requireNew(new.target, "MediaStreamTrackGenerator");
   const kind = typeof init === "string" ? init : init?.kind;
@@ -134,7 +134,7 @@ export function MediaStreamTrackProcessor(init) {
     discardedFrames: 0,
   });
 }
-export function MediaStreamTrackVideoStats() { illegalConstructor("MediaStreamTrackVideoStats"); }
+export function MediaStreamTrackVideoStats() { illegalConstructor("MediaStreamTrackVideoStats", new.target); }
 export function MediaStreamTrackEvent(type, init) {
   requireNew(new.target, "MediaStreamTrackEvent");
   if (init === null || typeof init !== "object" || !isMediaStreamTrack(init.track)) {
@@ -757,11 +757,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

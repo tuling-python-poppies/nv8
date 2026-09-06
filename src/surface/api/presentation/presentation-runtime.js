@@ -17,7 +17,7 @@ function presentationState() {
   return presentationSlot.get(globalThis);
 }
 
-export function Presentation() { illegalConstructor("Presentation"); }
+export function Presentation() { illegalConstructor("Presentation", new.target); }
 export function PresentationRequest(urls) {
   if (new.target === undefined) {
     throw new TypeError("PresentationRequest requires new");
@@ -35,10 +35,10 @@ export function PresentationRequest(urls) {
     availability: null,
   });
 }
-export function PresentationAvailability() { illegalConstructor("PresentationAvailability"); }
-export function PresentationConnection() { illegalConstructor("PresentationConnection"); }
-export function PresentationConnectionList() { illegalConstructor("PresentationConnectionList"); }
-export function PresentationReceiver() { illegalConstructor("PresentationReceiver"); }
+export function PresentationAvailability() { illegalConstructor("PresentationAvailability", new.target); }
+export function PresentationConnection() { illegalConstructor("PresentationConnection", new.target); }
+export function PresentationConnectionList() { illegalConstructor("PresentationConnectionList", new.target); }
+export function PresentationReceiver() { illegalConstructor("PresentationReceiver", new.target); }
 
 export const presentationConstructors = Object.freeze([
   Presentation,
@@ -188,11 +188,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

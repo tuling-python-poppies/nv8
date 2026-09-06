@@ -485,18 +485,15 @@ test('read-only window attributes expose no setter', async () => {
 // ------------------------------------------- 151 新增接口的原型成员顺序
 
 /**
- * 原型成员的**枚举顺序**也是指纹的一维，而且是一个新发现的检测面：
- * `edge-member-parity-test.js` 比的是成员**集合**（fixture 里已经排过序），
- * 谁都没比过顺序。实测 963 个共有原型里有 22 个顺序不一致，已登记为独立项
- * （见 REMAINING_TASKS.md）。
- *
- * 这一节只守本轮新实现的两个接口，不把那 22 处一并括进来——永久红的断言
- * 和没有断言等价。期望值实测自真实 Edge 152。
+ * 原型成员的**枚举顺序**也是指纹的一维。成员集合 fixture 与顺序 fixture 分开：
+ * `edge-member-parity-test.js` 负责集合，`prototype-order-parity-test.js` 负责
+ * Edge 152 的 27 个顺序校正项。这里保留本轮性能条目的局部回归，期望值实测自
+ * 真实 Edge 152。
  */
 const EDGE_151_PROTOTYPE_ORDER = Object.freeze({
   // 注意 `constructor` 夹在中间：`paintTime` / `presentationTime` 在 Chromium 里
   // 是后置注册的。按「先装完所有成员再装 backlink」的惯例写会把 constructor
-  // 排到末尾（`LargestContentfulPaint` 就是这么错的，在那 22 处里）。
+  // 排到末尾；统一校正表覆盖了这类性能条目以及其他 Edge 152 差异。
   InteractionContentfulPaint: [
     'largestContentfulPaint', 'interactionId', 'toJSON',
     'constructor', 'paintTime', 'presentationTime',

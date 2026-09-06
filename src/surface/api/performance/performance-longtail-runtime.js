@@ -13,12 +13,12 @@ function longtailState() {
 
 const state = new WeakMap();
 
-export function VisibilityStateEntry() { illegalConstructor("VisibilityStateEntry"); }
-export function TaskAttributionTiming() { illegalConstructor("TaskAttributionTiming"); }
-export function PerformanceScriptTiming() { illegalConstructor("PerformanceScriptTiming"); }
-export function PerformanceResourceTiming() { illegalConstructor("PerformanceResourceTiming"); }
-export function PerformancePaintTiming() { illegalConstructor("PerformancePaintTiming"); }
-export function PerformanceObserverEntryList() { illegalConstructor("PerformanceObserverEntryList"); }
+export function VisibilityStateEntry() { illegalConstructor("VisibilityStateEntry", new.target); }
+export function TaskAttributionTiming() { illegalConstructor("TaskAttributionTiming", new.target); }
+export function PerformanceScriptTiming() { illegalConstructor("PerformanceScriptTiming", new.target); }
+export function PerformanceResourceTiming() { illegalConstructor("PerformanceResourceTiming", new.target); }
+export function PerformancePaintTiming() { illegalConstructor("PerformancePaintTiming", new.target); }
+export function PerformanceObserverEntryList() { illegalConstructor("PerformanceObserverEntryList", new.target); }
 export function PerformanceObserver(callback) {
   requireNew(new.target, "PerformanceObserver");
   if (typeof callback !== "function") {
@@ -34,28 +34,24 @@ export function PerformanceObserver(callback) {
     active: true,
   });
 }
-export function PerformanceNavigationTiming() { illegalConstructor("PerformanceNavigationTiming"); }
-export function PerformanceNavigation() { illegalConstructor("PerformanceNavigation"); }
-export function PerformanceLongTaskTiming() { illegalConstructor("PerformanceLongTaskTiming"); }
-export function PerformanceLongAnimationFrameTiming() { illegalConstructor("PerformanceLongAnimationFrameTiming"); }
-export function PerformanceEventTiming() { illegalConstructor("PerformanceEventTiming"); }
-export function PerformanceElementTiming() { illegalConstructor("PerformanceElementTiming"); }
-export function LayoutShiftAttribution() { illegalConstructor("LayoutShiftAttribution"); }
-export function LayoutShift() { illegalConstructor("LayoutShift"); }
-export function LargestContentfulPaint() { illegalConstructor("LargestContentfulPaint"); }
-export function PerformanceServerTiming() { illegalConstructor("PerformanceServerTiming"); }
-export function PerformanceTiming() { illegalConstructor("PerformanceTiming"); }
-export function PerformanceTimingConfidence() { illegalConstructor("PerformanceTimingConfidence"); }
-export function EventCounts() { illegalConstructor("EventCounts"); }
-// Edge 151 新增的两个性能条目类型，与真实 Edge 151 对比时发现缺失。
-//
-// 构造函数已就绪，但**尚未暴露为全局**：全局的枚举顺序由生成文件
-// `src/install/finalize-window-surface-order.js` 控制（三段式：收集
-// descriptor → 全部删除 → 按目标顺序重定义），且需要像 `FontFaceSet`
-// 那样按 browserMajorVersion 做版本门控——Edge 150 没有这两个接口。
-// 手改生成文件会在下次重新生成时丢失，因此留待生成器支持版本门控。
-export function InteractionContentfulPaint() { illegalConstructor("InteractionContentfulPaint"); }
-export function PerformanceSoftNavigation() { illegalConstructor("PerformanceSoftNavigation"); }
+export function PerformanceNavigationTiming() { illegalConstructor("PerformanceNavigationTiming", new.target); }
+export function PerformanceNavigation() { illegalConstructor("PerformanceNavigation", new.target); }
+export function PerformanceLongTaskTiming() { illegalConstructor("PerformanceLongTaskTiming", new.target); }
+export function PerformanceLongAnimationFrameTiming() { illegalConstructor("PerformanceLongAnimationFrameTiming", new.target); }
+export function PerformanceEventTiming() { illegalConstructor("PerformanceEventTiming", new.target); }
+export function PerformanceElementTiming() { illegalConstructor("PerformanceElementTiming", new.target); }
+export function LayoutShiftAttribution() { illegalConstructor("LayoutShiftAttribution", new.target); }
+export function LayoutShift() { illegalConstructor("LayoutShift", new.target); }
+export function LargestContentfulPaint() { illegalConstructor("LargestContentfulPaint", new.target); }
+export function PerformanceServerTiming() { illegalConstructor("PerformanceServerTiming", new.target); }
+export function PerformanceTiming() { illegalConstructor("PerformanceTiming", new.target); }
+export function PerformanceTimingConfidence() { illegalConstructor("PerformanceTimingConfidence", new.target); }
+export function EventCounts() { illegalConstructor("EventCounts", new.target); }
+// Edge 151 新增的两个性能条目类型。它们的成员安装顺序由各自的
+// `longtail-members/*` 模块提供；Edge 152 profile 的最终原型顺序由
+// `prototype-surface-order.js` 做数据驱动校正。Edge 150 不暴露这两个接口。
+export function InteractionContentfulPaint() { illegalConstructor("InteractionContentfulPaint", new.target); }
+export function PerformanceSoftNavigation() { illegalConstructor("PerformanceSoftNavigation", new.target); }
 
 export const performanceLongtailConstructors = Object.freeze([
   InteractionContentfulPaint,
@@ -284,11 +280,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

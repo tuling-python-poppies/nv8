@@ -18,9 +18,9 @@ function userAgencyState() {
   return userAgencySlot.get(globalThis);
 }
 
-export function Permissions() { illegalConstructor("Permissions"); }
-export function PermissionStatus() { illegalConstructor("PermissionStatus"); }
-export function Clipboard() { illegalConstructor("Clipboard"); }
+export function Permissions() { illegalConstructor("Permissions", new.target); }
+export function PermissionStatus() { illegalConstructor("PermissionStatus", new.target); }
+export function Clipboard() { illegalConstructor("Clipboard", new.target); }
 export function ClipboardItem(items) {
   requireNew(new.target, "ClipboardItem");
   if (items === null || typeof items !== "object") {
@@ -244,11 +244,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

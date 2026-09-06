@@ -26,8 +26,8 @@ export function XPathEvaluator() {
   requireNew(new.target, "XPathEvaluator");
   state.set(this, { kind: "evaluator" });
 }
-export function XPathExpression() { illegalConstructor("XPathExpression"); }
-export function XPathResult() { illegalConstructor("XPathResult"); }
+export function XPathExpression() { illegalConstructor("XPathExpression", new.target); }
+export function XPathResult() { illegalConstructor("XPathResult", new.target); }
 export function StaticRange(init) {
   requireNew(new.target, "StaticRange");
   if (init === null || typeof init !== "object") {
@@ -39,8 +39,8 @@ export function StaticRange(init) {
   range.endContainer = init.endContainer;
   range.endOffset = Number(init.endOffset) >>> 0;
 }
-export function CaretPosition() { illegalConstructor("CaretPosition"); }
-export function DOMStringList() { illegalConstructor("DOMStringList"); }
+export function CaretPosition() { illegalConstructor("CaretPosition", new.target); }
+export function DOMStringList() { illegalConstructor("DOMStringList", new.target); }
 export function CountQueuingStrategy(init) {
   requireNew(new.target, "CountQueuingStrategy");
   state.set(this, {
@@ -57,7 +57,7 @@ export function ByteLengthQueuingStrategy(init) {
     size: byteSize,
   });
 }
-export function DOMStringMap() { illegalConstructor("DOMStringMap"); }
+export function DOMStringMap() { illegalConstructor("DOMStringMap", new.target); }
 
 const countSize = { size() { return 1; } }.size;
 const byteSize = { size(chunk) { return Number(chunk?.byteLength ?? 0); } }.size;
@@ -244,11 +244,11 @@ function requireNew(newTarget, name) {
   if (newTarget === undefined) throw new TypeError(`Failed to construct '${name}': use new`);
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

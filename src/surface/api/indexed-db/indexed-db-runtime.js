@@ -23,17 +23,17 @@ function indexedDBState() {
   return indexedDBSlot.get(globalThis);
 }
 
-export function IDBFactory() { illegalConstructor("IDBFactory"); }
-export function IDBDatabase() { illegalConstructor("IDBDatabase"); }
-export function IDBTransaction() { illegalConstructor("IDBTransaction"); }
-export function IDBRequest() { illegalConstructor("IDBRequest"); }
-export function IDBOpenDBRequest() { illegalConstructor("IDBOpenDBRequest"); }
-export function IDBObjectStore() { illegalConstructor("IDBObjectStore"); }
-export function IDBIndex() { illegalConstructor("IDBIndex"); }
-export function IDBCursor() { illegalConstructor("IDBCursor"); }
-export function IDBCursorWithValue() { illegalConstructor("IDBCursorWithValue"); }
-export function IDBKeyRange() { illegalConstructor("IDBKeyRange"); }
-export function IDBRecord() { illegalConstructor("IDBRecord"); }
+export function IDBFactory() { illegalConstructor("IDBFactory", new.target); }
+export function IDBDatabase() { illegalConstructor("IDBDatabase", new.target); }
+export function IDBTransaction() { illegalConstructor("IDBTransaction", new.target); }
+export function IDBRequest() { illegalConstructor("IDBRequest", new.target); }
+export function IDBOpenDBRequest() { illegalConstructor("IDBOpenDBRequest", new.target); }
+export function IDBObjectStore() { illegalConstructor("IDBObjectStore", new.target); }
+export function IDBIndex() { illegalConstructor("IDBIndex", new.target); }
+export function IDBCursor() { illegalConstructor("IDBCursor", new.target); }
+export function IDBCursorWithValue() { illegalConstructor("IDBCursorWithValue", new.target); }
+export function IDBKeyRange() { illegalConstructor("IDBKeyRange", new.target); }
+export function IDBRecord() { illegalConstructor("IDBRecord", new.target); }
 
 export const indexedDBConstructors = Object.freeze([
   IDBFactory,
@@ -968,11 +968,11 @@ function domError(message, name) {
   return new DOMException(message, name);
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

@@ -18,11 +18,11 @@ function fileSystemState() {
   return fileSystemSlot.get(globalThis);
 }
 
-export function StorageManager() { illegalConstructor("StorageManager"); }
-export function FileSystemDirectoryHandle() { illegalConstructor("FileSystemDirectoryHandle"); }
-export function FileSystemFileHandle() { illegalConstructor("FileSystemFileHandle"); }
-export function FileSystemHandle() { illegalConstructor("FileSystemHandle"); }
-export function FileSystemWritableFileStream() { illegalConstructor("FileSystemWritableFileStream"); }
+export function StorageManager() { illegalConstructor("StorageManager", new.target); }
+export function FileSystemDirectoryHandle() { illegalConstructor("FileSystemDirectoryHandle", new.target); }
+export function FileSystemFileHandle() { illegalConstructor("FileSystemFileHandle", new.target); }
+export function FileSystemHandle() { illegalConstructor("FileSystemHandle", new.target); }
+export function FileSystemWritableFileStream() { illegalConstructor("FileSystemWritableFileStream", new.target); }
 export function FileSystemObserver(callback) {
   requireNew(new.target, "FileSystemObserver");
   if (typeof callback !== "function") throw new TypeError("Observer callback is required");
@@ -35,8 +35,8 @@ export function FileSystemObserver(callback) {
   });
   fileSystemState().observers.add(this);
 }
-export function StorageBucket() { illegalConstructor("StorageBucket"); }
-export function StorageBucketManager() { illegalConstructor("StorageBucketManager"); }
+export function StorageBucket() { illegalConstructor("StorageBucket", new.target); }
+export function StorageBucketManager() { illegalConstructor("StorageBucketManager", new.target); }
 
 export const fileSystemConstructors = Object.freeze([
   StorageManager, FileSystemDirectoryHandle, FileSystemFileHandle,
@@ -469,11 +469,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

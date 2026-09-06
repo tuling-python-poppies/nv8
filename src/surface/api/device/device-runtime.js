@@ -41,19 +41,19 @@ export function configureDeviceProfile(profile = null) {
   ));
 }
 
-export function GeolocationPositionError() { illegalConstructor("GeolocationPositionError"); }
-export function GeolocationPosition() { illegalConstructor("GeolocationPosition"); }
-export function GeolocationCoordinates() { illegalConstructor("GeolocationCoordinates"); }
-export function Geolocation() { illegalConstructor("Geolocation"); }
-export function GamepadHapticActuator() { illegalConstructor("GamepadHapticActuator"); }
+export function GeolocationPositionError() { illegalConstructor("GeolocationPositionError", new.target); }
+export function GeolocationPosition() { illegalConstructor("GeolocationPosition", new.target); }
+export function GeolocationCoordinates() { illegalConstructor("GeolocationCoordinates", new.target); }
+export function Geolocation() { illegalConstructor("Geolocation", new.target); }
+export function GamepadHapticActuator() { illegalConstructor("GamepadHapticActuator", new.target); }
 export function GamepadEvent(type, init = {}) {
   initializeDeviceEvent(this, type, init, "gamepadEvent", {
     gamepad: init.gamepad ?? null,
   });
 }
-export function GamepadButton() { illegalConstructor("GamepadButton"); }
-export function Gamepad() { illegalConstructor("Gamepad"); }
-export function Sensor() { illegalConstructor("Sensor"); }
+export function GamepadButton() { illegalConstructor("GamepadButton", new.target); }
+export function Gamepad() { illegalConstructor("Gamepad", new.target); }
+export function Sensor() { illegalConstructor("Sensor", new.target); }
 export function SensorErrorEvent(type, init) {
   initializeDeviceEvent(this, type, init, "sensorErrorEvent", {
     error: init?.error ?? new DOMException("Sensor unavailable", "NotReadableError"),
@@ -75,7 +75,7 @@ export function Gyroscope(options = {}) {
   requireNew(new.target, "Gyroscope");
   initializeSensor(this, "gyroscope", options);
 }
-export function OrientationSensor() { illegalConstructor("OrientationSensor"); }
+export function OrientationSensor() { illegalConstructor("OrientationSensor", new.target); }
 export function AbsoluteOrientationSensor(options = {}) {
   requireNew(new.target, "AbsoluteOrientationSensor");
   initializeSensor(this, "absoluteOrientationSensor", options);
@@ -94,8 +94,8 @@ export function DeviceMotionEvent(type, init = {}) {
     interval: Number(init.interval ?? 0),
   });
 }
-export function DeviceMotionEventAcceleration() { illegalConstructor("DeviceMotionEventAcceleration"); }
-export function DeviceMotionEventRotationRate() { illegalConstructor("DeviceMotionEventRotationRate"); }
+export function DeviceMotionEventAcceleration() { illegalConstructor("DeviceMotionEventAcceleration", new.target); }
+export function DeviceMotionEventRotationRate() { illegalConstructor("DeviceMotionEventRotationRate", new.target); }
 export function DeviceOrientationEvent(type, init = {}) {
   initializeDeviceEvent(this, type, init, "deviceOrientationEvent", {
     alpha: nullableNumber(init.alpha),
@@ -346,11 +346,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

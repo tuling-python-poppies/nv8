@@ -20,10 +20,10 @@ function xrCoreState() {
   return xrCoreSlot.get(globalThis);
 }
 
-export function XRBoundedReferenceSpace() { illegalConstructor("XRBoundedReferenceSpace"); }
-export function XRFrame() { illegalConstructor("XRFrame"); }
-export function XRInputSourceArray() { illegalConstructor("XRInputSourceArray"); }
-export function XRPose() { illegalConstructor("XRPose"); }
+export function XRBoundedReferenceSpace() { illegalConstructor("XRBoundedReferenceSpace", new.target); }
+export function XRFrame() { illegalConstructor("XRFrame", new.target); }
+export function XRInputSourceArray() { illegalConstructor("XRInputSourceArray", new.target); }
+export function XRPose() { illegalConstructor("XRPose", new.target); }
 export function XRRay(origin = {}, direction = {}) {
   requireNew(new.target, "XRRay");
   const originPoint = point(origin, 0, 0, 0, 1);
@@ -35,29 +35,29 @@ export function XRRay(origin = {}, direction = {}) {
     matrix: rayMatrix(originPoint, directionPoint),
   });
 }
-export function XRReferenceSpace() { illegalConstructor("XRReferenceSpace"); }
+export function XRReferenceSpace() { illegalConstructor("XRReferenceSpace", new.target); }
 export function XRReferenceSpaceEvent(type, init) {
   initializeXREvent(this, type, init, "referenceSpaceEvent", {
     referenceSpace: init?.referenceSpace ?? null,
     transform: init?.transform ?? null,
   });
 }
-export function XRRenderState() { illegalConstructor("XRRenderState"); }
+export function XRRenderState() { illegalConstructor("XRRenderState", new.target); }
 export function XRRigidTransform(position = {}, orientation = {}) {
   requireNew(new.target, "XRRigidTransform");
   initializeRigidTransform(this, position, orientation);
 }
-export function XRSession() { illegalConstructor("XRSession"); }
+export function XRSession() { illegalConstructor("XRSession", new.target); }
 export function XRSessionEvent(type, init) {
   initializeXREvent(this, type, init, "sessionEvent", {
     session: init?.session ?? null,
   });
 }
-export function XRSpace() { illegalConstructor("XRSpace"); }
-export function XRSystem() { illegalConstructor("XRSystem"); }
-export function XRView() { illegalConstructor("XRView"); }
-export function XRViewerPose() { illegalConstructor("XRViewerPose"); }
-export function XRViewport() { illegalConstructor("XRViewport"); }
+export function XRSpace() { illegalConstructor("XRSpace", new.target); }
+export function XRSystem() { illegalConstructor("XRSystem", new.target); }
+export function XRView() { illegalConstructor("XRView", new.target); }
+export function XRViewerPose() { illegalConstructor("XRViewerPose", new.target); }
+export function XRViewport() { illegalConstructor("XRViewport", new.target); }
 
 export const xrCoreConstructors = Object.freeze([
   XRBoundedReferenceSpace,
@@ -580,11 +580,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

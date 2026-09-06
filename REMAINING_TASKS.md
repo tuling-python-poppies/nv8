@@ -155,7 +155,7 @@
 
 权威口径不是这张表而是两个测试：`edge-surface-parity-test.js`
 （多余 0、缺失全部登记）与 `edge-member-parity-test.js`
-（963/966 原型成员集完全一致、缺失 0、多余 0）。
+（969/969 原型成员集完全一致、缺失 0、多余 0）。
 
 **但这只证明形状对，不证明行为对。** 当前行为层已有 144 个探针 / 16 类，覆盖
 CSSOM、Canvas、音频、Intl、Performance、事件时序、跨 Realm 和 URL 等；Media /
@@ -1305,24 +1305,19 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 那 61 项不由 NV8 安装也不由它重排。抹平需要把重排起点从 `Option` 前移到
     TypedArray 段；**整段重排做不到**——`undefined` / `NaN` / `Infinity` 不可配置，
     删不掉。已在 `window-surface-order-test.js` 登记，Node 24 逐位一致
-- [ ] **原型成员的枚举顺序有 22 处与真实 Edge 不同**（新发现的检测面）
-  - `edge-member-parity-test.js` 比的是成员**集合**（fixture 里已排序），谁都没比
-    过顺序。实测 963 个共有原型里 941 个顺序一致、**22 个不一致**
-    （3 个仅 `constructor` 位置错，19 个有其他错位）
-  - 根因之一是「先装完所有成员再装 constructor backlink」的惯例，而 Chromium 里
-    `paintTime` / `presentationTime` 这类是后置注册的：
-
-    ```
-    LargestContentfulPaint
-      真实：… toJSON, constructor, paintTime, presentationTime
-      NV8 ：… toJSON, paintTime, presentationTime, constructor
-    ```
-
-  - 另一类是成员本身的相对次序不同（`Response` 的 `bytes` / `textStream`、
-    `Request` 的 `body` / `targetAddressSpace`、`SVGAElement` 的一整段）。
-    这 22 处需要逐个核对是 151 → 152 的版本差异还是实现偏差
-  - 本轮只给新实现的两个 151 接口加了顺序断言，**没有**把 22 处一并括进测试
-    ——永久红的断言和没有断言等价
+- [x] **原型成员的枚举顺序已对齐**
+  - 将采集器改为保留真实 `Object.getOwnPropertyNames()` 顺序；Edge 152 fixture
+    现包含 969 个原型的原生顺序。
+  - 对比确认 27 个原型存在实现顺序差异，新增
+    `src/surface/install/prototype-surface-order.js`，在所有表面安装完成后按
+    descriptor 原样重排；其余原型保持原安装路径。
+  - `tests/prototype-order-parity-test.js` 对 27 个差异项逐项断言，避免只比较集合。
+- [x] **`illegalConstructor` 对不带 `new` 的调用文案已对齐**
+  - 真实 Edge：`new InteractionContentfulPaint()` 报
+    `Failed to construct 'InteractionContentfulPaint': Illegal constructor`，
+    而 `InteractionContentfulPaint()`（不带 `new`）只报 `Illegal constructor`。
+  - 28 个 runtime 模块、273 个调用点均传递 `new.target`；
+    `tests/illegal-constructor-parity-test.js` 覆盖 GPU、XR、IDB 和性能接口。
 - [ ] **`illegalConstructor` 对不带 `new` 的调用文案多了接口名**（新发现）
   - 实测真实 Edge：`new InteractionContentfulPaint()` 报
     `Failed to construct 'InteractionContentfulPaint': Illegal constructor`，
@@ -1469,11 +1464,12 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。第一梯队已经完成音频指纹、
     Intl / 时区和 `performance.now()` 精度；下一轮应先评估字体度量与 DOM/Range 行为，
     而不是为了刷覆盖率平均给所有 API 加探针
-  - 「形状层已经到顶」这个判断**已被推翻一半**：多余 0、缺失 0、963/966 原型成员
+  - 「形状层已经到顶」这个判断**已被推翻一半**：多余 0、缺失 0、969/969 原型成员
     集合一致都是真的，但那两个数字都只覆盖**集合**，不覆盖**顺序**与 window 自身的
-    descriptor。新增第四层后首轮就抓到 3 个真问题（`FontFaceSet` 错位、
-    `window.chrome` 不可配置、Node 18/20 的顺序错乱），另外量出 22 个原型的成员
-    顺序不一致。形状层还有没测过的维度，不是到顶
+    descriptor。新增第四层后首轮抓到 3 个真问题（`FontFaceSet` 错位、
+    `window.chrome` 不可配置、Node 18/20 的顺序错乱），另外量出 27 个原型的成员
+    顺序不一致；这 27 项现已由 Edge 152 专用顺序表校正。形状层还有没测过的维度，
+    不是到顶
   - 行为层依然是发现真问题最多的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
     行为层却查出 6 处
   - **换基准已完成**：本机 Edge 152.0.4191.53，fixture 和对等性测试均已切换到
@@ -1663,7 +1659,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 |---|---|
 | 全局名存在性 | 152 profile 覆盖真实 Edge **100%**，多余 **0** —— 集合层到顶 |
 | 原型成员与描述符 | **969/969** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
-| 枚举顺序与 own-descriptor | 数据表管的 1178 项**逐字一致**（Node 22+）；原型成员顺序 **22 处**待核 |
+| 枚举顺序与 own-descriptor | 数据表管的 1178 项**逐字一致**（Node 22+）；Edge 152 原型成员顺序 27 项已校正 |
 | 运行时行为 | 144 探针 / 16 类 —— **剩余工作大头仍在这里** |
 
 「基本到顶」这个说法要限定在**集合**上。新增第四层（`window-surface-order-test.js`）

@@ -22,7 +22,7 @@ function schedulingState() {
   return schedulingSlot.get(globalThis);
 }
 
-export function IdleDeadline() { illegalConstructor("IdleDeadline"); }
+export function IdleDeadline() { illegalConstructor("IdleDeadline", new.target); }
 export function IdleDetector() {
   if (new.target === undefined) throw new TypeError("IdleDetector requires new");
   initializeEventTarget(this);
@@ -35,8 +35,8 @@ export function IdleDetector() {
     started: false,
   });
 }
-export function Scheduling() { illegalConstructor("Scheduling"); }
-export function Scheduler() { illegalConstructor("Scheduler"); }
+export function Scheduling() { illegalConstructor("Scheduling", new.target); }
+export function Scheduler() { illegalConstructor("Scheduler", new.target); }
 export function TaskController() {
   if (new.target === undefined) throw new TypeError("TaskController requires new");
   const init = arguments[0] ?? {};
@@ -52,7 +52,7 @@ export function TaskController() {
   requireAbortController(this).signal = signal;
   state.set(this, { kind: "taskController", signal });
 }
-export function TaskSignal() { illegalConstructor("TaskSignal"); }
+export function TaskSignal() { illegalConstructor("TaskSignal", new.target); }
 export function TaskPriorityChangeEvent(type, init) {
   if (new.target === undefined) throw new TypeError("TaskPriorityChangeEvent requires new");
   if (init === null || typeof init !== "object") throw new TypeError("Event init required");
@@ -66,7 +66,7 @@ export function TaskPriorityChangeEvent(type, init) {
     previousPriority: normalizePriority(init.previousPriority),
   });
 }
-export function UserActivation() { illegalConstructor("UserActivation"); }
+export function UserActivation() { illegalConstructor("UserActivation", new.target); }
 
 export const schedulingConstructors = Object.freeze([
   IdleDeadline, IdleDetector, Scheduling, Scheduler, TaskController, TaskSignal,
@@ -216,4 +216,10 @@ function requireRecord(value) {
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;
 }
-function illegalConstructor() { throw new TypeError("Illegal constructor"); }
+function illegalConstructor(name, newTarget) {
+  throw new TypeError(
+    newTarget === undefined
+      ? "Illegal constructor"
+      : `Failed to construct '${name}': Illegal constructor`,
+  );
+}

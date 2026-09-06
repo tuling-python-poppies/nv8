@@ -25,9 +25,9 @@ export function ReportingObserver(callback) {
   });
 }
 
-export function ReportBody() { illegalConstructor("ReportBody"); }
-export function CSPViolationReportBody() { illegalConstructor("CSPViolationReportBody"); }
-export function IntegrityViolationReportBody() { illegalConstructor("IntegrityViolationReportBody"); }
+export function ReportBody() { illegalConstructor("ReportBody", new.target); }
+export function CSPViolationReportBody() { illegalConstructor("CSPViolationReportBody", new.target); }
+export function IntegrityViolationReportBody() { illegalConstructor("IntegrityViolationReportBody", new.target); }
 export const reportingConstructors = Object.freeze([
   ReportingObserver,
   ReportBody,
@@ -146,11 +146,11 @@ function requireRecord(value) {
   return record;
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );

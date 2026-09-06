@@ -36,6 +36,9 @@ import {
   finalizeWindowSurfaceOrder,
 } from "../../surface/install/finalize-window-surface-order.js";
 import {
+  finalizePrototypeSurfaceOrder,
+} from "../../surface/install/prototype-surface-order.js";
+import {
   installEdgeStaticFunctions,
 } from "../../surface/install/install-edge-static-functions.js";
 import {
@@ -1308,6 +1311,7 @@ export function bootstrapRoot(
   parsePageHTML(pageHtml);
   installEdgeStaticFunctions();
   installEdgeAccessorSemantics();
+  finalizePrototypeSurfaceOrder(browserMajorVersion);
   finalizeWindowSurfaceOrder(browserMajorVersion);
 }
 

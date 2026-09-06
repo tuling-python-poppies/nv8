@@ -7,7 +7,7 @@
  *
  * 数据来源：
  * - 真实 Edge：`fixtures/fingerprint/edge-members.json`
- *   （`npm run fingerprint:members`，966 原型 / 8941 成员）
+ *   （`npm run fingerprint:members`，969 原型 / 8957 成员；成员顺序保留）
  * - NV8：实时捕获，因为 `full-surface.json` 里存的是压缩摘要
  *   （`type:members:symbols:digest16`），不含成员名。
  *

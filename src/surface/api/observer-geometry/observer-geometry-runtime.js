@@ -16,8 +16,8 @@ export function DOMQuad() {
     p4: point(arguments[3]),
   });
 }
-export function ResizeObserverSize() { illegalConstructor("ResizeObserverSize"); }
-export function ResizeObserverEntry() { illegalConstructor("ResizeObserverEntry"); }
+export function ResizeObserverSize() { illegalConstructor("ResizeObserverSize", new.target); }
+export function ResizeObserverEntry() { illegalConstructor("ResizeObserverEntry", new.target); }
 export function ResizeObserver(callback) {
   requireNew(new.target, "ResizeObserver");
   if (typeof callback !== "function") {
@@ -59,7 +59,7 @@ export function IntersectionObserver(callback) {
     active: true,
   });
 }
-export function VisualViewport() { illegalConstructor("VisualViewport"); }
+export function VisualViewport() { illegalConstructor("VisualViewport", new.target); }
 
 export const observerGeometryConstructors = Object.freeze([
   DOMQuad,
@@ -342,11 +342,11 @@ function requireNew(newTarget, name) {
   }
 }
 
-function illegalConstructor(name) {
+function illegalConstructor(name, newTarget) {
   // 真实 Chromium：`Failed to construct 'Node': Illegal constructor`
   // 不带接口名的裸文案是可检测偏差。
   throw new TypeError(
-    name === undefined
+    newTarget === undefined
       ? "Illegal constructor"
       : `Failed to construct '${name}': Illegal constructor`,
   );
