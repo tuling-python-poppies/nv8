@@ -49,6 +49,7 @@ export function Worker(scriptURL) {
     url,
     handle: null,
     terminated: false,
+    failed: false,
     pending: [],
     handlers: new Map(),
   };
@@ -67,8 +68,8 @@ export function Worker(scriptURL) {
       deliverError(record, error);
     },
   })).then(handle => {
-    if (record.terminated) {
-      handle.terminate();
+    if (record.terminated || record.failed) {
+      handle.terminate?.();
       return;
     }
     record.handle = handle;
@@ -76,7 +77,14 @@ export function Worker(scriptURL) {
       handle.deliverOwnerMessage(entry.value, undefined, entry.ports);
     }
   }, error => {
-    if (!record.terminated) deliverError(record, error);
+    if (record.terminated) return;
+    // A failed construction no longer represents a live Worker. Keep the
+    // record long enough to dispatch the browser-visible error, but do not
+    // retain it in the resource count or accept messages into a dead queue.
+    record.failed = true;
+    record.pending.splice(0);
+    liveWorkers.delete(record);
+    deliverError(record, error);
   });
 }
 registerNativeFunction(Worker, "Worker");
@@ -94,7 +102,7 @@ export function setWorkerHandler(worker, name, value) {
 
 export function workerPostMessage(worker, message, transferOrOptions) {
   const record = requireWorker(worker);
-  if (record.terminated) return;
+  if (record.terminated || record.failed) return;
   const cloned = performStructuredCloneDetailed(
     message,
     normalizeTransferOptions(transferOrOptions),
@@ -112,6 +120,7 @@ export function workerTerminate(worker) {
   const record = requireWorker(worker);
   if (record.terminated) return;
   record.terminated = true;
+  record.failed = false;
   liveWorkers.delete(record);
   record.pending.splice(0);
   record.handle?.terminate();
@@ -126,6 +135,7 @@ export function terminateAllWorkers() {
   for (const record of [...liveWorkers]) {
     if (record.terminated) continue;
     record.terminated = true;
+    record.failed = false;
     record.pending.splice(0);
     record.handle?.terminate();
     record.handle = null;

@@ -19,6 +19,31 @@ for (const backend of ['child-process', 'worker-thread']) {
   });
 }
 
+for (const backend of ['child-process', 'worker-thread']) {
+  test(`failed Worker construction releases its resource record on ${backend}`, async () => {
+    const sandbox = await EdgeSandbox.create({
+      execution: { backend },
+      page: { url: 'https://example.test/' },
+      limits: { timeoutMs: 3_000 },
+    });
+    try {
+      const result = await sandbox.evaluate(`new Promise(resolve => {
+        const worker = new Worker('/missing-worker.js');
+        worker.onerror = event => resolve(
+          (event.error?.name ?? 'unknown') + ':' + (event.message ?? ''),
+        );
+      })`);
+      assert.equal(result.type, 'string');
+      assert.match(result.value, /^TypeError:/);
+      const resources = await sandbox.resources();
+      assert.equal(resources.root.workers, 0);
+      assert.equal(resources.childRealms, 0);
+    } finally {
+      await sandbox.close();
+    }
+  });
+}
+
 for (const [backend, limits, expectedCode] of [
   ['child-process', { maxHeapBytes: 64 * 1024 * 1024 }, 'LIMIT_HEAP_BYTES'],
   ['worker-thread', { maxRealms: 1 }, 'LIMIT_REALM_CAPACITY'],

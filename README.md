@@ -796,7 +796,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，878 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，880 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -917,7 +917,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（878 项 / 86 个文件，自动发现） |
+| `npm test` | 全量测试（880 项 / 86 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |

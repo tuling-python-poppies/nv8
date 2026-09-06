@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 878 项（`npm test`，86 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 880 项（`npm test`，86 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -102,8 +102,11 @@
 
 ### 未完成项
 - [ ] 所有后端异常的句柄泄漏验证
+  - [x] Dedicated Worker 离线脚本构造失败：错误事件仍派发，失败记录从 live 资源计数移除
+    （`tests/resource-lifecycle-test.js`，child-process / worker-thread）
+  - [ ] child-process、worker-thread 的启动异常、协议异常、超时和关闭路径仍需完整覆盖
 
-**状态**: ✅ Evidence 接口解耦完成（21 项测试）
+**状态**: ✅ Evidence 接口解耦完成（21 项测试）；异常句柄验证已覆盖第一条 Worker 失败路径
 
 ---
 
@@ -1623,7 +1626,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：878 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：880 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1719,5 +1722,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（878 项 / 86 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（880 项 / 86 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
