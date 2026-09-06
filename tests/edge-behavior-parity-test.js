@@ -5,7 +5,7 @@
  * `edge-member-parity-test.js` 比原型成员名与 descriptor。两者都通过了，
  * 但形状对不代表行为对——`getComputedStyle` 存在、成员齐全，返回值仍可能是错的。
  *
- * 这一层跑同一段代码，比结果。探针定义在 `src/baseline/behavior-probes.js`，
+ * 这一层跑同一段代码，比结果。探针定义在 `src/infra/baseline/behavior-probes.js`，
  * 与采集脚本**共用同一份**：各写一份必然漂移，漂移后比较就没有意义。
  *
  * ## 探针只取「结构性事实」
@@ -255,6 +255,8 @@ categoryTest('errorShape', 'error identity and stack shape');
 categoryTest('collections', 'collection iterability and tags');
 categoryTest('cssom', 'CSSOM computed values and declaration semantics');
 categoryTest('canvas', 'canvas and TextMetrics interface shape');
+categoryTest('fontMetrics', 'font parsing and stable text-metrics behavior');
+categoryTest('domRange', 'DOM Range and Selection behavior');
 categoryTest('audio', 'Web Audio defaults, ranges and error shapes');
 categoryTest('intl', 'Intl formatting and locale-independent date shapes');
 categoryTest('performance', 'performance.now clamping and entry shapes');

@@ -317,13 +317,14 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 ### 第三层：运行时行为
 
-前两层都对，行为仍可能不同。这一层用 **144 个探针 / 16 类**覆盖：
+前两层都对，行为仍可能不同。这一层用 **154 个探针 / 18 类**覆盖：
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
-`arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`audio`、
-`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
+`arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`fontMetrics`、
+`domRange`、`audio`、`intl`、`performance`、`eventTiming`、`crossRealm`、
+`urlParsing`、`typeTag`。
 
-现状：**140 项一致，4 项登记**——2 项动态 iframe 时序（开
+现状：**150 项一致，4 项登记**——2 项动态 iframe 时序（开
 `limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
@@ -695,7 +696,7 @@ limits: { timeoutMs: 30_000 }
 | `npm run fingerprint:globals` | 1239 个全局名 |
 | `npm run fingerprint:members` | 8957 个原型成员与描述符 |
 | `npm run fingerprint:lengths` | 3508 个方法的 `length` |
-| `npm run fingerprint:behavior` | 144 个行为探针 |
+| `npm run fingerprint:behavior` | 154 个行为探针 |
 | `npm run fingerprint:css` | 746 个 CSS 属性名（保留真实枚举顺序） |
 | `npm run fingerprint:ua-defaults` | 96 个标签 × 736 个属性的 UA 默认值 |
 
@@ -757,14 +758,14 @@ limits: { timeoutMs: 30_000 }
 | 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
 | 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2**（`AbstractRange.startContainer/endContainer` 移到 `NodeRange`）|
 | 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
-| 行为探针 | 144 | 144 | **零变化** |
+| 行为探针 | 144 | 154 | **+10：字体解析、TextMetrics 形状、DOM/Range/Selection** |
 | CSS 属性 | 746 | 746 | 无 |
 | UA 默认值 | 96 标签 | 96 标签 | 无 |
 | UA / brands | `Edg/151` | `Edg/152` | brands **顺序与 GREASE 串都变了**：<br>`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一 |
 
 两条值得单独记：
 
-- **行为层零变化**说明探针可以跨 major 迁移，扩探针不必等特定版本。
+- **行为层在换基准时保持原有 144 项一致**，本轮另增 10 项稳定探针覆盖字体解析、TextMetrics 形状和 DOM/Range/Selection；扩探针不必等特定版本。
 - **brands 不只是版本号变了**，GREASE 品牌串与数组顺序都变。这类字段照抄才安全，
   按规律推导会错（ADR-0005 同一条铁律）。
 
@@ -795,7 +796,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，861 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，872 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -916,7 +917,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（861 项 / 82 个文件，自动发现） |
+| `npm test` | 全量测试（872 项 / 86 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -1080,8 +1081,9 @@ css-ua-defaults.js），现在都有了脚本。
     `style` 属性）比描述符形状更重要——脚本天天读 `el.style.display`，
     几乎从不检查它的描述符。
   - 10 个布局相关计算值。
-- **未覆盖的探针类别**：字体度量，以及其他尚未进入第一梯队的 API 行为；当前已覆盖
-  144 个探针 / 16 类。（Intl / 时区、时间精度、音频指纹已补。）
+- **行为探针已扩展到字体与 DOM Range**：当前 154 个探针 / 18 类，150 项与真实 Edge
+  一致；绝对字形像素宽度仍不进入契约，因为它依赖机器字体安装。尚未进入第一梯队
+  的 API 行为另行登记。
 
 ### 布局相关
 

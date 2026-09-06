@@ -1,7 +1,7 @@
 {
-  "collectedAt": "2026-09-06T05:57:05.058Z",
+  "collectedAt": "2026-09-06T08:15:29.252Z",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-  "probeCount": 144,
+  "probeCount": 154,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -371,6 +371,46 @@
     "canvas/default-font": {
       "threw": false,
       "value": "10px sans-serif"
+    },
+    "font/invalid-font-keeps-default": {
+      "threw": false,
+      "value": "10px sans-serif|10px sans-serif"
+    },
+    "font/font-shorthand-roundtrip": {
+      "threw": false,
+      "value": "italic bold 12px serif"
+    },
+    "font/empty-text-metrics": {
+      "threw": false,
+      "value": "0|0|0|true|true|[object TextMetrics]"
+    },
+    "font/metrics-finite-shape": {
+      "threw": false,
+      "value": "true|true|0"
+    },
+    "font/monospace-width-linearity": {
+      "threw": false,
+      "value": "true|true"
+    },
+    "dom/range-initial-state": {
+      "threw": false,
+      "value": "true|true|0|0|true|true|"
+    },
+    "dom/range-select-node-contents": {
+      "threw": false,
+      "value": "true|true|0|3|alphaomega|alphaomega|3"
+    },
+    "dom/range-text-boundaries": {
+      "threw": false,
+      "value": "bcd|true|true|1|4|false"
+    },
+    "dom/range-invalid-boundary": {
+      "threw": false,
+      "value": "IndexSizeError: Failed to execute 'setStart' on 'Range': The offset 4 is larger than the node's length (3)."
+    },
+    "dom/selection-initial-state": {
+      "threw": false,
+      "value": "[object Selection]|0|None|true|true|true|"
     },
     "audio/offline-context-shape": {
       "threw": false,

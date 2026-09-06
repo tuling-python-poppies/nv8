@@ -79,7 +79,7 @@ export function requireRange(value) {
 
 export function setRangeStart(range, node, offset) {
   const state = requireRange(range);
-  const normalized = validateBoundary(node, offset);
+  const normalized = validateBoundary(node, offset, "setStart", "Range");
   state.startContainer = node;
   state.startOffset = normalized;
   if (
@@ -98,7 +98,7 @@ export function setRangeStart(range, node, offset) {
 
 export function setRangeEnd(range, node, offset) {
   const state = requireRange(range);
-  const normalized = validateBoundary(node, offset);
+  const normalized = validateBoundary(node, offset, "setEnd", "Range");
   state.endContainer = node;
   state.endOffset = normalized;
   if (
@@ -115,7 +115,7 @@ export function setRangeEnd(range, node, offset) {
   }
 }
 
-export function validateBoundary(node, offset) {
+export function validateBoundary(node, offset, operation = null, interfaceName = "Range") {
   if (!isNode(node)) {
     throw new TypeError("The boundary container is not a Node.");
   }
@@ -126,7 +126,10 @@ export function validateBoundary(node, offset) {
   }
   const length = boundaryLength(node);
   if (normalized > length) {
-    throw new DOMException("The offset is larger than the node length.", "IndexSizeError");
+    const message = operation === null
+      ? "The offset is larger than the node length."
+      : `Failed to execute '${operation}' on '${interfaceName}': The offset ${normalized} is larger than the node's length (${length}).`;
+    throw new DOMException(message, "IndexSizeError");
   }
   return normalized;
 }

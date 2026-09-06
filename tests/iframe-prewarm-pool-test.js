@@ -127,7 +127,7 @@ test('a prewarmed slot is reparented to the real parent window', async () => {
 });
 
 test('the pool closes the cross-realm identity probe', async () => {
-  // 这段表达式与 `src/baseline/behavior-probes.js` 的 realm/identity-bundle 同源。
+  // 这段表达式与 `src/infra/baseline/behavior-probes.js` 的 realm/identity-bundle 同源。
   // 那两条探针在默认配置下登记为已知差异（池关着，contentWindow 为 null）；
   // 开池后必须逐字等于真实 Edge 151 的采集值。
   //

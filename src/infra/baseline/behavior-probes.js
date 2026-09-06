@@ -35,6 +35,8 @@
  * - `collections` —— 集合类的可迭代性与类型标签
  * - `cssom` —— UA 默认样式表决定的计算值与 CSSStyleDeclaration 语义
  * - `canvas` —— Canvas / TextMetrics 的接口形状（**不含字形宽度**）
+ * - `fontMetrics` —— 字体声明解析与稳定 TextMetrics 关系（**不含绝对字宽**）
+ * - `domRange` —— Range 边界、文本克隆和 Selection 初始语义
  * - `eventTiming` —— 事件阶段、传播中断、once / 重复监听器语义
  * - `crossRealm` —— iframe Realm 的对象身份、跨 Realm `instanceof`、自引用
  * - `urlParsing` —— `new URL()` 的校验与规范化
@@ -599,6 +601,160 @@ export const BEHAVIOR_PROBES = Object.freeze([
     id: 'canvas/default-font',
     category: 'canvas',
     expression: "() => document.createElement('canvas').getContext('2d').font",
+  },
+
+  // ---------------------------------------------- 字体度量与 Canvas 文本
+  // 绝对字形宽度依赖机器字体安装，不直接进入 fixture；这里锁定浏览器固定的
+  // 字体解析规则、空字符串边界、TextMetrics 形状和 monospace 的线性关系。
+  {
+    id: 'font/invalid-font-keeps-default',
+    category: 'fontMetrics',
+    expression: `() => {
+      const context = document.createElement('canvas').getContext('2d');
+      const before = context.font;
+      context.font = 'not a valid font declaration';
+      return before + '|' + context.font;
+    }`,
+  },
+  {
+    id: 'font/font-shorthand-roundtrip',
+    category: 'fontMetrics',
+    expression: `() => {
+      const context = document.createElement('canvas').getContext('2d');
+      context.font = 'italic 700 12px serif';
+      return context.font;
+    }`,
+  },
+  {
+    id: 'font/empty-text-metrics',
+    category: 'fontMetrics',
+    expression: `() => {
+      const metrics = document.createElement('canvas')
+        .getContext('2d').measureText('');
+      return [
+        metrics.width,
+        metrics.actualBoundingBoxLeft,
+        metrics.actualBoundingBoxRight,
+        Number.isFinite(metrics.fontBoundingBoxAscent),
+        Number.isFinite(metrics.fontBoundingBoxDescent),
+        Object.prototype.toString.call(metrics),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'font/metrics-finite-shape',
+    category: 'fontMetrics',
+    expression: `() => {
+      const metrics = document.createElement('canvas')
+        .getContext('2d').measureText('Edge');
+      const names = [
+        'width', 'actualBoundingBoxAscent', 'actualBoundingBoxDescent',
+        'actualBoundingBoxLeft', 'actualBoundingBoxRight',
+        'fontBoundingBoxAscent', 'fontBoundingBoxDescent',
+        'hangingBaseline', 'alphabeticBaseline', 'ideographicBaseline',
+      ];
+      return names.every(name => Number.isFinite(metrics[name]))
+        + '|' + (metrics.width > 0)
+        + '|' + Object.keys(metrics).length;
+    }`,
+  },
+  {
+    id: 'font/monospace-width-linearity',
+    category: 'fontMetrics',
+    expression: `() => {
+      const context = document.createElement('canvas').getContext('2d');
+      context.font = '10px monospace';
+      const one = context.measureText('A').width;
+      const two = context.measureText('AA').width;
+      return [
+        one > 0,
+        Math.abs(two - one * 2) < 0.000001,
+      ].join('|');
+    }`,
+  },
+
+  // ---------------------------------------------- DOM / Range / Selection
+  {
+    id: 'dom/range-initial-state',
+    category: 'domRange',
+    expression: `() => {
+      const range = document.createRange();
+      return [
+        range.startContainer === document,
+        range.endContainer === document,
+        range.startOffset,
+        range.endOffset,
+        range.collapsed,
+        range.commonAncestorContainer === document,
+        range.toString(),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'dom/range-select-node-contents',
+    category: 'domRange',
+    expression: `() => {
+      const root = document.createElement('div');
+      root.append('alpha', document.createElement('b'), 'omega');
+      const range = document.createRange();
+      range.selectNodeContents(root);
+      const clone = range.cloneContents();
+      return [
+        range.startContainer === root,
+        range.endContainer === root,
+        range.startOffset,
+        range.endOffset,
+        range.toString(),
+        clone.textContent,
+        clone.childNodes.length,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'dom/range-text-boundaries',
+    category: 'domRange',
+    expression: `() => {
+      const text = document.createTextNode('abcdef');
+      const range = document.createRange();
+      range.setStart(text, 1);
+      range.setEnd(text, 4);
+      return [
+        range.toString(),
+        range.startContainer === text,
+        range.endContainer === text,
+        range.startOffset,
+        range.endOffset,
+        range.collapsed,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'dom/range-invalid-boundary',
+    category: 'domRange',
+    expression: `() => {
+      const text = document.createTextNode('abc');
+      const range = document.createRange();
+      try {
+        range.setStart(text, 4);
+        return 'no-throw';
+      } catch (error) { return error.name + ': ' + error.message; }
+    }`,
+  },
+  {
+    id: 'dom/selection-initial-state',
+    category: 'domRange',
+    expression: `() => {
+      const selection = getSelection();
+      return [
+        Object.prototype.toString.call(selection),
+        selection.rangeCount,
+        selection.type,
+        selection.anchorNode === null,
+        selection.focusNode === null,
+        selection.isCollapsed,
+        selection.toString(),
+      ].join('|');
+    }`,
   },
 
   // ---------------------------------------------- 音频指纹

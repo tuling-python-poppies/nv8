@@ -40,9 +40,10 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 
 `tests/edge-behavior-parity-test.js` — 跑同一段代码，比结果。
 
-**144 个探针分 16 类**：报错文案、`toString` 形态、类型标签、非法接收者、
-构造器守卫、arity 元数据、Error 形态、集合语义、CSSOM、Canvas 形状、
-音频指纹、Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL 解析。
+**154 个探针分 18 类**：报错文案、`toString` 形态、类型标签、非法接收者、
+构造器守卫、arity 元数据、Error 形态、集合语义、CSSOM、Canvas 形状、字体解析、
+DOM/Range/Selection、音频指纹、Intl / 时区、`performance.now` 精度、事件时序、
+跨 Realm 身份、URL 解析。
 
 扩探针的历史，每一轮都在「形状层报 0 差异」的地方挖到东西：
 
@@ -54,7 +55,7 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 | 音频指纹 | 14 | **10 处**，含五处报错类型错、float32 极值被当 double 写死 |
 | Intl / 时区 + performance | 18 | 4 处，其中 2 处是宿主级（ICU 数据版本、V8 文案），已登记 |
 
-现状：**140 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。
+现状：**150 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。
 
 探针定义在 `src/infra/baseline/behavior-probes.js`，采集脚本与测试**共用同一份**——
 各写一份必然漂移，漂移后比较就没有意义。
@@ -66,7 +67,8 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 刻意不测的：`measureText` 字形宽度取决于已安装字体、`width`/`height` 取决于
 视口与排版——它们是机器指纹或需要布局引擎，不属于行为契约。
 
-仍未覆盖：字体度量。
+已覆盖字体声明归一化、稳定 TextMetrics 形状和 DOM/Range/Selection 行为；绝对
+字形宽度仍排除，因为它依赖机器字体安装。
 
 ### 四、枚举顺序与 own-descriptor 形状
 
@@ -216,7 +218,7 @@ Object.getOwnPropertyNames(new Event('x')).includes('isTrusted')
 npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL），小，需人工核对
 npm run fingerprint:globals   # 全局名列表，1239 项
 npm run fingerprint:members   # 原型成员明细，8957 项
-npm run fingerprint:behavior  # 行为探针，144 项（跑两轮校验确定性）
+npm run fingerprint:behavior  # 行为探针，154 项（跑两轮校验确定性）
 ```
 
 都走 headless Edge + `--dump-dom`，**不依赖 Puppeteer/CDP**——浏览器自动化不是

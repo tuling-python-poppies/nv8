@@ -70,6 +70,26 @@ export function canvasContextProperty(propertyName) {
   return descriptor;
 }
 
+function normalizeCanvasFont(value) {
+  const input = `${value}`.trim();
+  // Canvas uses the CSS font shorthand. This deliberately handles the stable
+  // subset needed by the runtime: optional style/variant/weight, a CSS size,
+  // then a non-empty family list. Invalid declarations leave the old value.
+  const match = /^(?:(normal|italic|oblique)\s+)?(?:(normal|small-caps)\s+)?(?:(normal|bold|bolder|lighter|[1-9]00)\s+)?(([0-9]+(?:\.[0-9]+)?(?:px|pt|pc|in|cm|mm|em|rem|ex|ch|vh|vw|vmin|vmax)(?:\/[^\s]+)?\s+))(.+)$/i.exec(input);
+  if (match === null) return null;
+  const style = match[1]?.toLowerCase() ?? null;
+  const variant = match[2]?.toLowerCase() ?? null;
+  const weight = match[3]?.toLowerCase() ?? null;
+  const sizeAndFamily = `${match[4]}${match[6]}`;
+  const normalizedWeight = weight === "400" ? null : weight === "700" ? "bold" : weight;
+  return [
+    style === "normal" ? null : style,
+    variant === "normal" ? null : variant,
+    normalizedWeight === "normal" ? null : normalizedWeight,
+    sizeAndFamily,
+  ].filter(Boolean).join(" ");
+}
+
 function normalizeProperty(name, value) {
   if (name === "imageSmoothingEnabled") {
     return { accepted: true, value: Boolean(value) };
@@ -101,10 +121,17 @@ function normalizeProperty(name, value) {
     };
   }
   const string = `${value}`;
-  if (name === "font" || colorNames.has(name)) {
+  if (name === "font") {
+    const normalizedFont = normalizeCanvasFont(string);
+    return {
+      accepted: normalizedFont !== null,
+      value: normalizedFont ?? string,
+    };
+  }
+  if (colorNames.has(name)) {
     return {
       accepted: string.trim() !== "",
-      value: colorNames.has(name) ? normalizeCanvasColor(string) : string,
+      value: normalizeCanvasColor(string),
     };
   }
   const allowed = enumValues[name];

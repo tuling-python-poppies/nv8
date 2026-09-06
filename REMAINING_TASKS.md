@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 861 项（`npm test`，82 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 872 项（`npm test`，86 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -157,10 +157,10 @@
 （多余 0、缺失全部登记）与 `edge-member-parity-test.js`
 （969/969 原型成员集完全一致、缺失 0、多余 0）。
 
-**但这只证明形状对，不证明行为对。** 当前行为层已有 144 个探针 / 16 类，覆盖
-CSSOM、Canvas、音频、Intl、Performance、事件时序、跨 Realm 和 URL 等；Media /
-IndexedDB / Web Animations / Observers / SVG / Range / Selection 等领域仍缺少专门
-行为探针。真正的剩余工作在那里，见第十二节末。
+**但这只证明形状对，不证明行为对。** 当前行为层已有 154 个探针 / 18 类，覆盖
+CSSOM、Canvas、字体解析、DOM/Range/Selection、音频、Intl、Performance、事件时序、
+跨 Realm 和 URL 等；Media / IndexedDB / Web Animations / Observers / SVG / fetch /
+XHR / Storage / Crypto 等领域仍缺少专门行为探针。真正的剩余工作在那里，见第十二节末。
 
 留着一份「说 IndexedDB 未实现」的清单比没有清单更糟——照它决策会从零开始重做
 一遍。这与本项目「登记而不是隐藏」的原则是同一条：登记表一旦失真就必须修，
@@ -798,7 +798,7 @@ opaque origin，拿不到 `parent`。这类探针走临时本地 HTTP 服务器�
 |---|---|
 | 全局名存在性 | 152 profile 覆盖真实 Edge 的 **100%**，**多出为 0** |
 | 原型成员明细 | 969 原型中 969 个成员集完全一致，**多出为 0** |
-| 行为 | 144 探针 / 16 类，已全部通过 |
+| 行为 | 154 探针 / 18 类，150 项与真实 Edge 一致，4 项已登记 |
 
 **修掉的宿主特征泄漏（多出的东西比缺少更危险）**
 - `AsyncIterator` —— Node 24 的 V8 特性，Edge 152 没有
@@ -1230,7 +1230,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     | 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
     | 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2** |
     | 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
-    | 行为探针 | 144 | 144 | **零变化** |
+    | 行为探针 | 144 | 154 | **+10：字体解析、TextMetrics 形状、DOM/Range/Selection** |
     | CSS 属性 | 746 | 746 | 无 |
     | UA 默认值 | 96 标签 | 96 标签 | 无 |
 
@@ -1242,7 +1242,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - **brands 不只是版本号变了**：GREASE 品牌串与数组顺序都变
     （`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一）。这类字段必须照抄，
     按规律推导会错——ADR-0005 同一条铁律
-  - **行为层零变化**是个好消息：探针可以跨 major 迁移，扩探针不必等特定版本
+  - **行为层原有 144 项保持一致**，本轮另增 10 项稳定探针覆盖字体解析、TextMetrics 形状和 DOM/Range/Selection；扩探针不必等特定版本
   - **架构阻塞已解除**（见下一条）。换基准现在是三步：
     `npm run fingerprint:globals` → `build-window-surface-order.mjs --write`。
     已用真实 Edge 152 做过 dry-run：3 个新增全局自动带上形状、门控保留、
@@ -1452,15 +1452,14 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 测试 6 项（`tests/ua-default-font-locale-test.js`）：查表最长前缀、
     配对校验能抓到不匹配与缺值、表项都是带引号的计算值形态、默认 profile 一致、
     切 locale 四档一起跟着切、`<pre>` 的 monospace 不被破坏
-- [ ] **行为探针覆盖面仍是最大的缺口** - 当前 144 项 / 16 类，对 1239 全局 / 8957 成员
-  - 已覆盖：`cssom` 22、`argumentCount` 19、`audio` 14、`intl` 13、`performance`、
-    `crossRealm`、URL、事件时序和其他结构性行为
-  - 仍缺少专门探针的领域：字体度量、DOM 遍历 / Range / Selection、fetch / XHR /
-    WebSocket 语义、Storage、IndexedDB、Worker / ServiceWorker、Media、Web Animations、
-    Observers、SVG、Crypto
-  - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。第一梯队已经完成音频指纹、
-    Intl / 时区和 `performance.now()` 精度；下一轮应先评估字体度量与 DOM/Range 行为，
-    而不是为了刷覆盖率平均给所有 API 加探针
+- [ ] **行为探针覆盖面仍是最大的缺口** - 当前 154 项 / 18 类，对 1239 全局 / 8957 成员
+  - 已覆盖：`cssom` 22、`argumentCount` 19、`audio` 14、`fontMetrics` 5、`domRange` 5、
+    `intl` 13、`performance`、`crossRealm`、URL、事件时序和其他结构性行为；150 项与
+    真实 Edge 一致，4 项为已登记的宿主/时序差异
+  - 仍缺少专门探针的领域：fetch / XHR / WebSocket 语义、Storage、IndexedDB、Worker /
+    ServiceWorker、Media、Web Animations、Observers、SVG、Crypto
+  - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。下一轮优先评估网络、存储和
+    Crypto 行为，而不是为了刷覆盖率平均给所有 API 加探针
   - 「形状层已经到顶」这个判断**已被推翻一半**：多余 0、缺失 0、969/969 原型成员
     集合一致都是真的，但那两个数字都只覆盖**集合**，不覆盖**顺序**与 window 自身的
     descriptor。新增第四层后首轮抓到 3 个真问题（`FontFaceSet` 错位、
@@ -1470,7 +1469,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 行为层依然是发现真问题最多的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
     行为层却查出 6 处
   - **换基准已完成**：本机 Edge 152.0.4191.53，fixture 和对等性测试均已切换到
-    Edge 152；实测 151 → 152 行为层零变化，探针可以跨 major 迁移
+    Edge 152；实测原有 144 项行为探针保持一致，并新增 10 项字体与 DOM/Range/Selection 探针
 
 **测试**：`tests/edge-surface-parity-test.js`(9)、
 `tests/edge-member-parity-test.js`(10)、`tests/window-surface-order-test.js`(27)、
@@ -1622,7 +1621,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：861 项四档全绿；三份 baseline（bootstrap 顺序 340 步 / surface /
+- [x] **验证**：872 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1657,7 +1656,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 | 全局名存在性 | 152 profile 覆盖真实 Edge **100%**，多余 **0** —— 集合层到顶 |
 | 原型成员与描述符 | **969/969** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
 | 枚举顺序与 own-descriptor | 数据表管的 1178 项**逐字一致**（Node 22+）；Edge 152 原型成员顺序 27 项已校正 |
-| 运行时行为 | 144 探针 / 16 类 —— **剩余工作大头仍在这里** |
+| 运行时行为 | 154 探针 / 18 类，150 项一致、4 项登记 —— **剩余工作大头仍在这里** |
 
 「基本到顶」这个说法要限定在**集合**上。新增第四层（`window-surface-order-test.js`）
 首轮就在已经报 0 差异的地方抓到 3 个真问题——集合对、顺序错，是形状层此前的盲区。
@@ -1718,5 +1717,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（861 项 / 82 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（872 项 / 86 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
