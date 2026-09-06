@@ -118,11 +118,15 @@ export class ChildProcessConnection extends ConnectionBase {
   }
 
   sendFrame(frame, requestId) {
-    this.child.stdin.write(frame, (error) => {
-      if (error) {
-        this.rejectPending(requestId, error);
-      }
-    });
+    try {
+      this.child.stdin.write(frame, (error) => {
+        if (error) {
+          this.terminate(error);
+        }
+      });
+    } catch (error) {
+      this.terminate(error);
+    }
   }
 
   handleProtocolFailure(cause) {
@@ -138,6 +142,10 @@ export class ChildProcessConnection extends ConnectionBase {
     }
     this.child = null;
     this.ready = false;
+    child.stdin.destroy();
+    child.stdout.destroy();
+    child.stderr.destroy();
+    child.kill();
     this.rejectAllPending(error);
   }
 

@@ -123,7 +123,7 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     try {
       this.worker.postMessage(frame);
     } catch (error) {
-      this.rejectPending(requestId, error);
+      this.terminate(error);
     }
   }
 
@@ -140,6 +140,7 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     if (this.worker !== worker) return;
     this.worker = null;
     this.ready = false;
+    void worker.terminate().catch(() => {});
     this.rejectAllPending(error);
   }
 

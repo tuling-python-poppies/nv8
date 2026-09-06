@@ -10,7 +10,7 @@
 | 18.18+ | `supported` | 最低版本；缺 Iterator helpers 与 `ArrayBuffer.transfer`；同上 |
 | < 18.18 | 不支持 | 启动即拒绝 |
 
-四个版本均已在完整测试套件（884 项）上验证通过。本地复现：
+四个版本均已在完整测试套件（888 项）上验证通过。本地复现：
 
 ```
 npm run test:matrix          # 自动发现 nvm 已安装版本
