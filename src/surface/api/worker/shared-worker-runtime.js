@@ -47,11 +47,12 @@ export function SharedWorker(scriptURL) {
     pending: [],
     handlers: new Map(),
     closed: false,
+    failed: false,
   };
   sharedWorkerState.set(this, record);
   liveSharedWorkers.add(record);
   channel.port2.onmessage = event => {
-    if (record.closed) return;
+    if (record.closed || record.failed) return;
     if (record.handle === null) {
       record.pending.push({
         value: event.data,
@@ -69,12 +70,12 @@ export function SharedWorker(scriptURL) {
     credentials: options.credentials,
     creatorOrigin: new URL(sharedWorkerBaseUrl).origin,
     onMessage(message, ports = []) {
-      if (record.closed) return;
+      if (record.closed || record.failed) return;
       record.bridge.postMessage(message, ports);
     },
   })).then(handle => {
-    if (record.closed) {
-      handle.close();
+    if (record.closed || record.failed) {
+      handle.close?.();
       return;
     }
     record.handle = handle;
@@ -82,6 +83,13 @@ export function SharedWorker(scriptURL) {
       handle.deliverOwnerMessage(message.value, message.ports);
     }
   }, error => {
+    if (record.closed) return;
+    // A failed graph must not remain visible as a live SharedWorker.
+    record.failed = true;
+    record.pending.splice(0);
+    liveSharedWorkers.delete(record);
+    record.bridge.close();
+    record.port.close?.();
     deliverError(record, error);
   });
 }
@@ -110,6 +118,8 @@ export function terminateAllSharedWorkers() {
   for (const record of [...liveSharedWorkers]) {
     if (record.closed) continue;
     record.closed = true;
+    record.failed = false;
+    record.pending.splice(0);
     record.handle?.close();
     record.handle = null;
     record.bridge.close();
