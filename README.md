@@ -321,8 +321,8 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
 `arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`fontMetrics`、
-`domRange`、`storage`、`fetch`、`crypto`、`audio`、`intl`、`performance`、
-`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
+`domRange`、`storage`、`fetch`、`crypto`、`xhr`、`websocket`、`indexedDB`、
+`audio`、`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
 
 现状：**174 项一致，4 项登记**——2 项动态 iframe 时序（开
 `limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。
