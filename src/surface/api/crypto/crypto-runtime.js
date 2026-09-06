@@ -47,10 +47,19 @@ export function createCryptoObjects(realm) {
 export function cryptoGetRandomValues(crypto, array) {
   requireCrypto(crypto);
   if (!ArrayBuffer.isView(array) || array instanceof DataView) {
-    throw new DOMException("The provided ArrayBufferView is not an integer array.", "TypeMismatchError");
+    const detail = array instanceof DataView
+      ? "ArrayBufferView is of type 'DataView', which is not an integer array type"
+      : "ArrayBufferView is not an integer array type";
+    throw new DOMException(
+      `Failed to execute 'getRandomValues' on 'Crypto': The provided ${detail}.`,
+      "TypeMismatchError",
+    );
   }
   if (array.byteLength > 65_536) {
-    throw new DOMException("The requested length exceeds 65536 bytes.", "QuotaExceededError");
+    throw new DOMException(
+      `Failed to execute 'getRandomValues' on 'Crypto': The ArrayBufferView's byte length (${array.byteLength}) exceeds the number of bytes of entropy available via this API (65536).`,
+      "QuotaExceededError",
+    );
   }
   const realm = crypto.__nv8Realm;
   const bytes = new Uint8Array(array.buffer, array.byteOffset, array.byteLength);

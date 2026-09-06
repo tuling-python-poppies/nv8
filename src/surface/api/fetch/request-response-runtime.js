@@ -18,7 +18,9 @@ export function Request(input) {
   );
   const method = `${init.method ?? source?.method ?? "GET"}`.toUpperCase();
   if ((method === "GET" || method === "HEAD") && body.bytes.length > 0) {
-    throw new TypeError("GET and HEAD requests cannot have a body");
+    throw new TypeError(
+      "Failed to construct 'Request': Request with GET/HEAD method cannot have body.",
+    );
   }
   const headers = new Headers(init.headers ?? source?.headers);
   applyBodyContentType(headers, body.type);

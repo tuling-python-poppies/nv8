@@ -1,7 +1,7 @@
 {
-  "collectedAt": "2026-09-06T08:15:29.252Z",
+  "collectedAt": "2026-09-06T09:31:42.387Z",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-  "probeCount": 154,
+  "probeCount": 166,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -411,6 +411,54 @@
     "dom/selection-initial-state": {
       "threw": false,
       "value": "[object Selection]|0|None|true|true|true|"
+    },
+    "storage/empty-state-and-tag": {
+      "threw": false,
+      "value": "[object Storage]|0||"
+    },
+    "storage/string-coercion-and-lifecycle": {
+      "threw": false,
+      "value": "null|undefined|1||name"
+    },
+    "storage/clear-and-illegal-receiver": {
+      "threw": false,
+      "value": "0|null|TypeError:Illegal invocation"
+    },
+    "storage/missing-argument-error": {
+      "threw": false,
+      "value": "TypeError:Failed to execute 'setItem' on 'Storage': 2 arguments required, but only 1 present."
+    },
+    "fetch/request-defaults": {
+      "threw": false,
+      "value": "[object Request]|GET|/api/items|cors|same-origin|follow|about:client|false|true"
+    },
+    "fetch/request-body-normalization": {
+      "threw": false,
+      "value": "POST|text/plain;charset=UTF-8|true|false"
+    },
+    "fetch/response-defaults": {
+      "threw": false,
+      "value": "[object Response]|200|true|default||false|true|false"
+    },
+    "fetch/get-body-rejected": {
+      "threw": false,
+      "value": "TypeError:Failed to construct 'Request': Request with GET/HEAD method cannot have body."
+    },
+    "crypto/object-shape": {
+      "threw": false,
+      "value": "[object Crypto]|[object SubtleCrypto]|true|function|function"
+    },
+    "crypto/random-values-identity": {
+      "threw": false,
+      "value": "true|8|true"
+    },
+    "crypto/random-values-type-error": {
+      "threw": false,
+      "value": "TypeMismatchError:Failed to execute 'getRandomValues' on 'Crypto': The provided ArrayBufferView is of type 'DataView', which is not an integer array type."
+    },
+    "crypto/random-values-limit-error": {
+      "threw": false,
+      "value": "QuotaExceededError:Failed to execute 'getRandomValues' on 'Crypto': The ArrayBufferView's byte length (65537) exceeds the number of bytes of entropy available via this API (65536)."
     },
     "audio/offline-context-shape": {
       "threw": false,

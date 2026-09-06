@@ -757,6 +757,163 @@ export const BEHAVIOR_PROBES = Object.freeze([
     }`,
   },
 
+  // ---------------------------------------------- Storage 行为
+  {
+    id: 'storage/empty-state-and-tag',
+    category: 'storage',
+    expression: `() => {
+      const storage = localStorage;
+      return [
+        Object.prototype.toString.call(storage),
+        storage.length,
+        storage.key(0),
+        storage.getItem('missing'),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'storage/string-coercion-and-lifecycle',
+    category: 'storage',
+    expression: `() => {
+      const storage = sessionStorage;
+      storage.clear();
+      storage.setItem(7, null);
+      storage.setItem('name', undefined);
+      const first = storage.getItem('7');
+      const second = storage.getItem('name');
+      storage.removeItem(7);
+      return [first, second, storage.length, storage.getItem('7'), storage.key(0)].join('|');
+    }`,
+  },
+  {
+    id: 'storage/clear-and-illegal-receiver',
+    category: 'storage',
+    expression: `() => {
+      const storage = localStorage;
+      storage.clear();
+      storage.setItem('x', '1');
+      storage.clear();
+      let error = 'none';
+      try { Storage.prototype.getItem.call({}, 'x'); } catch (caught) {
+        error = caught.name + ':' + caught.message;
+      }
+      return storage.length + '|' + storage.getItem('x') + '|' + error;
+    }`,
+  },
+  {
+    id: 'storage/missing-argument-error',
+    category: 'storage',
+    expression: `() => {
+      try { localStorage.setItem('only-key'); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+
+  // ---------------------------------------------- Fetch 请求/响应行为
+  {
+    id: 'fetch/request-defaults',
+    category: 'fetch',
+    expression: `() => {
+      const request = new Request('/api/items');
+      return [
+        Object.prototype.toString.call(request),
+        request.method,
+        (() => {
+          const url = new URL(request.url);
+          return url.pathname;
+        })(),
+        request.mode,
+        request.credentials,
+        request.redirect,
+        request.referrer,
+        request.bodyUsed,
+        request.body === null,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'fetch/request-body-normalization',
+    category: 'fetch',
+    expression: `() => {
+      const request = new Request('/submit', { method: 'post', body: 'hello' });
+      return [
+        request.method,
+        request.headers.get('content-type'),
+        request.body !== null,
+        request.bodyUsed,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'fetch/response-defaults',
+    category: 'fetch',
+    expression: `() => {
+      const response = new Response('ok');
+      return [
+        Object.prototype.toString.call(response),
+        response.status,
+        response.ok,
+        response.type,
+        response.url,
+        response.redirected,
+        response.body !== null,
+        response.bodyUsed,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'fetch/get-body-rejected',
+    category: 'fetch',
+    expression: `() => {
+      try {
+        new Request('/items', { method: 'GET', body: 'x' });
+        return 'no-throw';
+      } catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+
+  // ---------------------------------------------- Crypto 输入校验与对象关系
+  {
+    id: 'crypto/object-shape',
+    category: 'crypto',
+    expression: `() => [
+      Object.prototype.toString.call(crypto),
+      Object.prototype.toString.call(crypto.subtle),
+      crypto.subtle === crypto.subtle,
+      typeof crypto.getRandomValues,
+      typeof crypto.randomUUID,
+    ].join('|')`,
+  },
+  {
+    id: 'crypto/random-values-identity',
+    category: 'crypto',
+    expression: `() => {
+      const bytes = new Uint8Array(8);
+      const returned = crypto.getRandomValues(bytes);
+      return [
+        returned === bytes,
+        bytes.length,
+        bytes.some(value => value !== 0),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'crypto/random-values-type-error',
+    category: 'crypto',
+    expression: `() => {
+      try { crypto.getRandomValues(new DataView(new ArrayBuffer(8))); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+  {
+    id: 'crypto/random-values-limit-error',
+    category: 'crypto',
+    expression: `() => {
+      try { crypto.getRandomValues(new Uint8Array(65537)); return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+
   // ---------------------------------------------- 音频指纹
   //
   // 音频是排得上前五的真实指纹向量，此前**一个探针都没有**——而 surface 里
