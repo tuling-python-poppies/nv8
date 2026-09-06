@@ -10,9 +10,25 @@ import {
 } from "../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../engine/webidl/native-function.js";
 
-export function installFeaturePolicy() {
+/**
+ * @param {boolean} [edge152Surface] Edge 152 起 `FeaturePolicy` 被**重命名**为
+ *   `PermissionsPolicy`。
+ *
+ *   实测真实 Edge 152：`FeaturePolicy === PermissionsPolicy`（同一个函数对象）、
+ *   `FeaturePolicy.prototype === PermissionsPolicy.prototype`，两个名字的
+ *   `Symbol.toStringTag` 都是 `"PermissionsPolicy"`，而 `document.featurePolicy`
+ *   返回的实例 `Object.prototype.toString` 也是 `[object PermissionsPolicy]`。
+ *
+ *   所以这不是「新增一个接口」，是**加一个同对象别名并改 toStringTag**——
+ *   与 `webkitURL === URL` 同一种关系。实例入口仍然只有 `document.featurePolicy`；
+ *   `document.permissionsPolicy` 实测是 `undefined`。
+ */
+export function installFeaturePolicy(edge152Surface = false) {
   delete runtime.FeaturePolicy.prototype.constructor;
   defineGlobalConstructor("FeaturePolicy", runtime.FeaturePolicy);
+  if (edge152Surface) {
+    defineGlobalConstructor("PermissionsPolicy", runtime.FeaturePolicy);
+  }
   do {
     {
       const callback = {
@@ -99,7 +115,10 @@ do {
   } while (false);
 do {
     {
-      defineToStringTag(runtime.FeaturePolicy.prototype, "FeaturePolicy");
+      defineToStringTag(
+        runtime.FeaturePolicy.prototype,
+        edge152Surface ? "PermissionsPolicy" : "FeaturePolicy",
+      );
     }
   } while (false);
 }

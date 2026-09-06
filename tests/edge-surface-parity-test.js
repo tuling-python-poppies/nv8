@@ -55,7 +55,7 @@ const PENDING_GLOBALS = new Map(
 );
 
 /**
- * baseline 用默认 profile 采，而 fixture 采自真实 Edge 151。
+ * baseline 用默认 150 profile 采，而 fixture 采自当前真实 Edge 152。
  *
  * 差一个 major 就会把版本门控的全局误报成缺失——这个坑踩过两次，
  * `FontFaceSet` 就是这么进登记表的。门控进了数据表后这类差异能自动解释，
@@ -109,8 +109,8 @@ test('NV8 exposes no global that real Edge lacks', () => {
     .sort();
 
   // 多出的全局是宿主特征泄漏。此前有两个：
-  //   AsyncIterator      — Node 24 的 V8 特性，Edge 151 没有
-  //   webkitAudioContext — Edge 151 已移除的旧别名
+  //   AsyncIterator      — Node 24 的 V8 特性，Edge 152 没有
+  //   webkitAudioContext — Edge 152 已移除的旧别名
   assert.deepEqual(
     extra,
     [],
@@ -123,7 +123,7 @@ test('AsyncIterator is not leaked into the sandbox', () => {
   assert.equal(
     tier.legacy.groups.AsyncIterator,
     undefined,
-    'AsyncIterator is a Node 24 V8 feature that real Edge 151 does not have'
+    'AsyncIterator is a Node 24 V8 feature that real Edge 152 does not have'
   );
   assert.equal(realGlobals.has('AsyncIterator'), false, 'precondition: Edge lacks it');
 });
@@ -133,7 +133,7 @@ test('webkitAudioContext is not exposed', () => {
   assert.equal(
     tier.legacy.groups.webkitAudioContext,
     undefined,
-    'Edge 151 removed this legacy alias'
+    'Edge 152 removed this legacy alias'
   );
 });
 

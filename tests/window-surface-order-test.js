@@ -42,7 +42,7 @@ import {
   shapeNameOf,
 } from '../scripts/build-window-surface-order.mjs';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
-import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
+import { edge152Fingerprint } from '../src/infra/fingerprint/edge-152.js';
 import {
   CAPABILITY_STATUS,
   detectHostCapabilities,
@@ -261,27 +261,12 @@ test('gate fields only use the documented keys', () => {
 
 // --------------------------------------------- 采集 fixture 的 descriptors
 
-test('the globals fixture predates the descriptors field', () => {
-  // 采集器现在会输出 `descriptors`，但仓库里这份 fixture 采于 Edge 151，
-  // 而本机 Edge 已是 152——不能为了补字段就把基准偷换成 152（"采集基准版本
-  // 必须与 profile 一致"，这个坑踩过两次）。
-  //
-  // 这条断言是个 forcing function：换基准重采后它会红，逼人删掉它并打开
-  // 下面那条真正的形状校验。写成 `if (fixture.descriptors) { ... }` 就成了
-  // 永远不执行的分支——那和没有断言等价。
-  assert.equal(
-    fixture.descriptors,
-    undefined,
-    '重采过了？删掉这条断言，并把下一条改成无条件执行'
-  );
-  assert.match(fixture.userAgent, /Edg\/151\./);
+test('the globals fixture carries descriptors from Edge 152', () => {
+  assert.ok(fixture.descriptors, 'Edge 152 globals fixture must include descriptors');
+  assert.match(fixture.userAgent, /Edg\/152\./);
 });
 
 test('when the fixture carries descriptors they must match the table', () => {
-  if (fixture.descriptors === undefined) {
-    // 上一条断言保证了这个分支只在重采前成立，不是沉默跳过。
-    return;
-  }
   const byName = new Map(WINDOW_GLOBAL_ORDER.map((entry) => [entry[0], entry[1]]));
   for (const [name, descriptor] of Object.entries(fixture.descriptors)) {
     const shape = byName.get(name);
@@ -392,23 +377,22 @@ test('the host is explicit about whether global order can match at all', () => {
   }
 });
 
-// ------------------------------------------------ 实现忠实于表：151 profile
+// ------------------------------------------------ 实现忠实于表：152 profile
 
-test('at the 151 profile the enumeration order matches real Edge verbatim', async () => {
+test('at the 152 profile the enumeration order matches real Edge verbatim', async () => {
   const { names } = await captureWindow({
-    ...edge151Fingerprint,
-    browserMajorVersion: 151,
+    ...edge152Fingerprint,
+    browserMajorVersion: 152,
   });
   const { expected, actual } = sharedOrder(managedSegment(names), tableNames);
-  assertOrder(actual, expected, '151 profile 下数据表管的那一段');
+  assertOrder(actual, expected, '152 profile 下数据表管的那一段');
 });
 
 test('a since-gated global lands at its real index, not appended', async () => {
-  // 这条就是被修掉的 bug。旧实现下 FontFaceSet 在 151 profile 里是索引 61；
-  // 断言真实索引而不是"存在"，因为存在性早就是绿的。
+  // 这条就是被修掉的 bug。断言真实索引而不是"存在"，因为存在性早就是绿的。
   const { names } = await captureWindow({
-    ...edge151Fingerprint,
-    browserMajorVersion: 151,
+    ...edge152Fingerprint,
+    browserMajorVersion: 152,
   });
   assert.equal(names.includes('FontFaceSet'), true);
   assertIndex(names, 'FontFaceSet', 'FontFaceSet 落在真实索引上');
@@ -430,30 +414,15 @@ test('pending globals are absent at every profile version', async () => {
   const pending = WINDOW_GLOBAL_ORDER
     .filter((entry) => entry[2]?.pending !== undefined)
     .map((entry) => entry[0]);
-  assert.ok(pending.length > 0, 'pending 清空了？把这条测试改成断言 length === 0');
-
-  for (const fingerprint of [
-    edge150Fingerprint,
-    { ...edge151Fingerprint, browserMajorVersion: 151 },
-  ]) {
-    const { names } = await captureWindow(fingerprint);
-    for (const name of pending) {
-      assert.equal(
-        names.includes(name),
-        false,
-        `${name} 登记为未实现却存在于 ${fingerprint.browserMajorVersion} profile；`
-        + '实现好了就删掉表里的 pending 字段'
-      );
-    }
-  }
+  assert.equal(pending.length, 0, '所有已采集的 Edge 152 globals 都应已实现');
 });
 
 // ------------------------------------------------------ descriptor 形状
 
 test('every window own descriptor matches the shape the table declares', async () => {
   const { descriptors } = await captureWindow({
-    ...edge151Fingerprint,
-    browserMajorVersion: 151,
+    ...edge152Fingerprint,
+    browserMajorVersion: 152,
   });
   const mismatched = [];
   for (const entry of WINDOW_GLOBAL_ORDER) {
@@ -538,11 +507,11 @@ const EDGE_151_PROTOTYPE_ORDER = Object.freeze({
   ],
 });
 
-test('the 151-only performance entries match real Edge member order', async () => {
+test('the version-gated performance entries match real Edge member order', async () => {
   const { createSandbox } = await import('../src/public/create-sandbox.js');
   const sandbox = await createSandbox('https://surface-order.test/', {
     page: { html: '<!doctype html><html><head></head><body></body></html>' },
-    fingerprint: { ...edge151Fingerprint, browserMajorVersion: 151 },
+    fingerprint: { ...edge152Fingerprint, browserMajorVersion: 152 },
     limits: { maxOutputBytes: 4 * 1024 * 1024, timeoutMs: 30_000 },
   });
   try {

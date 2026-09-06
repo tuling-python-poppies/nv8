@@ -286,14 +286,14 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 ### 第一层：全局名存在性
 
-真实 Edge 151 有 **1236** 个全局名。
+真实 Edge 152 有 **1239** 个全局名。
 
 | 指标 | 现状 |
 |---|---|
-| 覆盖率 | **99.68%** |
+| 覆盖率 | **100%（152 profile）** |
 | 多余项 | **0**（硬断言） |
-| 枚举顺序 | 与真实 Edge **逐字一致**（Node 22+） |
-| own-descriptor 形状 | 1175 项，**0** 处不符 |
+| 枚举顺序 | 与真实 Edge 152 **逐字一致**（Node 22+） |
+| own-descriptor 形状 | 1178 项，**0** 处不符 |
 
 **多余项比缺失项严重。** 缺失只是功能不全；多余是宿主特征泄漏——一个
 `AsyncIterator`（Node 24 的 V8 特性）出现在 window 上，就足够证明这不是浏览器。
@@ -306,7 +306,7 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 | 指标 | 现状 |
 |---|---|
-| 原型完全一致 | **963 / 966** |
+| 原型完全一致 | **969 / 969** |
 | 缺失成员 | **0** |
 | 多余成员 | **0** |
 | 描述符比对 | **8892** 个成员，**0** 处不符 |
@@ -339,7 +339,7 @@ descriptor 零差异，而 14 个新增行为探针里 **10 个不一致**——
 ### 顺序也是一维：Window 全局的枚举序
 
 `Object.getOwnPropertyNames(window)` 的**序列**在真实 Edge 里是确定的。前三层谁都
-没比过它，也没比过 window 自身那 1175 个 own property 的 descriptor flag。
+没比过它，也没比过 window 自身那 1178 个受管理 own property 的 descriptor flag。
 `tests/window-surface-order-test.js`（27 项）补上这一维，首轮就抄出三个真问题：
 
 **1. 版本门控的全局错位。** `FontFaceSet` 只在 `browserMajorVersion >= 151` 暴露，
@@ -359,17 +359,17 @@ descriptor 零差异，而 14 个新增行为探针里 **10 个不一致**——
 前面。这是宿主限制，不是 NV8 能修的，已做成 `vm.global-property-order` 能力探针；
 测试在这两档上用**反向断言**而不是跳过，宿主哪天修好了会红。
 
-顺序现在是一张数据表（`src/surface/install/window-surface-order.js`，1175 行），
+顺序现在是一张数据表（`src/surface/install/window-surface-order.js`，1178 项），
 版本门控是一个字段：
 
 ```js
 ["FontFaceSet", VALUE_HIDDEN, { since: 151 }],
-["HTMLUserMediaElement", VALUE_HIDDEN, { since: 151, pending: "…" }],
+["HTMLUserMediaElement", VALUE_HIDDEN, { since: 151 }],
 ```
 
 `{ pending }` 是「已登记的缺口」的**单一来源**：两份 parity 测试都从这张表读，
-不各自维护名单。而且位置信息只有这张表有——实现好了只需删掉 `pending`，
-全局就自动落在正确的索引上。
+不各自维护名单。目前 152 基准没有 pending 全局；未来若出现暂未实现的接口，
+仍必须在这张表登记理由，不能让缺口静默消失。
 
 ### Intl 的天花板：ICU 数据不是同一份
 
@@ -579,12 +579,14 @@ FIFO 公平不是可选项：「谁抢到算谁的」会让高频调用方饿死
 **Profile** 描述「要一个什么样的浏览器」：版本、指纹字段、启用哪些插件、资源上限。
 
 内置：`minimal`、`minimal-fetch`、`dom-replay`、`legacy-full`、
-`edge-150`、`edge-151`。
+`browser-profile-edge-v150`。Edge 150/151/152 的冻结指纹从对应的
+`nv8/fingerprint/edge-150`、`nv8/fingerprint/edge-151`、
+`nv8/fingerprint/edge-152` 子路径读取。
 
 ```js
 import { createProfile } from './src/config/profiles/index.js';
 
-const profile = createProfile('edge-151');
+const profile = createProfile('legacy-full');
 ```
 
 **插件**是运行时装配单元，声明自己需要的能力与提供的表面。约束：
@@ -690,11 +692,11 @@ limits: { timeoutMs: 30_000 }
 | 命令 | 采集内容 |
 |---|---|
 | `npm run fingerprint:collect` | 身份字段（UA、brands、版本号等） |
-| `npm run fingerprint:globals` | 1236 个全局名 |
-| `npm run fingerprint:members` | 8941 个原型成员与描述符 |
-| `npm run fingerprint:lengths` | 3496 个方法的 `length` |
+| `npm run fingerprint:globals` | 1239 个全局名 |
+| `npm run fingerprint:members` | 8957 个原型成员与描述符 |
+| `npm run fingerprint:lengths` | 3508 个方法的 `length` |
 | `npm run fingerprint:behavior` | 144 个行为探针 |
-| `npm run fingerprint:css` | 745 个 CSS 属性名（保留真实枚举顺序） |
+| `npm run fingerprint:css` | 746 个 CSS 属性名（保留真实枚举顺序） |
 | `npm run fingerprint:ua-defaults` | 96 个标签 × 736 个属性的 UA 默认值 |
 
 ### 探针准入标准
@@ -715,7 +717,7 @@ limits: { timeoutMs: 30_000 }
 
 ### 采集方法论上的坑
 
-- **采集基准版本必须与 profile 一致**。用 Edge 151 的 fixture 去比 150 的
+- **采集基准版本必须与 profile 一致**。用 Edge 152 的 fixture 去比 150 的
   profile，会把版本门控的成员误报成缺失（这个坑踩过两次）。
 - **布局相关属性的排除靠实测，不靠手写名单**。需要两轴差分：视口
   （800×600 vs 1400×900）与内容（空 div vs 填充 div）。只做视口那一轴会漏掉
@@ -741,21 +743,22 @@ limits: { timeoutMs: 30_000 }
 - **采集页的顶层 `var` 会掺进结果**。经典脚本里顶层 `var` 会变成 globalThis 的
   own property：给 `collect-edge-globals.mjs` 加 descriptor 采集时，四个临时变量把
   1239 抬到了 1243。整段包在 IIFE 里。
-- **形状也要采，不能猜**。window 上 1175 个 own property 的 descriptor flag 分五种，
-  猜错不会报错，只会变成一处可探测偏差——`chrome` 被写成 `configurable: false`
-  就是这么来的。`edge-globals.json` 现在带 `descriptors` 字段。
+- **形状也要采，不能猜**。Edge 152 的 window own property descriptor 中，WebIDL
+  表面由 1178 项顺序表管理，另有 V8/不可重排项；猜错不会报错，只会变成一处可探测
+  偏差——`chrome` 被写成 `configurable: false` 就是这么来的。
+  `edge-globals.json` 现在带 `descriptors` 字段。
 
 ### 已测出的 151 → 152 差异
 
-本机 Edge 已是 152，7 份 fixture 全部重采并与 151 对比过（**只采集、未换基准**）：
+本机 Edge 已是 152，7 份 fixture 已全部重采，152 现在是对等性基准：
 
 | 维度 | 151 | 152 | 变化 |
 |---|---|---|---|
 | 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
 | 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2**（`AbstractRange.startContainer/endContainer` 移到 `NodeRange`）|
 | 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
-| 行为探针 | 112 | 112 | **零变化** |
-| CSS 属性 | 745 | 746 | +`windowDrag`（`css-ua-defaults.js` 里本来就有）|
+| 行为探针 | 144 | 144 | **零变化** |
+| CSS 属性 | 746 | 746 | 无 |
 | UA 默认值 | 96 标签 | 96 标签 | 无 |
 | UA / brands | `Edg/151` | `Edg/152` | brands **顺序与 GREASE 串都变了**：<br>`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一 |
 
@@ -767,7 +770,7 @@ limits: { timeoutMs: 30_000 }
 
 换基准的阻塞项（`finalize-window-surface-order.js` 没有生成器、新增全局要在那份
 1.5 万行文件里手改三处）**已解除**：顺序与 descriptor 形状变成了数据表，
-版本门控是一个字段。现在换基准是两步：
+版本门控是一个字段。现在刷新基准是三步：
 
 ```bash
 npm run fingerprint:globals        # 采顺序 + descriptor 形状
@@ -775,8 +778,8 @@ npm run check:surface-order        # 先看差异（不一致则非零退出）
 node scripts/build-window-surface-order.mjs --write
 ```
 
-已用真实 Edge 152 做过 dry-run：3 个新增全局自动带上形状，门控保留，1167 项位置
-发生变化。同时验证了现表 1175 项的形状与真实 152 **零不一致**。
+已用真实 Edge 152 完成重采：3 个新增全局自动带上形状，门控保留，1178 项表面
+顺序与真实 152 **逐字一致**，原型成员和行为对等性测试也全部通过。
 
 **顺序不是「旧顺序 + 追加新增项」**：实测 151 → 152 有 9 个已有全局挪了位置
 （`FeaturePolicy` 523 → 69、`PerformanceLongAnimationFrameTiming` 333 → 1191，
@@ -784,7 +787,8 @@ node scripts/build-window-surface-order.mjs --write
 `onpagereveal` / `PerformanceScriptTiming` / `PerformanceTimingConfidence` 亦然）。
 换基准必须整表重采，而这在 1.5 万行代码里等于重新生成整个文件。
 
-剩下的真阻塞只有一项：`HTMLUserMediaElement` 还没实现（已在表里 `pending`）。
+`HTMLUserMediaElement`、`NodeRange`、`OpaqueRange`、`PermissionsPolicy` 和六个新增成员
+已实现，并由 `tests/edge-152-surface-test.js` 锁定版本门控与运行时行为。
 
 ---
 
@@ -1093,7 +1097,7 @@ css-ua-defaults.js），现在都有了脚本。
   **「跑不起来」**——脚本在那一行抛 TypeError。
   开 `limits.prewarmChildRealms`（0–8，默认 0）可以关掉这条：`create()` 会在页面
   脚本**之前**建好 N 个空白子 Realm，`appendChild` 之后 `contentWindow` 同步可用，
-  `realm/identity-bundle` 的 16 个子项与真实 Edge 151 逐字相同。
+  `realm/identity-bundle` 的 16 个子项与真实 Edge 152 逐字相同。
   默认关闭是刻意的（每个池位 254ms + 占一个子 Realm 的堆额度），且池深 N 只覆盖建
   ≤N 个 iframe 的目标——**缓解不是根治**。
   实测依据与选项对比见 [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)。

@@ -773,14 +773,14 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 ## 十二、与真实 Edge 的对等性（新增）
 
 Baseline 保证「NV8 自己前后一致」，抓不到「NV8 从一开始就和真实浏览器不一样」。
-这一节是后者，全部结论来自**真实 Edge 151 实测**，不靠规范推断。
+这一节是后者，当前基准结论来自**真实 Edge 152 实测**，不靠规范推断。
 
 采集工具（headless Edge + `--dump-dom`，**不依赖 Puppeteer/CDP**）：
 
 ```
 npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL）
-npm run fingerprint:globals   # 全局名 1236 项
-npm run fingerprint:members   # 原型成员 8941 项
+npm run fingerprint:globals   # 全局名 1239 项
+npm run fingerprint:members   # 原型成员 8957 项
 ```
 
 涉及 iframe 或跨页面的测量需要真实 origin —— `file://` 下每个文件是独立的
@@ -793,12 +793,12 @@ opaque origin，拿不到 `parent`。这类探针走临时本地 HTTP 服务器�
 
 | 层级 | 现状 |
 |---|---|
-| 全局名存在性 | 覆盖真实 Edge 的 99.68%，**多出为 0** |
-| 原型成员明细 | 966 原型中 949 个成员集完全一致，**多出为 0** |
-| 行为 | **尚未建立** |
+| 全局名存在性 | 152 profile 覆盖真实 Edge 的 **100%**，**多出为 0** |
+| 原型成员明细 | 969 原型中 969 个成员集完全一致，**多出为 0** |
+| 行为 | 144 探针 / 16 类，已全部通过 |
 
 **修掉的宿主特征泄漏（多出的东西比缺少更危险）**
-- `AsyncIterator` —— Node 24 的 V8 特性，Edge 151 没有
+- `AsyncIterator` —— Node 24 的 V8 特性，Edge 152 没有
 - `webkitAudioContext` —— Edge 151 已移除的旧别名
 - `NetworkInformation.prototype.type` —— Chromium 只在 Android 暴露
 - `Event.prototype.isTrusted` —— `[LegacyUnforgeable]`，真实浏览器定义在
@@ -1224,16 +1224,16 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - `collect-edge-lengths.mjs` 更糟：路径**直接写成 `execFile` 的第一个实参**，
     连候选列表都没有。补 `findEdge()` 时才发现
   - 「基准跟随本机 Edge」要成为常规做法，就不能依赖每次手动 `--edge`
-- [ ] **换基准到本机 Edge 152** - 采集已完成，**未换**，阻塞项已定位
-  - 7 份 fixture 全部重采并与 151 对比（纯信息采集，未动实现）：
+- [x] **换基准到本机 Edge 152** - 采集、实现、测试和文档均已完成
+  - 7 份 fixture 全部重采并作为 Edge 152 对等性基准：
 
     | 维度 | 151 | 152 | 变化 |
     |---|---|---|---|
     | 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
     | 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2** |
     | 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
-    | 行为探针 | 112 | 112 | **零变化** |
-    | CSS 属性 | 745 | 746 | +`windowDrag` |
+    | 行为探针 | 144 | 144 | **零变化** |
+    | CSS 属性 | 746 | 746 | 无 |
     | UA 默认值 | 96 标签 | 96 标签 | 无 |
 
   - 新增成员：`ShadowRoot.referenceTarget`、`Navigator.cpuPerformance`、
@@ -1245,15 +1245,15 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     （`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一）。这类字段必须照抄，
     按规律推导会错——ADR-0005 同一条铁律
   - **行为层零变化**是个好消息：探针可以跨 major 迁移，扩探针不必等特定版本
-  - **架构阻塞已解除**（见下一条）。换基准现在是两步：
+  - **架构阻塞已解除**（见下一条）。换基准现在是三步：
     `npm run fingerprint:globals` → `build-window-surface-order.mjs --write`。
     已用真实 Edge 152 做过 dry-run：3 个新增全局自动带上形状、门控保留、
-    1167 项位置发生变化
-  - 剩下的前置条件只有 `HTMLUserMediaElement`（表里已 `pending`），以及
-    `AbstractRange.startContainer` / `endContainer` 要改成 `< 152` 门控
+    1178 项表面顺序已与真实 Edge 152 逐字一致
+  - `HTMLUserMediaElement`、`NodeRange`、`OpaqueRange`、`PermissionsPolicy` 和六个
+    152 新增成员均已实现，并由 `tests/edge-152-surface-test.js` 覆盖
 - [x] **全局的版本门控能力已做出来**（原架构阻塞）
   - `finalize-window-surface-order.js` 从 1.5 万行生成代码（638KB）改成
-    **数据表 + 45 行解释器**（`window-surface-order.js`，1175 行 / 52KB）。
+    **数据表 + 45 行解释器**（`window-surface-order.js`，1178 项）。
     生成它的工具 `tools/generate-window-surface-order.mjs` 从来没进版本库
   - 门控是一个字段：`{ since: 151 }` / `{ before: 152 }` / `{ pending: "理由" }`。
     `pending` 是「已登记缺口」的**单一来源**——`edge-surface-parity-test.js` 与
@@ -1665,9 +1665,9 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 | 层 | 状态 |
 |---|---|
-| 全局名存在性 | 覆盖真实 Edge 99.68%，多余 **0** —— 集合层到顶 |
-| 原型成员与描述符 | **963/966** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
-| 枚举顺序与 own-descriptor | 数据表管的 1175 项**逐字一致**（Node 22+）；原型成员顺序 **22 处**待核 |
+| 全局名存在性 | 152 profile 覆盖真实 Edge **100%**，多余 **0** —— 集合层到顶 |
+| 原型成员与描述符 | **969/969** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
+| 枚举顺序与 own-descriptor | 数据表管的 1178 项**逐字一致**（Node 22+）；原型成员顺序 **22 处**待核 |
 | 运行时行为 | 144 探针 / 16 类 —— **剩余工作大头仍在这里** |
 
 「基本到顶」这个说法要限定在**集合**上。新增第四层（`window-surface-order-test.js`）
@@ -1719,7 +1719,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 9. Bundle 签名与版本兼容、受信任脚本策略（§5）；信任边界可测试与安全边界文档、
    API 文档、示例代码（§9、§10）
 10. 剩余功能缺口：legacy 整文档替换、畸形 URL 的错误页文档、
-    1 个未实现的全局名 `HTMLUserMediaElement`（§12，表里已 `pending`）
+    Edge 152 新增的 `NodeRange`、`OpaqueRange`、`PermissionsPolicy` 和
+    `HTMLUserMediaElement` 均已实现；剩余项见本节后续清单
 11. 刻意不做的两项（CSS descriptor 形状、10 个布局相关计算值）保持登记
 
 ---

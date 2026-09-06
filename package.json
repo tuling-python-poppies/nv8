@@ -1,7 +1,7 @@
 {
   "name": "nv8",
   "version": "0.1.0",
-  "description": "Edge-compatible browser runtime for Node.js (profiles: Edge 150 / 151)",
+  "description": "Edge-compatible browser runtime for Node.js (profiles: Edge 150 / 151 / 152)",
   "type": "module",
   "private": true,
   "scripts": {
@@ -34,6 +34,7 @@
     ".": "./src/index.js",
     "./fingerprint/edge-150": "./src/infra/fingerprint/edge-150.js",
     "./fingerprint/edge-151": "./src/infra/fingerprint/edge-151.js",
+    "./fingerprint/edge-152": "./src/infra/fingerprint/edge-152.js",
     "./protocol": "./src/collection/request-protocol/index.js",
     "./collector": "./src/collection/collector/index.js"
   },

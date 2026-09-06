@@ -933,7 +933,7 @@ function normalizeFingerprint(fingerprint) {
     150,
     "fingerprint.browserMajorVersion",
     150,
-    151,
+    152,
   );
   const languages = navigator.languages;
   if (!Array.isArray(languages) || languages.some((value) => typeof value !== "string")) {

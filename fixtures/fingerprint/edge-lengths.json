@@ -1,5 +1,5 @@
 {
- "collectedAt": "2026-08-28T11:57:39.749Z",
+ "collectedAt": "2026-09-04T11:37:37.237Z",
  "interfaces": {
   "Object": {
    "ctorLength": 1,
@@ -576,6 +576,16 @@
     "translateSelf": 0,
     "constructor": 0,
     "setMatrixValue": 1
+   }
+  },
+  "FeaturePolicy": {
+   "ctorLength": 0,
+   "methods": {
+    "allowedFeatures": 0,
+    "allowsFeature": 1,
+    "features": 0,
+    "getAllowlistForFeature": 1,
+    "constructor": 0
    }
   },
   "XPathResult": {
@@ -2849,6 +2859,16 @@
     "constructor": 2
    }
   },
+  "PermissionsPolicy": {
+   "ctorLength": 0,
+   "methods": {
+    "allowedFeatures": 0,
+    "allowsFeature": 1,
+    "features": 0,
+    "getAllowlistForFeature": 1,
+    "constructor": 0
+   }
+  },
   "Permissions": {
    "ctorLength": 0,
    "methods": {
@@ -2868,6 +2888,13 @@
     "constructor": 1
    }
   },
+  "PerformanceTimingConfidence": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
   "PerformanceTiming": {
    "ctorLength": 0,
    "methods": {
@@ -2876,13 +2903,6 @@
    }
   },
   "PerformanceServerTiming": {
-   "ctorLength": 0,
-   "methods": {
-    "toJSON": 0,
-    "constructor": 0
-   }
-  },
-  "PerformanceScriptTiming": {
    "ctorLength": 0,
    "methods": {
     "toJSON": 0,
@@ -2954,13 +2974,6 @@
     "constructor": 0
    }
   },
-  "PerformanceLongAnimationFrameTiming": {
-   "ctorLength": 0,
-   "methods": {
-    "toJSON": 0,
-    "constructor": 0
-   }
-  },
   "PerformanceEventTiming": {
    "ctorLength": 0,
    "methods": {
@@ -3025,6 +3038,12 @@
    }
   },
   "PageTransitionEvent": {
+   "ctorLength": 1,
+   "methods": {
+    "constructor": 1
+   }
+  },
+  "PageRevealEvent": {
    "ctorLength": 1,
    "methods": {
     "constructor": 1
@@ -3239,8 +3258,8 @@
   "NavigationPrecommitController": {
    "ctorLength": 0,
    "methods": {
-    "redirect": 1,
     "addHandler": 1,
+    "redirect": 1,
     "constructor": 0
    }
   },
@@ -3877,6 +3896,7 @@
     "setCustomValidity": 1,
     "setRangeText": 1,
     "setSelectionRange": 2,
+    "createValueRange": 2,
     "constructor": 0
    }
   },
@@ -4157,6 +4177,7 @@
     "showPicker": 0,
     "stepDown": 0,
     "stepUp": 0,
+    "createValueRange": 2,
     "constructor": 0
    }
   },
@@ -4531,16 +4552,6 @@
     "constructor": 2
    }
   },
-  "FeaturePolicy": {
-   "ctorLength": 0,
-   "methods": {
-    "allowedFeatures": 0,
-    "allowsFeature": 1,
-    "features": 0,
-    "getAllowlistForFeature": 1,
-    "constructor": 0
-   }
-  },
   "External": {
    "ctorLength": 0,
    "methods": {
@@ -4795,7 +4806,6 @@
     "releaseEvents": 0,
     "replaceChildren": 0,
     "requestStorageAccess": 0,
-    "requestStorageAccessFor": 1,
     "startViewTransition": 0,
     "webkitCancelFullScreen": 0,
     "webkitExitFullscreen": 0,
@@ -4805,7 +4815,8 @@
     "browsingTopics": 0,
     "hasPrivateToken": 1,
     "hasRedemptionRecord": 1,
-    "ariaNotify": 1
+    "ariaNotify": 1,
+    "requestStorageAccessFor": 1
    }
   },
   "DelegatedInkTrailPresenter": {
@@ -7798,6 +7809,20 @@
     "constructor": 2
    }
   },
+  "XSLTProcessor": {
+   "ctorLength": 0,
+   "methods": {
+    "clearParameters": 0,
+    "getParameter": 2,
+    "importStylesheet": 1,
+    "removeParameter": 2,
+    "reset": 0,
+    "setParameter": 3,
+    "transformToDocument": 1,
+    "transformToFragment": 2,
+    "constructor": 0
+   }
+  },
   "AnimationTrigger": {
    "ctorLength": 0,
    "methods": {
@@ -7972,6 +7997,21 @@
     "constructor": 0
    }
   },
+  "NodeRange": {
+   "ctorLength": 0,
+   "methods": {
+    "constructor": 0
+   }
+  },
+  "OpaqueRange": {
+   "ctorLength": 0,
+   "methods": {
+    "disconnect": 0,
+    "getBoundingClientRect": 0,
+    "getClientRects": 0,
+    "constructor": 0
+   }
+  },
   "Notification": {
    "ctorLength": 1,
    "methods": {
@@ -7987,22 +8027,31 @@
     "constructor": 0
    }
   },
-  "PageRevealEvent": {
-   "ctorLength": 1,
-   "methods": {
-    "constructor": 1
-   }
-  },
   "PageSwapEvent": {
    "ctorLength": 1,
    "methods": {
     "constructor": 1
    }
   },
-  "PerformanceTimingConfidence": {
+  "PerformanceLongAnimationFrameTiming": {
    "ctorLength": 0,
    "methods": {
     "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "PerformanceScriptTiming": {
+   "ctorLength": 0,
+   "methods": {
+    "toJSON": 0,
+    "constructor": 0
+   }
+  },
+  "RTCDataChannel": {
+   "ctorLength": 0,
+   "methods": {
+    "close": 0,
+    "send": 1,
     "constructor": 0
    }
   },
@@ -8049,14 +8098,6 @@
   "QuotaExceededError": {
    "ctorLength": 0,
    "methods": {
-    "constructor": 0
-   }
-  },
-  "RTCDataChannel": {
-   "ctorLength": 0,
-   "methods": {
-    "close": 0,
-    "send": 1,
     "constructor": 0
    }
   },
@@ -8275,20 +8316,6 @@
    "methods": {
     "close": 0,
     "constructor": 1
-   }
-  },
-  "XSLTProcessor": {
-   "ctorLength": 0,
-   "methods": {
-    "clearParameters": 0,
-    "getParameter": 2,
-    "importStylesheet": 1,
-    "removeParameter": 2,
-    "reset": 0,
-    "setParameter": 3,
-    "transformToDocument": 1,
-    "transformToFragment": 2,
-    "constructor": 0
    }
   },
   "webkitSpeechGrammar": {

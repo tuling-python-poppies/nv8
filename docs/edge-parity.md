@@ -11,7 +11,7 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 | | 参照物 | 抓什么 |
 |---|---|---|
 | Baseline | NV8 上一次的录制 | 重构引入的回归 |
-| Edge 对等性 | 真实 Edge 151 采集结果 | 与真实浏览器的固有偏差 |
+| Edge 对等性 | 真实 Edge 152 采集结果 | 与真实浏览器的固有偏差 |
 
 ## 层级划分
 
@@ -25,14 +25,15 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 
 `tests/edge-surface-parity-test.js` — 比 `Object.getOwnPropertyNames(globalThis)`。
 
-最表层。1236 个真实全局中 NV8 覆盖 99.68%。
+最表层。真实 Edge 152 的 1239 个全局在 152 profile 下全部覆盖。150 profile
+仍按版本门控少暴露 151/152 新增表面。
 
 ### 二、原型成员明细
 
 `tests/edge-member-parity-test.js` — 比每个构造函数 `prototype` 上的成员名。
 
-966 个原型中 **963 个成员集完全一致**，缺失 0、多余 0；剩下 3 个是 NV8 完全没有的
-原型（只剩 `HTMLUserMediaElement` 未实现，另两个已补齐）。`fetch` 存在不代表
+969 个原型中 **969 个成员集完全一致**，缺失 0、多余 0；`NodeRange`、
+`OpaqueRange`、`PermissionsPolicy` 与 `HTMLUserMediaElement` 均已实现。`fetch` 存在不代表
 `Response.prototype` 齐全，这一层才看得到。
 
 ### 三、行为
@@ -70,7 +71,7 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 ### 四、枚举顺序与 own-descriptor 形状
 
 `tests/window-surface-order-test.js`（27 项）— 比
-`Object.getOwnPropertyNames(window)` 的**序列**，以及 window 自身 1175 个
+`Object.getOwnPropertyNames(window)` 的**序列**，以及 window 自身 1178 个受管理
 own property 的 descriptor flag。
 
 前三层谁都没比过这两个：第一层比的是名字集合（且 fixture 里成员已排序），
@@ -86,7 +87,7 @@ own property 的 descriptor flag。
 
 #### Window own-descriptor 形状
 
-1175 项的 flag 只有五种组合，已逐条与真实 Edge 152 实测对齐（零不一致）：
+1178 项的 flag 已逐条与真实 Edge 152 实测对齐（零不一致）：
 
 | 形状 | flag | 数量 | 对应 |
 |---|---|---|---|
@@ -121,8 +122,8 @@ UA 默认字体族那两个 bug 是同一类陷阱：在与 profile 同维度的
 #### 原型成员的枚举顺序：新发现的缺口
 
 同一条道理向下一层：原型成员的顺序也是一维，而 `edge-members.json` 里成员是
-排过序的，谁都没比过。实测（NV8 151 profile vs 真实 Edge 152）：963 个共有
-原型里 **941 个顺序一致、22 个不一致**（3 个仅 `constructor` 位置错）。典型例：
+排过序的，谁都没比过。Edge 152 新增的 Range 继承链和成员已由专门测试覆盖；
+其余历史上的 22 个成员顺序差异仍登记为独立项（3 个仅 `constructor` 位置错）。典型例：
 
 ```
 LargestContentfulPaint
@@ -209,13 +210,13 @@ Object.getOwnPropertyNames(new Event('x')).includes('isTrusted')
 
 ## 采集
 
-采集分三个脚本，因为三份数据的规模和人工核对需求差别很大：
+采集分多个脚本，因为各份数据的规模和人工核对需求差别很大：
 
 ```
 npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL），小，需人工核对
-npm run fingerprint:globals   # 全局名列表，1236 项
-npm run fingerprint:members   # 原型成员明细，8941 项
-npm run fingerprint:behavior  # 行为探针，33 项（跑两轮校验确定性）
+npm run fingerprint:globals   # 全局名列表，1239 项
+npm run fingerprint:members   # 原型成员明细，8957 项
+npm run fingerprint:behavior  # 行为探针，144 项（跑两轮校验确定性）
 ```
 
 都走 headless Edge + `--dump-dom`，**不依赖 Puppeteer/CDP**——浏览器自动化不是

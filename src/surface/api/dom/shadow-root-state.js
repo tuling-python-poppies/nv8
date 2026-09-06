@@ -49,6 +49,7 @@ export function createShadowRoot(host, init) {
     mode,
     delegatesFocus: Boolean(init?.delegatesFocus),
     slotAssignment,
+    referenceTarget: null,
     serializable: Boolean(init?.serializable),
     clonable: Boolean(init?.clonable),
     adoptedStyleSheets: [],

@@ -12,6 +12,8 @@ export function initializeTemplate(element, ownerDocument) {
     shadowRootClonable: false,
     shadowRootSerializable: false,
     shadowRootCustomElementRegistry: null,
+    shadowRootReferenceTarget: null,
+    shadowRootSlotAssignment: "named",
     htmlFor: "",
   });
 }

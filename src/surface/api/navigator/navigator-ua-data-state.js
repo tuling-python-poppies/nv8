@@ -84,16 +84,20 @@ export function highEntropyUaData(hints) {
  * 三处曾与真实 Edge 不符，均由 `scripts/collect-edge-fingerprint.mjs`
  * 从真实 Edge 151 采集后校正：
  *
- * 1. **顺序**。真实顺序是 GREASE → Microsoft Edge → Chromium；
- *    此前是 GREASE → Chromium → Microsoft Edge。
- * 2. **GREASE brand 名与版本**。真实是 `Not=A?Brand` / `99`；
- *    此前是 `Not A;Brand` / `8`（那是更早 Chromium 的形态）。
- * 3. **fullVersionList 里 Edge 与 Chromium 版本号不同**。真实为
- *    Edge `151.0.4129.101`、Chromium `151.0.7922.170`；此前两者相同，
- *    是很容易被识别的破绽。
+ * 真实 Edge 151 与 152 的低熵 brands 形态不同：151 是
+ * `Not=A?Brand/99`, `Microsoft Edge`, `Chromium`；本机 Edge 152 实测改为
+ * `Chromium/152`, `Not?A_Brand/24`, `Microsoft Edge/152`。按 major 分支保留
+ * 这个可观测版本差异。
  */
 function brandList(major, full) {
   const builds = buildVersions(major);
+  if (major >= "152") {
+    return [
+      { brand: "Chromium", version: full ? builds.chromium : major },
+      { brand: "Not?A_Brand", version: full ? "24.0.0.0" : "24" },
+      { brand: "Microsoft Edge", version: full ? builds.edge : major },
+    ];
+  }
   return [
     { brand: "Not=A?Brand", version: full ? "99.0.0.0" : "99" },
     { brand: "Microsoft Edge", version: full ? builds.edge : major },
@@ -109,8 +113,9 @@ function brandList(major, full) {
  */
 function buildVersions(major) {
   const known = {
-    // 采集自真实 Edge 151.0.4129.101（fixtures/fingerprint/edge-real.json）
+    // 采集自真实 Edge 151/152 的本机基准。
     "151": { edge: "151.0.4129.101", chromium: "151.0.7922.170" },
+    "152": { edge: "152.0.4191.53", chromium: "152.0.7977.65" },
   };
   return known[major] ?? {
     edge: `${major}.0.0.0`,

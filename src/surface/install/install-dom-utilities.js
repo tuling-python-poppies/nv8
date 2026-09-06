@@ -25,7 +25,8 @@ import { install as install_xpath_result_snapshot_length_property } from "../api
 import { install as install_xpath_result_string_value_property } from "../api/dom-utilities/members/xpath-result-string-value-property.js";
 import * as install_xpath_result from "../api/dom-utilities/members/xpath-result.js";
 
-export function installDOMUtilities() {
+/** @param {boolean} [edge152Surface] 152 起 `StaticRange` 的父类是 `NodeRange`。 */
+export function installDOMUtilities(edge152Surface = false) {
   install_dom_parser.installGlobal();
   install_xml_serializer.installGlobal();
   install_xpath_evaluator.installGlobal();
@@ -42,7 +43,7 @@ export function installDOMUtilities() {
   install_xpath_evaluator.installRelation();
   install_xpath_expression.installRelation();
   install_xpath_result.installRelation();
-  install_static_range.installRelation();
+  install_static_range.installRelation(edge152Surface);
   install_caret_position.installRelation();
   install_dom_string_list.installRelation();
   install_count_queuing_strategy.installRelation();

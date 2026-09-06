@@ -6,6 +6,7 @@ import {
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { traceConstruct } from "../../../infra/trace/trace-function.js";
 import { AbstractRange } from "./abstract-range-constructor.js";
+import { NodeRange } from "./range-152-runtime.js";
 import { initializeRange } from "./range-state.js";
 
 export function Range() {
@@ -23,9 +24,15 @@ export function createRange(document) {
   return range;
 }
 
-export function installRangeConstructor() {
-  Object.setPrototypeOf(Range.prototype, AbstractRange.prototype);
-  Object.setPrototypeOf(Range, AbstractRange);
+/**
+ * @param {boolean} [edge152Surface] Edge 152 起继承链多一层：
+ *   `Range → NodeRange → AbstractRange`（151 是 `Range → AbstractRange`）。
+ *   `startContainer` / `endContainer` 随之移到 `NodeRange.prototype`。
+ */
+export function installRangeConstructor(edge152Surface = false) {
+  const parent = edge152Surface ? NodeRange : AbstractRange;
+  Object.setPrototypeOf(Range.prototype, parent.prototype);
+  Object.setPrototypeOf(Range, parent);
   delete Range.prototype.constructor;
   defineRangeConstants(Range);
   defineGlobalConstructor("Range", Range);

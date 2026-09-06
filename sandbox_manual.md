@@ -145,15 +145,16 @@ import {
 | --- | --- |
 | `nv8/fingerprint/edge-150` | Edge 150 冻结指纹 |
 | `nv8/fingerprint/edge-151` | Edge 151 冻结指纹 |
+| `nv8/fingerprint/edge-152` | 本机 Edge 152 冻结指纹（当前对等性基准） |
 | `nv8/protocol` | 请求协议层（`src/collection/request-protocol/`）|
 | `nv8/collector` | 采集层（`src/collection/collector/`）|
 
-**指纹快照要从子路径拿**：`edge150Fingerprint` / `edge151Fingerprint` 不在顶层导出里。
+**指纹快照要从子路径拿**：`edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` 不在顶层导出里。
 
 ### 2.3 第一次验证
 
 ```bash
-npm test                    # 全量，861 项（`node --test` 自动发现 tests/）
+npm test                    # 全量，864 项（`node --test` 自动发现 tests/）
 npm run test:matrix         # Node 18 / 20 / 22 / 24 四档
 ```
 
@@ -1478,7 +1479,7 @@ UA 不能包含 `Edg/`。
 `npm run baseline` 或 `baseline-full-surface-test` 报差异时，**不要直接改期望值**。
 先确认差异是有意的：
 
-1. 采集基准版本与 profile 一致——用 Edge 151 的 fixture 去比 150 的 profile，会把
+1. 采集基准版本与 profile 一致——用 Edge 152 的 fixture 去比 150 的 profile，会把
    版本门控的成员误报成缺失（这个坑踩过两次）；
 2. 是否只在某个 Node 档出现——`Iterator` 需要 Node 22+ 之类的宿主缺口另有登记表
    （`src/infra/baseline/known-differences.js`）；

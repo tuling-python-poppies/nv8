@@ -40,6 +40,10 @@ export function initializeInput(input) {
   );
 }
 
+export function inputValue(input) {
+  return requireInput(input).value;
+}
+
 export function requireInput(input) {
   const state = inputState.get(input);
   if (state === undefined) throw new TypeError("Illegal invocation");

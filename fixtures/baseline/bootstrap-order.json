@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 340,
-      "callSequenceSha256": "c747d6caaee4d870522802fc732dcd48f08d3455b943d0b33e4282013c26319a",
+      "callCount": 343,
+      "callSequenceSha256": "67b12f98533dca750fe8b18568a7caed5d9162ac224b1a0243e21abd35e2d066",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -112,6 +112,7 @@
         "install:installHTMLLinkElement",
         "install:installHTMLMarqueeElement",
         "install:installHTMLGeolocationElement",
+        "install:installHTMLUserMediaElement",
         "install:installFencedFrameConfig",
         "install:installHTMLFencedFrameElement",
         "install:installHTMLFrameElement",
@@ -245,6 +246,7 @@
         "install:installDOMImplementation",
         "install:installDocument",
         "install:installAbstractRange",
+        "install:installEdge152Ranges",
         "install:installRange",
         "install:installCookie",
         "install:installSelection",
@@ -321,6 +323,7 @@
         "install:installScreen",
         "install:installNavigatorUAData",
         "install:installNavigator",
+        "install:installEdge152Members",
         "install:installWindowStateGlobals",
         "install:installWindowEventHandlerGlobals",
         "install:installWindowLegacyGlobals",
@@ -351,9 +354,9 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "15e414e77d0bea3cac19fe8b765a051df5fd3c52b73bdcb782b4de99d04580cf",
-        "functionStartLine": 842,
-        "functionEndLine": 1304
+        "sourceSha256": "bea63cab3df1a3e4634a429bb6a3baae60cac9e57f21221345c4e16ea7194277",
+        "functionStartLine": 847,
+        "functionEndLine": 1312
       }
     },
     "worker": {
@@ -475,7 +478,7 @@
         "finalize:finalizeWorkerSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "718f51356b0eba0d817c923c04d1ef415185a730ebef4ab6f4473c8765738750",
+        "sourceSha256": "44983574f8a362d5fd3580e3894a86e67307d78accf611b1aa5647960adc628c",
         "functionStartLine": 198,
         "functionEndLine": 368
       }
@@ -503,7 +506,7 @@
         "install:installRegistration"
       ],
       "informational": {
-        "sourceSha256": "03e35e7ba001b922c4313a486528365f04a2703a00ddb152b2c052c9c4b7a932",
+        "sourceSha256": "e0eb9dd122331ff1cac94ee24bea776babeb9c54374e592981476e0beb41d7b7",
         "functionStartLine": 30,
         "functionEndLine": 72
       }

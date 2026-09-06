@@ -57,14 +57,14 @@ let probePromise = null;
 function runProbes() {
   probePromise ??= (async () => {
     const { createSandbox } = await import('../src/public/create-sandbox.js');
-    const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
+    const { edge152Fingerprint } = await import('../src/infra/fingerprint/edge-152.js');
     const sandbox = await createSandbox('https://behavior.test/page', {
       page: { html: '<!doctype html><html><head></head><body></body></html>' },
-      // 采集基准是真实 Edge 151+，所以对比也必须用 151 profile——与
+      // 采集基准是真实 Edge 152，所以对比也必须用 152 profile——与
       // `edge-member-parity-test.js` 同一条理由。用默认的 150 profile 会把
       // `browserMajorVersion >= 151` 门控的成员误报成缺失：`Intl.v8BreakIterator`
       // 就是这么被记成「NV8 缺一个 Intl 成员」的，而它其实只是没到版本门槛。
-      fingerprint: { ...edge151Fingerprint, browserMajorVersion: 151 },
+      fingerprint: { ...edge152Fingerprint, browserMajorVersion: 152 },
       // 探针里有若干会创建 iframe（各自触发一次子 Realm 创建），一轮下来超过默认
       // 的 1000ms。那个默认值是给不受信页面脚本的生产安全上限，不是「探针该跑多快」
       // 的断言。
@@ -298,12 +298,12 @@ test('probe results are stable across repeated runs', async () => {
   const first = await runProbes();
 
   const { createSandbox } = await import('../src/public/create-sandbox.js');
-  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
+  const { edge152Fingerprint } = await import('../src/infra/fingerprint/edge-152.js');
   const sandbox = await createSandbox('https://behavior.test/page', {
     page: { html: '<!doctype html><html><head></head><body></body></html>' },
     // 必须与 runProbes() 用**同一个** profile，否则这条测的是「两个不同 profile
     // 给不同结果」而不是「同一环境跨运行是否确定」。版本门控的成员会立刻让它红。
-    fingerprint: { ...edge151Fingerprint, browserMajorVersion: 151 },
+    fingerprint: { ...edge152Fingerprint, browserMajorVersion: 152 },
     limits: { timeoutMs: 30_000 },
   });
   let second;

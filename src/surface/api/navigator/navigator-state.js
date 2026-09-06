@@ -105,6 +105,7 @@ export function configureNavigatorProfile(
     webdriver: metadata.webdriver ?? false,
     pdfViewerEnabled: metadata.pdfViewerEnabled ?? true,
     deviceMemory,
+    cpuPerformance: metadata.cpuPerformance ?? 4,
     userAgentData: Object.freeze({
       architecture: userAgentData.architecture ?? "x86",
       bitness: userAgentData.bitness ?? "64",

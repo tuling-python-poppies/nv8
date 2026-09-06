@@ -183,8 +183,8 @@ test('profile brand order and names match the real browser', () => {
   const realBrands = realFingerprint.userAgentData.brands.map((entry) => entry.brand);
   assert.deepEqual(
     realBrands,
-    ['Not=A?Brand', 'Microsoft Edge', 'Chromium'],
-    'this is the order the profile is calibrated against'
+    ['Chromium', 'Not?A_Brand', 'Microsoft Edge'],
+    'this is the order the Edge 152 profile is calibrated against'
   );
 });
 

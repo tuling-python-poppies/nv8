@@ -42,6 +42,33 @@ export function initializeRange(range, document = currentDocument()) {
   return state;
 }
 
+/**
+ * `OpaqueRange`（Edge 152）的初始化。
+ *
+ * 与 `initializeRange` 的两点不同：
+ *
+ * - **不进 `ranges` 集合**。那个集合是给 DOM 变更钩子用的，让树里的 Range 随
+ *   节点增删调整边界。`OpaqueRange` 指向的是表单控件 value 字符串的一段，
+ *   与节点树无关，进去只会白跑钩子。
+ * - **container 存 `null`**。这两个字段在 `OpaqueRange` 上取不到（getter 挂在
+ *   `NodeRange.prototype`，而它不继承），但 `collapsed` 的实现要读——
+ *   `null === null` 让它退化成「两个 offset 是否相等」，与实测一致。
+ *
+ * @param {object} range
+ * @param {number} startOffset
+ * @param {number} endOffset
+ */
+export function initializeOpaqueRange(range, startOffset, endOffset) {
+  const state = {
+    startContainer: null,
+    startOffset,
+    endContainer: null,
+    endOffset,
+  };
+  rangeState.set(range, state);
+  return state;
+}
+
 export function requireRange(value) {
   const state = rangeState.get(value);
   if (state === undefined) {

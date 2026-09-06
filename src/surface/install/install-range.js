@@ -56,8 +56,9 @@ import {
 } from "../api/dom/range-surround-contents.js";
 import { installRangeToString } from "../api/dom/range-to-string.js";
 
-export function installRange() {
-  installRangeConstructor();
+/** @param {boolean} [edge152Surface] 见 `range-constructor.js`：152 起父类是 `NodeRange`。 */
+export function installRange(edge152Surface = false) {
+  installRangeConstructor(edge152Surface);
   installRangeCommonAncestorContainer();
   installRangePrototypeConstants();
   installRangeCloneContents();

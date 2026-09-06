@@ -1,21 +1,14 @@
-// Edge 150 profile；当前采集基准为真实 Edge 152（fixtures/fingerprint/edge-real.json）。
-//
-// 字段分两类，不能一概照抄采集结果：
-//
-// - **浏览器身份**（UA、brands、版本号、platform、vendor、productSub）
-//   必须与真实 Edge 一致，否则自相矛盾会被检测。
-// - **机器相关**（hardwareConcurrency、deviceMemory、languages、screen 尺寸）
-//   是采集机器特有的。照抄会把指纹绑定到某台具体机器，反而更可疑。
-//   这些保持为合理默认值，由调用方按需覆盖。
+// Edge 152 (Chromium 152) fingerprint
+// UA build: 152.0.4191.53 — matches the local Edge 152 release channel
+
 const navigatorProfile = Object.freeze({
-  // `Edg/` 后缀是 Edge 的标志。此前缺失它——UA 说 Chrome、
-  // userAgentData.brands 说 Microsoft Edge，两者自相矛盾。
-  userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0",
+  userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
   platform: "Win32",
   languages: Object.freeze(["zh-CN", "zh"]),
   language: "zh-CN",
   hardwareConcurrency: 16,
   deviceMemory: 8,
+  cpuPerformance: 4,
   vendorSub: "",
   productSub: "20030107",
   vendor: "Google Inc.",
@@ -32,20 +25,21 @@ const navigatorProfile = Object.freeze({
     bitness: "64",
     model: "",
     platformVersion: "19.0.0",
+    uaFullVersion: "152.0.4191.53",
     wow64: false,
     formFactors: Object.freeze(["Desktop"]),
     mobile: false,
   }),
   plugins: Object.freeze([
-    { name: "PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
-    { name: "Chrome PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
-    { name: "Chromium PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+    { name: "PDF Viewer",              filename: "internal-pdf-viewer", description: "Portable Document Format" },
+    { name: "Chrome PDF Viewer",       filename: "internal-pdf-viewer", description: "Portable Document Format" },
+    { name: "Chromium PDF Viewer",     filename: "internal-pdf-viewer", description: "Portable Document Format" },
     { name: "Microsoft Edge PDF Viewer", filename: "internal-pdf-viewer", description: "Portable Document Format" },
-    { name: "WebKit built-in PDF", filename: "internal-pdf-viewer", description: "Portable Document Format" },
+    { name: "WebKit built-in PDF",     filename: "internal-pdf-viewer", description: "Portable Document Format" },
   ]),
   mimeTypes: Object.freeze([
     { type: "application/pdf", suffixes: "pdf", description: "Portable Document Format" },
-    { type: "text/pdf", suffixes: "pdf", description: "Portable Document Format" },
+    { type: "text/pdf",        suffixes: "pdf", description: "Portable Document Format" },
   ]),
 });
 
@@ -129,7 +123,7 @@ const timingProfile = Object.freeze({
   dateNowResolutionMs: 0,
   performanceResolutionMs: 0,
   performanceJitterMs: 0,
-  jitterSeed: 0x4e5638,
+  jitterSeed: 0x4e5639,
   minimumTimerDelayMs: 0,
   animationFrameIntervalMs: 16,
 });
@@ -254,8 +248,8 @@ const capabilityProfile = Object.freeze({
   }),
 });
 
-export const edge150Fingerprint = Object.freeze({
-  browserMajorVersion: 150,
+export const edge152Fingerprint = Object.freeze({
+  browserMajorVersion: 152,
   locale: "zh-CN",
   timezone: "Asia/Shanghai",
   navigator: navigatorProfile,

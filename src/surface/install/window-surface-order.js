@@ -49,10 +49,10 @@
 //
 // `pending` 是「已登记的缺口」的**单一来源**：`edge-surface-parity-test.js`
 // 与 `edge-member-parity-test.js` 都从这张表读，不各自维护名单。两处登记
-// 必然漂移，而且位置信息只有这张表有——实现好了只需删掉 `pending`，
-// 它就自动落在正确的索引上。
+// 必然漂移，而且位置信息只有这张表有。当前 Edge 152 基准没有 pending 项；
+// 未来的缺口必须写明理由，不能静默从表中消失。
 
-/** 数据属性，不可枚举。932 项，全是 WebIDL interface object（WebIDL §3.7.1）。 */
+/** 数据属性，不可枚举。Edge 152 基准中表内 939 项为 WebIDL interface object。 */
 const VALUE_HIDDEN = Object.freeze({
   accessor: false, writable: true, enumerable: false, configurable: true,
 });
@@ -100,6 +100,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["webkitMediaStream", VALUE_HIDDEN],
 ["WebKitMutationObserver", VALUE_HIDDEN],
 ["WebKitCSSMatrix", VALUE_HIDDEN],
+["FeaturePolicy", VALUE_HIDDEN],
 ["XPathResult", VALUE_HIDDEN],
 ["XPathExpression", VALUE_HIDDEN],
 ["XPathEvaluator", VALUE_HIDDEN],
@@ -349,12 +350,13 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["Plugin", VALUE_HIDDEN],
 ["PictureInPictureWindow", VALUE_HIDDEN],
 ["PictureInPictureEvent", VALUE_HIDDEN],
+["PermissionsPolicy", VALUE_HIDDEN, { since: 152 }],
 ["Permissions", VALUE_HIDDEN],
 ["PermissionStatus", VALUE_HIDDEN],
 ["PeriodicWave", VALUE_HIDDEN],
+["PerformanceTimingConfidence", VALUE_HIDDEN],
 ["PerformanceTiming", VALUE_HIDDEN],
 ["PerformanceServerTiming", VALUE_HIDDEN],
-["PerformanceScriptTiming", VALUE_HIDDEN],
 ["PerformanceResourceTiming", VALUE_HIDDEN],
 ["PerformancePaintTiming", VALUE_HIDDEN],
 ["PerformanceObserverEntryList", VALUE_HIDDEN],
@@ -364,7 +366,6 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["PerformanceMeasure", VALUE_HIDDEN],
 ["PerformanceMark", VALUE_HIDDEN],
 ["PerformanceLongTaskTiming", VALUE_HIDDEN],
-["PerformanceLongAnimationFrameTiming", VALUE_HIDDEN],
 ["PerformanceEventTiming", VALUE_HIDDEN],
 ["PerformanceEntry", VALUE_HIDDEN],
 ["PerformanceElementTiming", VALUE_HIDDEN],
@@ -372,6 +373,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["Path2D", VALUE_HIDDEN],
 ["PannerNode", VALUE_HIDDEN],
 ["PageTransitionEvent", VALUE_HIDDEN],
+["PageRevealEvent", VALUE_HIDDEN],
 ["OverconstrainedError", VALUE_HIDDEN],
 ["OscillatorNode", VALUE_HIDDEN],
 ["OffscreenCanvasRenderingContext2D", VALUE_HIDDEN],
@@ -556,7 +558,6 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["FileReader", VALUE_HIDDEN],
 ["FileList", VALUE_HIDDEN],
 ["File", VALUE_HIDDEN],
-["FeaturePolicy", VALUE_HIDDEN],
 ["External", VALUE_HIDDEN],
 ["EventTarget", VALUE_HIDDEN],
 ["EventSource", VALUE_HIDDEN],
@@ -750,6 +751,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["outerWidth", ACCESSOR],
 ["outerHeight", ACCESSOR],
 ["devicePixelRatio", ACCESSOR],
+["onpagereveal", ACCESSOR],
 ["event", ACCESSOR],
 ["clientInformation", ACCESSOR],
 ["offscreenBuffering", ACCESSOR_HIDDEN],
@@ -925,6 +927,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["DisposableStack", VALUE_HIDDEN],
 ["AsyncDisposableStack", VALUE_HIDDEN],
 ["Float16Array", VALUE_HIDDEN],
+["WebAssembly", VALUE_HIDDEN],
 // 旧生成文件把它写成 configurable: false——1171 项里唯一的不可配置数据
 // 属性。实测真实 Edge 152 是 configurable: true，且 WebIDL 没有任何机制
 // 产生不可配置的数据属性（`[LegacyUnforgeable]` 产生的是访问器）。孤例 +
@@ -932,7 +935,6 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 // false、`Object.defineProperty(window, "chrome", …)` 抛 TypeError——
 // 而改写 window.chrome 正是反爬脚本常做的事。
 ["chrome", VALUE_ENUMERABLE],
-["WebAssembly", VALUE_HIDDEN],
 ["crashReport", ACCESSOR],
 ["cookieStore", ACCESSOR],
 ["ondevicemotion", ACCESSOR],
@@ -1182,6 +1184,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["XRPlane", VALUE_HIDDEN],
 ["XRPlaneSet", VALUE_HIDDEN],
 ["XRVisibilityMaskChangeEvent", VALUE_HIDDEN],
+["XSLTProcessor", VALUE_HIDDEN],
 ["fetchLater", VALUE_ENUMERABLE],
 ["getDigitalGoodsService", VALUE_ENUMERABLE],
 ["getScreenDetails", VALUE_ENUMERABLE],
@@ -1192,7 +1195,6 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["originAgentCluster", ACCESSOR],
 ["viewport", ACCESSOR],
 ["onpageswap", ACCESSOR],
-["onpagereveal", ACCESSOR],
 ["credentialless", ACCESSOR],
 ["fence", ACCESSOR],
 ["launchQueue", ACCESSOR],
@@ -1220,7 +1222,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["HTMLGeolocationElement", VALUE_HIDDEN],
 // Edge 151 新增的元素接口。不只是形状活：7 个原型成员、HTMLElement 继承链、
 // tagName 工厂，而 `stream` / `setConstraints` 要接 MediaStream 语义。
-["HTMLUserMediaElement", VALUE_HIDDEN, { since: 151, pending: "151 新增元素接口；7 成员 + 继承链 + tagName 工厂 + MediaStream 语义" }],
+["HTMLUserMediaElement", VALUE_HIDDEN, { since: 151 }],
 ["IntegrityViolationReportBody", VALUE_HIDDEN],
 ["InteractionContentfulPaint", VALUE_HIDDEN, { since: 151 }],
 ["PerformanceSoftNavigation", VALUE_HIDDEN, { since: 151 }],
@@ -1228,18 +1230,20 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["LaunchQueue", VALUE_HIDDEN],
 ["MediaMetadata", VALUE_HIDDEN],
 ["MediaSession", VALUE_HIDDEN],
+["NodeRange", VALUE_HIDDEN, { since: 152 }],
+["OpaqueRange", VALUE_HIDDEN, { since: 152 }],
 ["Notification", VALUE_HIDDEN],
 ["Origin", VALUE_HIDDEN],
-["PageRevealEvent", VALUE_HIDDEN],
 ["PageSwapEvent", VALUE_HIDDEN],
-["PerformanceTimingConfidence", VALUE_HIDDEN],
+["PerformanceLongAnimationFrameTiming", VALUE_HIDDEN],
+["PerformanceScriptTiming", VALUE_HIDDEN],
+["RTCDataChannel", VALUE_HIDDEN],
 ["PeriodicSyncManager", VALUE_HIDDEN],
 ["Profiler", VALUE_HIDDEN],
 ["PushManager", VALUE_HIDDEN],
 ["PushSubscription", VALUE_HIDDEN],
 ["PushSubscriptionOptions", VALUE_HIDDEN],
 ["QuotaExceededError", VALUE_HIDDEN],
-["RTCDataChannel", VALUE_HIDDEN],
 ["RTCRtpScriptTransform", VALUE_HIDDEN],
 ["RemotePlayback", VALUE_HIDDEN],
 ["RestrictionTarget", VALUE_HIDDEN],
@@ -1269,7 +1273,6 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["Viewport", VALUE_HIDDEN],
 ["WebSocketError", VALUE_HIDDEN],
 ["WebSocketStream", VALUE_HIDDEN],
-["XSLTProcessor", VALUE_HIDDEN],
 ["webkitSpeechGrammar", VALUE_HIDDEN],
 ["webkitSpeechGrammarList", VALUE_HIDDEN],
 ["webkitSpeechRecognition", VALUE_HIDDEN],

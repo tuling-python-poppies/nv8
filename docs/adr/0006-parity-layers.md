@@ -86,7 +86,7 @@ descriptor flag。前三层比的都是集合，不是顺序——「集合对�
 
 写在这里，因为都不是一次就想对的：
 
-1. **采集基准版本必须与 profile 对齐**。拿 Edge 151 的 fixture 比 150 profile，
+1. **采集基准版本必须与 profile 对齐**。拿 Edge 152 的 fixture 比 150 profile，
    凡是版本门控的成员都会被误报成缺口。踩了两次。
 2. **探针必须逐用例隔离**。把 beforeunload 三条路径顺序跑在同一沙箱里，
    前一个 `preventDefault` 监听器没移除，导致后两条看起来都能取消。

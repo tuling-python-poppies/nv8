@@ -1,10 +1,10 @@
 {
-  "collectedAt": "2026-08-24T08:46:46.064Z",
+  "collectedAt": "2026-09-06T05:51:30.439Z",
   "navigator": {
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
     "appCodeName": "Mozilla",
     "appName": "Netscape",
-    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0",
+    "appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
     "platform": "Win32",
     "product": "Gecko",
     "productSub": "20030107",
@@ -25,21 +25,21 @@
     "onLine": true,
     "pdfViewerEnabled": true,
     "webdriver": false,
-    "userAgentHeadless": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36 Edg/151.0.0.0"
+    "userAgentHeadless": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0"
   },
   "userAgentData": {
     "brands": [
       {
-        "brand": "Not=A?Brand",
-        "version": "99"
+        "brand": "Chromium",
+        "version": "152"
+      },
+      {
+        "brand": "Not?A_Brand",
+        "version": "24"
       },
       {
         "brand": "Microsoft Edge",
-        "version": "151"
-      },
-      {
-        "brand": "Chromium",
-        "version": "151"
+        "version": "152"
       }
     ],
     "mobile": false,
@@ -49,16 +49,16 @@
       "bitness": "64",
       "brands": [
         {
-          "brand": "Not=A?Brand",
-          "version": "99"
+          "brand": "Chromium",
+          "version": "152"
+        },
+        {
+          "brand": "Not?A_Brand",
+          "version": "24"
         },
         {
           "brand": "Microsoft Edge",
-          "version": "151"
-        },
-        {
-          "brand": "Chromium",
-          "version": "151"
+          "version": "152"
         }
       ],
       "formFactors": [
@@ -66,23 +66,23 @@
       ],
       "fullVersionList": [
         {
-          "brand": "Not=A?Brand",
-          "version": "99.0.0.0"
+          "brand": "Chromium",
+          "version": "152.0.7977.65"
+        },
+        {
+          "brand": "Not?A_Brand",
+          "version": "24.0.0.0"
         },
         {
           "brand": "Microsoft Edge",
-          "version": "151.0.4129.101"
-        },
-        {
-          "brand": "Chromium",
-          "version": "151.0.7922.170"
+          "version": "152.0.4191.53"
         }
       ],
       "mobile": false,
       "model": "",
       "platform": "Windows",
       "platformVersion": "19.0.0",
-      "uaFullVersion": "151.0.4129.101",
+      "uaFullVersion": "152.0.4191.53",
       "wow64": false
     }
   },
@@ -108,7 +108,7 @@
     "unmaskedRenderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
   },
   "surface": {
-    "globalCount": 1236,
+    "globalCount": 1239,
     "hasIterator": "function"
   },
   "edgePath": "/mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"

@@ -162,6 +162,8 @@ import { installOfflineSocket } from "../../surface/install/install-offline-sock
 import { installInputEvents } from "../../surface/install/install-input-events.js";
 import { installGeneralEvents } from "../../surface/install/install-general-events.js";
 import { installDOMUtilities } from "../../surface/install/install-dom-utilities.js";
+import { installEdge152Ranges } from "../../surface/install/install-edge-152-ranges.js";
+import { installEdge152Members } from "../../surface/install/install-edge-152-members.js";
 import { installTrustedTypes } from "../../surface/install/install-trusted-types.js";
 import { installURLPattern } from "../../surface/install/install-url-pattern.js";
 import { installHighlight } from "../../surface/install/install-highlight.js";
@@ -624,6 +626,9 @@ import {
   installHTMLGeolocationElement,
 } from "../../surface/install/install-html-geolocation-element.js";
 import {
+  installHTMLUserMediaElement,
+} from "../../surface/install/install-html-user-media-element.js";
+import {
   installFencedFrameConfig,
 } from "../../surface/install/install-fenced-frame-config.js";
 import {
@@ -1054,6 +1059,7 @@ export function bootstrapRoot(
   installHTMLLinkElement();
   installHTMLMarqueeElement();
   installHTMLGeolocationElement();
+  if (browserMajorVersion >= 151) installHTMLUserMediaElement();
   installFencedFrameConfig();
   installHTMLFencedFrameElement();
   installHTMLFrameElement();
@@ -1186,8 +1192,9 @@ export function bootstrapRoot(
   installXMLDocument();
   installDOMImplementation();
   installDocument();
-  installAbstractRange();
-  installRange();
+  installAbstractRange(browserMajorVersion >= 152);
+  if (browserMajorVersion >= 152) installEdge152Ranges();
+  installRange(browserMajorVersion >= 152);
   installCookie();
   installSelection();
   installNodeFilter();
@@ -1212,7 +1219,7 @@ export function bootstrapRoot(
   installOfflineSocket();
   installInputEvents(browserMajorVersion >= 151);
   installGeneralEvents(browserMajorVersion >= 151);
-  installDOMUtilities();
+  installDOMUtilities(browserMajorVersion >= 152);
   installTrustedTypes();
   installURLPattern();
   installHighlight();
@@ -1250,7 +1257,7 @@ export function bootstrapRoot(
   installNavigationDiagnostics();
   installObservable();
   installChapterInformation();
-  installFeaturePolicy();
+  installFeaturePolicy(browserMajorVersion >= 152);
   installWGSLLanguageFeatures();
   installSVGUnitTypes();
   installPerformanceEntry(browserMajorVersion >= 151);
@@ -1263,6 +1270,7 @@ export function bootstrapRoot(
   installScreen();
   installNavigatorUAData();
   installNavigator();
+  if (browserMajorVersion >= 152) installEdge152Members();
   installWindowStateGlobals();
   installWindowEventHandlerGlobals();
   installWindowLegacyGlobals();

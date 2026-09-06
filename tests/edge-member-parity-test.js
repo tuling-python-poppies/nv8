@@ -124,16 +124,16 @@ function captureNv8Surface() {
     capturePromise = (async () => {
       const { captureFullSurface } = await import('../src/infra/baseline/full-surface.js');
       const { createSandbox } = await import('../src/public/create-sandbox.js');
-      const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
+      const { edge152Fingerprint } = await import('../src/infra/fingerprint/edge-152.js');
       const sandbox = await createSandbox('https://baseline.test/', {
         page: { html: '<!doctype html><html><head></head><body></body></html>' },
-        // 采集基准是真实 Edge **151**，所以对比也必须用 151 profile。
+        // 采集基准是真实 Edge **152**，所以对比也必须用 152 profile。
         //
-        // 之前用默认的 150 profile 对比 151 fixture，凡是 `edge151Surface`
+        // 之前用默认的 150 profile 对比 152 fixture，凡是 `edge151Surface`
         // 门控的成员都会被误报成缺口——`FontFaceSet`、`PerformanceEntry.navigationId`、
         // `WheelEvent.momentum`、`AnimationEvent.animation` 都是这么进登记表的。
         // 版本差异不是缺陷；基准版本必须与 profile 对齐。
-        fingerprint: { ...edge151Fingerprint, browserMajorVersion: 151 },
+        fingerprint: { ...edge152Fingerprint, browserMajorVersion: 152 },
       // 全表面自省是重型操作。默认 `limits.timeoutMs` 是 1000ms——那是给
       // 不受信页面脚本的生产安全上限，不是「自省该有多快」的断言。绑在默认值上
       // 会让测试在并行负载下随机超时（与固定 sleep 同类的时长赌注）。
@@ -234,7 +234,7 @@ test('isTrusted is unforgeable on the instance, not on Event.prototype', async (
       };
     })())`));
 
-    // 真实 Edge 151 的实测结果，逐字段对齐
+    // 真实 Edge 152 的实测结果，逐字段对齐
     assert.equal(observed.onPrototype, false, 'real Event.prototype has no isTrusted');
     assert.equal(observed.onInstance, true, '[LegacyUnforgeable] lives on the instance');
     assert.equal(observed.getterType, 'function');
@@ -332,8 +332,7 @@ test('prototype-level parity stays above the recorded floor', async () => {
   const total = Object.keys(realPrototypes).length;
   const identical = total - rows.length;
 
-  // 151 profile 下实测 966 原型中 963 个成员集完全一致；剩 3 个是 NV8
-  // 压根没有的接口（见 KNOWN_MISSING_PROTOTYPES）。下限只允许上调。
+  // 152 profile 下实测 969 个原型的成员集全部一致。下限只允许上调。
   //
   // 宿主 Node 版本造成的缺口先剔除，否则同一份代码在 Node 18/20 上会因为
   // V8 没有 `Set.prototype.union` 之类而"覆盖率下降"——那不是覆盖率问题。
@@ -348,8 +347,8 @@ test('the member gap stays small enough to be meaningful', async () => {
   const rows = withoutNodeVersionGaps(diffMembers(snapshot));
   const missingCount = rows.reduce((sum, row) => sum + row.missing.length, 0);
 
-  // 上限只允许下调。13 → 9 是把对比基准改成 151 profile（那 4 条本来就实现了），
-  // 9 → 0 是按真实 Edge 实测的 descriptor 形状把剩下的补齐。
+  // 上限只允许下调。152 基准切换后新增的 Range、value range 和元素表面也必须保持
+  // 零缺失，不能通过放宽上限隐藏回归。
   assert.ok(
     missingCount <= 0,
     `missing members grew to ${missingCount}; implement some before registering more`
