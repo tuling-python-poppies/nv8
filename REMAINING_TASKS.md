@@ -157,9 +157,10 @@
 （多余 0、缺失全部登记）与 `edge-member-parity-test.js`
 （963/966 原型成员集完全一致、缺失 0、多余 0）。
 
-**但这只证明形状对，不证明行为对。** 上表 14 组里，行为探针覆盖到的只有
-CSSOM(22) 与 Canvas(9)；Media / IndexedDB / Web Animations / Observers / SVG /
-Range / Selection **一个探针都没有**。真正的剩余工作在那里，见第十二节末。
+**但这只证明形状对，不证明行为对。** 当前行为层已有 144 个探针 / 16 类，覆盖
+CSSOM、Canvas、音频、Intl、Performance、事件时序、跨 Realm 和 URL 等；Media /
+IndexedDB / Web Animations / Observers / SVG / Range / Selection 等领域仍缺少专门
+行为探针。真正的剩余工作在那里，见第十二节末。
 
 留着一份「说 IndexedDB 未实现」的清单比没有清单更糟——照它决策会从零开始重做
 一遍。这与本项目「登记而不是隐藏」的原则是同一条：登记表一旦失真就必须修，
@@ -1459,19 +1460,15 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 测试 6 项（`tests/ua-default-font-locale-test.js`）：查表最长前缀、
     配对校验能抓到不匹配与缺值、表项都是带引号的计算值形态、默认 profile 一致、
     切 locale 四档一起跟着切、`<pre>` 的 monospace 不被破坏
-- [ ] **行为探针覆盖面仍是最大的缺口** - 144 项 / 16 类，对 1232 全局 / 8901 成员
-  - 分布极不均：`cssom` 22、`argumentCount` 19、`audio` 14、`intl` 13、`crossRealm` 只有 2
-  - **完全没有探针**的领域：**音频指纹**（`OfflineAudioContext` → oscillator →
-    取 buffer 求和，排得上前五的真实指纹向量，surface 里
-    `AudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer` 全都在，
-    只有行为没验过）、Intl / 时区、Performance 时间精度、字体度量、
-    DOM 遍历 / Range / Selection、fetch / XHR / WebSocket 语义、Storage、
-    IndexedDB、Worker / ServiceWorker、Media、Web Animations、Observers、SVG、Crypto
-  - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。第一梯队只有三项：
-    音频指纹、Intl / 时区（采集必须锁 locale + TZ，ADR-0005 的 `fontFamily`
-    就是没锁 locale 把采集机的中文系统语言烙进 fixture）、`performance.now()`
-    精度与钳制。IndexedDB / Range / Selection / SVG / Web Animations / Observers
-    极少被用来算签名，给它们写探针是在刷覆盖率
+- [ ] **行为探针覆盖面仍是最大的缺口** - 当前 144 项 / 16 类，对 1239 全局 / 8957 成员
+  - 已覆盖：`cssom` 22、`argumentCount` 19、`audio` 14、`intl` 13、`performance`、
+    `crossRealm`、URL、事件时序和其他结构性行为
+  - 仍缺少专门探针的领域：字体度量、DOM 遍历 / Range / Selection、fetch / XHR /
+    WebSocket 语义、Storage、IndexedDB、Worker / ServiceWorker、Media、Web Animations、
+    Observers、SVG、Crypto
+  - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。第一梯队已经完成音频指纹、
+    Intl / 时区和 `performance.now()` 精度；下一轮应先评估字体度量与 DOM/Range 行为，
+    而不是为了刷覆盖率平均给所有 API 加探针
   - 「形状层已经到顶」这个判断**已被推翻一半**：多余 0、缺失 0、963/966 原型成员
     集合一致都是真的，但那两个数字都只覆盖**集合**，不覆盖**顺序**与 window 自身的
     descriptor。新增第四层后首轮就抓到 3 个真问题（`FontFaceSet` 错位、
@@ -1479,9 +1476,8 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     顺序不一致。形状层还有没测过的维度，不是到顶
   - 行为层依然是发现真问题最多的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
     行为层却查出 6 处
-  - **换基准的阻塞已解除**（见上文「全局的版本门控能力已做出来」）。本机 Edge 是
-    152.0.4191.53，fixture 基准仍是 151；实测 151 → 152 行为层零变化，探针可以跨
-    major 迁移，所以扩探针不必等换基准
+  - **换基准已完成**：本机 Edge 152.0.4191.53，fixture 和对等性测试均已切换到
+    Edge 152；实测 151 → 152 行为层零变化，探针可以跨 major 迁移
 
 **测试**：`tests/edge-surface-parity-test.js`(9)、
 `tests/edge-member-parity-test.js`(10)、`tests/window-surface-order-test.js`(27)、
@@ -1699,10 +1695,9 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 
 **P2 最大的质量缺口**
 
-6. ~~固定 Edge 151 的采集环境~~、~~全局的版本门控能力~~ —— **均已完成**。
-   顺序与 descriptor 形状变成数据表，门控是一个字段；换基准现在是
-   `npm run fingerprint:globals` + `--write` 两步，已用真实 Edge 152 dry-run 验证。
-   剩余前置条件只有 `HTMLUserMediaElement` 与两个 `< 152` 门控的成员（§12）
+6. ~~固定 Edge 151 的采集环境~~、~~全局的版本门控能力~~、~~换基准到 Edge 152~~
+   —— **均已完成**。顺序与 descriptor 形状变成数据表，门控是一个字段；Edge 152
+   fixture、Range/Policy/HTMLUserMediaElement 表面和对等性测试均已落地
 7. 行为探针第一梯队**三项全部完成**：音频指纹（14 项，10 处偏差）、
    Intl / 时区（13 项）、`performance.now()` 精度（5 项，共 4 处偏差、
    2 处宿主级已登记）。剩余领域按「反爬真正读什么」判断价值不高，明确延后（§12 末）

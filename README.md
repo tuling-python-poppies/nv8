@@ -1065,15 +1065,13 @@ css-ua-defaults.js），现在都有了脚本。
 
 ### 三层对齐的剩余缺口
 
-- **1 个全局名缺失**：`HTMLUserMediaElement`。已在
-  `src/surface/install/window-surface-order.js` 里登记为 `pending`，位置保留——实现后
-  删掉那个字段就自动落在正确的枚举索引上。
-  （`InteractionContentfulPaint` / `PerformanceSoftNavigation` 已实现。）
+- **Edge 152 基准下全局名缺失为 0**：`NodeRange`、`OpaqueRange`、
+  `PermissionsPolicy`、`HTMLUserMediaElement` 均已实现。
 - **原型成员的枚举顺序有 22 处不一致**。963 个共有原型里 941 个顺序一致；
   剩下 22 个需逐个核对是 151 → 152 的版本差异还是实现偏差，未括进测试。
 - **Node 18/20 上全局枚举顺序做不到一致**（宿主限制，见「环境要求」）；
   Node 18–22 的 V8 内建段自身顺序也与 Chromium 不同。Node 24 逐位一致。
-- **2 个行为探针不一致**，已登记（都是动态 iframe 时序）。
+- **4 个行为探针差异**，已登记：2 个动态 iframe 时序差异、2 个 Node/Chromium ICU 差异。
 - **`illegalConstructor` 对不带 `new` 的调用多了接口名**：真实 Edge 只报
   `Illegal constructor`，带名字的只在 `new X()` 时。影响几百处调用点，已登记。
 - **2 项刻意不探**（`UNPROBED_KNOWN_GAPS`，断言恰好为 2）：
@@ -1082,7 +1080,8 @@ css-ua-defaults.js），现在都有了脚本。
     `style` 属性）比描述符形状更重要——脚本天天读 `el.style.display`，
     几乎从不检查它的描述符。
   - 10 个布局相关计算值。
-- **未覆盖的探针类别**：字体度量。（Intl / 时区、时间精度已补。）
+- **未覆盖的探针类别**：字体度量，以及其他尚未进入第一梯队的 API 行为；当前已覆盖
+  144 个探针 / 16 类。（Intl / 时区、时间精度、音频指纹已补。）
 
 ### 布局相关
 

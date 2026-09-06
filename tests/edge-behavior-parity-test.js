@@ -103,16 +103,13 @@ function describe(result) {
  * → 约 265ms 后才可用。真实浏览器在 `appendChild` 返回时就有初始 about:blank
  * 文档。
  *
- * **预热池方案已实现并回滚**（见 `docs/adr/0004-dynamic-iframe-timing.md`）。
- * 池确实让 `contentWindow` 同步可用、intrinsics 独立、原生 toString 正确，
- * 但池位与普通子 Realm 在账目上无法区分，导致 59 项既有测试失败——
- * 所有断言 Realm 数量与清理的测试都会看到多出来的池位。要落地必须先设计
- * 独立的池位账目，那是 ADR-0004 未决的部分。
- *
- * 静态写在页面 HTML 里的 iframe **没有**这个问题。
+ * 预热池方案已落地为显式 opt-in（见 `docs/adr/0004-dynamic-iframe-timing.md`）。
+ * 开启 `limits.prewarmChildRealms` 后，池位有独立账目并参与容量与清理；默认值
+ * 仍为 0，所以默认行为保留这个已登记差异。静态写在页面 HTML 里的 iframe
+ * **没有**这个问题。
  */
-const DYNAMIC_IFRAME_REASON = '动态 iframe 的 contentWindow 同步为 null；'
-  + '预热池方案已实现并回滚（池位与普通子 Realm 账目无法区分，导致 59 项测试失败）；'
+const DYNAMIC_IFRAME_REASON = '默认配置下动态 iframe 的 contentWindow 同步为 null；'
+  + '可通过 limits.prewarmChildRealms 显式预热有限数量的子 Realm；'
   + '见 docs/adr/0004-dynamic-iframe-timing.md';
 
 /**
