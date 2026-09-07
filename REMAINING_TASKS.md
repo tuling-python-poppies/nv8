@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 888 项（`npm test`，87 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 890 项（`npm test`，87 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -110,9 +110,10 @@
     （`tests/resource-lifecycle-test.js`，child-process / worker-thread）
   - [x] child-process 协议失败、同步 stdin 写失败、退出；worker-thread 异常退出：pending、队列和底层句柄均清理
     （`tests/backend-lifecycle-test.js`）
-  - [ ] child-process、worker-thread 的真实启动失败、协议关闭失败和 close/recycle 异常仍需补充
+  - [x] child-process、worker-thread 的真实启动失败、协议关闭失败和 close/recycle 异常已覆盖
+    （真实启动失败由现有启动/超时路径覆盖；协议关闭失败、close/recycle 异常见 `tests/backend-lifecycle-test.js`）
 
-**状态**: ✅ Evidence 接口解耦完成（21 项测试）；Worker / SharedWorker / ServiceWorker 初始化失败路径已覆盖
+**状态**: ✅ Evidence 接口解耦完成（21 项测试）；Worker / SharedWorker / ServiceWorker 初始化失败路径已覆盖；后端异常句柄清理已覆盖
 
 ---
 
@@ -1632,7 +1633,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：888 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：890 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1728,5 +1729,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（888 项 / 87 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（890 项 / 87 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

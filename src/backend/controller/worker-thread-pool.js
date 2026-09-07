@@ -30,6 +30,7 @@ function scheduleCleanup() {
     for (let i = idlePool.length - 1; i >= 0; i--) {
       if (now - idlePool[i].returnedAt > IDLE_THREAD_TTL_MS) {
         const entry = idlePool.splice(i, 1)[0];
+        detachIdleListeners(entry);
         void entry.worker.terminate().catch(() => {});
       }
     }
@@ -38,11 +39,25 @@ function scheduleCleanup() {
   cleanupTimer.unref?.();
 }
 
+function removeIdleEntry(entry) {
+  const index = idlePool.indexOf(entry);
+  if (index === -1) return false;
+  idlePool.splice(index, 1);
+  return true;
+}
+
+function detachIdleListeners(entry) {
+  entry.worker.removeListener?.("error", entry.onError);
+  entry.worker.removeListener?.("exit", entry.onExit);
+}
+
 function acquireIdleWorker(heapMegabytes) {
   // Find a compatible idle worker (same heap limit).
   for (let i = 0; i < idlePool.length; i++) {
     if (idlePool[i].heapMegabytes === heapMegabytes) {
-      return idlePool.splice(i, 1)[0];
+      const entry = idlePool.splice(i, 1)[0];
+      detachIdleListeners(entry);
+      return entry;
     }
   }
   return null;
@@ -52,9 +67,30 @@ function returnToPool(worker, heapMegabytes) {
   if (idlePool.length >= MAX_IDLE_THREADS) {
     // Pool is full, terminate the oldest idle thread.
     const oldest = idlePool.shift();
+    detachIdleListeners(oldest);
     void oldest.worker.terminate().catch(() => {});
   }
-  idlePool.push({ worker, heapMegabytes, returnedAt: Date.now() });
+  const entry = {
+    worker,
+    heapMegabytes,
+    returnedAt: Date.now(),
+    onError: null,
+    onExit: null,
+  };
+  // An idle Worker still emits lifecycle events. Keep the pool from turning
+  // a later thread failure into an unhandled error or a stale pool entry.
+  entry.onError = () => {
+    if (!removeIdleEntry(entry)) return;
+    detachIdleListeners(entry);
+    void worker.terminate().catch(() => {});
+  };
+  entry.onExit = () => {
+    removeIdleEntry(entry);
+    detachIdleListeners(entry);
+  };
+  worker.once("error", entry.onError);
+  worker.once("exit", entry.onExit);
+  idlePool.push(entry);
   scheduleCleanup();
 }
 
@@ -202,6 +238,7 @@ function threadEnvironment(timezone) {
  */
 export function drainWorkerThreadPool() {
   for (const entry of idlePool) {
+    detachIdleListeners(entry);
     void entry.worker.terminate().catch(() => {});
   }
   idlePool.length = 0;
