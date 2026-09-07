@@ -38,9 +38,12 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 
 ### 三、行为
 
-`tests/edge-behavior-parity-test.js` — 跑同一段代码，比结果。
+`tests/edge-behavior-parity-test.js` — 跑同一段同步代码，比结果。
 
-**186 个探针分 25 类**：报错文案、`toString` 形态、类型标签、非法接收者、
+Dedicated Worker 异步行为由 `tests/worker-async-parity-test.js` 对照
+`fixtures/fingerprint/edge-async-behavior.json` 验证。
+
+**同步基线为 186 个探针分 25 类**；另有独立的 **2 个 Dedicated Worker 异步探针**。同步内容包括报错文案、`toString` 形态、类型标签、非法接收者、
 构造器守卫、arity 元数据、Error 形态、集合语义、Worker 入口契约、CSSOM、Canvas 形状、
 字体解析、DOM/Range/Selection、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB、音频指纹、
 Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL 解析。
@@ -57,10 +60,12 @@ Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL
 | Storage / Fetch / Crypto | 12 | 首批输入校验、默认值、生命周期行为全部一致 |
 | XHR / WebSocket / IndexedDB | 12 | 首批状态、URL、KeyRange 和错误行为全部一致 |
 | Worker 入口契约 | 8 | 构造器校验、协议边界、实例标签、终止幂等和非法接收者全部一致 |
+| Dedicated Worker 异步 | 2 | 消息往返、terminate 后消息行为，真实 Edge 双轮采集一致 |
 
-现状：**182 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。
+同步基线现状：**182 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。Dedicated Worker 异步基线另有 2 项，由 `edge-async-behavior.json` 锁定；ServiceWorker 异步注册/激活尚未纳入 fixture。
 
-探针定义在 `src/infra/baseline/behavior-probes.js`，采集脚本与测试**共用同一份**——
+同步探针定义在 `src/infra/baseline/behavior-probes.js`，Dedicated Worker 异步探针定义在
+`src/infra/baseline/async-behavior-probes.js`，各自的采集脚本与测试共用同一份定义——
 各写一份必然漂移，漂移后比较就没有意义。
 
 准入条件三条：**跨运行确定**、**与机器无关**、**可序列化**。因此只取引擎固定
@@ -221,7 +226,8 @@ Object.getOwnPropertyNames(new Event('x')).includes('isTrusted')
 npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL），小，需人工核对
 npm run fingerprint:globals   # 全局名列表，1239 项
 npm run fingerprint:members   # 原型成员明细，8957 项
-npm run fingerprint:behavior  # 行为探针，186 项（跑两轮校验确定性）
+npm run fingerprint:behavior  # 同步行为探针，186 项（跑两轮校验确定性）
+npm run fingerprint:async-behavior  # Dedicated Worker 异步探针，2 项（跑两轮校验确定性）
 ```
 
 都走 headless Edge + `--dump-dom`，**不依赖 Puppeteer/CDP**——浏览器自动化不是

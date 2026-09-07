@@ -18,6 +18,7 @@
     "check:bundle": "node scripts/build-module-bundle.mjs --check",
     "check:surface-order": "node scripts/build-window-surface-order.mjs",
     "fingerprint:behavior": "node scripts/collect-edge-behavior.mjs --out fixtures/fingerprint/edge-behavior.json",
+    "fingerprint:async-behavior": "node scripts/collect-edge-async-behavior.mjs --out fixtures/fingerprint/edge-async-behavior.json",
     "fingerprint:collect": "node scripts/collect-edge-fingerprint.mjs --out fixtures/fingerprint/edge-real.json",
     "fingerprint:css": "node scripts/collect-edge-css-properties.mjs --out fixtures/fingerprint/edge-css-properties.json",
     "fingerprint:globals": "node scripts/collect-edge-globals.mjs --out fixtures/fingerprint/edge-globals.json",

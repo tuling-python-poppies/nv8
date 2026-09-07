@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 891 项（`npm test`，87 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 895 项（`npm test`，89 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -167,9 +167,9 @@
 （多余 0、缺失全部登记）与 `edge-member-parity-test.js`
 （969/969 原型成员集完全一致、缺失 0、多余 0）。
 
-**但这只证明形状对，不证明行为对。** 当前行为层已有 186 个探针 / 25 类，覆盖
-CSSOM、Canvas、字体解析、DOM/Range/Selection、Storage、Fetch、Crypto、音频、Intl、
-Performance、事件时序、跨 Realm、URL 和 Worker 入口契约等；ServiceWorker / Media /
+**但这只证明形状对，不证明行为对。** 当前同步行为层已有 186 个探针 / 25 类，另有独立
+Dedicated Worker 异步基线 2 项，覆盖 CSSOM、Canvas、字体解析、DOM/Range/Selection、Storage、
+Fetch、Crypto、音频、Intl、Performance、事件时序、跨 Realm、URL 和 Worker 入口契约等；ServiceWorker / Media /
 Web Animations / Observers / SVG，以及上述网络与存储 API 的更深层语义仍缺少专门探针。
 真正的剩余工作在那里，见第十二节末。
 
@@ -423,7 +423,9 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 - [ ] **pending module evaluation 取消** - 取消未完成的模块加载
 - [ ] **Worker 并发/深度/关闭限制** - 防止资源耗尽
 - [x] **Worker 同步入口行为探针** - 构造器参数校验、协议边界、实例标签、终止幂等性和非法接收者
-  （8 项，`worker` 类别；异步消息与生命周期语义仍待单独建模）
+  （8 项，`worker` 类别）
+- [x] **Dedicated Worker 异步行为探针** - 消息往返、terminate 后消息行为（2 项独立 fixture，真实 Edge 双轮采集）
+- [ ] **ServiceWorker 异步行为探针** - Edge `--dump-dom` 采集模式无法等待注册/激活，需专门浏览器采集入口
 
 **状态**: 基础实现完成，高级策略待定义
 
@@ -797,6 +799,7 @@ Baseline 保证「NV8 自己前后一致」，抓不到「NV8 从一开始就和
 npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL）
 npm run fingerprint:globals   # 全局名 1239 项
 npm run fingerprint:members   # 原型成员 8957 项
+npm run fingerprint:async-behavior # Dedicated Worker 异步行为，2 项
 ```
 
 涉及 iframe 或跨页面的测量需要真实 origin —— `file://` 下每个文件是独立的
@@ -811,7 +814,7 @@ opaque origin，拿不到 `parent`。这类探针走临时本地 HTTP 服务器�
 |---|---|
 | 全局名存在性 | 152 profile 覆盖真实 Edge 的 **100%**，**多出为 0** |
 | 原型成员明细 | 969 原型中 969 个成员集完全一致，**多出为 0** |
-| 行为 | 186 探针 / 25 类，182 项与真实 Edge 一致，4 项已登记 |
+| 行为 | 同步 186 探针 / 25 类，182 项一致、4 项登记；Dedicated Worker 异步 2 项 |
 
 **修掉的宿主特征泄漏（多出的东西比缺少更危险）**
 - `AsyncIterator` —— Node 24 的 V8 特性，Edge 152 没有
@@ -1465,13 +1468,13 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 测试 6 项（`tests/ua-default-font-locale-test.js`）：查表最长前缀、
     配对校验能抓到不匹配与缺值、表项都是带引号的计算值形态、默认 profile 一致、
     切 locale 四档一起跟着切、`<pre>` 的 monospace 不被破坏
-- [ ] **行为探针覆盖面仍是最大的缺口** - 当前 186 项 / 25 类，对 1239 全局 / 8957 成员
+- [ ] **行为探针覆盖面仍是最大的缺口** - 同步基线 186 项 / 25 类，对 1239 全局 / 8957 成员；另有独立异步 Worker 基线 2 项
   - 已覆盖：`cssom` 22、`argumentCount` 19、`audio` 14、`fontMetrics` 5、`domRange` 5、
     `storage` 4、`fetch` 4、`crypto` 4、`xhr` 4、`websocket` 4、`indexedDB` 4、`worker` 8、`intl` 13、
-    `performance`、`crossRealm`、URL、事件时序和其他结构性行为；182 项与真实 Edge 一致，
-    4 项为已登记的宿主/时序差异
-  - Worker 当前已覆盖同步入口契约；仍缺少专门探针的领域：ServiceWorker、Media、Web Animations、
-    Observers、SVG，以及 fetch / Storage / Crypto / XHR / WebSocket / IndexedDB 的更深层语义
+    `performance`、`crossRealm`、URL、事件时序和其他结构性行为；同步基线 182 项与真实 Edge 一致，
+    4 项为已登记的宿主/时序差异；异步 Worker 2 项另由 `edge-async-behavior.json` 锁定
+  - Worker 当前已覆盖同步入口和 Dedicated Worker 异步消息/终止行为；仍缺少专门探针的领域：ServiceWorker、
+    Media、Web Animations、Observers、SVG，以及 fetch / Storage / Crypto / XHR / WebSocket / IndexedDB 的更深层语义
   - **按「反爬真正读什么」排，不按未覆盖的表面大小排**。下一轮优先评估 Worker、ServiceWorker
     的异步与生命周期语义，以及上述网络/存储 API 的更深层行为，而不是为了刷覆盖率平均给所有 API 加探针
   - 「形状层已经到顶」这个判断**已被推翻一半**：多余 0、缺失 0、969/969 原型成员
@@ -1635,7 +1638,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：891 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：895 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1670,7 +1673,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 | 全局名存在性 | 152 profile 覆盖真实 Edge **100%**，多余 **0** —— 集合层到顶 |
 | 原型成员与描述符 | **969/969** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
 | 枚举顺序与 own-descriptor | 数据表管的 1178 项**逐字一致**（Node 22+）；Edge 152 原型成员顺序 27 项已校正 |
-| 运行时行为 | 186 探针 / 25 类，182 项一致、4 项登记 —— **剩余工作大头仍在这里** |
+| 运行时行为 | 同步 186 探针 / 25 类，182 项一致、4 项登记；Dedicated Worker 异步 2 项 —— **剩余工作大头仍在这里** |
 
 「基本到顶」这个说法要限定在**集合**上。新增第四层（`window-surface-order-test.js`）
 首轮就在已经报 0 差异的地方抓到 3 个真问题——集合对、顺序错，是形状层此前的盲区。
@@ -1731,5 +1734,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（891 项 / 87 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（895 项 / 89 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

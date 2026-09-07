@@ -33,6 +33,69 @@ function createRuntime(script) {
   });
 }
 
+test('ServiceWorker registration resolves ready with active metadata', async () => {
+  const nv8 = await createRuntime(`self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+    self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));`);
+  try {
+    const realm = await nv8.sandbox.createRealm({ type: 'root', pageUrl: 'https://example.test/app/page' });
+    const result = await realm.evaluate(`(async () => {
+      const readyPromise = navigator.serviceWorker.ready;
+      const registration = await navigator.serviceWorker.register('/sw-clients.js', {
+        scope: '/app/', updateViaCache: 'none',
+      });
+      const ready = await readyPromise;
+      return JSON.stringify([
+        ready === registration,
+        registration.scope,
+        registration.updateViaCache,
+        registration.installing === null,
+        registration.waiting === null,
+        registration.active.state,
+        navigator.serviceWorker.controller.scriptURL,
+      ]);
+    })()`);
+    assert.deepEqual(JSON.parse(result), [
+      true,
+      'https://example.test/app/',
+      'none',
+      true,
+      true,
+      'activated',
+      'https://example.test/sw-clients.js',
+    ]);
+    await nv8.sandbox.destroyRealm(realm.id);
+  } finally {
+    await nv8.destroy();
+  }
+});
+
+test('ServiceWorker messages complete asynchronously and preserve source identity', async () => {
+  const nv8 = await createRuntime(`self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+    self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+    self.onmessage = event => self.postMessage(JSON.stringify([
+      event.data,
+      event.source !== null,
+    ]));`);
+  try {
+    const realm = await nv8.sandbox.createRealm({ type: 'root', pageUrl: 'https://example.test/app/page' });
+    const result = await realm.evaluate(`(async () => {
+      await navigator.serviceWorker.register('/sw-clients.js', { scope: '/app/' });
+      const response = new Promise(resolve => {
+        navigator.serviceWorker.onmessage = event => resolve([
+          JSON.parse(event.data),
+          event.source === navigator.serviceWorker.controller,
+        ]);
+      });
+      navigator.serviceWorker.controller.postMessage({ kind: 'roundtrip', value: 7 });
+      return JSON.stringify(await response);
+    })()`);
+    assert.deepEqual(JSON.parse(result), [[{ kind: 'roundtrip', value: 7 }, true], true]);
+    await nv8.sandbox.destroyRealm(realm.id);
+  } finally {
+    await nv8.destroy();
+  }
+});
+
 test('ServiceWorker WindowClient filters and operations use Realm-scoped clients', async () => {
   const nv8 = await createRuntime(`self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
     self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
