@@ -317,14 +317,14 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 ### 第三层：运行时行为
 
-前两层都对，行为仍可能不同。这一层用 **178 个探针 / 24 类**覆盖：
+前两层都对，行为仍可能不同。这一层用 **186 个探针 / 25 类**覆盖：
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
-`arityMetadata`、`errorShape`、`collections`、`cssom`、`canvas`、`fontMetrics`、
+`arityMetadata`、`errorShape`、`collections`、`worker`、`cssom`、`canvas`、`fontMetrics`、
 `domRange`、`storage`、`fetch`、`crypto`、`xhr`、`websocket`、`indexedDB`、
 `audio`、`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
 
-现状：**174 项一致，4 项登记**——2 项动态 iframe 时序（开
+现状：**182 项一致，4 项登记**——2 项动态 iframe 时序（开
 `limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
@@ -796,7 +796,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，890 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，891 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -917,7 +917,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（890 项 / 87 个文件，自动发现） |
+| `npm test` | 全量测试（891 项 / 87 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -1081,9 +1081,9 @@ css-ua-defaults.js），现在都有了脚本。
     `style` 属性）比描述符形状更重要——脚本天天读 `el.style.display`，
     几乎从不检查它的描述符。
   - 10 个布局相关计算值。
-- **行为探针已扩展到字体、DOM Range、Storage、Fetch、Crypto、XHR、WebSocket 与 IndexedDB**：
-  当前 178 个探针 / 24 类，174 项与真实 Edge 一致；绝对字形像素宽度仍不进入契约，因为它依赖机器字体安装。
-  Worker、ServiceWorker、Media、Web Animations、Observers、SVG 以及上述 API 的更深层语义另行登记。
+- **行为探针已扩展到字体、DOM Range、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB 与 Worker 入口契约**：
+  当前 186 个探针 / 25 类，182 项与真实 Edge 一致；绝对字形像素宽度仍不进入契约，因为它依赖机器字体安装。
+  ServiceWorker、Media、Web Animations、Observers、SVG 以及上述 API 的更深层语义另行登记。
 
 ### 布局相关
 

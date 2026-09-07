@@ -1,7 +1,7 @@
 {
-  "collectedAt": "2026-09-06T11:04:16.066Z",
+  "collectedAt": "2026-09-07T08:48:16.664Z",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-  "probeCount": 178,
+  "probeCount": 186,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -246,6 +246,42 @@
     "iter/urlSearchParams-toStringTag": {
       "threw": false,
       "value": "[object URLSearchParams]"
+    },
+    "worker/constructor-no-args": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Worker': 1 argument required, but only 0 present."
+    },
+    "worker/invalid-type": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Worker': Failed to read the 'type' property from 'WorkerOptions': The provided value 'classic-module' is not a valid enum value of type WorkerType."
+    },
+    "worker/invalid-credentials": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Worker': Failed to read the 'credentials' property from 'WorkerOptions': The provided value 'same-site' is not a valid enum value of type RequestCredentials."
+    },
+    "worker/unsupported-scheme": {
+      "threw": false,
+      "value": "SecurityError"
+    },
+    "worker/cross-origin": {
+      "threw": false,
+      "value": "SecurityError"
+    },
+    "worker/instance-tag": {
+      "threw": false,
+      "value": "[object Worker]"
+    },
+    "worker/terminate-idempotent": {
+      "threw": false,
+      "value": "undefined|undefined"
+    },
+    "worker/terminate-illegal-receiver": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
     },
     "cssom/div-display": {
       "threw": false,

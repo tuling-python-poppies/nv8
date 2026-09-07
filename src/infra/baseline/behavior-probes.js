@@ -33,6 +33,7 @@
  * - `arityMetadata` —— 方法与构造器的 `length`（WebIDL 的必需参数个数）
  * - `errorShape` —— `Error.stack` 首行、错误构造器身份、`toString` 形态
  * - `collections` —— 集合类的可迭代性与类型标签
+ * - `worker` —— Worker 构造器、实例和终止行为
  * - `cssom` —— UA 默认样式表决定的计算值与 CSSStyleDeclaration 语义
  * - `canvas` —— Canvas / TextMetrics 的接口形状（**不含字形宽度**）
  * - `fontMetrics` —— 字体声明解析与稳定 TextMetrics 关系（**不含绝对字宽**）
@@ -359,6 +360,50 @@ export const BEHAVIOR_PROBES = Object.freeze([
     id: 'iter/urlSearchParams-toStringTag',
     category: 'collections',
     expression: '() => Object.prototype.toString.call(new URLSearchParams())',
+  },
+
+  // ---------------------------------------------- Worker 同步入口契约
+  // 只取构造器拒绝、实例形状和终止幂等性；异步脚本执行与消息时序另建专门
+  // 生命周期测试，避免把调度时序误写成同步行为基线。
+  {
+    id: 'worker/constructor-no-args',
+    category: 'worker',
+    expression: '() => new Worker()',
+  },
+  {
+    id: 'worker/invalid-type',
+    category: 'worker',
+    expression: "() => new Worker('data:text/javascript,', { type: 'classic-module' })",
+  },
+  {
+    id: 'worker/invalid-credentials',
+    category: 'worker',
+    expression: "() => new Worker('data:text/javascript,', { credentials: 'same-site' })",
+  },
+  {
+    id: 'worker/unsupported-scheme',
+    category: 'worker',
+    expression: "() => { try { new Worker('javascript:postMessage(1)'); return 'no-throw'; } catch (error) { return error.name; } }",
+  },
+  {
+    id: 'worker/cross-origin',
+    category: 'worker',
+    expression: "() => { try { new Worker('https://worker.example.test/worker.js'); return 'no-throw'; } catch (error) { return error.name; } }",
+  },
+  {
+    id: 'worker/instance-tag',
+    category: 'worker',
+    expression: "() => { const worker = new Worker('data:text/javascript,'); const tag = Object.prototype.toString.call(worker); worker.terminate(); return tag; }",
+  },
+  {
+    id: 'worker/terminate-idempotent',
+    category: 'worker',
+    expression: "() => { const worker = new Worker('data:text/javascript,'); const first = worker.terminate(); const second = worker.terminate(); return String(first) + '|' + String(second); }",
+  },
+  {
+    id: 'worker/terminate-illegal-receiver',
+    category: 'worker',
+    expression: '() => Worker.prototype.terminate.call({})',
   },
 
   // ---------------------------------------------- CSSOM 计算值

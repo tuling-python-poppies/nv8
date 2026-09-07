@@ -28,7 +28,9 @@ export function configureWorkers(factory, baseUrl) {
 export function Worker(scriptURL) {
   if (!new.target) throw new TypeError("Constructor Worker requires 'new'");
   if (arguments.length === 0) {
-    throw new TypeError("Failed to construct 'Worker': 1 argument required.");
+    throw new TypeError(
+      "Failed to construct 'Worker': 1 argument required, but only 0 present.",
+    );
   }
   if (workerFactory === null) {
     throw new DOMException("Worker creation is unavailable.", "NotSupportedError");
@@ -37,11 +39,17 @@ export function Worker(scriptURL) {
   const url = resolveWorkerUrl(scriptURL);
   const type = `${options.type ?? "classic"}`;
   if (type !== "classic" && type !== "module") {
-    throw new TypeError("The provided value is not a valid WorkerType.");
+    throw new TypeError(
+      `Failed to construct 'Worker': Failed to read the 'type' property from `
+      + `'WorkerOptions': The provided value '${type}' is not a valid enum value of type WorkerType.`,
+    );
   }
   const credentials = `${options.credentials ?? "same-origin"}`;
   if (!["omit", "same-origin", "include"].includes(credentials)) {
-    throw new TypeError("The provided value is not a valid RequestCredentials.");
+    throw new TypeError(
+      `Failed to construct 'Worker': Failed to read the 'credentials' property from `
+      + `'WorkerOptions': The provided value '${credentials}' is not a valid enum value of type RequestCredentials.`,
+    );
   }
   initializeEventTarget(this);
   const record = {

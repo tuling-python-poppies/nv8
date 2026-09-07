@@ -253,6 +253,7 @@ categoryTest('typeTag', 'Object.prototype.toString tags');
 categoryTest('arityMetadata', 'method and constructor length');
 categoryTest('errorShape', 'error identity and stack shape');
 categoryTest('collections', 'collection iterability and tags');
+categoryTest('worker', 'Worker construction and lifecycle behavior');
 categoryTest('cssom', 'CSSOM computed values and declaration semantics');
 categoryTest('canvas', 'canvas and TextMetrics interface shape');
 categoryTest('fontMetrics', 'font parsing and stable text-metrics behavior');
