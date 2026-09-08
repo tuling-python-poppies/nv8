@@ -1331,12 +1331,6 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     而 `InteractionContentfulPaint()`（不带 `new`）只报 `Illegal constructor`。
   - 28 个 runtime 模块、273 个调用点均传递 `new.target`；
     `tests/illegal-constructor-parity-test.js` 覆盖 GPU、XR、IDB 和性能接口。
-- [ ] **`illegalConstructor` 对不带 `new` 的调用文案多了接口名**（新发现）
-  - 实测真实 Edge：`new InteractionContentfulPaint()` 报
-    `Failed to construct 'InteractionContentfulPaint': Illegal constructor`，
-    而 `InteractionContentfulPaint()`（不带 `new`）只报 `Illegal constructor`
-  - NV8 两种都带接口名。这是全项目一致的既有行为（几百处调用点），
-    修它要在 `illegalConstructor` 里区分 `new.target`，单独立项
 - [x] **音频指纹探针已补**（14 项，第一梯队第一项）
   - 补之前**一个探针都没有**，而 surface 里 `AudioContext` /
     `OfflineAudioContext` / `OscillatorNode` / `AnalyserNode` / `AudioBuffer`
