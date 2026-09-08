@@ -863,16 +863,28 @@ export class RuntimePool {
       );
       await realm.bootstrap.runServiceWorkerLifecycle("install");
       options.onState("installed");
-      options.onState("activating");
-      await realm.bootstrap.runServiceWorkerLifecycle("activate");
-      this.assertGenerationActive(generation);
-      options.onState("activated");
+      if (options.activate !== false) options.onState("activating");
     } catch (error) {
       this.destroyChildRealm(realm);
       throw error;
     }
     const pool = this;
-    return {
+    let activationPromise = null;
+    const handle = {
+      scriptURL: options.url,
+      scope: options.scope ?? new URL('./', options.url).href,
+      version: null,
+      activate() {
+        if (activationPromise !== null) return activationPromise;
+        activationPromise = (async () => {
+          if (realm.destroyed) return;
+          await realm.bootstrap.runServiceWorkerLifecycle("activate");
+          pool.assertGenerationActive(generation);
+          if (realm.destroyed) return;
+          options.onState("activated");
+        })();
+        return activationPromise;
+      },
       deliverOwnerMessage(message, ports) {
         if (!realm.destroyed) {
           realm.bootstrap.receiveOwnerMessageEvent(message, undefined, ports);
@@ -882,6 +894,7 @@ export class RuntimePool {
         pool.destroyChildRealm(realm);
       },
     };
+    return handle;
   }
 
   async createWorkletModule(options) {

@@ -31,6 +31,18 @@ const replay = [
     repeat: 'unlimited',
     body: 'postMessage("sentinel");',
   },
+  {
+    method: 'GET',
+    url: 'https://example.test/sw.js',
+    repeat: 'unlimited',
+    body: `self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('message', event => {
+  if (event.data && event.data.kind === 'roundtrip') {
+    event.source.postMessage({ kind: 'reply', value: event.data.value });
+  }
+});`,
+  },
 ];
 
 let observedPromise;

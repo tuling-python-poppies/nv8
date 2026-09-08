@@ -60,7 +60,7 @@ test('ServiceWorker registration resolves ready with active metadata', async () 
       'none',
       true,
       true,
-      'activated',
+      'activating',
       'https://example.test/sw-clients.js',
     ]);
     await nv8.sandbox.destroyRealm(realm.id);

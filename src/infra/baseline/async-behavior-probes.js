@@ -40,6 +40,66 @@ export const ASYNC_BEHAVIOR_PROBES = Object.freeze([
       return String(delivered);
     }`,
   },
+  {
+    id: "service-worker/registration-metadata",
+    category: "serviceWorkerAsync",
+    expression: `async () => {
+      const readyPromise = navigator.serviceWorker.ready;
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/app/',
+        updateViaCache: 'none',
+      });
+      const ready = await readyPromise;
+      return [
+        new URL(registration.scope).pathname,
+        registration.updateViaCache,
+        new URL(ready.active.scriptURL).pathname,
+        ready.active.state,
+        String(ready === registration),
+      ].join('|');
+    }`,
+  },
+  {
+    id: "service-worker/controller-claim",
+    category: "serviceWorkerAsync",
+    expression: `async () => {
+      await navigator.serviceWorker.register('/sw.js', { scope: '/app/' });
+      const controller = navigator.serviceWorker.controller ?? await new Promise((resolve, reject) => {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          resolve(navigator.serviceWorker.controller);
+        }, { once: true });
+        setTimeout(() => reject(new Error('controller claim failed')), 8000);
+      });
+      return [
+        String(controller !== null),
+        controller === null ? '' : new URL(controller.scriptURL).pathname,
+        controller.state,
+      ].join('|');
+    }`,
+  },
+  {
+    id: "service-worker/message-roundtrip",
+    category: "serviceWorkerAsync",
+    expression: `async () => {
+      await navigator.serviceWorker.register('/sw.js', { scope: '/app/' });
+      const controller = navigator.serviceWorker.controller ?? await new Promise((resolve, reject) => {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          resolve(navigator.serviceWorker.controller);
+        }, { once: true });
+        setTimeout(() => reject(new Error('controller claim failed')), 8000);
+      });
+      return await new Promise((resolve, reject) => {
+        navigator.serviceWorker.onmessage = event => resolve([
+          event.data.kind,
+          event.data.value,
+          String(event.source === controller),
+          String(event.origin === location.origin),
+        ].join('|'));
+        controller.postMessage({ kind: 'roundtrip', value: 7 });
+        setTimeout(() => reject(new Error('service worker message failed')), 8000);
+      });
+    }`,
+  },
 ]);
 
 /**

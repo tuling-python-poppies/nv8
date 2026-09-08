@@ -281,6 +281,9 @@ async function performRegistrationUpdate(registration) {
     : record.active;
   if (current === null) return Promise.resolve(registration);
   const currentRecord = requireServiceWorker(current);
+  if (currentRecord.state === "activating") {
+    await currentRecord.handle?.activate?.();
+  }
   const nextWorker = createServiceWorker(record.scriptURL);
   const nextRecord = requireServiceWorker(nextWorker);
   nextRecord.state = "installing";
@@ -427,7 +430,17 @@ export function containerRegister(container, scriptURL, options) {
   const defaultScope = new URL("./", script).href;
   const scope = resolveSameOriginUrl(input.scope ?? defaultScope);
   const existing = record.registrations.get(scope);
-  if (existing !== undefined) return Promise.resolve(existing);
+  if (existing !== undefined) {
+    const existingRecord = requireRegistration(existing);
+    const active = existingRecord.active;
+    if (active !== null) {
+      const activeRecord = requireServiceWorker(active);
+      if (activeRecord.state === "activating" && activeRecord.handle !== null) {
+        return Promise.resolve(activeRecord.handle.activate()).then(() => existing);
+      }
+    }
+    return Promise.resolve(existing);
+  }
 
   const worker = createServiceWorker(script);
   const registration = createRegistration(
@@ -464,7 +477,7 @@ export function containerRegister(container, scriptURL, options) {
   })).then(handle => {
     workerRecord.handle = handle;
     workerRecord.version = handle.version ?? null;
-    workerRecord.state = "activated";
+    if (workerRecord.state === "installing") workerRecord.state = "activating";
     for (const message of workerRecord.pending.splice(0)) {
       handle.deliverOwnerMessage(message.value, undefined, message.ports);
     }
@@ -554,6 +567,7 @@ function deliverContainerMessage(record, worker, message, ports) {
       const queued = record.messageQueue.shift();
       const event = new MessageEvent("message", {
         data: queued.value,
+        origin: new URL(serviceWorkerRuntimeState().serviceWorkerPageUrl).origin,
         source: queued.worker,
         ports: queued.ports,
       });

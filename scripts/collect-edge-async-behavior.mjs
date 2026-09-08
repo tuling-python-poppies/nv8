@@ -2,18 +2,18 @@
 /**
  * 从真实 Edge 采集 Worker / ServiceWorker 异步行为探针。
  *
- * 与同步行为 fixture 分开：这里等待消息或 ServiceWorker ready/controllerchange，
- * 结果仍必须跨运行确定、与机器无关、可序列化。
+ * Dedicated Worker 仍可用 `--dump-dom`。ServiceWorker 注册/激活必须等真实
+ * Promise，因此走最小 CDP 客户端。两轮结果必须逐字一致才写入 fixture。
  */
 
 import http from 'node:http';
-import { execFile } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
 import {
   ASYNC_BEHAVIOR_PROBES,
   buildAsyncProbeExpression,
 } from '../src/infra/baseline/async-behavior-probes.js';
+import { launchEdgeCdp } from './edge-cdp.mjs';
 
 const EDGE_CANDIDATES = [
   'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
@@ -28,6 +28,13 @@ const WORKER_SCRIPTS = {
   '/worker-message.js': 'postMessage("ready");',
   '/worker-late.js': 'setTimeout(() => postMessage("late"), 0);',
   '/worker-sentinel.js': 'postMessage("sentinel");',
+  '/sw.js': `self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+self.addEventListener('message', event => {
+  if (event.data && event.data.kind === 'roundtrip') {
+    event.source.postMessage({ kind: 'reply', value: event.data.value });
+  }
+});`,
 };
 
 function findEdge(explicit) {
@@ -43,21 +50,6 @@ function findEdge(explicit) {
 }
 
 async function collectOnce(edgePath, probes) {
-  const page = `<!doctype html><html><head><meta charset="utf-8"></head><body>
-<pre id="out">pending</pre>
-<script>
-(async () => {
-  try {
-    document.getElementById('out').textContent = JSON.stringify({
-      __userAgent: navigator.userAgent,
-      results: JSON.parse(await (${buildAsyncProbeExpression(probes)})),
-    });
-  } catch (error) {
-    document.getElementById('out').textContent = JSON.stringify({ __error: String(error && error.message) });
-  }
-})();
-</script></body></html>`;
-
   const server = http.createServer((request, response) => {
     if (WORKER_SCRIPTS[request.url] !== undefined) {
       response.writeHead(200, {
@@ -68,34 +60,20 @@ async function collectOnce(edgePath, probes) {
       return;
     }
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    response.end(page);
+    response.end('<!doctype html><html><body>probe</body></html>');
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address();
-
+  const browser = await launchEdgeCdp(edgePath, { timeoutMs: 25_000 });
   try {
-    const dom = await new Promise((resolve, reject) => {
-      execFile(edgePath, [
-        '--headless=new', '--disable-gpu', '--no-sandbox',
-        '--virtual-time-budget=10000', '--dump-dom', `http://localhost:${port}/app/page`,
-      ], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024, timeout: 120_000 },
-      (error, stdout) => (error && !stdout ? reject(error) : resolve(stdout)));
-    });
-    const match = /<pre id="out">([\s\S]*?)<\/pre>/.exec(dom);
-    if (match === null) throw new Error('probe output not found in dumped DOM');
-    const decoded = match[1]
-      .replace(/&quot;/g, '"').replace(/&#039;/g, "'")
-      .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&');
-    if (decoded === 'pending') {
-      throw new Error(`probe page stayed pending; dump tail: ${dom.slice(-2000)}`);
-    }
-    const parsed = JSON.parse(decoded);
-    if (parsed.__error !== undefined) {
-      throw new Error(`probe script failed in the browser: ${parsed.__error}`);
-    }
-    return parsed;
+    const sessionId = await browser.openPage(`http://localhost:${port}/app/page`);
+    const raw = await browser.evaluate(sessionId, buildAsyncProbeExpression(probes));
+    return {
+      __userAgent: browser.userAgent,
+      results: typeof raw === 'string' ? JSON.parse(raw) : raw,
+    };
   } finally {
+    await browser.close();
     server.close();
   }
 }

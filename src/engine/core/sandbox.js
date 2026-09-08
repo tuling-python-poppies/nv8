@@ -724,15 +724,12 @@ export async function createSandbox(config) {
       version = evaluatedVersion ?? version;
       await workerRuntime?.dispatchServiceWorkerLifecycle?.('install');
       options.onState?.('installed');
-      if (options.activate !== false) {
-        options.onState?.('activating');
-        await workerRuntime?.dispatchServiceWorkerLifecycle?.('activate');
-        options.onState?.('activated');
-      }
+      if (options.activate !== false) options.onState?.('activating');
     } catch (error) {
       destroyWorkerRealm(workerRealm);
       throw error;
     }
+    let activationPromise = null;
     const handle = {
       scriptURL: options.url,
       scope: workerScope,
@@ -745,11 +742,17 @@ export async function createSandbox(config) {
         if (workerRealm.destroyed) return null;
         return workerRuntime?.dispatchServiceWorkerFetch?.(request) ?? null;
       },
-      async activate() {
-        if (workerRealm.destroyed) return;
-        await workerRuntime?.dispatchServiceWorkerLifecycle?.('activate');
-        serviceWorkerHandles.set(workerScope, handle);
-        notifyServiceWorkerClients(workerScope, handle);
+      activate() {
+        if (activationPromise !== null) return activationPromise;
+        activationPromise = (async () => {
+          if (workerRealm.destroyed) return;
+          await workerRuntime?.dispatchServiceWorkerLifecycle?.('activate');
+          if (workerRealm.destroyed) return;
+          options.onState?.('activated');
+          serviceWorkerHandles.set(workerScope, handle);
+          notifyServiceWorkerClients(workerScope, handle);
+        })();
+        return activationPromise;
       },
       terminate(options = {}) {
         for (const [scope, candidate] of serviceWorkerHandles) {

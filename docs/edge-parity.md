@@ -40,10 +40,10 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 
 `tests/edge-behavior-parity-test.js` — 跑同一段同步代码，比结果。
 
-Dedicated Worker 异步行为由 `tests/worker-async-parity-test.js` 对照
+Worker / ServiceWorker 异步行为由 `tests/worker-async-parity-test.js` 对照
 `fixtures/fingerprint/edge-async-behavior.json` 验证。
 
-**同步基线为 186 个探针分 25 类**；另有独立的 **2 个 Dedicated Worker 异步探针**。同步内容包括报错文案、`toString` 形态、类型标签、非法接收者、
+**同步基线为 186 个探针分 25 类**；另有独立的 **5 个 Worker / ServiceWorker 异步探针**（2 个 Dedicated Worker、3 个 ServiceWorker）。同步内容包括报错文案、`toString` 形态、类型标签、非法接收者、
 构造器守卫、arity 元数据、Error 形态、集合语义、Worker 入口契约、CSSOM、Canvas 形状、
 字体解析、DOM/Range/Selection、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB、音频指纹、
 Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL 解析。
@@ -61,10 +61,11 @@ Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL
 | XHR / WebSocket / IndexedDB | 12 | 首批状态、URL、KeyRange 和错误行为全部一致 |
 | Worker 入口契约 | 8 | 构造器校验、协议边界、实例标签、终止幂等和非法接收者全部一致 |
 | Dedicated Worker 异步 | 2 | 消息往返、terminate 后消息行为，真实 Edge 双轮采集一致 |
+| ServiceWorker 异步 | 3 | 注册元数据、控制器接管、页面消息往返，真实 Edge 双轮采集一致 |
 
-同步基线现状：**182 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。Dedicated Worker 异步基线另有 2 项，由 `edge-async-behavior.json` 锁定；ServiceWorker 异步注册/激活尚未纳入 fixture。
+同步基线现状：**182 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。Worker / ServiceWorker 异步基线另有 5 项，由 `edge-async-behavior.json` 锁定。
 
-同步探针定义在 `src/infra/baseline/behavior-probes.js`，Dedicated Worker 异步探针定义在
+同步探针定义在 `src/infra/baseline/behavior-probes.js`，Worker / ServiceWorker 异步探针定义在
 `src/infra/baseline/async-behavior-probes.js`，各自的采集脚本与测试共用同一份定义——
 各写一份必然漂移，漂移后比较就没有意义。
 
@@ -227,11 +228,12 @@ npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL），小，需人
 npm run fingerprint:globals   # 全局名列表，1239 项
 npm run fingerprint:members   # 原型成员明细，8957 项
 npm run fingerprint:behavior  # 同步行为探针，186 项（跑两轮校验确定性）
-npm run fingerprint:async-behavior  # Dedicated Worker 异步探针，2 项（跑两轮校验确定性）
+npm run fingerprint:async-behavior  # Worker / ServiceWorker 异步探针，5 项（跑两轮校验确定性）
 ```
 
-都走 headless Edge + `--dump-dom`，**不依赖 Puppeteer/CDP**——浏览器自动化不是
-NV8 的职责，这些是一次性数据工具。
+同步采集走 headless Edge + `--dump-dom`；ServiceWorker 异步采集走
+`scripts/edge-cdp.mjs` 提供的无第三方依赖最小 CDP 客户端。CDP 只用于一次性
+fixture 采集，不进入 NV8 运行时或生产依赖。
 
 产物在 `fixtures/fingerprint/`，随 Edge 版本更新时重新采集。
 

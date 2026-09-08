@@ -230,7 +230,12 @@ export function receiveOwnerMessage(message, options, ports = []) {
     const event = new MessageEvent("message", {
       data: cloned.value,
       ports: ports.length === 0 ? cloned.transferred : ports,
-      source: globalKind === "service" ? serviceClient() : null,
+      source: globalKind === "service" ? serviceClient({
+        postMessage(message, ports = []) {
+          if (workerClosed || outbound === null) return;
+          outbound(message, ports);
+        },
+      }) : null,
     });
     globalThis.dispatchEvent(event);
     const handler = handlers.get("onmessage") ?? null;
@@ -575,7 +580,11 @@ function serviceClient(snapshot = {}) {
         message,
         normalizeTransferOptions(arguments[1]),
       );
-      snapshot.postMessage(cloned.value, cloned.transferred);
+      snapshot.postMessage(
+        cloned.value,
+        cloned.transferred.filter(value =>
+          Object.prototype.toString.call(value) === "[object MessagePort]"),
+      );
     },
   }.postMessage;
   Object.defineProperty(postMessage, "length", {

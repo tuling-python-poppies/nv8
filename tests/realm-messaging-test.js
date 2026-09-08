@@ -203,7 +203,7 @@ test('Core activates messaging, Worker, and Worklet APIs in a Realm', async () =
           navigator.serviceWorker.controller !== null,
         ]);
       })()`),
-      JSON.stringify(['https://example.test/', 'activated', true]),
+      JSON.stringify(['https://example.test/', 'activating', true]),
     );
     assert.equal(
       await realm.evaluate(`new Promise(resolve => {

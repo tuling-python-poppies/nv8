@@ -317,7 +317,7 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 ### 第三层：运行时行为
 
-前两层都对，行为仍可能不同。同步行为层用 **186 个探针 / 25 类**覆盖；另有独立的 **2 个 Dedicated Worker 异步探针**：
+前两层都对，行为仍可能不同。同步行为层用 **186 个探针 / 25 类**覆盖；另有独立的 **5 个 Worker 异步探针**（2 个 Dedicated Worker、3 个 ServiceWorker）：
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
 `arityMetadata`、`errorShape`、`collections`、`worker`、`workerAsync`、`cssom`、`canvas`、`fontMetrics`、
@@ -325,8 +325,9 @@ await sandbox.evaluate('typeof require');   // "undefined"
 `audio`、`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
 
 同步基线现状：**182 项一致，4 项登记**——2 项动态 iframe 时序（开
-`limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。异步 Worker 基线另有 2 项，
-真实 Edge 双轮采集并由 `tests/worker-async-parity-test.js` 对等验证；ServiceWorker 异步注册/激活尚未纳入 fixture。
+`limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。异步 Worker 基线另有 5 项，
+真实 Edge 双轮采集并由 `tests/worker-async-parity-test.js` 对等验证，覆盖 Dedicated Worker 消息与终止、
+ServiceWorker 注册元数据、控制器接管和页面消息往返。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
 10 个成员），行为层却查出 **6 处**不同。形状层永远看不到那个洞。
@@ -698,7 +699,7 @@ limits: { timeoutMs: 30_000 }
 | `npm run fingerprint:members` | 8957 个原型成员与描述符 |
 | `npm run fingerprint:lengths` | 3508 个方法的 `length` |
 | `npm run fingerprint:behavior` | 同步行为探针（186 项） |
-| `npm run fingerprint:async-behavior` | Dedicated Worker 异步行为探针（2 项） |
+| `npm run fingerprint:async-behavior` | Worker / ServiceWorker 异步行为探针（5 项） |
 | `npm run fingerprint:css` | 746 个 CSS 属性名（保留真实枚举顺序） |
 | `npm run fingerprint:ua-defaults` | 96 个标签 × 736 个属性的 UA 默认值 |
 
@@ -1084,9 +1085,9 @@ css-ua-defaults.js），现在都有了脚本。
     几乎从不检查它的描述符。
   - 10 个布局相关计算值。
 - **行为探针已扩展到字体、DOM Range、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB 与 Worker 入口契约**：
-  当前同步行为基线为 186 个探针 / 25 类，182 项与真实 Edge 一致；另有 2 个 Dedicated Worker 异步探针
+  当前同步行为基线为 186 个探针 / 25 类，182 项与真实 Edge 一致；另有 5 个 Worker / ServiceWorker 异步探针
   由独立 fixture 锁定。绝对字形像素宽度仍不进入契约，因为它依赖机器字体安装。
-  ServiceWorker、Media、Web Animations、Observers、SVG 以及上述 API 的更深层语义另行登记。
+  Media、Web Animations、Observers、SVG 以及上述 API 的更深层语义另行登记。
 
 ### 布局相关
 
