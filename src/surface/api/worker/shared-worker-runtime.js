@@ -16,10 +16,12 @@ const realmErrorConstructors = Object.freeze({
 });
 let sharedWorkerFactory = null;
 let sharedWorkerBaseUrl = "https://sandbox.test/";
+let sharedWorkerDepth = 0;
 
-export function configureSharedWorkers(factory, baseUrl) {
+export function configureSharedWorkers(factory, baseUrl, depth = 0) {
   sharedWorkerFactory = typeof factory === "function" ? factory : null;
   sharedWorkerBaseUrl = `${baseUrl}`;
+  sharedWorkerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 0;
 }
 
 export function SharedWorker(scriptURL) {
@@ -69,6 +71,7 @@ export function SharedWorker(scriptURL) {
     type: options.type,
     credentials: options.credentials,
     creatorOrigin: new URL(sharedWorkerBaseUrl).origin,
+    workerDepth: sharedWorkerDepth + 1,
     onMessage(message, ports = []) {
       if (record.closed || record.failed) return;
       record.bridge.postMessage(message, ports);

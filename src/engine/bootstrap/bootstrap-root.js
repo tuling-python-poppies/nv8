@@ -898,6 +898,7 @@ export function bootstrapRoot(
   realmOrigin = null,
   documentBaseUrl = null,
   serviceWorkerPageUrl = null,
+  workerDepth = 0,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -972,6 +973,7 @@ export function bootstrapRoot(
     serviceWorkerFactory,
     serviceWorkerPageUrl ?? pageUrl,
     capabilitiesProfile?.serviceWorker,
+    workerDepth,
   );
   configureWorklets(workletFactory, pageUrl);
   configureGPUProfile(renderingProfile);
@@ -1293,9 +1295,9 @@ export function bootstrapRoot(
   installStructuredClone();
   configureBroadcastConnector(broadcastConnector);
   installMessaging();
-  configureWorkers(workerFactory, pageUrl);
+  configureWorkers(workerFactory, pageUrl, workerDepth);
   installWorker();
-  configureSharedWorkers(sharedWorkerFactory, pageUrl);
+  configureSharedWorkers(sharedWorkerFactory, pageUrl, workerDepth);
   installSharedWorker();
   installServiceWorker();
   installWindowSelfReferences();

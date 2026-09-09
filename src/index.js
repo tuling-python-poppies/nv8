@@ -196,6 +196,24 @@ function normalizeCoreLimits(input) {
   return Object.freeze({
     timeoutMs: integer(input.timeoutMs, 5_000, 'limits.timeoutMs', 1),
     maxRealms: integer(input.maxRealms, 64, 'limits.maxRealms', 1),
+    maxWorkerRealms: integer(
+      input.maxWorkerRealms,
+      4096,
+      'limits.maxWorkerRealms',
+      0,
+    ),
+    maxWorkerConnections: integer(
+      input.maxWorkerConnections,
+      4096,
+      'limits.maxWorkerConnections',
+      0,
+    ),
+    maxWorkerDepth: integer(
+      input.maxWorkerDepth,
+      64,
+      'limits.maxWorkerDepth',
+      0,
+    ),
     maxLifecycleEntries: integer(
       input.maxLifecycleEntries,
       10_000,

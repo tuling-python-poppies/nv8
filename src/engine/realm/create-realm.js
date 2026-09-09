@@ -80,6 +80,7 @@ export function activateRealmShell(shell, options) {
     frameElement = null,
     documentBaseUrl = null,
     serviceWorkerPageUrl = null,
+    workerDepth = 0,
     onContext = null,
   } = options;
   const { context, moduleLoader, bootstrap } = shell;
@@ -135,6 +136,7 @@ export function activateRealmShell(shell, options) {
     origin,
     documentBaseUrl,
     serviceWorkerPageUrl,
+    workerDepth,
   );
   if (typeof onContext === "function") onContext(context);
   auditRealmGlobals(context);

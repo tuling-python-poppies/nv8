@@ -221,6 +221,7 @@ export function bootstrapWorker(
   browserMajorVersion = 150,
   timingProfile = null,
   navigatorMetadata = null,
+  workerDepth = 0,
 ) {
   hideNodeGlobals();
   configureTimingProfile(timingProfile);
@@ -340,9 +341,9 @@ export function bootstrapWorker(
   installWorkerOnlyAPIs();
   configureBroadcastConnector(broadcastConnector);
   installMessaging();
-  configureWorkers(nestedWorkerFactory, workerUrl);
+  configureWorkers(nestedWorkerFactory, workerUrl, workerDepth);
   installWorker();
-  configureSharedWorkers(nestedSharedWorkerFactory, workerUrl);
+  configureSharedWorkers(nestedSharedWorkerFactory, workerUrl, workerDepth);
   installSharedWorker();
   installDedicatedWorkerGlobal({
     kind: workerKind,

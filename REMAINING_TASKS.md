@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 895 项（`npm test`，89 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 902 项（`npm test`，89 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -421,7 +421,9 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 - [ ] **SharedWorker/Worklet graph 指纹** - 版本和缓存
 - [ ] **module cache 作用域和销毁** - 模块缓存生命周期
 - [ ] **pending module evaluation 取消** - 取消未完成的模块加载
-- [ ] **Worker 并发/深度/关闭限制** - 防止资源耗尽
+- [x] **Worker 并发/深度/关闭限制** - `maxWorkerRealms`、`maxWorkerConnections`、`maxWorkerDepth`
+  独立限制 Dedicated / Shared / Service Worker；创建中、脚本失败、`close()`、reset 和
+  sandbox destroy 均使用幂等释放路径，覆盖 child-process、worker-thread 和 plugin Sandbox。
 - [x] **Worker 同步入口行为探针** - 构造器参数校验、协议边界、实例标签、终止幂等性和非法接收者
   （8 项，`worker` 类别）
 - [x] **Dedicated Worker 异步行为探针** - 消息往返、terminate 后消息行为（2 项独立 fixture，真实 Edge 双轮采集）
@@ -1632,7 +1634,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：895 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：902 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1728,5 +1730,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（895 项 / 89 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（902 项 / 89 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

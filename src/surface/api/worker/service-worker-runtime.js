@@ -26,6 +26,7 @@ const containerState = new WeakMap();
 const serviceWorkerSlot = createRealmSlot(() => ({
   serviceWorkerFactory: null,
   serviceWorkerPageUrl: "https://sandbox.test/",
+  workerDepth: 0,
   containerSingleton: null,
   serviceWorkerEnabled: true,
   initialController: null,
@@ -35,9 +36,12 @@ function serviceWorkerRuntimeState() {
   return serviceWorkerSlot.get(globalThis);
 }
 
-export function configureServiceWorkers(factory, pageUrl, profile = null) {
+export function configureServiceWorkers(factory, pageUrl, profile = null, workerDepth = 0) {
   serviceWorkerRuntimeState().serviceWorkerFactory = typeof factory === "function" ? factory : null;
   serviceWorkerRuntimeState().serviceWorkerPageUrl = `${pageUrl}`;
+  serviceWorkerRuntimeState().workerDepth = Number.isSafeInteger(workerDepth) && workerDepth >= 0
+    ? workerDepth
+    : 0;
   serviceWorkerRuntimeState().serviceWorkerEnabled = profile?.enabled ?? true;
   serviceWorkerRuntimeState().initialController = profile?.controller ?? null;
   if (serviceWorkerRuntimeState().containerSingleton !== null) {
@@ -295,6 +299,7 @@ async function performRegistrationUpdate(registration) {
     scope: record.scope,
     type: record.type,
     updateViaCache: record.updateViaCache,
+    workerDepth: serviceWorkerRuntimeState().workerDepth + 1,
     activate: false,
     onMessage(message, ports = []) {
       deliverContainerMessage(record.container, nextWorker, message, ports);
@@ -458,6 +463,7 @@ export function containerRegister(container, scriptURL, options) {
     scope,
     type,
     updateViaCache,
+    workerDepth: serviceWorkerRuntimeState().workerDepth + 1,
     activate: true,
     onMessage(message, ports = []) {
       deliverContainerMessage(record, worker, message, ports);

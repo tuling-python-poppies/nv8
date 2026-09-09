@@ -40,6 +40,7 @@ export const serviceWorkerPlugin = {
       serviceWorkerFactory: context.runtime?.serviceWorkerFactory ?? null,
       pageUrl: context.runtime?.serviceWorkerPageUrl ?? context.pageUrl,
       profile: context.runtime?.serviceWorkerProfile ?? null,
+      workerDepth: context.runtime?.workerDepth ?? 0,
     });
     context.exports.serviceWorker = true;
   },

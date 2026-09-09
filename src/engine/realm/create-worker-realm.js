@@ -23,6 +23,7 @@ export async function createWorkerRealm({
   browserMajorVersion = 150,
   timingProfile = null,
   objectURLRegistry = null,
+  workerDepth = 0,
 }) {
   const parsed = new URL(workerUrl);
   const sandboxGlobal = Object.create(null);
@@ -65,6 +66,7 @@ export async function createWorkerRealm({
     browserMajorVersion,
     timingProfile,
     navigatorProfile,
+    workerDepth,
   );
   auditRealmGlobals(context);
   return {

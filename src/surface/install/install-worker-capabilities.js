@@ -7,9 +7,10 @@ export function installWorkerCapabilities({
   workerFactory = null,
   sharedWorkerFactory = null,
   baseUrl = 'https://sandbox.test/',
+  workerDepth = 0,
 } = {}) {
-  configureWorkers(workerFactory, baseUrl);
-  configureSharedWorkers(sharedWorkerFactory, baseUrl);
+  configureWorkers(workerFactory, baseUrl, workerDepth);
+  configureSharedWorkers(sharedWorkerFactory, baseUrl, workerDepth);
   installWorker();
   installSharedWorker();
 }

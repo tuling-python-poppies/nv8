@@ -27,6 +27,11 @@ const DEFAULT_LIMITS = Object.freeze({
   maxFrameQueueBytes: 32 * 1024 * 1024,
   maxValueDepth: 32,
   maxRealms: 12,
+  // Worker 额度独立于 iframe / Worklet 额度；默认高水位保持既有
+  // `maxRealms` 行为，显式设置后才启用更细的治理。
+  maxWorkerRealms: 4096,
+  maxWorkerConnections: 4096,
+  maxWorkerDepth: 64,
   // 预热的空白子 Realm 数。**默认 0**，见 docs/adr/0004-dynamic-iframe-timing.md。
   //
   // 开启后 `create()` 会在页面脚本执行**之前**建好这些 Realm，于是
@@ -1291,6 +1296,27 @@ export function normalizeRuntimeOptions(options = {}) {
       "limits.maxRealms",
       1,
       4096,
+    ),
+    maxWorkerRealms: finiteInteger(
+      inputLimits.maxWorkerRealms,
+      DEFAULT_LIMITS.maxWorkerRealms,
+      "limits.maxWorkerRealms",
+      0,
+      4096,
+    ),
+    maxWorkerConnections: finiteInteger(
+      inputLimits.maxWorkerConnections,
+      DEFAULT_LIMITS.maxWorkerConnections,
+      "limits.maxWorkerConnections",
+      0,
+      16_384,
+    ),
+    maxWorkerDepth: finiteInteger(
+      inputLimits.maxWorkerDepth,
+      DEFAULT_LIMITS.maxWorkerDepth,
+      "limits.maxWorkerDepth",
+      0,
+      256,
     ),
     // 上限刻意压得很低（8）：池位是**真实的** Realm，占真实的堆。
     // 512MB 默认堆实测只装得下 11 个子 Realm，池深超过个位数就等于把额度

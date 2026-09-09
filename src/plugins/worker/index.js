@@ -46,6 +46,7 @@ export const workerPlugin = {
         workerFactory: context.runtime?.workerFactory ?? null,
         sharedWorkerFactory: context.runtime?.sharedWorkerFactory ?? null,
         baseUrl: context.pageUrl,
+        workerDepth: context.runtime?.workerDepth ?? 0,
       });
       context.exports.workerGlobal = true;
       return;
@@ -59,6 +60,7 @@ export const workerPlugin = {
       workerFactory: context.runtime?.workerFactory ?? null,
       sharedWorkerFactory: context.runtime?.sharedWorkerFactory ?? null,
       baseUrl: context.pageUrl,
+      workerDepth: context.runtime?.workerDepth ?? 0,
     });
     context.exports.worker = true;
   },

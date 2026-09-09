@@ -6,8 +6,9 @@ export function installServiceWorkerCapabilities({
   serviceWorkerFactory = null,
   pageUrl = 'https://sandbox.test/',
   profile = null,
+  workerDepth = 0,
 } = {}) {
-  configureServiceWorkers(serviceWorkerFactory, pageUrl, profile);
+  configureServiceWorkers(serviceWorkerFactory, pageUrl, profile, workerDepth);
   installServiceWorkerManagers();
   installServiceWorker();
 }

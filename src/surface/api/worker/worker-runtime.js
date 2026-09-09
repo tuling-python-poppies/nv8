@@ -19,10 +19,12 @@ const realmErrorConstructors = Object.freeze({
 });
 let workerFactory = null;
 let workerBaseUrl = "https://sandbox.test/";
+let workerDepth = 0;
 
-export function configureWorkers(factory, baseUrl) {
+export function configureWorkers(factory, baseUrl, depth = 0) {
   workerFactory = typeof factory === "function" ? factory : null;
   workerBaseUrl = `${baseUrl}`;
+  workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 0;
 }
 
 export function Worker(scriptURL) {
@@ -69,6 +71,7 @@ export function Worker(scriptURL) {
     credentials,
     name: `${options.name ?? ""}`,
     creatorOrigin: new URL(workerBaseUrl).origin,
+    workerDepth: workerDepth + 1,
     onMessage(message, ports = []) {
       deliverMessage(record, message, ports);
     },

@@ -277,6 +277,13 @@ await sandbox.evaluate('typeof require');   // "undefined"
 
 `iframe` 与 Worker 各自获得独立的子 Realm，跨 Realm 只能通过消息通道通信。
 
+Worker 资源可以单独治理：`maxWorkerRealms` 限制 Dedicated / Shared / Service Worker
+Realm 数，`maxWorkerConnections` 限制页面到 Worker 的活动连接数，`maxWorkerDepth` 限制
+嵌套 Worker 深度。三个限制默认取高水位，不改变既有 `maxRealms` 行为；显式触发时返回
+`QuotaExceededError`，并带有 `LIMIT_WORKER_REALMS`、`LIMIT_WORKER_CONNECTIONS` 或
+`LIMIT_WORKER_DEPTH` 诊断码。`resources()` / `diagnose()` 会报告当前 Worker Realm、连接数
+和创建中的数量。
+
 ---
 
 ## 三层对齐
@@ -649,6 +656,9 @@ await EdgeSandbox.create({
     timeoutMs: 1000,          // 墙钟超时（生产安全上限）
     maxHeapBytes: 512 * 1024 * 1024,
     maxRealms: 16,
+    maxWorkerRealms: 64,
+    maxWorkerConnections: 128,
+    maxWorkerDepth: 8,
     maxValueDepth: 32,
   },
 });
@@ -799,7 +809,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，895 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，902 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -920,7 +930,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（895 项 / 89 个文件，自动发现） |
+| `npm test` | 全量测试（902 项 / 89 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |

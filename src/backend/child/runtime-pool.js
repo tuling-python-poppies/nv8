@@ -87,6 +87,15 @@ export function heapSafeRealmLimitFor(maxHeapBytes) {
 /** 空白子文档的骨架，与 `html-iframe-element-realm-state.js` 保持一致。 */
 const BLANK_CHILD_HTML = "<!doctype html><html><head></head><body></body></html>";
 
+function createWorkerLimitError(code, limit, message) {
+  const error = new DOMException(message, "QuotaExceededError");
+  Object.defineProperties(error, {
+    nv8Code: { value: code, enumerable: true },
+    limit: { value: limit, enumerable: true },
+  });
+  return error;
+}
+
 // Module-level pre-warmed shell survives across RuntimePool instances.
 let pendingShell = null;
 
@@ -142,6 +151,9 @@ export class RuntimePool {
     );
     this.cookieData = options.persistence?.cookieData ?? "";
     this.childRealms = new Set();
+    this.workerRealms = new Set();
+    this.pendingWorkerCreations = 0;
+    this.workerConnections = 0;
     /**
      * 空闲的预热池位（已激活的空白子 Realm 的 handle）。
      *
@@ -608,7 +620,14 @@ export class RuntimePool {
       this.objectURLRegistry,
       options.creatorOrigin,
     );
-    this.reserveRealmCapacity();
+    const reservation = this.reserveWorkerCapacity(options.workerDepth, true);
+    try {
+      this.reserveRealmCapacity();
+    } catch (error) {
+      reservation.releaseConnection();
+      reservation.releasePending();
+      throw error;
+    }
     let realm = null;
     try {
       realm = await createWorkerRealm({
@@ -632,6 +651,7 @@ export class RuntimePool {
           options.onMessage(message, ports);
         },
         close: () => {
+          reservation.releaseConnection();
           if (realm !== null) this.destroyChildRealm(realm);
         },
         nestedWorkerFactory: workerOptions =>
@@ -644,15 +664,22 @@ export class RuntimePool {
         renderingProfile: this.options.fingerprint.rendering,
         capabilitiesProfile: this.options.fingerprint.capabilities,
         objectURLRegistry: this.objectURLRegistry,
+        workerDepth: options.workerDepth,
       });
+    } catch (error) {
+      reservation.releaseConnection();
+      throw error;
     } finally {
       this.pendingRealmCreations -= 1;
+      reservation.releasePending();
     }
     if (!this.isGenerationActive(generation)) {
+      reservation.releaseConnection();
       this.discardRealm(realm);
       throw this.lifecycleError();
     }
     this.childRealms.add(realm);
+    this.workerRealms.add(realm);
     try {
       await evaluateWorkerSource(
         realm,
@@ -664,6 +691,7 @@ export class RuntimePool {
       this.assertGenerationActive(generation);
     } catch (error) {
       this.destroyChildRealm(realm);
+      reservation.releaseConnection();
       throw error;
     }
     const pool = this;
@@ -677,6 +705,7 @@ export class RuntimePool {
         );
       },
       terminate() {
+        reservation.releaseConnection();
         pool.destroyChildRealm(realm);
       },
     };
@@ -684,6 +713,7 @@ export class RuntimePool {
 
   async createSharedWorkerConnection(options) {
     const generation = this.captureGeneration();
+    const releaseConnection = this.reserveWorkerConnection(options.workerDepth);
     const key = `${options.creatorOrigin}\0${options.url}\0${options.name}`;
     let creating = this.sharedWorkers.get(key);
     if (creating === undefined) {
@@ -697,16 +727,29 @@ export class RuntimePool {
       if (this.sharedWorkers.get(key) === creating) {
         this.sharedWorkers.delete(key);
       }
+      releaseConnection();
       throw error;
     }
     if (this.sharedWorkers.get(key) === creating) {
       this.sharedWorkers.set(key, shared);
     }
-    this.assertGenerationActive(generation);
-    const connection = shared.realm.bootstrap.connectSharedWorkerConnection(
-      (message, ports) => options.onMessage(message, ports),
-    );
+    try {
+      this.assertGenerationActive(generation);
+    } catch (error) {
+      releaseConnection();
+      throw error;
+    }
+    let connection;
+    try {
+      connection = shared.realm.bootstrap.connectSharedWorkerConnection(
+        (message, ports) => options.onMessage(message, ports),
+      );
+    } catch (error) {
+      releaseConnection();
+      throw error;
+    }
     shared.connections.add(connection);
+    shared.connectionReleases.add(releaseConnection);
     const pool = this;
     return {
       deliverOwnerMessage(message, ports) {
@@ -715,8 +758,10 @@ export class RuntimePool {
         }
       },
       close() {
+        releaseConnection();
         connection.close();
         shared.connections.delete(connection);
+        shared.connectionReleases.delete(releaseConnection);
         if (shared.connections.size === 0) {
           pool.destroyChildRealm(shared.realm);
           if (pool.sharedWorkers.get(key) === shared) {
@@ -734,7 +779,13 @@ export class RuntimePool {
       this.objectURLRegistry,
       options.creatorOrigin,
     );
-    this.reserveRealmCapacity();
+    const reservation = this.reserveWorkerCapacity(options.workerDepth, false);
+    try {
+      this.reserveRealmCapacity();
+    } catch (error) {
+      reservation.releasePending();
+      throw error;
+    }
     let realm = null;
     try {
       realm = await createWorkerRealm({
@@ -756,6 +807,11 @@ export class RuntimePool {
         }),
         postMessage: null,
         close: () => {
+          const shared = this.sharedWorkers.get(key);
+          if (shared?.connectionReleases) {
+            for (const release of shared.connectionReleases) release();
+            shared.connectionReleases.clear();
+          }
           if (realm !== null) {
             this.destroyChildRealm(realm);
             this.sharedWorkers.delete(key);
@@ -771,15 +827,18 @@ export class RuntimePool {
         renderingProfile: this.options.fingerprint.rendering,
         capabilitiesProfile: this.options.fingerprint.capabilities,
         objectURLRegistry: this.objectURLRegistry,
+        workerDepth: options.workerDepth,
       });
     } finally {
       this.pendingRealmCreations -= 1;
+      reservation.releasePending();
     }
     if (!this.isGenerationActive(generation)) {
       this.discardRealm(realm);
       throw this.lifecycleError();
     }
     this.childRealms.add(realm);
+    this.workerRealms.add(realm);
     try {
       await evaluateWorkerSource(
         realm,
@@ -796,6 +855,7 @@ export class RuntimePool {
     return {
       realm,
       connections: new Set(),
+      connectionReleases: new Set(),
     };
   }
 
@@ -807,7 +867,13 @@ export class RuntimePool {
       this.objectURLRegistry,
       options.creatorOrigin,
     );
-    this.reserveRealmCapacity();
+    const reservation = this.reserveWorkerCapacity(options.workerDepth, false);
+    try {
+      this.reserveRealmCapacity();
+    } catch (error) {
+      reservation.releasePending();
+      throw error;
+    }
     let realm = null;
     try {
       realm = await createWorkerRealm({
@@ -831,6 +897,7 @@ export class RuntimePool {
           options.onMessage(message, ports);
         },
         close: () => {
+          reservation.releaseConnection();
           if (realm !== null) this.destroyChildRealm(realm);
         },
         nestedWorkerFactory: workerOptions =>
@@ -843,15 +910,22 @@ export class RuntimePool {
         renderingProfile: this.options.fingerprint.rendering,
         capabilitiesProfile: this.options.fingerprint.capabilities,
         objectURLRegistry: this.objectURLRegistry,
+        workerDepth: options.workerDepth,
       });
+    } catch (error) {
+      reservation.releaseConnection();
+      throw error;
     } finally {
       this.pendingRealmCreations -= 1;
+      reservation.releasePending();
     }
     if (!this.isGenerationActive(generation)) {
+      reservation.releaseConnection();
       this.discardRealm(realm);
       throw this.lifecycleError();
     }
     this.childRealms.add(realm);
+    this.workerRealms.add(realm);
     try {
       options.onState("installing");
       await evaluateWorkerSource(
@@ -866,6 +940,7 @@ export class RuntimePool {
       if (options.activate !== false) options.onState("activating");
     } catch (error) {
       this.destroyChildRealm(realm);
+      reservation.releaseConnection();
       throw error;
     }
     const pool = this;
@@ -891,6 +966,7 @@ export class RuntimePool {
         }
       },
       terminate() {
+        reservation.releaseConnection();
         pool.destroyChildRealm(realm);
       },
     };
@@ -1165,7 +1241,10 @@ export class RuntimePool {
       // 池位也在 childRealms 里（它们是真实的 Realm，占真实的堆）。单列出来，
       // 「当前有几个业务 Realm」才答得出来：childRealms - idlePrewarmedRealms
       idlePrewarmedRealms: Number(this.idlePrewarmedHandles.length),
+      workerRealms: Number(this.workerRealms.size),
       sharedWorkerGraphs: Number(this.sharedWorkers.size),
+      workerConnections: this.workerConnections,
+      pendingWorkerCreations: this.pendingWorkerCreations,
       root: {
         workers: Number(root.workers ?? 0),
         sharedWorkers: Number(root.sharedWorkers ?? 0),
@@ -1204,6 +1283,7 @@ export class RuntimePool {
     // 池位在 childRealms 里，上一行已经销毁；这里只清索引
     this.idlePrewarmedHandles.length = 0;
     this.sharedWorkers.clear();
+    this.workerRealms.clear();
     this.workletRealmsByOwner = new WeakMap();
   }
 
@@ -1241,6 +1321,7 @@ export class RuntimePool {
       destroyRealm(realm);
     }
     this.childRealms.delete(realm);
+    this.workerRealms.delete(realm);
     // 未被领走就被销毁的池位要从索引里摘掉，否则 takePrewarmedRealm() 会拿到
     // 一个已销毁的 Realm，而 idlePrewarmedRealms 也会虚报
     const idleIndex = this.idlePrewarmedHandles.findIndex(
@@ -1266,6 +1347,81 @@ export class RuntimePool {
       }
     }
     return delay;
+  }
+
+  reserveWorkerCapacity(depth, connection = true) {
+    if (this.closed) throw this.lifecycleError();
+    const limits = this.options.limits;
+    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
+    const maxWorkerRealms = limits.maxWorkerRealms ?? 4096;
+    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
+    if (workerDepth > maxWorkerDepth) {
+      throw createWorkerLimitError(
+        "LIMIT_WORKER_DEPTH",
+        maxWorkerDepth,
+        "The sandbox worker nesting depth limit has been reached.",
+      );
+    }
+    if (this.workerRealms.size + this.pendingWorkerCreations >= maxWorkerRealms) {
+      throw createWorkerLimitError(
+        "LIMIT_WORKER_REALMS",
+        maxWorkerRealms,
+        "The sandbox worker realm limit has been reached.",
+      );
+    }
+    if (connection && this.workerConnections >= maxWorkerConnections) {
+      throw createWorkerLimitError(
+        "LIMIT_WORKER_CONNECTIONS",
+        maxWorkerConnections,
+        "The sandbox worker connection limit has been reached.",
+      );
+    }
+    this.pendingWorkerCreations += 1;
+    if (connection) this.workerConnections += 1;
+    const connectionRelease = { released: !connection };
+    return {
+      depth: workerDepth,
+      releasePending: () => {
+        this.pendingWorkerCreations = Math.max(0, this.pendingWorkerCreations - 1);
+      },
+      releaseConnection: () => {
+        if (!connectionRelease.released) {
+          connectionRelease.released = true;
+          this.workerConnections = Math.max(0, this.workerConnections - 1);
+        }
+      },
+    };
+  }
+
+  reserveWorkerConnection(depth) {
+    if (this.closed) throw this.lifecycleError();
+    const limits = this.options.limits;
+    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
+    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
+    if (workerDepth > maxWorkerDepth) {
+      throw createWorkerLimitError(
+        "LIMIT_WORKER_DEPTH",
+        maxWorkerDepth,
+        "The sandbox worker nesting depth limit has been reached.",
+      );
+    }
+    if (this.workerConnections >= maxWorkerConnections) {
+      throw createWorkerLimitError(
+        "LIMIT_WORKER_CONNECTIONS",
+        maxWorkerConnections,
+        "The sandbox worker connection limit has been reached.",
+      );
+    }
+    this.workerConnections += 1;
+    const release = { released: false };
+    return () => {
+      if (!release.released) {
+        release.released = true;
+        this.workerConnections = Math.max(0, this.workerConnections - 1);
+      }
+    };
   }
 
   reserveRealmCapacity() {

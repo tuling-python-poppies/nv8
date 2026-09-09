@@ -79,7 +79,14 @@ export async function createSandbox(config) {
   
   // Realm 管理
   const realms = new Map(); // realm-id -> Realm
-  
+  const workerRealms = new Set();
+  const workerConnectionReleases = new WeakMap();
+  let pendingWorkerCreations = 0;
+  const workerCreationWaiters = new Set();
+  let workerConnections = 0;
+  let lifecycleGeneration = 0;
+  let lifecycleClosed = false;
+
   // 插件实例
   const pluginInstances = [];
   
@@ -310,6 +317,117 @@ export async function createSandbox(config) {
     return selected === null ? null : selected.handle.fetch(request);
   }
 
+  function createWorkerLimitError(code, limit, message) {
+    const error = new DOMException(message, 'QuotaExceededError');
+    Object.defineProperties(error, {
+      nv8Code: { value: code, enumerable: true },
+      limit: { value: limit, enumerable: true },
+    });
+    return error;
+  }
+
+  function createWorkerLifecycleError() {
+    const error = new Error('Sandbox worker lifecycle is no longer active');
+    error.code = 'ERR_NV8_WORKER_LIFECYCLE';
+    return error;
+  }
+
+  function trackWorkerConnection(realm, release) {
+    let releases = workerConnectionReleases.get(realm);
+    if (releases === undefined) {
+      releases = new Set();
+      workerConnectionReleases.set(realm, releases);
+    }
+    releases.add(release);
+  }
+
+  function releaseWorkerConnections(realm) {
+    const releases = workerConnectionReleases.get(realm);
+    if (releases === undefined) return;
+    workerConnectionReleases.delete(realm);
+    for (const release of releases) release();
+    releases.clear();
+  }
+
+  function reserveWorker(depth, connection) {
+    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
+    const maxWorkerRealms = limits.maxWorkerRealms ?? limits.maxRealms ?? 64;
+    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
+    if (workerDepth > maxWorkerDepth) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_DEPTH',
+        maxWorkerDepth,
+        'The sandbox worker nesting depth limit has been reached.',
+      );
+    }
+    if (workerRealms.size + pendingWorkerCreations >= maxWorkerRealms) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_REALMS',
+        maxWorkerRealms,
+        'The sandbox worker realm limit has been reached.',
+      );
+    }
+    if (connection && workerConnections >= maxWorkerConnections) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_CONNECTIONS',
+        maxWorkerConnections,
+        'The sandbox worker connection limit has been reached.',
+      );
+    }
+    pendingWorkerCreations += 1;
+    if (connection) workerConnections += 1;
+    const state = { released: false, connectionReleased: !connection };
+    return {
+      depth: workerDepth,
+      releasePending() {
+        pendingWorkerCreations = Math.max(0, pendingWorkerCreations - 1);
+        if (pendingWorkerCreations === 0) {
+          for (const resolve of workerCreationWaiters) resolve();
+          workerCreationWaiters.clear();
+        }
+      },
+      releaseConnection() {
+        if (!state.connectionReleased) {
+          state.connectionReleased = true;
+          workerConnections = Math.max(0, workerConnections - 1);
+        }
+      },
+    };
+  }
+
+  function waitForWorkerCreations() {
+    if (pendingWorkerCreations === 0) return Promise.resolve();
+    return new Promise(resolve => workerCreationWaiters.add(resolve));
+  }
+
+  function reserveWorkerConnection(depth) {
+    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
+    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
+    if (workerDepth > maxWorkerDepth) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_DEPTH',
+        maxWorkerDepth,
+        'The sandbox worker nesting depth limit has been reached.',
+      );
+    }
+    if (workerConnections >= maxWorkerConnections) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_CONNECTIONS',
+        maxWorkerConnections,
+        'The sandbox worker connection limit has been reached.',
+      );
+    }
+    workerConnections += 1;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      workerConnections = Math.max(0, workerConnections - 1);
+    };
+  }
+
   async function createIframeChildRealm(options) {
     if (realms.size >= (limits.maxRealms ?? 64)) {
       const error = new Error('Realm capacity limit exceeded');
@@ -356,6 +474,7 @@ export async function createSandbox(config) {
         serviceWorkerPageUrl,
         documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
         childRealmFactory: createIframeChildRealm,
+        workerDepth: 0,
         workerFactory: createDedicatedWorker,
         sharedWorkerFactory: createSharedWorkerConnection,
         serviceWorkerFactory: createServiceWorker,
@@ -487,6 +606,7 @@ export async function createSandbox(config) {
       runtime: {
         broadcastConnector: defaultBroadcastConnector,
         childRealmFactory: createIframeChildRealm,
+        workerDepth: 0,
         windowContext: {
           origin: new URL(targetUrl).origin,
           sameOrigin: true,
@@ -561,55 +681,75 @@ export async function createSandbox(config) {
   }
 
   async function createDedicatedWorker(options) {
+    const generation = lifecycleGeneration;
     const source = resolveCoreWorkerSource(options.url, workerReplayState);
+    const reservation = reserveWorker(options.workerDepth, true);
     let version = createHash('sha256').update(source).digest('hex');
     const workerNavigatorProfile = {
       ...(profile.navigator || {}),
       languages: profile.navigator?.languages || ['en-US', 'en'],
       language: profile.navigator?.language || 'en-US',
     };
-    const workerRealm = await createRealm({
-      sandboxId,
-      type: 'worker',
-      plugins: pluginInstances,
-      stateRegistry,
-      globals,
-      trace,
-      logger,
-      pageUrl: options.url,
-      pageHtml: '',
-      replay,
-      navigatorProfile: workerNavigatorProfile,
-      timingProfile: profile.timing || null,
-      runtime: {
-        ...runtime,
-        workerFactory: createDedicatedWorker,
-        sharedWorkerFactory: createSharedWorkerConnection,
-        workletFactory: createWorkletModule,
-        broadcastConnector: defaultBroadcastConnector,
-        networkRequestRecorder: scopeNetworkRecorder(
-          runtime.networkRequestRecorder,
-          'worker',
-          options.url,
-        ),
-        workerGlobal: {
-          kind: 'dedicated',
-          name: `${options.name ?? ''}`,
-          url: options.url,
-          type: options.type,
-          replay,
-          navigatorProfile: workerNavigatorProfile,
-          renderingProfile: profile.rendering ?? null,
-          postMessage(message, ports) {
-            options.onMessage?.(message, ports);
-          },
-          close() {
-            destroyWorkerRealm(workerRealm);
+    let workerRealm;
+    try {
+      workerRealm = await createRealm({
+        sandboxId,
+        type: 'worker',
+        plugins: pluginInstances,
+        stateRegistry,
+        globals,
+        trace,
+        logger,
+        pageUrl: options.url,
+        pageHtml: '',
+        replay,
+        navigatorProfile: workerNavigatorProfile,
+        timingProfile: profile.timing || null,
+        workerDepth: reservation.depth,
+        runtime: {
+          ...runtime,
+          workerDepth: reservation.depth,
+          workerFactory: createDedicatedWorker,
+          sharedWorkerFactory: createSharedWorkerConnection,
+          workletFactory: createWorkletModule,
+          broadcastConnector: defaultBroadcastConnector,
+          networkRequestRecorder: scopeNetworkRecorder(
+            runtime.networkRequestRecorder,
+            'worker',
+            options.url,
+          ),
+          workerGlobal: {
+            kind: 'dedicated',
+            name: `${options.name ?? ''}`,
+            url: options.url,
+            type: options.type,
+            replay,
+            navigatorProfile: workerNavigatorProfile,
+            renderingProfile: profile.rendering ?? null,
+            postMessage(message, ports) {
+              options.onMessage?.(message, ports);
+            },
+            close() {
+              reservation.releaseConnection();
+              destroyWorkerRealm(workerRealm);
+            },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      reservation.releaseConnection();
+      reservation.releasePending();
+      throw error;
+    }
+    reservation.releasePending();
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      reservation.releaseConnection();
+      destroyWorkerRealm(workerRealm);
+      throw createWorkerLifecycleError();
+    }
     realms.set(workerRealm.id, workerRealm);
+    workerRealms.add(workerRealm);
+    trackWorkerConnection(workerRealm, reservation.releaseConnection);
     try {
       version = await evaluateCoreWorkerSource(
         workerRealm,
@@ -620,6 +760,7 @@ export async function createSandbox(config) {
       ) ?? version;
     } catch (error) {
       destroyWorkerRealm(workerRealm);
+      reservation.releaseConnection();
       throw error;
     }
     const workerRuntime = workerRealm.moduleLoader
@@ -631,85 +772,106 @@ export async function createSandbox(config) {
         workerRuntime?.receiveOwnerMessage?.(message, transferOptions, ports);
       },
       terminate() {
+        reservation.releaseConnection();
         destroyWorkerRealm(workerRealm);
       },
     };
   }
 
   async function createServiceWorker(options) {
+    const generation = lifecycleGeneration;
     const workerScope = options.scope ?? new URL('./', options.url).href;
     const activeHandle = { current: null };
     const source = resolveCoreWorkerSource(options.url, workerReplayState);
+    const reservation = reserveWorker(options.workerDepth, false);
     let version = createHash('sha256').update(source).digest('hex');
     const workerNavigatorProfile = {
       ...(profile.navigator || {}),
       languages: profile.navigator?.languages || ['en-US', 'en'],
       language: profile.navigator?.language || 'en-US',
     };
-    const workerRealm = await createRealm({
-      sandboxId,
-      type: 'worker',
-      plugins: pluginInstances,
-      stateRegistry,
-      globals,
-      trace,
-      logger,
-      pageUrl: options.url,
-      pageHtml: '',
-      replay,
-      navigatorProfile: workerNavigatorProfile,
-      timingProfile: profile.timing || null,
-      runtime: {
-        ...runtime,
-        workerFactory: createDedicatedWorker,
-        sharedWorkerFactory: createSharedWorkerConnection,
-        workletFactory: createWorkletModule,
-        serviceWorkerFactory: null,
-        broadcastConnector: defaultBroadcastConnector,
-        networkRequestRecorder: scopeNetworkRecorder(
-          runtime.networkRequestRecorder,
-          'service-worker',
-          options.url,
-        ),
-        workerGlobal: {
-          kind: 'service',
-          name: '',
-          url: options.url,
-          type: options.type,
-          replay,
-          navigatorProfile: workerNavigatorProfile,
-          renderingProfile: profile.rendering ?? null,
-          postMessage(message, ports) {
-            options.onMessage?.(message, ports);
-          },
-          close() {
-            destroyWorkerRealm(workerRealm);
-          },
-          serviceWorkerControl: {
-            skipWaiting() {
-              options.onSkipWaiting?.();
+    let workerRealm;
+    try {
+      workerRealm = await createRealm({
+        sandboxId,
+        type: 'worker',
+        plugins: pluginInstances,
+        stateRegistry,
+        globals,
+        trace,
+        logger,
+        pageUrl: options.url,
+        pageHtml: '',
+        replay,
+        navigatorProfile: workerNavigatorProfile,
+        timingProfile: profile.timing || null,
+        workerDepth: reservation.depth,
+        runtime: {
+          ...runtime,
+          workerDepth: reservation.depth,
+          workerFactory: createDedicatedWorker,
+          sharedWorkerFactory: createSharedWorkerConnection,
+          workletFactory: createWorkletModule,
+          serviceWorkerFactory: null,
+          broadcastConnector: defaultBroadcastConnector,
+          networkRequestRecorder: scopeNetworkRecorder(
+            runtime.networkRequestRecorder,
+            'service-worker',
+            options.url,
+          ),
+          workerGlobal: {
+            kind: 'service',
+            name: '',
+            url: options.url,
+            type: options.type,
+            replay,
+            navigatorProfile: workerNavigatorProfile,
+            renderingProfile: profile.rendering ?? null,
+            postMessage(message, ports) {
+              options.onMessage?.(message, ports);
             },
-            claim() {
-              options.onClaim?.();
+            close() {
+              reservation.releaseConnection();
+              destroyWorkerRealm(workerRealm);
             },
-            hasClient() {
-              return getServiceWorkerClients({
-                scope: workerScope,
-                handle: activeHandle.current,
-              }).length > 0;
-            },
-            matchAll(options = {}) {
-              return getServiceWorkerClients({
-                ...options,
-                scope: options.includeUncontrolled === true ? null : workerScope,
-                handle: activeHandle.current,
-              });
+            serviceWorkerControl: {
+              skipWaiting() {
+                options.onSkipWaiting?.();
+              },
+              claim() {
+                options.onClaim?.();
+              },
+              hasClient() {
+                return getServiceWorkerClients({
+                  scope: workerScope,
+                  handle: activeHandle.current,
+                }).length > 0;
+              },
+              matchAll(options = {}) {
+                return getServiceWorkerClients({
+                  ...options,
+                  scope: options.includeUncontrolled === true ? null : workerScope,
+                  handle: activeHandle.current,
+                });
+              },
             },
           },
         },
-      },
-    });
+      });
+    } catch (error) {
+      reservation.releaseConnection();
+      reservation.releasePending();
+      throw error;
+    }
+    reservation.releasePending();
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      reservation.releaseConnection();
+      destroyWorkerRealm(workerRealm);
+      throw createWorkerLifecycleError();
+    }
     realms.set(workerRealm.id, workerRealm);
+    workerRealms.add(workerRealm);
+    trackWorkerConnection(workerRealm, reservation.releaseConnection);
     const workerRuntime = workerRealm.moduleLoader
       .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace;
     try {
@@ -727,6 +889,7 @@ export async function createSandbox(config) {
       if (options.activate !== false) options.onState?.('activating');
     } catch (error) {
       destroyWorkerRealm(workerRealm);
+      reservation.releaseConnection();
       throw error;
     }
     let activationPromise = null;
@@ -761,6 +924,7 @@ export async function createSandbox(config) {
         if (options.replacing !== true) {
           notifyServiceWorkerClients(workerScope, null);
         }
+        reservation.releaseConnection();
         destroyWorkerRealm(workerRealm);
       },
     };
@@ -773,55 +937,82 @@ export async function createSandbox(config) {
   }
 
   async function createSharedWorkerConnection(options) {
+    const generation = lifecycleGeneration;
     const key = `${options.creatorOrigin}\0${options.url}\0${options.name}`;
     let record = sharedWorkerRecords.get(key);
+    const source = record === undefined
+      ? resolveCoreWorkerSource(options.url, workerReplayState)
+      : null;
+    const releaseConnection = reserveWorkerConnection(options.workerDepth);
     if (record === undefined) {
-      const source = resolveCoreWorkerSource(options.url, workerReplayState);
+      let workerRealm;
+      let reservation;
+      try {
+        reservation = reserveWorker(options.workerDepth, false);
+      } catch (error) {
+        releaseConnection();
+        throw error;
+      }
       const workerNavigatorProfile = {
         ...(profile.navigator || {}),
         languages: profile.navigator?.languages || ['en-US', 'en'],
         language: profile.navigator?.language || 'en-US',
       };
-      const workerRealm = await createRealm({
-        sandboxId,
-        type: 'worker',
-        plugins: pluginInstances,
-        stateRegistry,
-        globals,
-        trace,
-        logger,
-        pageUrl: options.url,
-        pageHtml: '',
-        replay,
-        navigatorProfile: workerNavigatorProfile,
-        timingProfile: profile.timing || null,
-        runtime: {
-          ...runtime,
-          workerFactory: createDedicatedWorker,
-          sharedWorkerFactory: createSharedWorkerConnection,
-          workletFactory: createWorkletModule,
-          broadcastConnector: defaultBroadcastConnector,
-          networkRequestRecorder: scopeNetworkRecorder(
-            runtime.networkRequestRecorder,
-            'shared-worker',
-            options.url,
-          ),
-          workerGlobal: {
-            kind: 'shared',
-            name: `${options.name ?? ''}`,
-            url: options.url,
-            type: options.type,
-            replay,
-            navigatorProfile: workerNavigatorProfile,
-            renderingProfile: profile.rendering ?? null,
-            postMessage: null,
-            close() {
-              destroyWorkerRealm(workerRealm);
+      try {
+        workerRealm = await createRealm({
+          sandboxId,
+          type: 'worker',
+          plugins: pluginInstances,
+          stateRegistry,
+          globals,
+          trace,
+          logger,
+          pageUrl: options.url,
+          pageHtml: '',
+          replay,
+          navigatorProfile: workerNavigatorProfile,
+          timingProfile: profile.timing || null,
+          workerDepth: reservation.depth,
+          runtime: {
+            ...runtime,
+            workerDepth: reservation.depth,
+            workerFactory: createDedicatedWorker,
+            sharedWorkerFactory: createSharedWorkerConnection,
+            workletFactory: createWorkletModule,
+            broadcastConnector: defaultBroadcastConnector,
+            networkRequestRecorder: scopeNetworkRecorder(
+              runtime.networkRequestRecorder,
+              'shared-worker',
+              options.url,
+            ),
+            workerGlobal: {
+              kind: 'shared',
+              name: `${options.name ?? ''}`,
+              url: options.url,
+              type: options.type,
+              replay,
+              navigatorProfile: workerNavigatorProfile,
+              renderingProfile: profile.rendering ?? null,
+              postMessage: null,
+              close() {
+                destroyWorkerRealm(workerRealm);
+              },
             },
           },
-        },
-      });
+        });
+      } catch (error) {
+        reservation.releasePending();
+        releaseConnection();
+        throw error;
+      }
+      reservation.releasePending();
+      if (lifecycleClosed || generation !== lifecycleGeneration) {
+        releaseConnection();
+        destroyWorkerRealm(workerRealm);
+        throw createWorkerLifecycleError();
+      }
       realms.set(workerRealm.id, workerRealm);
+      workerRealms.add(workerRealm);
       try {
         await evaluateCoreWorkerSource(
           workerRealm,
@@ -832,6 +1023,7 @@ export async function createSandbox(config) {
         );
       } catch (error) {
         destroyWorkerRealm(workerRealm);
+        releaseConnection();
         throw error;
       }
       record = {
@@ -842,15 +1034,27 @@ export async function createSandbox(config) {
       };
       sharedWorkerRecords.set(key, record);
     }
-    const connection = record.runtime?.connectSharedWorker?.(
-      (message, ports) => options.onMessage?.(message, ports),
-    ) ?? { deliverOwnerMessage() {}, close() {} };
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      releaseConnection();
+      throw createWorkerLifecycleError();
+    }
+    let connection;
+    try {
+      connection = record.runtime?.connectSharedWorker?.(
+        (message, ports) => options.onMessage?.(message, ports),
+      ) ?? { deliverOwnerMessage() {}, close() {} };
+    } catch (error) {
+      releaseConnection();
+      throw error;
+    }
     record.connections.add(connection);
+    trackWorkerConnection(record.realm, releaseConnection);
     return {
       deliverOwnerMessage(message, ports) {
         if (!record.realm.destroyed) connection.deliverOwnerMessage(message, ports);
       },
       close() {
+        releaseConnection();
         connection.close();
         record.connections.delete(connection);
         if (record.connections.size === 0) {
@@ -898,8 +1102,10 @@ export async function createSandbox(config) {
   function destroyWorkerRealm(workerRealm) {
     if (!workerRealm || workerRealm.destroyed) return;
     workerRealm.destroyed = true;
+    releaseWorkerConnections(workerRealm);
     void workerRealm.destroy();
     realms.delete(workerRealm.id);
+    workerRealms.delete(workerRealm);
     stateRegistry.destroyContext('realm', workerRealm.id);
   }
   
@@ -1009,6 +1215,7 @@ export async function createSandbox(config) {
           },
           ...runtime,
           ...(options.runtime || {}),
+          workerDepth: options.workerDepth ?? 0,
           networkRequestRecorder: scopeNetworkRecorder(
             options.runtime?.networkRequestRecorder
               ?? runtime.networkRequestRecorder,
@@ -1086,7 +1293,11 @@ export async function createSandbox(config) {
       
       evidenceResources.get(realmId)?.dispose();
       evidenceResources.delete(realmId);
-      await realm.destroy();
+      if (workerRealms.has(realm)) {
+        destroyWorkerRealm(realm);
+      } else {
+        await realm.destroy();
+      }
       lifecycle.emit('realm.dispose.completed', {
         sandboxId,
         realmId,
@@ -1177,11 +1388,14 @@ export async function createSandbox(config) {
         return;
       }
       this._disposed = true;
+      lifecycleClosed = true;
+      lifecycleGeneration += 1;
       
       // 销毁所有 realm
       for (const [realmId] of realms) {
         await this.destroyRealm(realmId);
       }
+      await waitForWorkerCreations();
       
       // 卸载所有插件
       for (const plugin of pluginInstances) {
@@ -1213,6 +1427,7 @@ export async function createSandbox(config) {
       workletRealms.clear();
       // 清理沙箱状态
       broadcastGroups.clear();
+      workerRealms.clear();
       stateRegistry.destroyContext('sandbox', sandboxId);
       
       lifecycle.emit('sandbox.dispose.completed', { sandboxId });
@@ -1263,11 +1478,13 @@ export async function createSandbox(config) {
       }
       
       logger.info(`[Sandbox ${sandboxId}] Resetting sandbox`);
+      lifecycleGeneration += 1;
       
       // 销毁所有 realm
       for (const [realmId] of [...realms]) {
         await this.destroyRealm(realmId);
       }
+      await waitForWorkerCreations();
       
       lifecycle.emit('sandbox.reset', { sandboxId });
       logger.info(`[Sandbox ${sandboxId}] Sandbox reset completed`);
@@ -1363,6 +1580,9 @@ export async function createSandbox(config) {
         profile: profile.id ?? 'default',
         realms: Array.from(realms.keys()),
         lifecycle: lifecycle.snapshot(),
+        workerRealms: workerRealms.size,
+        pendingWorkerCreations,
+        workerConnections,
         limits: { ...limits },
       };
     },
@@ -1375,6 +1595,8 @@ export async function createSandbox(config) {
         plugins: pluginInstances.map(p => `${p.id}@${p.version}`),
         capabilities: Array.from(capabilityIndex.keys()),
         realms: Array.from(realms.keys()),
+        workerRealms: workerRealms.size,
+        workerConnections,
       };
     },
   };
