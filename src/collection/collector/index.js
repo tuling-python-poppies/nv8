@@ -37,6 +37,7 @@ export {
 } from './pagination.js';
 
 export { createProxyTransport } from './proxy-transport.js';
+export { createWebSocketTransport } from './websocket-transport.js';
 
 export {
   ProxyPool,

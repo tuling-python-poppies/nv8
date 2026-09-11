@@ -559,6 +559,46 @@ FIFO 公平不是可选项：「谁抢到算谁的」会让高频调用方饿死
 **配了代理就绝不直连**：回落直连会泄露真实出口 IP，而且完全无声——请求成功、
 采集正常，等到目标把真实 IP 拉黑才发现。要允许必须显式 `allowDirect: true`。
 
+### WebSocket 采集（`websocket-transport.js`）
+
+WebSocket 采集是 Collector 的**有界请求/响应传输**，不是页面里的离线
+`WebSocket` API，也不是长连接订阅管理器。先在 Protocol 层声明 `ws:` / `wss:`
+计划和 `metadata.websocket`，再显式允许 `ws:` / `wss:` scheme：
+
+```js
+import {
+  createCollector,
+  createWebSocketTransport,
+} from './src/collection/collector/index.js';
+import { createRequestPlan } from './src/collection/request-protocol/index.js';
+
+const plan = createRequestPlan({
+  method: 'GET',
+  url: 'wss://api.example.com/stream',
+  metadata: {
+    websocket: {
+      protocols: ['json'],
+      send: ['{"op":"ping"}'],
+      maxFrames: 1,
+      maxMessageBytes: 1024 * 1024,
+    },
+  },
+});
+const collector = createCollector({
+  transport: createWebSocketTransport(),
+  policy: {
+    enabled: true,
+    allowedOrigins: ['wss://api.example.com'],
+    allowedSchemes: ['wss:'],
+  },
+});
+```
+
+传输负责 RFC 6455 握手、客户端掩码、文本/二进制消息、分片、Ping/Pong、关闭
+和 Abort/超时清理；响应中的 `response.websocket.frames` 是有限帧集合。发送过消息
+后发生的传输失败不会标记为可重试，避免重试造成业务消息重复。长连接订阅、代理
+隧道和业务重连策略由调用方注入或编排，不在这个有界传输里隐式完成。
+
 **凭据零泄露**：`password` 不可枚举，`toJSON` 只报 `authenticated: bool`，
 错误消息只带脱敏 label。`JSON.stringify` / `util.inspect` / 对象展开 / 模板串
 四条泄露路径各有断言。
@@ -809,7 +849,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，902 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，907 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 性能基准
 npm run baseline      # 重新生成基线快照
@@ -930,7 +970,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（902 项 / 89 个文件，自动发现） |
+| `npm test` | 全量测试（907 项 / 89 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
@@ -992,7 +1032,7 @@ src/
 │   └── protocol/      宿主↔子进程帧协议
 │
 ├── collection/        采集链路：证据进、请求出
-│   ├── collector/     采集层（15 个模块）
+│   ├── collector/     采集层（16 个模块）
 │   ├── request-protocol/  RequestPlan、适配器、声明式变换、canonical JSON
 │   └── evidence/      Evidence Bundle 与离线回放
 │

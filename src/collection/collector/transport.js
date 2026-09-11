@@ -26,6 +26,7 @@ export function createCollectorResponse(input) {
     url,
     redirected = false,
     timingMs = null,
+    websocket = undefined,
   } = input ?? {};
 
   if (!Number.isInteger(status) || status < 100 || status > 599) {
@@ -49,7 +50,7 @@ export function createCollectorResponse(input) {
     values: Object.freeze(entry.values.map(String)),
   }));
 
-  return Object.freeze({
+  const response = {
     status,
     statusText: String(statusText),
     headers: Object.freeze(normalizedHeaders),
@@ -58,7 +59,16 @@ export function createCollectorResponse(input) {
     url: url ?? null,
     redirected: redirected === true,
     timingMs,
-  });
+  };
+  if (websocket !== undefined) {
+    response.websocket = Object.freeze({
+      protocol: websocket?.protocol ?? null,
+      frames: Object.freeze((websocket?.frames ?? []).map(frame => Object.freeze({ ...frame }))),
+      closeCode: websocket?.closeCode ?? null,
+      closeReason: websocket?.closeReason ?? '',
+    });
+  }
+  return Object.freeze(response);
 }
 
 /**
@@ -125,6 +135,9 @@ export function withTimeout(transport, timeoutMs) {
         clearTimeout(timer);
         external?.removeEventListener?.('abort', onAbort);
       }
+    },
+    async dispose() {
+      await transport.dispose?.();
     },
   };
 }

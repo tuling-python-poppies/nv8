@@ -240,11 +240,41 @@ test('createRequestPlan normalizes method and lowercases header names', () => {
   assert.equal(getHeader(plan, 'Content-Type'), 'application/json');
 });
 
-test('createRequestPlan rejects relative and non-http URLs', () => {
+test('createRequestPlan rejects relative and unsupported URLs', () => {
   assert.throws(() => createRequestPlan({ method: 'GET', url: '/relative' }), /not absolute/);
   assert.throws(
     () => createRequestPlan({ method: 'GET', url: 'ftp://target.test/x' }),
     /protocol must be http/
+  );
+});
+
+test('createRequestPlan accepts bounded WebSocket plans only with metadata', () => {
+  const plan = createRequestPlan({
+    method: 'GET',
+    url: 'wss://target.test/socket',
+    metadata: { websocket: { protocols: ['chat'], send: ['hello'] } },
+  });
+  assert.equal(plan.url, 'wss://target.test/socket');
+  assert.deepEqual(plan.metadata.websocket.protocols, ['chat']);
+  assert.throws(
+    () => createRequestPlan({ method: 'GET', url: 'wss://target.test/socket' }),
+    /require metadata\.websocket/
+  );
+  assert.throws(
+    () => createRequestPlan({
+      method: 'POST',
+      url: 'wss://target.test/socket',
+      metadata: { websocket: {} },
+    }),
+    /must use GET/
+  );
+  assert.throws(
+    () => createRequestPlan({
+      method: 'GET',
+      url: 'https://target.test/socket',
+      metadata: { websocket: {} },
+    }),
+    /requires a ws: or wss:/
   );
 });
 

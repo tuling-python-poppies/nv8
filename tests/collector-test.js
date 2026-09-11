@@ -104,6 +104,26 @@ test('policy rejects http when only https is allowed', () => {
   assert.equal(result.code, CollectorErrorCode.SCHEME_NOT_ALLOWED);
 });
 
+test('policy accepts WebSocket schemes only when explicitly enabled', () => {
+  const denied = new NetworkPolicy({
+    enabled: true,
+    allowedOrigins: ['ws://target.test'],
+  });
+  assert.equal(denied.check('ws://target.test/socket', 'GET').allowed, false);
+  assert.equal(
+    denied.check('ws://target.test/socket', 'GET').code,
+    CollectorErrorCode.SCHEME_NOT_ALLOWED,
+  );
+
+  const allowed = new NetworkPolicy({
+    enabled: true,
+    allowedOrigins: ['ws://target.test'],
+    allowedSchemes: ['ws:'],
+  });
+  assert.equal(allowed.check('ws://target.test/socket', 'GET').allowed, true);
+  assert.equal(allowed.check('wss://target.test/socket', 'GET').allowed, false);
+});
+
 test('policy restricts methods', () => {
   const policy = new NetworkPolicy({
     enabled: true,

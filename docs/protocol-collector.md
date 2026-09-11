@@ -130,7 +130,8 @@ registry.apply({ request, artifacts, allowConflicts: true });
 
 - header 名统一小写，多值用数组保序
 - header/cookie 值中的 CR、LF、NUL 直接拒绝（防注入）
-- URL 必须是绝对 http/https
+- URL 必须是绝对 `http:`、`https:`、`ws:` 或 `wss:`；WebSocket 计划必须显式携带 `metadata.websocket`
+- WebSocket 计划只能使用 `GET`，且不携带 HTTP body；普通 HTTP 计划仍按下面的 body 规则校验
 - `GET`/`HEAD`/`OPTIONS`/`TRACE` 携带 body 时拒绝
 - 输出按 header 名和 cookie 名排序，保证 `digest` 稳定
 
@@ -188,6 +189,18 @@ const result = await collector.send(protocolResult.plan);
 - 在审计、`describe()` 和错误消息中始终显示为 `[redacted]`
 - 含 CR/LF/NUL 的凭据值在配置阶段就被拒绝
 
+### WebSocket 有界交换
+
+Collector 的 `createWebSocketTransport()` 提供有限的 WebSocket 请求/响应交换：完成 RFC 6455
+握手后，可发送有限数量的文本或 base64 二进制消息，并收集有界数量的完整消息。传输处理客户端
+掩码、消息分片、Ping/Pong、Close、Abort 和超时；`maxMessageBytes` 与 `maxTotalBytes` 保护
+接收内存。发送应用消息后发生的连接失败不会再次重试，因为重试可能重复业务操作。它不承担
+长连接订阅、后台重连或代理隧道管理。
+
+WebSocket 必须同时满足三层配置：`ws:`/`wss:` URL、`metadata.websocket` 计划字段，以及
+NetworkPolicy 中显式允许的 `ws:`/`wss:` scheme 和 origin。Cookie 的 `Secure` 属性对 `wss:`
+视为安全连接。
+
 ### 重试语义
 
 | 情况 | 是否重试 |
@@ -238,8 +251,9 @@ Protocol 和 Collector 都**不**负责：
 ## 测试
 
 ```
-tests/protocol-artifact-test.js    71 项：canonical JSON、工件、plan、transform、adapter
-tests/collector-test.js            49 项：策略、凭据、重试、cookie、审计、生命周期
+tests/protocol-artifact-test.js    72 项：canonical JSON、工件、plan、transform、adapter
+tests/collector-test.js            50 项：策略、凭据、重试、cookie、审计、生命周期
+tests/collector-websocket-test.js   3 项：握手、帧收发、重试与生命周期清理
 tests/gate5-end-to-end-test.js      7 项：完整链路与边界断言
 ```
 

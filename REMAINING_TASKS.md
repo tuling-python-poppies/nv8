@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 902 项（`npm test`，89 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 907 项（`npm test`，89 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -532,7 +532,9 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 顺带补了缺失的生成器 `scripts/build-css-ua-defaults.mjs`——原先
     fixture 在仓库里、生成它的代码不在。"声称是生成的但没有生成器"等于手写
     文件，只是看起来更可信
-- [ ] **WebSocket 采集** - 当前只支持 HTTP
+- [x] **WebSocket 采集** - `createWebSocketTransport()` 支持 `ws:` / `wss:` 握手、客户端掩码、
+  文本/二进制帧、分片、Ping/Pong、有限帧收集和 Abort/超时清理；发送帧后的失败不重试，
+  避免业务消息重复，策略仍要求显式允许 WebSocket scheme
 - [x] **熔断器** - 按 origin 的三态熔断（`src/collection/collector/circuit-breaker.js`，22 项测试）
   - `CIRCUIT_OPEN` 错误码早就在 `errors.js` 里定义了但没实现——缺口是设计时
     就意识到的
@@ -1634,7 +1636,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：902 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：907 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1730,5 +1732,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（902 项 / 89 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（907 项 / 89 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

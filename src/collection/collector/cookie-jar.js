@@ -184,7 +184,7 @@ export class CookieJar {
    */
   cookiesFor(url) {
     const requestUrl = new URL(url);
-    const isSecure = requestUrl.protocol === 'https:';
+    const isSecure = requestUrl.protocol === 'https:' || requestUrl.protocol === 'wss:';
     const now = Date.now();
     const result = new Map();
 

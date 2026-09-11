@@ -46,7 +46,7 @@ function normalizeOriginPattern(pattern) {
     return { kind: 'exact', value: url.origin };
   }
 
-  const match = /^(https?):\/\/\*\.([a-z0-9.-]+)(?::(\d+))?$/i.exec(pattern);
+  const match = /^(https?|wss?):\/\/\*\.([a-z0-9.-]+)(?::(\d+))?$/i.exec(pattern);
   if (!match) {
     throw new CollectorConfigError(
       `wildcard origin must look like "https://*.example.com": "${pattern}"`,
@@ -84,7 +84,7 @@ export class NetworkPolicy {
    * @param {boolean} [config.enabled=false] 必须显式开启才能发起真实请求
    * @param {string[]} [config.allowedOrigins=[]]
    * @param {boolean} [config.allowAnyOrigin=false] 仅供受控测试环境
-   * @param {string[]} [config.allowedSchemes=['https:']]
+   * @param {string[]} [config.allowedSchemes=['https:']] HTTP(S) and WebSocket schemes are accepted
    * @param {string[]} [config.allowedMethods]
    * @param {boolean} [config.followRedirects=false]
    * @param {number} [config.maxRedirects=5]
@@ -122,9 +122,9 @@ export class NetworkPolicy {
     }
 
     for (const scheme of allowedSchemes) {
-      if (scheme !== 'http:' && scheme !== 'https:') {
+      if (!['http:', 'https:', 'ws:', 'wss:'].includes(scheme)) {
         throw new CollectorConfigError(
-          `allowedSchemes only supports "http:" and "https:", received "${scheme}"`,
+          `allowedSchemes only supports "http:", "https:", "ws:" and "wss:", received "${scheme}"`,
           { context: { scheme } }
         );
       }

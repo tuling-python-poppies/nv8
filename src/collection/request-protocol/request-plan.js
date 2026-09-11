@@ -15,6 +15,7 @@ import { ProtocolError, ProtocolErrorCode } from './errors.js';
 export const REQUEST_PLAN_SCHEMA_VERSION = '1.0';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'TRACE']);
+const NETWORK_SCHEMES = new Set(['http:', 'https:', 'ws:', 'wss:']);
 const KNOWN_METHODS = new Set([
   'GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'TRACE',
 ]);
@@ -62,9 +63,9 @@ function normalizeUrl(url) {
   } catch {
     throw invalid(`url is not absolute or parseable: "${url}"`, { url });
   }
-  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+  if (!NETWORK_SCHEMES.has(parsed.protocol)) {
     throw invalid(
-      `url protocol must be http: or https:, received "${parsed.protocol}"`,
+      `url protocol must be http:, https:, ws: or wss:, received "${parsed.protocol}"`,
       { url, protocol: parsed.protocol }
     );
   }
@@ -206,6 +207,71 @@ function normalizeBody(body) {
   }
 }
 
+function validateWebSocketMetadata(websocket) {
+  if (typeof websocket !== 'object' || websocket === null || Array.isArray(websocket)) {
+    throw invalid('metadata.websocket must be an object or null', {});
+  }
+
+  const protocols = websocket.protocols ?? [];
+  if (!Array.isArray(protocols)) {
+    throw invalid('metadata.websocket.protocols must be an array', {});
+  }
+  const protocolToken = /^[^\x00-\x20\x7f(),/:;<=>?@[\\\\\]"]+$/;
+  for (const protocol of protocols) {
+    if (typeof protocol !== 'string' || protocol.length === 0 || !protocolToken.test(protocol)) {
+      throw invalid('metadata.websocket.protocols contains an invalid token', {});
+    }
+  }
+  if (new Set(protocols).size !== protocols.length) {
+    throw invalid('metadata.websocket.protocols must not contain duplicates', {});
+  }
+
+  const send = websocket.send ?? [];
+  if (!Array.isArray(send)) {
+    throw invalid('metadata.websocket.send must be an array', {});
+  }
+  for (const message of send) {
+    if (typeof message === 'string') continue;
+    if (message === null || typeof message !== 'object' || Array.isArray(message)) {
+      throw invalid('metadata.websocket messages must be strings or { type, data } objects', {});
+    }
+    const type = message.type ?? 'text';
+    if (type !== 'text' && type !== 'binary') {
+      throw invalid('metadata.websocket message type must be text or binary', {});
+    }
+    if (typeof message.data !== 'string') {
+      throw invalid('metadata.websocket message data must be a string', {});
+    }
+    if (type === 'binary' && !isBase64String(message.data)) {
+      throw invalid('binary WebSocket message data must be base64', {});
+    }
+  }
+
+  for (const [name, value] of [
+    ['maxFrames', websocket.maxFrames],
+    ['maxMessageBytes', websocket.maxMessageBytes],
+    ['maxTotalBytes', websocket.maxTotalBytes],
+  ]) {
+    if (value !== undefined && (!Number.isSafeInteger(value) || value < 1)) {
+      throw invalid(`metadata.websocket.${name} must be a positive integer`, { value });
+    }
+  }
+  if (websocket.closeOnFrames !== undefined && typeof websocket.closeOnFrames !== 'boolean') {
+    throw invalid('metadata.websocket.closeOnFrames must be a boolean', {});
+  }
+  if (websocket.maxTotalBytes !== undefined
+    && websocket.maxMessageBytes !== undefined
+    && websocket.maxTotalBytes < websocket.maxMessageBytes
+    && (websocket.maxFrames ?? 1) > 1) {
+    throw invalid('metadata.websocket.maxTotalBytes must cover maxMessageBytes when receiving multiple frames', {});
+  }
+}
+
+function isBase64String(value) {
+  return value.length % 4 === 0
+    && /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value);
+}
+
 export const DEFAULT_REQUEST_PLAN_LIMITS = Object.freeze({
   maxUrlLength: 8 * 1024,
   maxHeaderCount: 128,
@@ -219,7 +285,7 @@ export const DEFAULT_REQUEST_PLAN_LIMITS = Object.freeze({
  *
  * @param {object} input
  * @param {string} input.method
- * @param {string} input.url 绝对 http/https URL
+ * @param {string} input.url 绝对 http/https/ws/wss URL
  * @param {object|Array|Map} [input.headers]
  * @param {object|Array|Map} [input.cookies]
  * @param {string|object} [input.body]
@@ -291,6 +357,20 @@ export function createRequestPlan(input) {
   const metadata = input.metadata ?? null;
   if (metadata !== null && (typeof metadata !== 'object' || Array.isArray(metadata))) {
     throw invalid('metadata must be a plain object or null', {});
+  }
+  const websocket = metadata?.websocket ?? null;
+  if (websocket !== null) {
+    if (!['ws:', 'wss:'].includes(url.protocol)) {
+      throw invalid('metadata.websocket requires a ws: or wss: URL', {
+        protocol: url.protocol,
+      });
+    }
+    validateWebSocketMetadata(websocket);
+  } else if (['ws:', 'wss:'].includes(url.protocol)) {
+    throw invalid('WebSocket plans require metadata.websocket', {});
+  }
+  if (['ws:', 'wss:'].includes(url.protocol) && method !== 'GET') {
+    throw invalid('WebSocket plans must use GET', { method });
   }
 
   const record = {
