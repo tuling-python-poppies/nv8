@@ -215,7 +215,7 @@ function navigate(element) {
     return incumbentSource;
   };
   const scope = iframeScope();
-  const created = scope.createChildRealm({
+  const createChildRealm = () => scope.createChildRealm({
     pageUrl: documentUrl,
     origin: childOrigin,
     documentBaseUrl: url,
@@ -251,6 +251,15 @@ function navigate(element) {
       }
     },
   });
+  // 非空白导航延迟到当前 JavaScript 任务结束后才创建 Realm。这样同一任务内
+  // 连续的 src/srcdoc 修改会先完成版本淘汰，旧导航不会短暂创建一个必然被销毁的
+  // 子 Realm；空白 iframe 仍保留预热池要求的同步 contentWindow 语义。
+  const created = isBlankDocument
+    ? createChildRealm()
+    : Promise.resolve().then(() => {
+      if (current.version !== version || !element.isConnected) return null;
+      return createChildRealm();
+    });
 
   // 命中预热池时工厂**同步**返回 handle —— 这是整个池存在的理由：
   // `document.body.appendChild(frame)` 之后 `frame.contentWindow` 必须立刻可用，
@@ -275,6 +284,7 @@ function navigate(element) {
   }
 
   current.loading = Promise.resolve(created).then(handle => {
+    if (handle === null || handle === undefined) return;
     if (current.version !== version || !element.isConnected) {
       handle.close();
       return;
