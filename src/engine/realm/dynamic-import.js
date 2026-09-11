@@ -140,6 +140,8 @@ export function createDynamicImporter(options) {
     availableUrls = () => [],
     cache = new Map(),
   } = options;
+  let disposed = false;
+  const pending = new Set();
 
   if (typeof resolveSource !== 'function') {
     throw new TypeError('createDynamicImporter requires resolveSource');
@@ -157,7 +159,32 @@ export function createDynamicImporter(options) {
    *
    * （同一个坑在 `src/realm/module-loader.js` 的异步路径上也踩过。）
    */
+  function lifecycleError() {
+    const error = new TypeError('Realm module evaluation was cancelled');
+    error.code = 'ERR_NV8_MODULE_EVALUATION_CANCELLED';
+    return error;
+  }
+
+  function assertActive() {
+    if (disposed) throw lifecycleError();
+  }
+
+  function track(operation) {
+    assertActive();
+    let cancel;
+    const cancellation = new Promise((_, reject) => {
+      cancel = reject;
+    });
+    const entry = { cancel };
+    pending.add(entry);
+    const work = Promise.resolve().then(operation);
+    return Promise.race([work, cancellation]).finally(() => {
+      pending.delete(entry);
+    });
+  }
+
   function instantiate(url, source) {
+    assertActive();
     const cached = cache.get(url);
     if (cached !== undefined) return cached;
 
@@ -178,6 +205,7 @@ export function createDynamicImporter(options) {
    * 链接模块图。linker 只创建实例，不递归链接。
    */
   async function linkGraph(module) {
+    assertActive();
     if (module.status !== 'unlinked') return;
     await module.link(async (specifier, referencingModule) => {
       const referrer = normalizeReferrer(referencingModule, module.identifier);
@@ -187,6 +215,7 @@ export function createDynamicImporter(options) {
         : requireSource(target.url, specifier, referrer);
       return instantiate(target.url, childSource);
     });
+    assertActive();
   }
 
   function requireSource(url, specifier, referrer) {
@@ -210,18 +239,22 @@ export function createDynamicImporter(options) {
    * @returns {Promise<object>} 模块命名空间
    */
   async function importDynamic(specifier, referrer) {
-    const referrerUrl = normalizeReferrer(referrer, options.defaultReferrer);
-    const target = resolveModuleSpecifier(specifier, referrerUrl);
-    const source = target.kind === 'data'
-      ? decodeDataModule(target.url)
-      : requireSource(target.url, specifier, referrerUrl);
+    return track(async () => {
+      const referrerUrl = normalizeReferrer(referrer, options.defaultReferrer);
+      const target = resolveModuleSpecifier(specifier, referrerUrl);
+      const source = target.kind === 'data'
+        ? decodeDataModule(target.url)
+        : requireSource(target.url, specifier, referrerUrl);
 
-    const module = instantiate(target.url, source);
-    await linkGraph(module);
-    if (module.status !== 'evaluated') {
-      await module.evaluate();
-    }
-    return module.namespace;
+      const module = instantiate(target.url, source);
+      await linkGraph(module);
+      assertActive();
+      if (module.status !== 'evaluated') {
+        await module.evaluate();
+        assertActive();
+      }
+      return module.namespace;
+    });
   }
 
   /**
@@ -235,15 +268,42 @@ export function createDynamicImporter(options) {
    * @returns {Promise<object>} vm.SourceTextModule
    */
   async function loadEntryModule(source, url) {
-    const module = instantiate(url, source);
-    await linkGraph(module);
-    return module;
+    return track(async () => {
+      const module = instantiate(url, source);
+      await linkGraph(module);
+      assertActive();
+      return module;
+    });
+  }
+
+  async function evaluateEntryModule(source, url) {
+    return track(async () => {
+      const module = instantiate(url, source);
+      await linkGraph(module);
+      assertActive();
+      if (module.status !== 'evaluated') {
+        await module.evaluate();
+        assertActive();
+      }
+      return module;
+    });
+  }
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    const error = lifecycleError();
+    for (const entry of pending) entry.cancel(error);
+    pending.clear();
+    cache.clear();
   }
 
   // 主用法是直接作为 importModuleDynamically 传入，因此返回函数本体；
   // 入口加载能力挂成属性，避免调用方各自实现 link。
   importDynamic.loadEntryModule = loadEntryModule;
+  importDynamic.evaluateEntryModule = evaluateEntryModule;
   importDynamic.cache = cache;
+  importDynamic.dispose = dispose;
   return importDynamic;
 }
 

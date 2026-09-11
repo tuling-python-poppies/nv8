@@ -387,6 +387,7 @@ export async function createRealm(config) {
   }
   let pageScriptAsyncComplete = Promise.resolve();
   let pageScriptObserver = null;
+  let pageScriptDispose = null;
   const parserExecutedScripts = new WeakSet();
   if (hasDocumentPlugin && pageHtml !== '') {
     const parserModule = await moduleLoader.importUrlAsync(PAGE_PARSER_URL);
@@ -413,7 +414,10 @@ export async function createRealm(config) {
     });
     pageScriptAsyncComplete = pageScripts.asyncComplete;
     pageScriptObserver = pageScripts.observer;
+    pageScriptDispose = pageScripts.dispose;
     lifecycleModule.namespace.setDocumentPageReload?.(async document => {
+      pageScriptDispose?.();
+      pageScriptDispose = null;
       const nextScripts = await executePageScripts({
         context,
         document,
@@ -425,6 +429,7 @@ export async function createRealm(config) {
       pageScriptAsyncComplete = nextScripts.asyncComplete;
       pageScriptObserver?.disconnect?.();
       pageScriptObserver = nextScripts.observer;
+      pageScriptDispose = nextScripts.dispose;
       lifecycleModule.namespace.setPageInteractive?.();
       lifecycleModule.namespace.dispatchDOMContentLoaded?.();
       await pageScriptAsyncComplete;
@@ -482,6 +487,10 @@ export async function createRealm(config) {
     moduleLoader,
     pageScriptAsyncComplete,
     pageScriptObserver,
+    disposePageScripts() {
+      pageScriptDispose?.();
+      pageScriptDispose = null;
+    },
     // 缺失能力诊断查询器（ADR-0002）。默认不修改全局，通过 API 提供建议。
     capabilityExplainer,
     // strict 模式下安装了抛错 getter 的全局名；默认模式为空数组。
@@ -583,6 +592,8 @@ export async function createRealm(config) {
     async destroy() {
       pageScriptObserver?.disconnect?.();
       pageScriptObserver = null;
+      pageScriptDispose?.();
+      pageScriptDispose = null;
       logger.info(`[Realm ${realmId}] Destroying realm`);
       
       // 调用所有插件的 dispose 钩子

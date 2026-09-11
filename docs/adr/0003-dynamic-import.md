@@ -183,7 +183,7 @@ request for './right.js' can not be resolved on module
 | 任何情况下不发起真实网络请求 | ✅ |
 | 内部受信模块路径仍拒绝动态 import | ✅ |
 
-测试：`tests/dynamic-import-test.js`（25 项）。含两条边界断言——
+测试：`tests/dynamic-import-test.js`（27 项）。含缓存生命周期与取消断言，以及两条边界断言——
 `resolveSource` 是唯一取源入口，以及源码不 import 任何网络/文件系统模块。
 
 ## 各执行路径的最终策略

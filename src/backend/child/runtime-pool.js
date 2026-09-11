@@ -1089,11 +1089,14 @@ export class RuntimePool {
    * 缓存挂在 Realm 上：模块实例持有状态，跨 Realm 共享会破坏隔离。
    */
   moduleImporterFor(realm, referrerUrl) {
+    if (realm.__nv8ModuleImporter !== undefined) {
+      return realm.__nv8ModuleImporter;
+    }
     if (realm.__nv8ModuleCache === undefined) {
       realm.__nv8ModuleCache = new Map();
     }
     const entries = this.evidenceReplayEntries ?? this.options.replay ?? [];
-    return createDynamicImporter({
+    realm.__nv8ModuleImporter = createDynamicImporter({
       context: realm.context,
       cache: realm.__nv8ModuleCache,
       defaultReferrer: referrerUrl,
@@ -1107,6 +1110,7 @@ export class RuntimePool {
         .filter(entry => `${entry.method ?? "GET"}`.toUpperCase() === "GET")
         .map(entry => `${entry.url}`),
     });
+    return realm.__nv8ModuleImporter;
   }
 
   async evaluateModule(source, url) {
@@ -1114,16 +1118,10 @@ export class RuntimePool {
     const moduleUrl = normalizeModuleUrl(url, this.page.url);
     const importDynamic = this.moduleImporterFor(realm, moduleUrl);
     // 静态 import 与动态走同一条重放路径：同一份 Bundle 里的模块不应因
-    // 引入方式不同而待遇不同。loadEntryModule 内部处理 link，避免调用方
-    // 自己写 link 而踩「边递归边 link」在循环依赖上失败的坑。
-    const module = await importDynamic.loadEntryModule(source, moduleUrl);
-
-    const evaluation = module.evaluate();
-    if (isPromise(evaluation)) {
-      await settleRealmPromise(evaluation, realm, this);
-    } else {
-      await evaluation;
-    }
+    // 引入方式不同而待遇不同。链接和求值都由 importer 跟踪，Realm 销毁时
+    // 可以取消调用方等待，旧模块图不会在新 Realm 中复活。
+    await importDynamic.evaluateEntryModule(source, moduleUrl);
+    this.assertGenerationActive(this.generation);
     return evaluationResult("undefined", undefined);
   }
 
@@ -1693,8 +1691,12 @@ async function evaluateWorkerSource(realm, source, type, url, importer = null) {
   if (type === "module") {
     // Worker 的模块图与页面共用同一条重放路径（ADR-0003）
     if (importer !== null) {
-      const module = await importer.loadEntryModule(source, url);
-      await module.evaluate();
+      if (typeof importer.evaluateEntryModule === "function") {
+        await importer.evaluateEntryModule(source, url);
+      } else {
+        const module = await importer.loadEntryModule(source, url);
+        await module.evaluate();
+      }
       return;
     }
     const module = new vm.SourceTextModule(source, {

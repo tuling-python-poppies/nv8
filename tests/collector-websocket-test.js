@@ -46,7 +46,10 @@ function decodeClientFrame(buffer) {
 
 async function createServer({ onMessage, onOpen } = {}) {
   const server = http.createServer();
+  const sockets = new Set();
   server.on('upgrade', (request, socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
     const key = request.headers['sec-websocket-key'];
     const protocols = `${request.headers['sec-websocket-protocol'] ?? ''}`
       .split(',')
@@ -86,7 +89,10 @@ async function createServer({ onMessage, onOpen } = {}) {
   const address = server.address();
   return {
     url: `ws://127.0.0.1:${address.port}/socket`,
-    close: () => new Promise(resolve => server.close(() => resolve())),
+    close: () => new Promise(resolve => {
+      for (const socket of sockets) socket.destroy();
+      server.close(() => resolve());
+    }),
   };
 }
 

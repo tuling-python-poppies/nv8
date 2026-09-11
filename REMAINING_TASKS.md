@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 907 项（`npm test`，89 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 911 项（`npm test`，90 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -280,7 +280,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 未命中给 `ERR_NV8_MODULE_REPLAY_MISS`，含 resolvedUrl 与可用模块列表
   - per-Realm 缓存，键为解析后绝对 URL；循环依赖不死锁
   - 任何情况下不触达真实网络
-  - 测试 25 项（`tests/dynamic-import-test.js`）
+  - 测试 27 项（`tests/dynamic-import-test.js`）
 - [x] Worker 路径动态 import 重放已接入；`evaluateModule()` 改用共享入口
 - [x] eval 与 Worklet 保持拒绝并说明理由（eval 编译结果跨 Realm 复用，
   无法绑定 per-Realm 缓存；Worklet 规范不支持）
@@ -417,7 +417,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 
 ### 未完成项
 - [x] **动态 `import()` 策略** - ADR-0003 定案：离线重放 + 结构化拒绝
-  （实现与测试见第六节，25 项）
+  （实现与测试见第六节，27 项）
 - [ ] **SharedWorker/Worklet graph 指纹** - 版本和缓存
 - [ ] **module cache 作用域和销毁** - 模块缓存生命周期
 - [ ] **pending module evaluation 取消** - 取消未完成的模块加载
@@ -606,7 +606,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 - [ ] **真实存储适配** - 内存与 NDJSON 两个实现已就位，Postgres/SQLite 等
   由调用方按 `write/flush/close` 接口提供（刻意不内置 DB 驱动）
 
-**状态**: ✅ Gate 5 核心边界完成（125 项测试）。剩余为上层编排能力，非边界问题。
+**状态**: ✅ Gate 5 核心边界完成（130 项测试）。剩余为上层编排能力，非边界问题。
 
 ---
 
@@ -1636,7 +1636,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：907 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：911 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1732,5 +1732,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（907 项 / 89 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（911 项 / 90 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

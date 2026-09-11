@@ -292,6 +292,54 @@ test('circular dependencies do not deadlock', async () => {
   assert.equal(namespace.seesRight(), 'R');
 });
 
+test('disposing an importer clears its per-Realm module cache', async () => {
+  let evaluations = 0;
+  const { importDynamic } = importerFor({
+    'https://target.test/app/cache.js': 'export const value = 1;',
+  }, {
+    resolveSource: (url) => {
+      if (url === 'https://target.test/app/cache.js') evaluations += 1;
+      return url === 'https://target.test/app/cache.js'
+        ? 'export const value = 1;'
+        : null;
+    },
+  });
+
+  await importDynamic('./cache.js', REFERRER);
+  assert.equal(importDynamic.cache.size, 1);
+  importDynamic.dispose();
+  assert.equal(importDynamic.cache.size, 0);
+  await assert.rejects(
+    () => importDynamic('./cache.js', REFERRER),
+    error => error.code === 'ERR_NV8_MODULE_EVALUATION_CANCELLED',
+  );
+  assert.equal(evaluations, 1);
+});
+
+test('disposing an importer rejects pending module evaluation', async () => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const context = vm.createContext({ gate });
+  const importDynamic = createDynamicImporter({
+    context,
+    defaultReferrer: REFERRER,
+    resolveSource: () => null,
+  });
+
+  const pending = importDynamic.evaluateEntryModule(
+    'await gate; export const done = true;',
+    'https://target.test/app/pending.js',
+  );
+  await Promise.resolve();
+  await Promise.resolve();
+  importDynamic.dispose();
+  await assert.rejects(
+    pending,
+    error => error.code === 'ERR_NV8_MODULE_EVALUATION_CANCELLED',
+  );
+  release();
+});
+
 test('caches are independent across importers', async () => {
   let firstCount = 0;
   let secondCount = 0;

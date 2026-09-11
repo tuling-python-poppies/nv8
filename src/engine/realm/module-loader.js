@@ -67,6 +67,32 @@ export class RealmModuleLoader {
   constructor(context) {
     this.context = context;
     this.modules = new Map();
+    this.closed = false;
+    this.pending = new Set();
+  }
+
+  #lifecycleError() {
+    const error = new TypeError("Realm module evaluation was cancelled");
+    error.code = "ERR_NV8_MODULE_EVALUATION_CANCELLED";
+    return error;
+  }
+
+  #assertOpen() {
+    if (this.closed) throw this.#lifecycleError();
+  }
+
+  #track(operation) {
+    this.#assertOpen();
+    let cancel;
+    const cancellation = new Promise((_, reject) => {
+      cancel = reject;
+    });
+    const pending = { cancel };
+    this.pending.add(pending);
+    const work = Promise.resolve().then(operation);
+    return Promise.race([work, cancellation]).finally(() => {
+      this.pending.delete(pending);
+    });
   }
 
   importInternal(specifier) {
@@ -91,6 +117,7 @@ export class RealmModuleLoader {
   }
 
   importUrl(url) {
+    this.#assertOpen();
     ensureBundleLoaded();
     if (!(url instanceof URL)) {
       throw new TypeError("Internal module URL must be a URL");
@@ -127,18 +154,22 @@ export class RealmModuleLoader {
    * @returns {Promise<object>} vm.SourceTextModule
    */
   async importUrlAsync(url) {
-    ensureBundleLoaded();
-    if (!(url instanceof URL)) {
-      throw new TypeError("Internal module URL must be a URL");
-    }
+    return this.#track(async () => {
+      ensureBundleLoaded();
+      if (!(url instanceof URL)) {
+        throw new TypeError("Internal module URL must be a URL");
+      }
 
-    // 与同步路径一致的三阶段：先建图，再链接，最后求值。
+      // 与同步路径一致的三阶段：先建图，再链接，最后求值。
       // 必须分阶段：循环依赖（如 navigator-state ↔ navigator-constructor）下，
-    // 边递归边 link 会把未完成链接的模块交给 link() 回调而失败。
-    const module = this.loadGraph(url);
-    await this.#linkGraphAsync(module, new Set());
-    await evaluateAsync(module);
-    return module;
+      // 边递归边 link 会把未完成链接的模块交给 link() 回调而失败。
+      const module = this.loadGraph(url);
+      await this.#linkGraphAsync(module, new Set());
+      this.#assertOpen();
+      await evaluateAsync(module);
+      this.#assertOpen();
+      return module;
+    });
   }
 
   /**
@@ -178,6 +209,7 @@ export class RealmModuleLoader {
    * @returns {Promise<void>}
    */
   async preload(urls) {
+    this.#assertOpen();
     for (const url of urls) {
       if (!(url instanceof URL)) {
         throw new TypeError("Preloaded module URL must be a URL");
@@ -197,6 +229,7 @@ export class RealmModuleLoader {
    * @returns {object} vm.SourceTextModule
    */
   importUrlSyncCached(url) {
+    this.#assertOpen();
     const cached = this.modules.get(url.href);
     if (cached !== undefined && cached.status === "evaluated") return cached;
 
@@ -221,6 +254,7 @@ export class RealmModuleLoader {
   }
 
   loadGraph(url) {
+    this.#assertOpen();
     const identifier = url.href;
     const cached = this.modules.get(identifier);
     if (cached !== undefined) {
@@ -285,7 +319,26 @@ export class RealmModuleLoader {
     linkGraphSync(module, visited ?? new Set());
   }
 
+  dispose() {
+    if (this.closed) return;
+    this.closed = true;
+    const error = this.#lifecycleError();
+    for (const pending of this.pending) pending.cancel(error);
+    this.pending.clear();
+    this.modules.clear();
+    this.context = null;
+  }
+
+  cacheStats() {
+    return Object.freeze({
+      entries: this.modules.size,
+      pending: this.pending.size,
+      closed: this.closed,
+    });
+  }
+
   resolve(specifier, referencingModule) {
+    this.#assertOpen();
     if (
       specifier.startsWith("node:")
       || specifier.startsWith("file:")

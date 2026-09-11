@@ -52,6 +52,21 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
   // `<script type="module">` 在 `<script defer src>` 前面时顺序颠倒。
   const deferredOrModules = [];
   const asyncScripts = [];
+  const pageModuleImporter = createDynamicImporter({
+    context,
+    cache: new Map(),
+    defaultReferrer: pageUrl,
+    resolveSource: url => {
+      try {
+        return resolveReplay(url);
+      } catch {
+        return null;
+      }
+    },
+    availableUrls: () => replay
+      .filter(entry => `${entry.method ?? 'GET'}`.toUpperCase() === 'GET')
+      .map(entry => `${entry.url}`),
+  });
 
   for (const script of scripts) {
     if (executedScripts.has(script) || script.__nv8ParserExecuted === true) continue;
@@ -94,7 +109,11 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
     else await runClassic(entry);
   }
   const observer = observeDynamicScripts();
-  return { asyncComplete, observer };
+  return {
+    asyncComplete,
+    observer,
+    dispose: () => pageModuleImporter.dispose(),
+  };
 
   async function runClassic(entry) {
     if (executedScripts.has(entry.script) || entry.script.__nv8ParserExecuted === true) return;
@@ -118,9 +137,7 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
     if (executedScripts.has(entry.script) || entry.script.__nv8ParserExecuted === true) return;
     try {
       const source = entry.source ?? resolveReplay(entry.url);
-      const cache = new Map();
-      const module = await linkModule(source, entry.url, cache);
-      await module.evaluate();
+      await pageModuleImporter.evaluateEntryModule(source, entry.url);
       dispatchScriptEvent(context, entry.script, 'load');
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;
@@ -131,51 +148,6 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
     }
   }
 
-  async function linkModule(source, url, cache) {
-    if (cache.has(url)) return cache.get(url);
-    const module = new vm.SourceTextModule(source, {
-      context,
-      identifier: url,
-      initializeImportMeta(meta) {
-        meta.url = url;
-      },
-      // 动态 import 走离线重放（ADR-0003），与静态 import 同一套解析规则。
-      // 迁移前这里硬拒绝，导致「静态 import 能跑、动态 import 不能」的
-      // 不一致——同一份 Bundle 里的模块两种引入方式待遇不同。
-      // 显式绑定当前模块 URL：Node 传入的 referrer 是模块对象而非字符串
-      importModuleDynamically: (specifier) => dynamicImporter(cache)(specifier, url),
-    });
-    cache.set(url, module);
-    await module.link(async specifier => {
-      const childUrl = new URL(specifier, url).href;
-      return linkModule(resolveReplay(childUrl), childUrl, cache);
-    });
-    return module;
-  }
-
-  /**
-   * 为指定模块缓存创建动态 import 处理器。
-   *
-   * 缓存与静态 link 共用：同一 URL 在同一 Realm 内只求值一次，
-   * 无论它是静态还是动态引入的。
-   */
-  function dynamicImporter(cache) {
-    return createDynamicImporter({
-      context,
-      cache,
-      defaultReferrer: pageUrl,
-      resolveSource: url => {
-        try {
-          return resolveReplay(url);
-        } catch {
-          return null;
-        }
-      },
-      availableUrls: () => replay
-        .filter(entry => `${entry.method ?? 'GET'}`.toUpperCase() === 'GET')
-        .map(entry => `${entry.url}`),
-    });
-  }
 
   function resolveReplay(url) {
     if (url.startsWith('data:')) return decodeData(url);
