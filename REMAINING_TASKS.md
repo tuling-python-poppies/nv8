@@ -419,8 +419,8 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 - [x] **动态 `import()` 策略** - ADR-0003 定案：离线重放 + 结构化拒绝
   （实现与测试见第六节，27 项）
 - [ ] **SharedWorker/Worklet graph 指纹** - 版本和缓存
-- [ ] **module cache 作用域和销毁** - 模块缓存生命周期
-- [ ] **pending module evaluation 取消** - 取消未完成的模块加载
+- [x] **module cache 作用域和销毁** - per-Realm module cache 在 Realm destroy/reset 时清空；新增 `RealmModuleLoader` 生命周期断言
+- [x] **pending module evaluation 取消** - 动态 import、页面 module script 和 Worker module evaluation 在 Realm 销毁时取消等待，并返回结构化生命周期错误
 - [x] **Worker 并发/深度/关闭限制** - `maxWorkerRealms`、`maxWorkerConnections`、`maxWorkerDepth`
   独立限制 Dedicated / Shared / Service Worker；创建中、脚本失败、`close()`、reset 和
   sandbox destroy 均使用幂等释放路径，覆盖 child-process、worker-thread 和 plugin Sandbox。
