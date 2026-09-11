@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 911 项（`npm test`，90 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 915 项（`npm test`，92 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -418,7 +418,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
 ### 未完成项
 - [x] **动态 `import()` 策略** - ADR-0003 定案：离线重放 + 结构化拒绝
   （实现与测试见第六节，27 项）
-- [ ] **SharedWorker/Worklet graph 指纹** - 版本和缓存
+- [x] **SharedWorker/Worklet graph 指纹** - `resources().graphFingerprints` 提供版本化、可序列化的 SHA-256 graph 指纹；包含入口、模块集合和 per-Realm module cache 摘要，排除连接数与时序状态
 - [x] **module cache 作用域和销毁** - per-Realm module cache 在 Realm destroy/reset 时清空；新增 `RealmModuleLoader` 生命周期断言
 - [x] **pending module evaluation 取消** - 动态 import、页面 module script 和 Worker module evaluation 在 Realm 销毁时取消等待，并返回结构化生命周期错误
 - [x] **Worker 并发/深度/关闭限制** - `maxWorkerRealms`、`maxWorkerConnections`、`maxWorkerDepth`
@@ -1671,7 +1671,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 | 全局名存在性 | 152 profile 覆盖真实 Edge **100%**，多余 **0** —— 集合层到顶 |
 | 原型成员与描述符 | **969/969** 成员集合一致，缺失 0，多余 0 —— 集合层到顶 |
 | 枚举顺序与 own-descriptor | 数据表管的 1178 项**逐字一致**（Node 22+）；Edge 152 原型成员顺序 27 项已校正 |
-| 运行时行为 | 同步 186 探针 / 25 类，182 项一致、4 项登记；Worker / ServiceWorker 异步 5 项 —— **剩余工作大头仍在这里** |
+| 运行时行为 | 同步 186 探针 / 25 类，182 项一致、4 项登记；Worker / ServiceWorker 异步 5 项；SharedWorker/Worklet graph 指纹已纳入资源诊断 —— **剩余工作大头仍在这里** |
 
 「基本到顶」这个说法要限定在**集合**上。新增第四层（`window-surface-order-test.js`）
 首轮就在已经报 0 差异的地方抓到 3 个真问题——集合对、顺序错，是形状层此前的盲区。
@@ -1732,5 +1732,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（911 项 / 90 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（915 项 / 92 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

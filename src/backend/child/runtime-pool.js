@@ -28,6 +28,7 @@ import {
 import {
   resolveTrustedScriptIds,
 } from "../../engine/core/evidence-contract.js";
+import { createWorkerGraphFingerprint } from "../../infra/fingerprint/worker-graph.js";
 
 /**
  * 每个**额外** Realm 的老生代增量估算。
@@ -174,6 +175,8 @@ export class RuntimePool {
     );
     this.sharedWorkers = new Map();
     this.workletRealmsByOwner = new WeakMap();
+    this.workletRealms = new Set();
+    this.workletStates = new Set();
     this.broadcastGroups = new Map();
     const nativeFunctions = new WeakMap();
     this.nativeFunctionRegistry = Object.freeze({
@@ -854,6 +857,10 @@ export class RuntimePool {
     }
     return {
       realm,
+      key,
+      url: options.url,
+      name: options.name,
+      type: options.type,
       connections: new Set(),
       connectionReleases: new Set(),
     };
@@ -994,14 +1001,25 @@ export class RuntimePool {
       throw error;
     }
     this.assertGenerationActive(generation);
+    this.workletStates.add(state);
     const source = resolveWorkerSource(
       options.url,
       this.options.replay,
       this.objectURLRegistry,
       options.creatorOrigin,
     );
-    await evaluateWorkletModule(state.realm, source, options.url);
-    this.assertGenerationActive(generation);
+    try {
+      await evaluateWorkletModule(state.realm, source, options.url);
+      state.modules.add(options.url);
+      this.assertGenerationActive(generation);
+    } catch (error) {
+      if (state.modules.size === 0) {
+        if (worklets.get(key) === creating) worklets.delete(key);
+        this.workletStates.delete(state);
+        this.destroyChildRealm(state.realm);
+      }
+      throw error;
+    }
   }
 
   async createWorkletState(options) {
@@ -1025,7 +1043,14 @@ export class RuntimePool {
       throw this.lifecycleError();
     }
     this.childRealms.add(realm);
-    return { realm };
+    this.workletRealms.add(realm);
+    return {
+      realm,
+      kind: options.kind,
+      id: options.id,
+      creatorOrigin: options.creatorOrigin,
+      modules: new Set(),
+    };
   }
 
   async evaluate(source) {
@@ -1230,6 +1255,56 @@ export class RuntimePool {
     return this.networkRequestCapture.read();
   }
 
+  readWorkerGraphFingerprints() {
+    const graphs = [];
+    for (const shared of this.sharedWorkers.values()) {
+      if (shared === null || typeof shared !== "object" || shared.realm === undefined) continue;
+      const moduleCache = moduleCacheSnapshot(shared.realm);
+      const fingerprint = createWorkerGraphFingerprint({
+        kind: "shared-worker",
+        url: shared.url,
+        name: shared.name,
+        type: shared.type,
+        browserMajorVersion: this.options.fingerprint.browserMajorVersion,
+        modules: moduleCache.map((entry) => entry.url),
+        moduleCache,
+      });
+      graphs.push({
+        kind: "shared-worker",
+        key: shared.key,
+        url: shared.url,
+        name: shared.name,
+        type: shared.type,
+        fingerprint,
+      });
+    }
+    for (const state of this.workletStates) {
+      if (state.realm?.destroyed) continue;
+      const modules = [...state.modules].sort();
+      const moduleCache = modules.map((url) => ({ url, status: "evaluated" }));
+      const fingerprint = createWorkerGraphFingerprint({
+        kind: `${state.kind}-worklet`,
+        url: modules[0] ?? "",
+        name: "",
+        type: "module",
+        browserMajorVersion: this.options.fingerprint.browserMajorVersion,
+        modules,
+        moduleCache,
+      });
+      graphs.push({
+        kind: `${state.kind}-worklet`,
+        id: state.id,
+        modules,
+        fingerprint,
+      });
+    }
+    return graphs.sort((left, right) => {
+      const leftKey = `${left.kind}\0${left.key ?? left.id}`;
+      const rightKey = `${right.kind}\0${right.key ?? right.id}`;
+      return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
+    });
+  }
+
   readResources() {
     const root = this.realm?.bootstrap?.resourceSnapshot?.() ?? {};
     return {
@@ -1243,6 +1318,7 @@ export class RuntimePool {
       sharedWorkerGraphs: Number(this.sharedWorkers.size),
       workerConnections: this.workerConnections,
       pendingWorkerCreations: this.pendingWorkerCreations,
+      graphFingerprints: this.readWorkerGraphFingerprints(),
       root: {
         workers: Number(root.workers ?? 0),
         sharedWorkers: Number(root.sharedWorkers ?? 0),
@@ -1282,6 +1358,8 @@ export class RuntimePool {
     this.idlePrewarmedHandles.length = 0;
     this.sharedWorkers.clear();
     this.workerRealms.clear();
+    this.workletRealms.clear();
+    this.workletStates.clear();
     this.workletRealmsByOwner = new WeakMap();
   }
 
@@ -1320,6 +1398,10 @@ export class RuntimePool {
     }
     this.childRealms.delete(realm);
     this.workerRealms.delete(realm);
+    this.workletRealms.delete(realm);
+    for (const state of this.workletStates) {
+      if (state.realm === realm) this.workletStates.delete(state);
+    }
     // 未被领走就被销毁的池位要从索引里摘掉，否则 takePrewarmedRealm() 会拿到
     // 一个已销毁的 Realm，而 idlePrewarmedRealms 也会虚报
     const idleIndex = this.idlePrewarmedHandles.findIndex(
@@ -1724,6 +1806,15 @@ async function evaluateWorkerSource(realm, source, type, url, importer = null) {
     },
   });
   script.runInContext(realm.context);
+}
+
+function moduleCacheSnapshot(realm) {
+  const cache = realm?.__nv8ModuleCache;
+  if (!(cache instanceof Map)) return [];
+  return [...cache.entries()].map(([url, module]) => ({
+    url: `${url}`,
+    status: `${module?.status ?? "unknown"}`,
+  }));
 }
 
 async function evaluateWorkletModule(realm, source, url) {

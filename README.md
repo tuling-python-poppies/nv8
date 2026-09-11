@@ -282,7 +282,10 @@ Realm 数，`maxWorkerConnections` 限制页面到 Worker 的活动连接数，`
 嵌套 Worker 深度。三个限制默认取高水位，不改变既有 `maxRealms` 行为；显式触发时返回
 `QuotaExceededError`，并带有 `LIMIT_WORKER_REALMS`、`LIMIT_WORKER_CONNECTIONS` 或
 `LIMIT_WORKER_DEPTH` 诊断码。`resources()` / `diagnose()` 会报告当前 Worker Realm、连接数
-和创建中的数量。
+和创建中的数量。对于活动的 SharedWorker 和 Worklet，`resources().graphFingerprints` 还会
+返回稳定、可序列化的 graph 指纹：包含 graph 类型、入口 URL、模块 URL 集合、浏览器主版本
+和 per-Realm module cache 摘要。指纹采用版本号与 SHA-256 摘要；连接数、Realm 对象和时序
+状态不参与摘要，因此等价运行不会因资源创建顺序变化而产生不同指纹。
 
 ---
 
