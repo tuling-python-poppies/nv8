@@ -30,6 +30,13 @@ export {
 export { ArtifactSet, createArtifactSet } from './artifact-set.js';
 
 export {
+  PROTOCOL_SCHEMA_VERSION,
+  parseProtocolSchemaVersion,
+  isProtocolSchemaCompatible,
+  assertProtocolSchemaCompatible,
+} from './schema-version.js';
+
+export {
   REQUEST_PLAN_SCHEMA_VERSION,
   BodyEncoding,
   DEFAULT_REQUEST_PLAN_LIMITS,

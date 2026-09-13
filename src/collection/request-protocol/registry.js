@@ -17,6 +17,7 @@ import { ArtifactSet } from './artifact-set.js';
 import { createRequestPlan, requestPlanToJSON } from './request-plan.js';
 import { applyTransforms, diffRequestPlans, findTransformConflicts, transformsDigest } from './transforms.js';
 import { ProtocolError, ProtocolErrorCode } from './errors.js';
+import { PROTOCOL_SCHEMA_VERSION, assertProtocolSchemaCompatible } from './schema-version.js';
 
 export class ProtocolRegistry {
   #adapters = new Map();
@@ -157,6 +158,7 @@ export class ProtocolRegistry {
     });
 
     return Object.freeze({
+      schemaVersion: PROTOCOL_SCHEMA_VERSION,
       plan: finalPlan,
       basePlan,
       transforms: Object.freeze(collected),
@@ -200,7 +202,7 @@ export class ProtocolRegistry {
       };
     });
     return {
-      schemaVersion: '1.0',
+      schemaVersion: PROTOCOL_SCHEMA_VERSION,
       adapters,
       digest: canonicalDigest(adapters),
     };
@@ -223,7 +225,9 @@ export function createProtocolRegistry(adapters = []) {
  * @param {object} result
  */
 export function protocolResultToJSON(result) {
+  assertProtocolSchemaCompatible(result.schemaVersion ?? PROTOCOL_SCHEMA_VERSION);
   return {
+    schemaVersion: result.schemaVersion ?? PROTOCOL_SCHEMA_VERSION,
     plan: requestPlanToJSON(result.plan),
     basePlan: requestPlanToJSON(result.basePlan),
     transforms: result.transforms.map((entry) => ({ ...entry })),

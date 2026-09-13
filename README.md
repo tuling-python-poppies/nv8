@@ -623,7 +623,9 @@ const collector = createCollector({
 适配器返回**声明式变换列表**而不是直接改计划——这样变换可审计、可重放、可测试。
 
 配套 `canonical-json.js` 提供稳定序列化与摘要（键顺序无关），
-是任务指纹与去重 key 的基础。
+是任务指纹与去重 key 的基础。Protocol registry 和 `ProtocolResult` 使用独立的
+`schemaVersion`（当前 `1.0`）：同主版本的旧 minor 可消费，未来 minor 和不同 major
+拒绝；它与底层 Frame Protocol 的版本不是同一个概念。
 
 ---
 
