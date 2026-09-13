@@ -41,7 +41,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
-import { BEHAVIOR_PROBES, buildProbeExpression } from '../src/infra/baseline/behavior-probes.js';
+import {
+  BEHAVIOR_PROBES,
+  buildProbeExpression,
+  validateBehaviorProbeDefinitions,
+} from '../src/infra/baseline/behavior-probes.js';
 
 const FIXTURE_URL = new URL('../fixtures/fingerprint/edge-behavior.json', import.meta.url);
 const hasFixture = existsSync(FIXTURE_URL);
@@ -209,19 +213,28 @@ test('the real-Edge behavior fixture is present and complete', () => {
   }
 });
 
-test('every probe id is unique and carries a category', () => {
-  const ids = BEHAVIOR_PROBES.map(entry => entry.id);
-  assert.equal(new Set(ids).size, ids.length, 'duplicate probe id');
-  for (const entry of BEHAVIOR_PROBES) {
-    assert.equal(typeof entry.id, 'string', 'probe id must be a string');
-    assert.ok(entry.id.length > 0, 'probe id must not be empty');
-    assert.equal(typeof entry.category, 'string', `${entry.id} category must be a string`);
-    assert.ok(entry.category.length > 0, `${entry.id} has no category`);
-    assert.equal(typeof entry.expression, 'string', `${entry.id} expression must be a string`);
-    assert.ok(entry.expression.startsWith('()'), `${entry.id} must be a thunk`);
-    const thunk = Function(`return (${entry.expression});`)();
-    assert.equal(typeof thunk, 'function', `${entry.id} must compile to a function`);
-  }
+test('every probe definition passes the shared validator', () => {
+  assert.strictEqual(validateBehaviorProbeDefinitions(), BEHAVIOR_PROBES);
+});
+
+test('the shared validator rejects malformed probe definitions', () => {
+  const base = { id: 'test/probe', category: 'storage', expression: '() => 1' };
+  assert.throws(
+    () => validateBehaviorProbeDefinitions([base, { ...base }]),
+    /unique and non-empty/,
+  );
+  assert.throws(
+    () => validateBehaviorProbeDefinitions([{ ...base, category: 'unknown' }]),
+    /unknown behavior probe category/,
+  );
+  assert.throws(
+    () => validateBehaviorProbeDefinitions([{ ...base, expression: 'not a thunk' }]),
+    /zero-argument thunk/,
+  );
+  assert.throws(
+    () => validateBehaviorProbeDefinitions([{ ...base, expression: '() => {' }]),
+    /invalid behavior probe expression/,
+  );
 });
 
 test('the Edge fixture has exactly the shared probe set', () => {

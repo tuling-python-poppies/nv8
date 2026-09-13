@@ -1774,6 +1774,79 @@ export const BEHAVIOR_PROBES = Object.freeze([
   },
 ]);
 
+/** 允许的探针分类。分类是报告和对等测试的稳定维度，不能由拼写漂移产生新组。 */
+export const BEHAVIOR_PROBE_CATEGORIES = Object.freeze([
+  'nativeToString',
+  'illegalInvocation',
+  'argumentCount',
+  'constructorGuard',
+  'typeTag',
+  'arityMetadata',
+  'errorShape',
+  'collections',
+  'worker',
+  'cssom',
+  'canvas',
+  'fontMetrics',
+  'domRange',
+  'eventTiming',
+  'crossRealm',
+  'urlParsing',
+  'storage',
+  'fetch',
+  'crypto',
+  'xhr',
+  'websocket',
+  'indexedDB',
+  'audio',
+  'intl',
+  'performance',
+]);
+
+/**
+ * 校验共享探针定义。
+ *
+ * 采集脚本和对等测试都调用同一个门禁，避免某一端接受坏 thunk 或新分类，
+ * 另一端却静默生成或比较错误 fixture。这里只编译箭头函数，不执行探针正文。
+ *
+ * @param {readonly object[]} probes
+ * @returns {readonly object[]}
+ */
+export function validateBehaviorProbeDefinitions(probes = BEHAVIOR_PROBES) {
+  if (!Array.isArray(probes)) {
+    throw new TypeError('behavior probes must be an array');
+  }
+  const ids = new Set();
+  const categories = new Set(BEHAVIOR_PROBE_CATEGORIES);
+  for (const entry of probes) {
+    if (entry === null || typeof entry !== 'object') {
+      throw new TypeError('behavior probe entries must be objects');
+    }
+    if (typeof entry.id !== 'string' || entry.id.length === 0 || ids.has(entry.id)) {
+      throw new TypeError(`behavior probe id must be unique and non-empty: ${entry.id}`);
+    }
+    if (typeof entry.category !== 'string' || !categories.has(entry.category)) {
+      throw new TypeError(`unknown behavior probe category: ${entry.category}`);
+    }
+    if (typeof entry.expression !== 'string' || !entry.expression.startsWith('()')) {
+      throw new TypeError(`behavior probe must be a zero-argument thunk: ${entry.id}`);
+    }
+    let thunk;
+    try {
+      thunk = new Function(`return (${entry.expression});`)();
+    } catch (error) {
+      throw new TypeError(`invalid behavior probe expression: ${entry.id}`, { cause: error });
+    }
+    if (typeof thunk !== 'function') {
+      throw new TypeError(`behavior probe expression is not a function: ${entry.id}`);
+    }
+    ids.add(entry.id);
+  }
+  return probes;
+}
+
+validateBehaviorProbeDefinitions();
+
 /**
  * 生成在目标环境里执行全部探针的表达式。
  *
