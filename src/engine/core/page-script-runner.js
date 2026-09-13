@@ -1,8 +1,10 @@
 import vm from 'node:vm';
 import { Buffer } from 'node:buffer';
 import { createDynamicImporter } from '../realm/dynamic-import.js';
+import { normalizeScriptPolicy, scriptPolicyAllows } from './script-policy.js';
 
-export function createParserScriptExecutor({ context, pageUrl, replay, lifecycleModule, executedScripts }) {
+export function createParserScriptExecutor({ context, pageUrl, replay, lifecycleModule, executedScripts, scriptPolicy }) {
+  const normalizedPolicy = normalizeScriptPolicy(scriptPolicy);
   return script => {
     if (executedScripts?.has(script) || script.__nv8ParserExecuted === true) return;
     const type = `${script.getAttribute?.('type') ?? ''}`.trim().toLowerCase();
@@ -24,6 +26,13 @@ export function createParserScriptExecutor({ context, pageUrl, replay, lifecycle
       const scriptUrl = isInline
         ? pageUrl
         : new URL(`${sourceUrl}`, pageUrl).href;
+      const permission = scriptPolicyAllows(normalizedPolicy, {
+        url: scriptUrl,
+        inline: isInline,
+        module: false,
+        pageUrl,
+      });
+      if (!permission.allowed) throw scriptPolicyError(scriptUrl, permission.reason);
       const source = isInline
         ? `${script.textContent ?? ''}`
         : resolveReplaySource(scriptUrl, replay);
@@ -42,7 +51,8 @@ export function createParserScriptExecutor({ context, pageUrl, replay, lifecycle
   };
 }
 
-export async function executePageScripts({ context, document, pageUrl, replay, lifecycleModule, executedScripts = new WeakSet() }) {
+export async function executePageScripts({ context, document, pageUrl, replay, lifecycleModule, executedScripts = new WeakSet(), scriptPolicy }) {
+  const normalizedPolicy = normalizeScriptPolicy(scriptPolicy);
   lifecycleModule?.namespace?.ensureDocumentEventTargetForPage?.();
   const scripts = [...(document?.getElementsByTagName?.('script') ?? [])];
   const knownScripts = new WeakSet(scripts);
@@ -56,6 +66,12 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
     context,
     cache: new Map(),
     defaultReferrer: pageUrl,
+    allowUrl: url => scriptPolicyAllows(normalizedPolicy, {
+      url,
+      inline: false,
+      module: true,
+      pageUrl,
+    }).allowed,
     resolveSource: url => {
       try {
         return resolveReplay(url);
@@ -118,6 +134,13 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
   async function runClassic(entry) {
     if (executedScripts.has(entry.script) || entry.script.__nv8ParserExecuted === true) return;
     try {
+      const permission = scriptPolicyAllows(normalizedPolicy, {
+        url: entry.url,
+        inline: entry.source !== undefined,
+        module: false,
+        pageUrl,
+      });
+      if (!permission.allowed) throw scriptPolicyError(entry.url, permission.reason);
       const source = entry.source ?? resolveReplay(entry.url);
       lifecycleModule?.namespace?.setCurrentScriptElement?.(entry.script);
       vm.runInContext(source, context, { filename: entry.url });
@@ -136,6 +159,13 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
   async function runModule(entry) {
     if (executedScripts.has(entry.script) || entry.script.__nv8ParserExecuted === true) return;
     try {
+      const permission = scriptPolicyAllows(normalizedPolicy, {
+        url: entry.url,
+        inline: entry.source !== undefined,
+        module: true,
+        pageUrl,
+      });
+      if (!permission.allowed) throw scriptPolicyError(entry.url, permission.reason);
       const source = entry.source ?? resolveReplay(entry.url);
       await pageModuleImporter.evaluateEntryModule(source, entry.url);
       dispatchScriptEvent(context, entry.script, 'load');
@@ -223,6 +253,13 @@ function runLater(callback) {
       Promise.resolve(callback()).then(resolve, resolve);
     }, 0);
   });
+}
+
+function scriptPolicyError(url, reason) {
+  const error = new Error(`Refused to execute script ${url}: ${reason}`);
+  error.code = 'ERR_NV8_SCRIPT_POLICY_REJECTED';
+  error.reason = reason;
+  return error;
 }
 
 function dispatchScriptEvent(context, script, type, error = null) {

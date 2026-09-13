@@ -45,6 +45,7 @@ export async function createNv8(options = {}) {
     pluginLockPlan = null,
     limits = {},
     capabilityPolicy = 'degrade',
+    scriptPolicy = undefined,
   } = options;
   const hasProfileInput = profileId !== null
     || typeof profileInput === 'string'
@@ -135,7 +136,10 @@ export async function createNv8(options = {}) {
     replay,
     evidence,
     evidenceSource,
-    runtime,
+    runtime: {
+      ...runtime,
+      scriptPolicy: scriptPolicy ?? effectiveProfile.scriptPolicy ?? runtime.scriptPolicy,
+    },
   });
   
   logger.info(`[Nv8] Instance created: ${sandbox.id}`);

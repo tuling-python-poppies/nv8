@@ -677,6 +677,31 @@ const nv8 = await createNv8({
 降级不会伪造能力为可用；运行时只能使用 Profile 已声明的 fallback。缺少 required
 能力或 strict 模式下的 optional 能力都会在目标脚本执行前失败。
 
+### 受信任脚本与 CSP 边界
+
+`runtime.scriptPolicy` 是页面脚本执行层的 CSP-like 白名单，不是对
+`vm.Context` 的安全保证。它分别控制 inline、external、module 和 `data:` 脚本，
+并可用 `allowedOrigins` 限制脚本来源。页面 module 的静态依赖和动态 `import()`
+共用同一检查；未授权脚本收到 `ERR_NV8_SCRIPT_POLICY_REJECTED` 并派发脚本
+`error` 事件，不会回退到真实网络。
+
+```js
+runtime: {
+  scriptPolicy: {
+    allowInline: false,
+    allowExternal: true,
+    allowModules: true,
+    allowDataUrls: false,
+    allowedOrigins: ['https://target.test', 'https://cdn.target.test'],
+  },
+}
+```
+
+这条策略只约束页面目标脚本。Core 的内部 surface/module loader 不通过页面
+allowlist；Evidence Bundle 中的脚本仍需另外通过 `evidence.trustedScriptPolicy`
+（`entrypoints-only`、`allowlist` 或 `deny-all`）授权。这样不会把“Bundle 来源可信”
+错误地等同为“Bundle 中目标脚本可信”。
+
 指纹字段遵循 [ADR-0005](docs/adr/0005-machine-specific-values.md) 一条铁律：
 **浏览器身份照抄，机器特定值保持中性。**
 

@@ -400,6 +400,7 @@ export async function createRealm(config) {
         pageUrl,
         replay,
         lifecycleModule,
+        scriptPolicy: runtime.scriptPolicy,
         executedScripts: parserExecutedScripts,
       }),
     );
@@ -410,6 +411,7 @@ export async function createRealm(config) {
       pageUrl,
       replay,
       lifecycleModule,
+      scriptPolicy: runtime.scriptPolicy,
       executedScripts: parserExecutedScripts,
     });
     pageScriptAsyncComplete = pageScripts.asyncComplete;
@@ -424,6 +426,7 @@ export async function createRealm(config) {
         pageUrl,
         replay,
         lifecycleModule,
+        scriptPolicy: runtime.scriptPolicy,
         executedScripts: parserExecutedScripts,
       });
       pageScriptAsyncComplete = nextScripts.asyncComplete;

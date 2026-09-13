@@ -138,6 +138,7 @@ export function createDynamicImporter(options) {
     context,
     resolveSource,
     availableUrls = () => [],
+    allowUrl = () => true,
     cache = new Map(),
   } = options;
   let disposed = false;
@@ -210,12 +211,23 @@ export function createDynamicImporter(options) {
     await module.link(async (specifier, referencingModule) => {
       const referrer = normalizeReferrer(referencingModule, module.identifier);
       const target = resolveModuleSpecifier(specifier, referrer);
+      assertUrlAllowed(target.url, specifier, referrer);
       const childSource = target.kind === 'data'
         ? decodeDataModule(target.url)
         : requireSource(target.url, specifier, referrer);
       return instantiate(target.url, childSource);
     });
     assertActive();
+  }
+
+  function assertUrlAllowed(url, specifier, referrer) {
+    if (allowUrl(url) === true) return;
+    const error = new TypeError(`Module execution blocked by script policy: ${url}`);
+    error.code = 'ERR_NV8_SCRIPT_POLICY_REJECTED';
+    error.reason = 'module-not-allowed';
+    error.specifier = specifier;
+    error.referrer = referrer;
+    throw error;
   }
 
   function requireSource(url, specifier, referrer) {
@@ -242,6 +254,7 @@ export function createDynamicImporter(options) {
     return track(async () => {
       const referrerUrl = normalizeReferrer(referrer, options.defaultReferrer);
       const target = resolveModuleSpecifier(specifier, referrerUrl);
+      assertUrlAllowed(target.url, specifier, referrerUrl);
       const source = target.kind === 'data'
         ? decodeDataModule(target.url)
         : requireSource(target.url, specifier, referrerUrl);
