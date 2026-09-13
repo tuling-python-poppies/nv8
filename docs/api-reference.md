@@ -235,8 +235,10 @@ Transport IO；凭据按精确 origin 绑定并在 `describe()`、审计和错�
 Collector 还提供：
 
 - `PaginationScheduler`：按 cursor 增量分页；检测重复 cursor、空页、页数和条目上限；
+- `createBatchingResultSink({ persist })`：为外部 Postgres/SQLite 等存储提供统一的批量
+  `write` / `flush` / `close` 契约；只有持久化成功后才提交去重 key，失败可安全重试；
 - `createMemoryResultSink()` / `createNdjsonResultSink()`：批量写入、显式 key 去重、
-  `close()` 冲干；NDJSON 损坏末行可跳过并计数；
+  `close()` 冲干；NDJSON 损坏末行可跳过并计数；外部 `persist` 应具备事务性或幂等性；
 - `createMemoryCheckpointStore()` / `createFileCheckpointStore()`：任务指纹绑定、
   原子文件写、损坏检查点回退为重新开始；
 - `createProxyTransport()`：显式代理池、HTTP CONNECT/SOCKS5、代理健康和限流；
