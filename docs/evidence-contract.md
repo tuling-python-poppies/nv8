@@ -113,6 +113,18 @@ const bundle = await loadEvidenceBundle(bundlePath, {
 });
 ```
 
+Evidence schema 使用严格的 `major.minor` 版本。Loader 的兼容规则是：当前版本直接
+接受；同主版本的旧 minor 只有在 `allowLegacySchema: true`（默认）时接受；新 minor
+和不同 major 一律拒绝，不会把未知字段静默降级。受控集成可通过
+`supportedSchemaVersions` 提供已审计的版本集合。
+
+```js
+const bundle = await loadEvidenceBundle(bundlePath, {
+  allowLegacySchema: true,
+  supportedSchemaVersions: ['1.0'],
+});
+```
+
 `signaturePolicy` 有三个值：
 
 - `optional`（默认）：无签名的历史 Bundle 仍可加载；带签名的 Bundle 必须验证。

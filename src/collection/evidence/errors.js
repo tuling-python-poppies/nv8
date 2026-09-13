@@ -46,11 +46,11 @@ export class EvidenceInvalidManifestError extends EvidenceError {
  * Schema 版本不支持
  */
 export class EvidenceSchemaUnsupportedError extends EvidenceError {
-  constructor(version, supportedVersions) {
+  constructor(version, supportedVersions, reason = 'unsupported') {
     super(
       'EVIDENCE_SCHEMA_UNSUPPORTED',
-      `Schema version ${version} is not supported. Supported versions: ${supportedVersions.join(', ')}`,
-      { version, supportedVersions }
+      `Schema version ${version} is not supported (${reason}). Supported versions: ${supportedVersions.join(', ')}`,
+      { context: { version, supportedVersions, reason } }
     );
   }
 }

@@ -8,7 +8,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import {
-  SCHEMA_VERSION,
   FILE_ROLES,
   DEFAULT_LIMITS,
   TRUST_POLICIES,
@@ -18,6 +17,10 @@ import {
   isValidUrl,
   isValidIso8601,
 } from './schema.js';
+import {
+  SUPPORTED_SCHEMA_VERSIONS,
+  resolveSchemaCompatibility,
+} from './schema-compatibility.js';
 import {
   EvidenceNotFoundError,
   EvidenceInvalidManifestError,
@@ -49,6 +52,8 @@ export async function loadEvidenceBundle(bundlePath, options = {}) {
     trustedScriptPolicy = TRUST_POLICIES.REGISTERED_ONLY,
     signaturePolicy = 'optional',
     trustedKeys,
+    allowLegacySchema = true,
+    supportedSchemaVersions = SUPPORTED_SCHEMA_VERSIONS,
   } = options;
   if (!['optional', 'required', 'disabled'].includes(signaturePolicy)) {
     throw new TypeError('signaturePolicy must be optional, required, or disabled');
@@ -60,6 +65,8 @@ export async function loadEvidenceBundle(bundlePath, options = {}) {
     trustedScriptPolicy,
     signaturePolicy,
     trustedKeys,
+    allowLegacySchema,
+    supportedSchemaVersions,
   );
   return await loader.load();
 }
@@ -68,12 +75,22 @@ export async function loadEvidenceBundle(bundlePath, options = {}) {
  * Evidence Bundle Loader 实现
  */
 class EvidenceBundleLoader {
-  constructor(bundlePath, limits, trustedScriptPolicy, signaturePolicy, trustedKeys) {
+  constructor(
+    bundlePath,
+    limits,
+    trustedScriptPolicy,
+    signaturePolicy,
+    trustedKeys,
+    allowLegacySchema,
+    supportedSchemaVersions,
+  ) {
     this.bundlePath = bundlePath;
     this.limits = limits;
     this.trustedScriptPolicy = trustedScriptPolicy;
     this.signaturePolicy = signaturePolicy;
     this.trustedKeys = trustedKeys;
+    this.allowLegacySchema = allowLegacySchema;
+    this.supportedSchemaVersions = [...supportedSchemaVersions];
     this.manifest = null;
     this.files = new Map(); // path -> file metadata
     this.loadedAt = null;
@@ -163,8 +180,17 @@ class EvidenceBundleLoader {
       throw new EvidenceInvalidManifestError('missing schemaVersion');
     }
     
-    if (m.schemaVersion !== SCHEMA_VERSION) {
-      throw new EvidenceSchemaUnsupportedError(m.schemaVersion, [SCHEMA_VERSION]);
+    const compatibility = resolveSchemaCompatibility(
+      m.schemaVersion,
+      this.supportedSchemaVersions,
+      { allowLegacy: this.allowLegacySchema },
+    );
+    if (!compatibility.compatible) {
+      throw new EvidenceSchemaUnsupportedError(
+        m.schemaVersion,
+        this.supportedSchemaVersions,
+        compatibility.reason,
+      );
     }
     
     // 检查必需字段

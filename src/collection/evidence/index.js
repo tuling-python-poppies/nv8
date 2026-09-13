@@ -18,6 +18,14 @@ export {
 } from './schema.js';
 
 export {
+  SUPPORTED_SCHEMA_VERSIONS,
+  parseSchemaVersion,
+  compareSchemaVersions,
+  resolveSchemaCompatibility,
+  isSchemaVersionCompatible,
+} from './schema-compatibility.js';
+
+export {
   EvidenceError,
   EvidenceNotFoundError,
   EvidenceInvalidManifestError,
