@@ -201,6 +201,16 @@ WebSocket 必须同时满足三层配置：`ws:`/`wss:` URL、`metadata.websocke
 NetworkPolicy 中显式允许的 `ws:`/`wss:` scheme 和 origin。Cookie 的 `Secure` 属性对 `wss:`
 视为安全连接。
 
+### Schema 与兼容策略
+
+Protocol registry lock 和 `ProtocolResult` 使用独立的 `schemaVersion`，当前为
+`1.0`。它不等同于底层 Frame Protocol 版本，也不等同于 Runtime Artifact schema：
+
+- 同主版本且 producer minor 不高于 consumer minor：允许消费；
+- producer minor 更新：旧消费者拒绝，避免猜测未知字段；
+- major 不同或格式非法：立即返回 `PROTOCOL_SCHEMA_UNSUPPORTED`；
+- lock 和审计快照都必须保留 schema 版本，便于离线回放和审计。
+
 ### 重试语义
 
 | 情况 | 是否重试 |
@@ -253,6 +263,7 @@ Protocol 和 Collector 都**不**负责：
 ```
 tests/protocol-artifact-test.js    72 项：canonical JSON、工件、plan、transform、adapter
 tests/collector-test.js            50 项：策略、凭据、重试、cookie、审计、生命周期
+tests/collector-boundary-test.js    6 项：凭据注入/脱敏、幂等重试与策略前置阻断
 tests/collector-websocket-test.js   3 项：握手、帧收发、重试与生命周期清理
 tests/gate5-end-to-end-test.js      7 项：完整链路与边界断言
 ```
