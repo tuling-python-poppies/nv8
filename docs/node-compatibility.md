@@ -10,7 +10,7 @@
 | 18.18+ | `supported` | 最低版本；缺 Iterator helpers 与 `ArrayBuffer.transfer`；同上 |
 | < 18.18 | 不支持 | 启动即拒绝 |
 
-四个版本均已在完整测试套件（918 项）上验证通过。本地复现：
+四个版本均已在完整测试套件（当前 988 项）上验证通过。本地复现：
 
 ```
 npm run test:matrix          # 自动发现 nvm 已安装版本
@@ -166,7 +166,7 @@ TypedArray 和循环引用。遇到这些输入抛 `ERR_NV8_STRUCTURED_CLONE_UNA
 
 `best-effort` 版本设 `continue-on-error` 是历史遗留：Node 18 / 20 曾各有
 5 项固定失败（V8 内建缺口未接入版本门控 + `in` 触发 getter）。现在四档
-**741/741 全绿**，实测方式是直接调用 nvm 里各版本的 node.exe，不切换全局符号链接：
+**988/988 全绿**，实测方式是直接调用 nvm 里各版本的 node.exe，不切换全局符号链接：
 
 ```
 D:\...\nvm\v18.20.8\node.exe --experimental-vm-modules --test ...

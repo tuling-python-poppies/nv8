@@ -796,7 +796,9 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
   覆盖跨 chunk 边界与非法帧
 
 ### Phase 2 (Plugin SDK)
-- [ ] Node 18 ModuleLoader 实现策略（当前 Node 24）
+- [x] Node 18 ModuleLoader 实现策略 - `module-link-strategy.js` 以 `dependencySpecifiers + link()`
+  走全异步链接/求值；同步入口在缺少 `moduleRequests/linkRequests/instantiate` 时显式拒绝，
+  `preload()` + `importUrlSyncCached()` 保留同步回调语义；真实 Node 18.20.8 全量 988/988 通过
 - [x] StateRegistry 容量和回收策略 - Core StateRegistry 支持 `maxStateContexts`、
   `maxStateKeysPerStore`、`maxStateTotalKeys` 实例级配额；拒绝原子化，Realm bucket
   在 destroy/clear 后回收，`stats()`/`limits()` 提供不含状态值的诊断；专项 8 项测试
