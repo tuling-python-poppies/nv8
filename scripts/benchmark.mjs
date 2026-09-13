@@ -103,6 +103,19 @@ const warmDom = await measure('热复用（DOM 查询）', ITERATIONS * 25, asyn
 await warmSandbox.close();
 createSandbox.drain();
 
+// ---------------------------------------------------------------- Realm reset
+
+const resetSandbox = await createSandbox('https://bench.test/', {
+  execution: { backend: BACKEND },
+  page: { html: PAGE_HTML },
+  limits: { timeoutMs: 30_000 },
+});
+const reset = await measure('Realm reset（setPage）', ITERATIONS, async () => {
+  await resetSandbox.setPage({ url: 'https://bench.test/reset', html: PAGE_HTML });
+});
+await resetSandbox.close();
+createSandbox.drain();
+
 // ---------------------------------------------------------------- Realm 生命周期
 
 const rssBefore = process.memoryUsage().rss;
@@ -121,7 +134,7 @@ const report = {
   node: process.versions.node,
   backend: BACKEND,
   iterations: ITERATIONS,
-  measurements: [coldStart, warmRun, warmDom, realmCycle],
+  measurements: [coldStart, warmRun, warmDom, reset, realmCycle],
   memory: {
     rssBeforeMiB: round(rssBefore / 1024 / 1024),
     rssAfterMiB: round(rssAfter / 1024 / 1024),

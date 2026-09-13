@@ -81,15 +81,16 @@ const report = {
 if (asJson) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  console.log("Node version   backend         cold median/p90   warm run median/p90   realm median/p90   RSS Δ MiB");
+  console.log("Node version   backend         cold median/p90   warm run median/p90   reset median/p90   realm median/p90   RSS Δ MiB");
   for (const row of rows) {
     const measurements = new Map(row.measurements.map((entry) => [entry.label, entry]));
     const cold = measurements.get("冷启动（create → 首次 run）");
     const warm = measurements.get("热复用（单次 run）");
+    const reset = measurements.get("Realm reset（setPage）");
     const realm = measurements.get("Realm 创建+销毁一轮");
     console.log(
       `${row.node.padEnd(14)}${row.backend.padEnd(17)}`
-      + `${formatPair(cold)}         ${formatPair(warm)}             ${formatPair(realm)}       `
+      + `${formatPair(cold)}         ${formatPair(warm)}             ${formatPair(reset)}        ${formatPair(realm)}       `
       + `${row.memory.deltaMiB.toFixed(2)}`,
     );
   }

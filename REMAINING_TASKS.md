@@ -751,7 +751,8 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 - [x] 冷启动、内存、并发指标 - `performance-budget-test.js`（8 项）
   + `npm run benchmark`（中位数 + p90）。冷启动断言取三次采样的最小值，
   不取单次——单次测的是「此刻机器有多忙」
-- [ ] reset 指标 - 未单独采集（冷启动/热执行/Realm 创建销毁已有）
+- [x] reset 指标 - `npm run benchmark` 与 `npm run benchmark:matrix` 已单独采集
+  `Realm reset（setPage）` 的中位数、p90、min、max
 
 ---
 
@@ -1636,7 +1637,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：911 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：918 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
