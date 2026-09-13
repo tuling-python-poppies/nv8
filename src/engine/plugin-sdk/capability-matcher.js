@@ -53,6 +53,10 @@ export function resolvePluginDependencies(requestedPluginIds, availablePlugins) 
     }
     pluginIndex.get(plugin.id).push(plugin);
   }
+
+  // 能力提供者索引：requires 可以声明能力名而不是插件 id，
+  // 解析阶段必须与 validateDependencies 使用同一语义（IKFDA4）。
+  const capabilityIndex = buildCapabilityIndex(availablePlugins);
   
   // 2. 解析请求的插件
   const requestedPlugins = [];
@@ -77,7 +81,14 @@ export function resolvePluginDependencies(requestedPluginIds, availablePlugins) 
   const resolving = new Set(); // 正在解析的插件（用于检测循环依赖）
   
   for (const plugin of requestedPlugins) {
-    resolveDependenciesRecursive(plugin, pluginIndex, visited, resolved, resolving);
+    resolveDependenciesRecursive(
+      plugin,
+      pluginIndex,
+      capabilityIndex,
+      visited,
+      resolved,
+      resolving,
+    );
   }
   
   return {
@@ -89,7 +100,14 @@ export function resolvePluginDependencies(requestedPluginIds, availablePlugins) 
 /**
  * 递归解析依赖
  */
-function resolveDependenciesRecursive(plugin, pluginIndex, visited, resolved, resolving) {
+function resolveDependenciesRecursive(
+  plugin,
+  pluginIndex,
+  capabilityIndex,
+  visited,
+  resolved,
+  resolving,
+) {
   const key = `${plugin.id}@${plugin.version}`;
   
   // 已经处理过
@@ -112,6 +130,10 @@ function resolveDependenciesRecursive(plugin, pluginIndex, visited, resolved, re
       requirement.id,
       requirement.version,
       pluginIndex
+    ) ?? findCapabilityProvider(
+      requirement.id,
+      requirement.version,
+      capabilityIndex,
     );
     
     if (!depPlugin) {
@@ -126,7 +148,14 @@ function resolveDependenciesRecursive(plugin, pluginIndex, visited, resolved, re
       );
     }
     
-    resolveDependenciesRecursive(depPlugin, pluginIndex, visited, resolved, resolving);
+    resolveDependenciesRecursive(
+      depPlugin,
+      pluginIndex,
+      capabilityIndex,
+      visited,
+      resolved,
+      resolving,
+    );
   }
   
   // 依赖都处理完了，添加自己
@@ -136,13 +165,41 @@ function resolveDependenciesRecursive(plugin, pluginIndex, visited, resolved, re
 }
 
 /**
- * 解析插件请求字符串
- * 
- * 'plugin-id' -> { id: 'plugin-id', version: '*' }
- * 'plugin-id@1.0.0' -> { id: 'plugin-id', version: '1.0.0' }
+ * 在能力索引里查找满足版本要求的提供者插件。
+ */
+function findCapabilityProvider(capabilityName, versionRange, capabilityIndex) {
+  const providers = capabilityIndex.get(capabilityName);
+  if (!providers || providers.length === 0) {
+    return null;
+  }
+  const matching = providers.filter((entry) =>
+    satisfiesVersionRange(entry.capability.version, versionRange)
+  );
+  if (matching.length === 0) {
+    return null;
+  }
+  matching.sort((a, b) => compareVersions(b.plugin.version, a.plugin.version));
+  return matching[0].plugin;
+}
+
+/**
+ * 解析插件请求
+ *
+ * 同时接受两种调用方形态：
+ * - 字符串：'plugin-id' / 'plugin-id@1.0.0'
+ * - 对象：{ id, range }（仓库自身 Profile 的 PluginReference）或 { id, version }
  */
 function parsePluginRequest(requestStr) {
-  const match = requestStr.match(/^([a-z][a-z0-9-]*)(?:@(.+))?$/);
+  if (requestStr !== null && typeof requestStr === 'object') {
+    const id = `${requestStr.id ?? ''}`;
+    const version = requestStr.range ?? requestStr.version ?? '*';
+    if (!/^[a-z][a-z0-9-]*$/.test(id)) {
+      throw new Error(`Invalid plugin request format: ${JSON.stringify(requestStr)}`);
+    }
+    return { id, version: `${version}` };
+  }
+
+  const match = `${requestStr}`.match(/^([a-z][a-z0-9-]*)(?:@(.+))?$/);
   
   if (!match) {
     throw new Error(`Invalid plugin request format: "${requestStr}"`);
@@ -364,21 +421,19 @@ export function detectCircularDependencies(plugins) {
     
     for (const depId of deps) {
       if (!visited.has(depId)) {
-        if (dfs(depId)) {
-          return true;
-        }
+        dfs(depId);
       } else if (recStack.has(depId)) {
-        // 找到循环
+        // 找到循环。不能在这里提前 return：遗留的 path/recStack 会让
+        // 后续顶层节点的 DFS 把无环节点误报成环（IKFDA4）。
         const cycleStart = path.indexOf(depId);
-        const cycle = path.slice(cycleStart).concat(depId);
-        cycles.push(cycle);
-        return true;
+        if (cycleStart !== -1) {
+          cycles.push(path.slice(cycleStart).concat(depId));
+        }
       }
     }
     
     path.pop();
     recStack.delete(nodeId);
-    return false;
   }
   
   for (const nodeId of graph.keys()) {

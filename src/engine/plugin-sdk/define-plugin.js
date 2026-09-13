@@ -46,7 +46,7 @@ export function definePlugin(definition) {
     
     // 支持配置
     supports: {
-      realms: definition.supports?.realms || ['root', 'worker', 'iframe', 'node', 'browser', 'quickjs', 'v8'],
+      realms: definition.supports?.realms || ['root', 'worker', 'iframe', 'worklet'],
       profiles: definition.supports?.profiles || null, // null = all profiles
     },
     
@@ -130,11 +130,14 @@ function validatePluginDefinition(def) {
     }
     
     for (const req of def.requires) {
-      if (typeof req !== 'string') {
-        throw new Error(
-          `Plugin "${def.id}" requires must be array of strings (got ${typeof req})`
-        );
+      if (typeof req === 'string') continue;
+      // 与 normalizeRequirements 保持一致：对象形态 { id, version?, optional? }
+      if (req !== null && typeof req === 'object' && typeof req.id === 'string') {
+        continue;
       }
+      throw new Error(
+        `Plugin "${def.id}" requires entries must be strings or { id } objects`
+      );
     }
   }
   
