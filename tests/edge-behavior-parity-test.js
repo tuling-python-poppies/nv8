@@ -213,9 +213,27 @@ test('every probe id is unique and carries a category', () => {
   const ids = BEHAVIOR_PROBES.map(entry => entry.id);
   assert.equal(new Set(ids).size, ids.length, 'duplicate probe id');
   for (const entry of BEHAVIOR_PROBES) {
+    assert.equal(typeof entry.id, 'string', 'probe id must be a string');
+    assert.ok(entry.id.length > 0, 'probe id must not be empty');
+    assert.equal(typeof entry.category, 'string', `${entry.id} category must be a string`);
     assert.ok(entry.category.length > 0, `${entry.id} has no category`);
+    assert.equal(typeof entry.expression, 'string', `${entry.id} expression must be a string`);
     assert.ok(entry.expression.startsWith('()'), `${entry.id} must be a thunk`);
+    const thunk = Function(`return (${entry.expression});`)();
+    assert.equal(typeof thunk, 'function', `${entry.id} must compile to a function`);
   }
+});
+
+test('the Edge fixture has exactly the shared probe set', () => {
+  assert.ok(hasFixture, 'run: npm run fingerprint:behavior');
+  const expectedIds = new Set(BEHAVIOR_PROBES.map(entry => entry.id));
+  const actualIds = Object.keys(fixture.results);
+  assert.equal(fixture.probeCount, expectedIds.size);
+  assert.deepEqual(
+    new Set(actualIds),
+    expectedIds,
+    'fixture must not contain stale or unregistered probe ids',
+  );
 });
 
 // ------------------------------------------------------ 逐类比较
