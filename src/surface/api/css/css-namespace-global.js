@@ -82,7 +82,13 @@ const unitNames = [
   ["fr", "fr"],
 ];
 
-export function installCSSNamespace() {
+/**
+ * 构造 `CSS` 命名空间对象。
+ *
+ * 全局本身由 install 层的 `installCSSNamespace()` 负责定义——与其它
+ * install-* 文件一致，api 文件不直接摸 `globalThis`。
+ */
+export function createCSSNamespace() {
   const namespace = {};
   Object.defineProperty(namespace, Symbol.toStringTag, {
     value: "CSS",
@@ -105,12 +111,7 @@ export function installCSSNamespace() {
     registerNativeFunction(callback, name);
     defineMethod(namespace, name, callback);
   }
-  Object.defineProperty(globalThis, "CSS", {
-    value: namespace,
-    writable: true,
-    enumerable: false,
-    configurable: true,
-  });
+  return namespace;
 }
 
 function defineMethod(target, name, callback) {

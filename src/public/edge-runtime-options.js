@@ -236,6 +236,179 @@ function normalizeExternalDeviceList(value, fallback, name, mapper) {
     mapper(objectOption(item, undefined, `${name}[${index}]`), index)));
 }
 
+/**
+ * 构造 `capabilities.media`。
+ *
+ * 在返回对象字面量里调用，字段顺序（audioCodecs → videoCodecs → imageTypes →
+ * powerEfficient → captureEnabled → devices）与拆分前一致。
+ */
+function normalizeMediaFields(media, fallbackMedia, mediaDevices) {
+  return Object.freeze({
+    audioCodecs: stringArrayOption(
+      media.audioCodecs,
+      fallbackMedia.audioCodecs,
+      "fingerprint.capabilities.media.audioCodecs",
+    ),
+    videoCodecs: stringArrayOption(
+      media.videoCodecs,
+      fallbackMedia.videoCodecs,
+      "fingerprint.capabilities.media.videoCodecs",
+    ),
+    imageTypes: stringArrayOption(
+      media.imageTypes,
+      fallbackMedia.imageTypes,
+      "fingerprint.capabilities.media.imageTypes",
+    ),
+    powerEfficient: booleanOption(
+      media.powerEfficient,
+      fallbackMedia.powerEfficient,
+      "fingerprint.capabilities.media.powerEfficient",
+    ),
+    captureEnabled: booleanOption(
+      media.captureEnabled,
+      fallbackMedia.captureEnabled,
+      "fingerprint.capabilities.media.captureEnabled",
+    ),
+    devices: Object.freeze(mediaDevices.map(normalizeMediaDevice)),
+  });
+}
+
+/**
+ * 构造 `capabilities.externalDevices`。
+ *
+ * `bluetooth` / `hid` / `serial` / `usb` 已在前段用 objectOption 校验并合并基线，
+ * 这里只做字段级归一化；顺序与拆分前一致（bluetooth → hid → serial → usb）。
+ */
+function normalizeExternalDevicesFields(bluetooth, hid, serial, usb, fallbackExternal) {
+  return Object.freeze({
+    bluetooth: Object.freeze({
+      available: booleanOption(
+        bluetooth.available,
+        fallbackExternal.bluetooth.available,
+        "fingerprint.capabilities.externalDevices.bluetooth.available",
+      ),
+      devices: normalizeExternalDeviceList(
+        bluetooth.devices,
+        fallbackExternal.bluetooth.devices,
+        "fingerprint.capabilities.externalDevices.bluetooth.devices",
+        (item, index) => Object.freeze({
+          id: stringOption(
+            item.id,
+            `bluetooth-${index + 1}`,
+            `fingerprint.capabilities.externalDevices.bluetooth.devices[${index}].id`,
+            16 * 1024,
+          ),
+          name: stringOption(
+            item.name,
+            "",
+            `fingerprint.capabilities.externalDevices.bluetooth.devices[${index}].name`,
+            16 * 1024,
+          ),
+        }),
+      ),
+    }),
+    hid: Object.freeze({
+      devices: normalizeExternalDeviceList(
+        hid.devices,
+        fallbackExternal.hid.devices,
+        "fingerprint.capabilities.externalDevices.hid.devices",
+        (item, index) => Object.freeze({
+          vendorId: finiteInteger(
+            item.vendorId,
+            0,
+            `fingerprint.capabilities.externalDevices.hid.devices[${index}].vendorId`,
+            0,
+            0xffff,
+          ),
+          productId: finiteInteger(
+            item.productId,
+            0,
+            `fingerprint.capabilities.externalDevices.hid.devices[${index}].productId`,
+            0,
+            0xffff,
+          ),
+          productName: stringOption(
+            item.productName,
+            "",
+            `fingerprint.capabilities.externalDevices.hid.devices[${index}].productName`,
+            16 * 1024,
+          ),
+        }),
+      ),
+    }),
+    serial: Object.freeze({
+      ports: normalizeExternalDeviceList(
+        serial.ports,
+        fallbackExternal.serial.ports,
+        "fingerprint.capabilities.externalDevices.serial.ports",
+        (item, index) => Object.freeze({
+          usbVendorId: finiteInteger(
+            item.usbVendorId,
+            0,
+            `fingerprint.capabilities.externalDevices.serial.ports[${index}].usbVendorId`,
+            0,
+            0xffff,
+          ),
+          usbProductId: finiteInteger(
+            item.usbProductId,
+            0,
+            `fingerprint.capabilities.externalDevices.serial.ports[${index}].usbProductId`,
+            0,
+            0xffff,
+          ),
+          label: stringOption(
+            item.label,
+            "",
+            `fingerprint.capabilities.externalDevices.serial.ports[${index}].label`,
+            16 * 1024,
+          ),
+        }),
+      ),
+    }),
+    usb: Object.freeze({
+      devices: normalizeExternalDeviceList(
+        usb.devices,
+        fallbackExternal.usb.devices,
+        "fingerprint.capabilities.externalDevices.usb.devices",
+        (item, index) => Object.freeze({
+          vendorId: finiteInteger(
+            item.vendorId,
+            0,
+            `fingerprint.capabilities.externalDevices.usb.devices[${index}].vendorId`,
+            0,
+            0xffff,
+          ),
+          productId: finiteInteger(
+            item.productId,
+            0,
+            `fingerprint.capabilities.externalDevices.usb.devices[${index}].productId`,
+            0,
+            0xffff,
+          ),
+          manufacturerName: stringOption(
+            item.manufacturerName,
+            "",
+            `fingerprint.capabilities.externalDevices.usb.devices[${index}].manufacturerName`,
+            16 * 1024,
+          ),
+          productName: stringOption(
+            item.productName,
+            "",
+            `fingerprint.capabilities.externalDevices.usb.devices[${index}].productName`,
+            16 * 1024,
+          ),
+          serialNumber: stringOption(
+            item.serialNumber,
+            "",
+            `fingerprint.capabilities.externalDevices.usb.devices[${index}].serialNumber`,
+            16 * 1024,
+          ),
+        }),
+      ),
+    }),
+  });
+}
+
 function normalizeCapabilityProfile(value) {
   const fallback = edge150Fingerprint.capabilities;
   const input = objectOption(
@@ -340,34 +513,7 @@ function normalizeCapabilityProfile(value) {
         "fingerprint.capabilities.serviceWorker.enabled",
       ),
     }),
-    media: Object.freeze({
-      audioCodecs: stringArrayOption(
-        media.audioCodecs,
-        fallback.media.audioCodecs,
-        "fingerprint.capabilities.media.audioCodecs",
-      ),
-      videoCodecs: stringArrayOption(
-        media.videoCodecs,
-        fallback.media.videoCodecs,
-        "fingerprint.capabilities.media.videoCodecs",
-      ),
-      imageTypes: stringArrayOption(
-        media.imageTypes,
-        fallback.media.imageTypes,
-        "fingerprint.capabilities.media.imageTypes",
-      ),
-      powerEfficient: booleanOption(
-        media.powerEfficient,
-        fallback.media.powerEfficient,
-        "fingerprint.capabilities.media.powerEfficient",
-      ),
-      captureEnabled: booleanOption(
-        media.captureEnabled,
-        fallback.media.captureEnabled,
-        "fingerprint.capabilities.media.captureEnabled",
-      ),
-      devices: Object.freeze(mediaDevices.map(normalizeMediaDevice)),
-    }),
+    media: normalizeMediaFields(media, fallback.media, mediaDevices),
     sensors: Object.freeze(Object.fromEntries(
       Object.keys(fallback.sensors).map(sensorName => [
         sensorName,
@@ -378,137 +524,17 @@ function normalizeCapabilityProfile(value) {
         ),
       ]),
     )),
-    externalDevices: Object.freeze({
-      bluetooth: Object.freeze({
-        available: booleanOption(
-          bluetooth.available,
-          fallback.externalDevices.bluetooth.available,
-          "fingerprint.capabilities.externalDevices.bluetooth.available",
-        ),
-        devices: normalizeExternalDeviceList(
-          bluetooth.devices,
-          fallback.externalDevices.bluetooth.devices,
-          "fingerprint.capabilities.externalDevices.bluetooth.devices",
-          (item, index) => Object.freeze({
-            id: stringOption(
-              item.id,
-              `bluetooth-${index + 1}`,
-              `fingerprint.capabilities.externalDevices.bluetooth.devices[${index}].id`,
-              16 * 1024,
-            ),
-            name: stringOption(
-              item.name,
-              "",
-              `fingerprint.capabilities.externalDevices.bluetooth.devices[${index}].name`,
-              16 * 1024,
-            ),
-          }),
-        ),
-      }),
-      hid: Object.freeze({
-        devices: normalizeExternalDeviceList(
-          hid.devices,
-          fallback.externalDevices.hid.devices,
-          "fingerprint.capabilities.externalDevices.hid.devices",
-          (item, index) => Object.freeze({
-            vendorId: finiteInteger(
-              item.vendorId,
-              0,
-              `fingerprint.capabilities.externalDevices.hid.devices[${index}].vendorId`,
-              0,
-              0xffff,
-            ),
-            productId: finiteInteger(
-              item.productId,
-              0,
-              `fingerprint.capabilities.externalDevices.hid.devices[${index}].productId`,
-              0,
-              0xffff,
-            ),
-            productName: stringOption(
-              item.productName,
-              "",
-              `fingerprint.capabilities.externalDevices.hid.devices[${index}].productName`,
-              16 * 1024,
-            ),
-          }),
-        ),
-      }),
-      serial: Object.freeze({
-        ports: normalizeExternalDeviceList(
-          serial.ports,
-          fallback.externalDevices.serial.ports,
-          "fingerprint.capabilities.externalDevices.serial.ports",
-          (item, index) => Object.freeze({
-            usbVendorId: finiteInteger(
-              item.usbVendorId,
-              0,
-              `fingerprint.capabilities.externalDevices.serial.ports[${index}].usbVendorId`,
-              0,
-              0xffff,
-            ),
-            usbProductId: finiteInteger(
-              item.usbProductId,
-              0,
-              `fingerprint.capabilities.externalDevices.serial.ports[${index}].usbProductId`,
-              0,
-              0xffff,
-            ),
-            label: stringOption(
-              item.label,
-              "",
-              `fingerprint.capabilities.externalDevices.serial.ports[${index}].label`,
-              16 * 1024,
-            ),
-          }),
-        ),
-      }),
-      usb: Object.freeze({
-        devices: normalizeExternalDeviceList(
-          usb.devices,
-          fallback.externalDevices.usb.devices,
-          "fingerprint.capabilities.externalDevices.usb.devices",
-          (item, index) => Object.freeze({
-            vendorId: finiteInteger(
-              item.vendorId,
-              0,
-              `fingerprint.capabilities.externalDevices.usb.devices[${index}].vendorId`,
-              0,
-              0xffff,
-            ),
-            productId: finiteInteger(
-              item.productId,
-              0,
-              `fingerprint.capabilities.externalDevices.usb.devices[${index}].productId`,
-              0,
-              0xffff,
-            ),
-            manufacturerName: stringOption(
-              item.manufacturerName,
-              "",
-              `fingerprint.capabilities.externalDevices.usb.devices[${index}].manufacturerName`,
-              16 * 1024,
-            ),
-            productName: stringOption(
-              item.productName,
-              "",
-              `fingerprint.capabilities.externalDevices.usb.devices[${index}].productName`,
-              16 * 1024,
-            ),
-            serialNumber: stringOption(
-              item.serialNumber,
-              "",
-              `fingerprint.capabilities.externalDevices.usb.devices[${index}].serialNumber`,
-              16 * 1024,
-            ),
-          }),
-        ),
-      }),
-    }),
+    externalDevices: normalizeExternalDevicesFields(
+      bluetooth,
+      hid,
+      serial,
+      usb,
+      fallback.externalDevices,
+    ),
   });
 }
 
-function normalizeEvidence(evidence, limits) {
+function normalizeEvidence(evidence) {
   if (evidence === undefined || evidence === null) return null;
   const input = typeof evidence === "string"
     ? { bundlePath: evidence }
@@ -557,7 +583,19 @@ function normalizeEvidence(evidence, limits) {
 }
 
 function normalizePage(page, limits) {
-  const input = page ?? DEFAULT_PAGE;
+  let input;
+  if (page === undefined || page === null) {
+    input = DEFAULT_PAGE;
+  } else if (typeof page === "string") {
+    // 字符串是 `{ url }` 的简写，与 `Sandbox.navigate()` 的既有语义一致。
+    input = { url: page };
+  } else if (typeof page === "object" && !Array.isArray(page)) {
+    input = page;
+  } else {
+    // 此前非法输入被逐字段回退成默认页：页面静默停在 sandbox.test 上，
+    // 调用方却以为换页成功。宁可显式失败。
+    throw new TypeError("page must be a string, an object, or undefined");
+  }
   return Object.freeze({
     url: stringOption(input.url, DEFAULT_PAGE.url, "page.url", 64 * 1024),
     html: stringOption(input.html, DEFAULT_PAGE.html, "page.html", limits.maxHtmlBytes),
@@ -855,6 +893,269 @@ function normalizeTimingProfile(value) {
   });
 }
 
+/**
+ * 校验并归一化 `rendering.webgpu` 中**连续**的一段：limit 白名单、limit
+ * 数值区间、subgroup 区间。
+ *
+ * `vendor` / `architecture` 等字段的校验仍留在 `normalizeFingerprint` 的
+ * 返回对象里——这样拆分前后的求值顺序与错误优先级逐位一致，只是把内聚的
+ * WebGPU 预校验段落移进了具名函数。
+ *
+ * @param {object} rendering 已合并基线的 `fingerprint.rendering`
+ * @returns {{webgpu: object, webgpuFeatures: string[], normalizedWebgpuLimits: object,
+ *   subgroupMinSize: number, subgroupMaxSize: number}}
+ */
+function normalizeWebgpuConfig(rendering) {
+  const baseline = edge150Fingerprint.rendering.webgpu;
+  const webgpu = rendering.webgpu ?? baseline;
+  if (webgpu === null || typeof webgpu !== "object" || Array.isArray(webgpu)) {
+    throw new TypeError("fingerprint.rendering.webgpu must be an object");
+  }
+  const webgpuFeatures = webgpu.features ?? baseline.features;
+  if (
+    !Array.isArray(webgpuFeatures)
+    || webgpuFeatures.some(value => typeof value !== "string")
+  ) {
+    throw new TypeError(
+      "fingerprint.rendering.webgpu.features must be a string array",
+    );
+  }
+  const webgpuLimits = webgpu.limits ?? {};
+  if (
+    webgpuLimits === null
+    || typeof webgpuLimits !== "object"
+    || Array.isArray(webgpuLimits)
+  ) {
+    throw new TypeError("fingerprint.rendering.webgpu.limits must be an object");
+  }
+  const supportedLimitNames = Object.keys(baseline.limits);
+  for (const name of Object.keys(webgpuLimits)) {
+    if (!supportedLimitNames.includes(name)) {
+      throw new TypeError(`Unsupported WebGPU limit in fingerprint: ${name}`);
+    }
+  }
+  const normalizedWebgpuLimits = Object.fromEntries(
+    supportedLimitNames.map(name => [
+      name,
+      finiteInteger(
+        webgpuLimits[name],
+        baseline.limits[name],
+        `fingerprint.rendering.webgpu.limits.${name}`,
+        0,
+        Number.MAX_SAFE_INTEGER,
+      ),
+    ]),
+  );
+  const subgroupMinSize = finiteInteger(
+    webgpu.subgroupMinSize,
+    baseline.subgroupMinSize,
+    "fingerprint.rendering.webgpu.subgroupMinSize",
+    1,
+    1024,
+  );
+  const subgroupMaxSize = finiteInteger(
+    webgpu.subgroupMaxSize,
+    baseline.subgroupMaxSize,
+    "fingerprint.rendering.webgpu.subgroupMaxSize",
+    1,
+    1024,
+  );
+  if (subgroupMinSize > subgroupMaxSize) {
+    throw new RangeError(
+      "fingerprint.rendering.webgpu subgroupMinSize exceeds subgroupMaxSize",
+    );
+  }
+  return { webgpu, webgpuFeatures, normalizedWebgpuLimits, subgroupMinSize, subgroupMaxSize };
+}
+
+/**
+ * 先归一化 `screen` 的宽高与色深，供后面的 `pixelDepth` 兜底引用**已归一化**
+ * 的 `colorDepth`（旧实现引用未处理的 `screen.colorDepth`，用户只传
+ * width/height 时会抛 RangeError）。
+ */
+function normalizeScreenBase(screen) {
+  const baseline = edge150Fingerprint.screen;
+  return {
+    width: finiteInteger(screen.width, baseline.width, "fingerprint.screen.width", 1, 100_000),
+    height: finiteInteger(screen.height, baseline.height, "fingerprint.screen.height", 1, 100_000),
+    colorDepth: finiteInteger(
+      screen.colorDepth,
+      baseline.colorDepth,
+      "fingerprint.screen.colorDepth",
+      1,
+      128,
+    ),
+  };
+}
+
+/**
+ * 构造 `fingerprint.navigator`。
+ *
+ * 在返回对象的字面量里调用，字段校验顺序与拆分前逐位一致；`navigatorMetadata`
+ * 仍在函数前段提前算好（`userAgent` 校验之前），这里只是接手字面量的部分。
+ */
+function normalizeNavigatorFields(
+  navigator,
+  userAgent,
+  languages,
+  navigatorProvided,
+  explicitLocale,
+  navigatorMetadata,
+) {
+  return Object.freeze({
+    userAgent,
+    platform: stringOption(navigator.platform, "Win32", "fingerprint.navigator.platform", 1024),
+    languages: Object.freeze([...languages]),
+    language: stringOption(
+      navigatorProvided
+        ? navigator.language
+        : explicitLocale ?? navigator.language,
+      languages[0] ?? "zh-CN",
+      "fingerprint.navigator.language",
+      1024,
+    ),
+    hardwareConcurrency: finiteInteger(
+      navigator.hardwareConcurrency,
+      16,
+      "fingerprint.navigator.hardwareConcurrency",
+      1,
+      1024,
+    ),
+    deviceMemory: finiteInteger(
+      navigator.deviceMemory,
+      8,
+      "fingerprint.navigator.deviceMemory",
+      1,
+      1024,
+    ),
+    ...navigatorMetadata,
+  });
+}
+
+/**
+ * 构造 `fingerprint.screen`。
+ *
+ * `avail*` 按字段回退**基线**，而不是悄悄跟随用户覆盖的 width/height：
+ * 基线 availHeight=1040（任务栏）而 height=1080，跟随 width/height 会
+ * 在缺省时也偏离基线。
+ */
+function normalizeScreenFields(screenWidth, screenHeight, screenColorDepth, screen) {
+  const baseline = edge150Fingerprint.screen;
+  return Object.freeze({
+    width: screenWidth,
+    height: screenHeight,
+    availWidth: finiteInteger(
+      screen.availWidth,
+      baseline.availWidth,
+      "fingerprint.screen.availWidth",
+      1,
+      100_000,
+    ),
+    availHeight: finiteInteger(
+      screen.availHeight,
+      baseline.availHeight,
+      "fingerprint.screen.availHeight",
+      1,
+      100_000,
+    ),
+    colorDepth: screenColorDepth,
+    pixelDepth: finiteInteger(
+      screen.pixelDepth,
+      screenColorDepth,
+      "fingerprint.screen.pixelDepth",
+      1,
+      128,
+    ),
+    devicePixelRatio: finiteNumber(
+      screen.devicePixelRatio,
+      1,
+      "fingerprint.screen.devicePixelRatio",
+      0.1,
+      16,
+    ),
+    availLeft: finiteInteger(
+      screen.availLeft,
+      0,
+      "fingerprint.screen.availLeft",
+      -100_000,
+      100_000,
+    ),
+    availTop: finiteInteger(
+      screen.availTop,
+      0,
+      "fingerprint.screen.availTop",
+      -100_000,
+      100_000,
+    ),
+    isExtended: booleanOption(
+      screen.isExtended,
+      false,
+      "fingerprint.screen.isExtended",
+    ),
+  });
+}
+
+/** 构造 `fingerprint.rendering`（含 WebGPU 字面量，校验顺序不变）。 */
+function normalizeRenderingFields(rendering, webgpuConfig) {
+  const {
+    webgpu,
+    webgpuFeatures,
+    normalizedWebgpuLimits,
+    subgroupMinSize,
+    subgroupMaxSize,
+  } = webgpuConfig;
+  return Object.freeze({
+    webglVendor: stringOption(
+      rendering.webglVendor,
+      edge150Fingerprint.rendering.webglVendor,
+      "fingerprint.rendering.webglVendor",
+      16 * 1024,
+    ),
+    webglRenderer: stringOption(
+      rendering.webglRenderer,
+      edge150Fingerprint.rendering.webglRenderer,
+      "fingerprint.rendering.webglRenderer",
+      16 * 1024,
+    ),
+    webgpu: Object.freeze({
+      vendor: stringOption(
+        webgpu.vendor,
+        edge150Fingerprint.rendering.webgpu.vendor,
+        "fingerprint.rendering.webgpu.vendor",
+        16 * 1024,
+      ),
+      architecture: stringOption(
+        webgpu.architecture,
+        edge150Fingerprint.rendering.webgpu.architecture,
+        "fingerprint.rendering.webgpu.architecture",
+        16 * 1024,
+      ),
+      device: stringOption(
+        webgpu.device,
+        edge150Fingerprint.rendering.webgpu.device,
+        "fingerprint.rendering.webgpu.device",
+        16 * 1024,
+      ),
+      description: stringOption(
+        webgpu.description,
+        edge150Fingerprint.rendering.webgpu.description,
+        "fingerprint.rendering.webgpu.description",
+        16 * 1024,
+      ),
+      subgroupMinSize,
+      subgroupMaxSize,
+      isFallbackAdapter: Boolean(webgpu.isFallbackAdapter),
+      features: Object.freeze(webgpuFeatures.map((value) => stringOption(
+        value,
+        undefined,
+        "fingerprint.rendering.webgpu.features[]",
+        1024,
+      ))),
+      limits: Object.freeze(normalizedWebgpuLimits),
+    }),
+  });
+}
+
 function normalizeFingerprint(fingerprint) {
   const input = fingerprint ?? edge150Fingerprint;
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
@@ -872,67 +1173,13 @@ function normalizeFingerprint(fingerprint) {
   if (rendering === null || typeof rendering !== "object") {
     throw new TypeError("fingerprint.rendering must be an object");
   }
-  const webgpu = rendering.webgpu ?? edge150Fingerprint.rendering.webgpu;
-  if (webgpu === null || typeof webgpu !== "object" || Array.isArray(webgpu)) {
-    throw new TypeError("fingerprint.rendering.webgpu must be an object");
-  }
-  const webgpuFeatures = webgpu.features
-    ?? edge150Fingerprint.rendering.webgpu.features;
-  if (
-    !Array.isArray(webgpuFeatures)
-    || webgpuFeatures.some(value => typeof value !== "string")
-  ) {
-    throw new TypeError(
-      "fingerprint.rendering.webgpu.features must be a string array",
-    );
-  }
-  const webgpuLimits = webgpu.limits ?? {};
-  if (
-    webgpuLimits === null
-    || typeof webgpuLimits !== "object"
-    || Array.isArray(webgpuLimits)
-  ) {
-    throw new TypeError("fingerprint.rendering.webgpu.limits must be an object");
-  }
-  const supportedLimitNames = Object.keys(
-    edge150Fingerprint.rendering.webgpu.limits,
-  );
-  for (const name of Object.keys(webgpuLimits)) {
-    if (!supportedLimitNames.includes(name)) {
-      throw new TypeError(`Unsupported WebGPU limit in fingerprint: ${name}`);
-    }
-  }
-  const normalizedWebgpuLimits = Object.fromEntries(
-    supportedLimitNames.map(name => [
-      name,
-      finiteInteger(
-        webgpuLimits[name],
-        edge150Fingerprint.rendering.webgpu.limits[name],
-        `fingerprint.rendering.webgpu.limits.${name}`,
-        0,
-        Number.MAX_SAFE_INTEGER,
-      ),
-    ]),
-  );
-  const subgroupMinSize = finiteInteger(
-    webgpu.subgroupMinSize,
-    edge150Fingerprint.rendering.webgpu.subgroupMinSize,
-    "fingerprint.rendering.webgpu.subgroupMinSize",
-    1,
-    1024,
-  );
-  const subgroupMaxSize = finiteInteger(
-    webgpu.subgroupMaxSize,
-    edge150Fingerprint.rendering.webgpu.subgroupMaxSize,
-    "fingerprint.rendering.webgpu.subgroupMaxSize",
-    1,
-    1024,
-  );
-  if (subgroupMinSize > subgroupMaxSize) {
-    throw new RangeError(
-      "fingerprint.rendering.webgpu subgroupMinSize exceeds subgroupMaxSize",
-    );
-  }
+  const {
+    webgpu,
+    webgpuFeatures,
+    normalizedWebgpuLimits,
+    subgroupMinSize,
+    subgroupMaxSize,
+  } = normalizeWebgpuConfig(rendering);
   const browserMajorVersion = finiteInteger(
     input.browserMajorVersion,
     150,
@@ -940,13 +1187,23 @@ function normalizeFingerprint(fingerprint) {
     150,
     152,
   );
-  const languages = navigator.languages;
+  // `navigator` 是局部覆盖与基线的合并入口：只要调用方没有整体提供 navigator，
+  // `fingerprint.locale` 就驱动 `navigator.language` / `navigator.languages`，
+  // 而不是让它们停在基线值上（此前 `locale` 归一化后被完全忽略）。
+  // 显式提供的 navigator 永远优先，避免两处语言声明互相打架。
+  const navigatorProvided = input.navigator !== undefined && input.navigator !== null;
+  const explicitLocale = input.locale;
+  const languages = !navigatorProvided && explicitLocale !== undefined
+    ? [explicitLocale]
+    : navigator.languages;
   if (!Array.isArray(languages) || languages.some((value) => typeof value !== "string")) {
     throw new TypeError("fingerprint.navigator.languages must be a string array");
   }
+  // 兜底必须用**合并后的基线 UA**。此前的字面量既没有 `Edg/` 也没有平台段，
+  // 只覆盖 locale / screen / timezone 就会把 Edge 身份退化成裸 Chrome 串，
+  // 与 `userAgentData.brands` 声明的 Microsoft Edge 自相矛盾。
   const userAgent = stringOption(
-    input.navigator?.userAgent
-      ?? `Mozilla/5.0 Chrome/${browserMajorVersion}.0.0.0 Safari/537.36`,
+    navigator.userAgent ?? edge150Fingerprint.navigator.userAgent,
     undefined,
     "fingerprint.navigator.userAgent",
     16 * 1024,
@@ -977,6 +1234,14 @@ function normalizeFingerprint(fingerprint) {
       + " the Edge and Chrome majors must match",
     );
   }
+  // 屏幕字段先各自归一化，后面的 fallback 才能引用**已归一化**的值：
+  // `pixelDepth` 兜底曾经直接用未处理的 `screen.colorDepth`，用户只传
+  // width/height 时它是 undefined，`finiteInteger` 抛 RangeError。
+  const {
+    width: screenWidth,
+    height: screenHeight,
+    colorDepth: screenColorDepth,
+  } = normalizeScreenBase(screen);
   return Object.freeze({
     browserMajorVersion,
     locale: stringOption(input.locale, "zh-CN", "fingerprint.locale", 1024),
@@ -985,143 +1250,71 @@ function normalizeFingerprint(fingerprint) {
       edge150Fingerprint.timezone,
       "fingerprint.timezone",
     ),
-    navigator: Object.freeze({
+    navigator: normalizeNavigatorFields(
+      navigator,
       userAgent,
-      platform: stringOption(navigator.platform, "Win32", "fingerprint.navigator.platform", 1024),
-      languages: Object.freeze([...languages]),
-      language: stringOption(
-        navigator.language,
-        languages[0] ?? "zh-CN",
-        "fingerprint.navigator.language",
-        1024,
-      ),
-      hardwareConcurrency: finiteInteger(
-        navigator.hardwareConcurrency,
-        16,
-        "fingerprint.navigator.hardwareConcurrency",
-        1,
-        1024,
-      ),
-      deviceMemory: finiteInteger(
-        navigator.deviceMemory,
-        8,
-        "fingerprint.navigator.deviceMemory",
-        1,
-        1024,
-      ),
-      ...navigatorMetadata,
-    }),
-    screen: Object.freeze({
-      width: finiteInteger(screen.width, 1920, "fingerprint.screen.width", 1, 100_000),
-      height: finiteInteger(screen.height, 1080, "fingerprint.screen.height", 1, 100_000),
-      availWidth: finiteInteger(
-        screen.availWidth,
-        screen.width,
-        "fingerprint.screen.availWidth",
-        1,
-        100_000,
-      ),
-      availHeight: finiteInteger(
-        screen.availHeight,
-        screen.height,
-        "fingerprint.screen.availHeight",
-        1,
-        100_000,
-      ),
-      colorDepth: finiteInteger(
-        screen.colorDepth,
-        24,
-        "fingerprint.screen.colorDepth",
-        1,
-        128,
-      ),
-      pixelDepth: finiteInteger(
-        screen.pixelDepth,
-        screen.colorDepth,
-        "fingerprint.screen.pixelDepth",
-        1,
-        128,
-      ),
-      devicePixelRatio: finiteNumber(
-        screen.devicePixelRatio,
-        1,
-        "fingerprint.screen.devicePixelRatio",
-        0.1,
-        16,
-      ),
-      availLeft: finiteInteger(
-        screen.availLeft,
-        0,
-        "fingerprint.screen.availLeft",
-        -100_000,
-        100_000,
-      ),
-      availTop: finiteInteger(
-        screen.availTop,
-        0,
-        "fingerprint.screen.availTop",
-        -100_000,
-        100_000,
-      ),
-      isExtended: booleanOption(
-        screen.isExtended,
-        false,
-        "fingerprint.screen.isExtended",
-      ),
-    }),
-    rendering: Object.freeze({
-      webglVendor: stringOption(
-        rendering.webglVendor,
-        edge150Fingerprint.rendering.webglVendor,
-        "fingerprint.rendering.webglVendor",
-        16 * 1024,
-      ),
-      webglRenderer: stringOption(
-        rendering.webglRenderer,
-        edge150Fingerprint.rendering.webglRenderer,
-        "fingerprint.rendering.webglRenderer",
-        16 * 1024,
-      ),
-      webgpu: Object.freeze({
-        vendor: stringOption(
-          webgpu.vendor,
-          edge150Fingerprint.rendering.webgpu.vendor,
-          "fingerprint.rendering.webgpu.vendor",
-          16 * 1024,
-        ),
-        architecture: stringOption(
-          webgpu.architecture,
-          edge150Fingerprint.rendering.webgpu.architecture,
-          "fingerprint.rendering.webgpu.architecture",
-          16 * 1024,
-        ),
-        device: stringOption(
-          webgpu.device,
-          edge150Fingerprint.rendering.webgpu.device,
-          "fingerprint.rendering.webgpu.device",
-          16 * 1024,
-        ),
-        description: stringOption(
-          webgpu.description,
-          edge150Fingerprint.rendering.webgpu.description,
-          "fingerprint.rendering.webgpu.description",
-          16 * 1024,
-        ),
-        subgroupMinSize,
-        subgroupMaxSize,
-        isFallbackAdapter: Boolean(webgpu.isFallbackAdapter),
-        features: Object.freeze(webgpuFeatures.map((value) => stringOption(
-          value,
-          undefined,
-          "fingerprint.rendering.webgpu.features[]",
-          1024,
-        ))),
-        limits: Object.freeze(normalizedWebgpuLimits),
-      }),
+      languages,
+      navigatorProvided,
+      explicitLocale,
+      navigatorMetadata,
+    ),
+    screen: normalizeScreenFields(
+      screenWidth,
+      screenHeight,
+      screenColorDepth,
+      screen,
+    ),
+    rendering: normalizeRenderingFields(rendering, {
+      webgpu,
+      webgpuFeatures,
+      normalizedWebgpuLimits,
+      subgroupMinSize,
+      subgroupMaxSize,
     }),
     timing,
     capabilities: normalizeCapabilityProfile(input.capabilities),
   });
+}
+
+/**
+ * replay 匹配策略。消费端（`surface/api/fetch/fetch-replay.js` 与
+ * `collection/evidence/network-replay.js`）按字符串精确比较，未登记的字符串
+ * 会让所有请求都匹配失败——静默的语义漂移，所以在入口就拒绝。
+ */
+const REPLAY_MATCH_STRATEGIES = Object.freeze([
+  "method-url",
+  "method-url-body",
+  "method-url-body-sha256",
+  "exact",
+]);
+
+/**
+ * 消费端的 `isAvailable` 支持 `'once'`、`'unlimited'` 和非负整数；
+ * `repeat: 1.5` / `'2'` 这类值会被 `Number(...)` 悄悄转成另一套语义。
+ */
+function replayRepeatOption(value, name) {
+  const selected = value ?? "once";
+  if (selected === "once" || selected === "unlimited") return selected;
+  if (Number.isSafeInteger(selected) && selected >= 0) return selected;
+  throw new TypeError(
+    `${name} must be "once", "unlimited", or a non-negative integer`,
+  );
+}
+
+function replaySequenceOption(value, name) {
+  if (value === undefined || value === null) return undefined;
+  if (Number.isSafeInteger(value) && value >= 0) return value;
+  throw new TypeError(`${name} must be a non-negative integer`);
+}
+
+function replayMatchingOption(value, name) {
+  if (value === undefined || value === null) return null;
+  if (typeof value === "string" && REPLAY_MATCH_STRATEGIES.includes(value)) {
+    return value;
+  }
+  throw new TypeError(
+    `${name} must be one of ${REPLAY_MATCH_STRATEGIES.join(", ")}`,
+  );
 }
 
 function normalizeReplay(replay, limits) {
@@ -1204,9 +1397,9 @@ function normalizeReplay(replay, limits) {
       requestHeaders,
       requestBody,
       requestBodySha256: requestBodySha256?.toLowerCase() ?? null,
-      repeat: entry.repeat ?? "once",
-      sequence: entry.sequence,
-      matching: entry.matching ?? null,
+      repeat: replayRepeatOption(entry.repeat, `replay[${index}].repeat`),
+      sequence: replaySequenceOption(entry.sequence, `replay[${index}].sequence`),
+      matching: replayMatchingOption(entry.matching, `replay[${index}].matching`),
       body,
       redirected: Boolean(entry.redirected),
       type: stringOption(entry.type, "basic", `replay[${index}].type`, 64),
@@ -1228,12 +1421,15 @@ function normalizeReplay(replay, limits) {
   return Object.freeze(records);
 }
 
-export function normalizeRuntimeOptions(options = {}) {
-  if (options === null || typeof options !== "object" || Array.isArray(options)) {
-    throw new TypeError("EdgeSandbox options must be an object");
-  }
-  const inputLimits = options.limits ?? {};
-  const limits = Object.freeze({
+/**
+ * 归一化 `limits`。
+ *
+ * 与 execution / proxyTrace / networkCapture 相互独立，且是入口最先求值的
+ * 部分（`networkCapture` 的上限引用 `maxPayloadBytes`）。调用点保持在原位，
+ * 校验顺序与错误优先级不变。
+ */
+function normalizeLimits(inputLimits) {
+  return Object.freeze({
     timeoutMs: finiteInteger(
       inputLimits.timeoutMs,
       DEFAULT_LIMITS.timeoutMs,
@@ -1329,7 +1525,10 @@ export function normalizeRuntimeOptions(options = {}) {
       8,
     ),
   });
-  const inputTrace = options.proxyTrace ?? {};
+}
+
+/** 归一化 `proxyTrace`；类型检查与拆分前一样放在对象构造之后。 */
+function normalizeProxyTrace(inputTrace) {
   const proxyTrace = Object.freeze({
     enabled: inputTrace.enabled ?? DEFAULT_TRACE.enabled,
     mirrorToConsole: inputTrace.mirrorToConsole ?? DEFAULT_TRACE.mirrorToConsole,
@@ -1347,7 +1546,16 @@ export function normalizeRuntimeOptions(options = {}) {
   if (typeof proxyTrace.mirrorToConsole !== "boolean") {
     throw new TypeError("proxyTrace.mirrorToConsole must be boolean");
   }
-  const inputNetworkCapture = options.networkCapture ?? {};
+  return proxyTrace;
+}
+
+/**
+ * 归一化 `networkCapture`。
+ *
+ * `maxTotalBytes` 的兜底上限受 `limits.maxPayloadBytes` 的 75% 约束，
+ * `maxBodyBytes` / `maxHeaderBytes` 再受 `maxTotalBytes` 约束。
+ */
+function normalizeNetworkCapture(inputNetworkCapture, limits) {
   if (
     inputNetworkCapture === null
     || typeof inputNetworkCapture !== "object"
@@ -1384,7 +1592,7 @@ export function normalizeRuntimeOptions(options = {}) {
   if (typeof networkCapture.enabled !== "boolean") {
     throw new TypeError("networkCapture.enabled must be boolean");
   }
-  const normalizedNetworkCapture = Object.freeze({
+  return Object.freeze({
     ...networkCapture,
     maxBodyBytes: finiteInteger(
       inputNetworkCapture.maxBodyBytes,
@@ -1407,7 +1615,10 @@ export function normalizeRuntimeOptions(options = {}) {
       networkCapture.maxTotalBytes,
     ),
   });
-  const inputExecution = options.execution ?? {};
+}
+
+/** 归一化 `execution`（后端选择）。 */
+function normalizeExecution(inputExecution) {
   if (
     inputExecution === null
     || typeof inputExecution !== "object"
@@ -1421,11 +1632,26 @@ export function normalizeRuntimeOptions(options = {}) {
       "execution.backend must be child-process or worker-thread",
     );
   }
-  const execution = Object.freeze({ backend });
+  return Object.freeze({ backend });
+}
+
+export function normalizeRuntimeOptions(options = {}) {
+  if (options === null || typeof options !== "object" || Array.isArray(options)) {
+    throw new TypeError("EdgeSandbox options must be an object");
+  }
+  // 求值顺序与拆分前一致：limits → proxyTrace → networkCapture → execution，
+  // 四者都在 evidence / page / fingerprint 校验之前完成。
+  const limits = normalizeLimits(options.limits ?? {});
+  const proxyTrace = normalizeProxyTrace(options.proxyTrace ?? {});
+  const normalizedNetworkCapture = normalizeNetworkCapture(
+    options.networkCapture ?? {},
+    limits,
+  );
+  const execution = normalizeExecution(options.execution ?? {});
   return Object.freeze({
     limits,
     execution,
-    evidence: normalizeEvidence(options.evidence, limits),
+    evidence: normalizeEvidence(options.evidence),
     page: normalizePage(options.page, limits),
     fingerprint: normalizeFingerprint(options.fingerprint),
     proxyTrace,

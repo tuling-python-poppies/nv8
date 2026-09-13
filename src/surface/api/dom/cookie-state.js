@@ -1,50 +1,67 @@
-import { currentHref } from "../../../infra/navigation/navigation-state.js";
+import {
+  currentHref,
+  currentOrigin,
+} from "../../../infra/navigation/navigation-state.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
+import { originScopedState } from "./same-origin-shared-state.js";
 
 // Cookie Map 与 CookieStore 实例原先是模块级单例，会跨 legacy Sandbox
-// 共享。每个 Realm 使用自己的状态槽；无参数 API 以当前 Realm 的
-// globalThis 为隐式宿主，保持既有签名不变。
+// 共享。CookieStore 实例仍按 Realm 键控；Cookie Map 按 origin 共享——
+// cookie 是 origin 作用域，同源 iframe 必须与父页面互通。
 const cookieSlot = createRealmSlot(() => ({
-  cookies: new Map(),
+  cookies: null,
   cookieStoreInstance: null,
 }), "cookie-state");
 
 function cookieState() {
-  return cookieSlot.get(globalThis);
+  const state = cookieSlot.get(globalThis);
+  if (state.cookies === null) {
+    state.cookies = originScopedState("cookies", () => new Map()).value;
+  }
+  return state;
 }
 
 export function configureCookies(encoded = "") {
-  const state = cookieState();
-  state.cookies.clear();
-  let offset = 0;
-  while (offset < encoded.length) {
-    const fields = [];
-    for (let index = 0; index < 8; index += 1) {
-      const decoded = decodeString(encoded, offset);
-      fields.push(decoded.value);
-      offset = decoded.offset;
+  const state = cookieSlot.get(globalThis);
+  const { value: cookies, created } = originScopedState(
+    "cookies",
+    () => new Map(),
+  );
+  state.cookies = cookies;
+  // 只在该 origin 首次建容器时灌入序列化数据。同源子 Realm 的
+  // `configureCookies("")` 不能把父页面已有的 cookie 清掉。
+  if (created) {
+    cookies.clear();
+    let offset = 0;
+    while (offset < encoded.length) {
+      const fields = [];
+      for (let index = 0; index < 8; index += 1) {
+        const decoded = decodeString(encoded, offset);
+        fields.push(decoded.value);
+        offset = decoded.offset;
+      }
+      const [
+        name,
+        value,
+        domain,
+        path,
+        expires,
+        secure,
+        sameSite,
+        partitioned,
+      ] = fields;
+      const cookie = {
+        name,
+        value,
+        domain,
+        path,
+        expires: expires === "" ? null : Number(expires),
+        secure: secure === "1",
+        sameSite,
+        partitioned: partitioned === "1",
+      };
+      cookies.set(cookieKey(name, domain, path), cookie);
     }
-    const [
-      name,
-      value,
-      domain,
-      path,
-      expires,
-      secure,
-      sameSite,
-      partitioned,
-    ] = fields;
-    const cookie = {
-      name,
-      value,
-      domain,
-      path,
-      expires: expires === "" ? null : Number(expires),
-      secure: secure === "1",
-      sameSite,
-      partitioned: partitioned === "1",
-    };
-    state.cookies.set(cookieKey(name, domain, path), cookie);
   }
   state.cookieStoreInstance = null;
 }
@@ -67,9 +84,26 @@ export function encodeCookies() {
   return output;
 }
 
+/**
+ * cookie 匹配用的文档 URL。
+ *
+ * `about:blank` / `about:srcdoc` 这类非 http(s) 文档没有可用的 host/path，
+ * 但它们的安全 origin 继承自容器。直接 `new URL(currentHref())` 会得到空
+ * hostname，导致同源 iframe 读不到父页面的 cookie。这里回退到 origin 根。
+ */
+function cookieUrl() {
+  try {
+    const url = new URL(currentHref());
+    if (url.protocol === "http:" || url.protocol === "https:") return url;
+  } catch {
+    // 落到 origin 回退
+  }
+  return new URL(currentOrigin());
+}
+
 export function documentCookieString() {
   purgeExpired();
-  const url = new URL(currentHref());
+  const url = cookieUrl();
   return [...cookieState().cookies.values()]
     .filter(cookie => visibleAt(cookie, url))
     .map(cookie => `${cookie.name}=${cookie.value}`)
@@ -83,7 +117,7 @@ export function setDocumentCookie(source) {
   if (equals <= 0) {
     return;
   }
-  const url = new URL(currentHref());
+  const url = cookieUrl();
   const cookie = {
     name: first.slice(0, equals).trim(),
     value: first.slice(equals + 1).trim(),
@@ -122,6 +156,12 @@ export function setDocumentCookie(source) {
       cookie.partitioned = true;
     }
   }
+  // RFC6265bis：非安全源（http）不能写 Secure cookie，整个 cookie 被忽略。
+  // 迁移前不校验 scheme，http 页面写下的 Secure cookie 会被 https 页面读到，
+  // 等于凭空多出一条安全 cookie。
+  if (cookie.secure && !isSecureOrigin(url)) {
+    return;
+  }
   storeCookie(cookie);
 }
 
@@ -142,7 +182,7 @@ export function cookieStoreGetAll(options) {
 }
 
 export function cookieStoreSet(nameOrOptions, value) {
-  const url = new URL(currentHref());
+  const url = cookieUrl();
   const input = typeof nameOrOptions === "object" && nameOrOptions !== null
     ? nameOrOptions
     : { name: nameOrOptions, value };
@@ -164,7 +204,7 @@ export function cookieStoreSet(nameOrOptions, value) {
 
 export function cookieStoreDelete(options) {
   const input = typeof options === "string" ? { name: options } : Object(options);
-  const url = new URL(currentHref());
+  const url = cookieUrl();
   const name = `${input.name}`;
   const path = input.path === undefined ? "/" : `${input.path}`;
   const key = cookieKey(name, url.hostname, path);
@@ -211,16 +251,34 @@ function notifyCookieChange(changed, deleted) {
 }
 
 function visibleCookies() {
-  const url = new URL(currentHref());
+  const url = cookieUrl();
   return [...cookieState().cookies.values()].filter(cookie => visibleAt(cookie, url)).map(publicCookie);
 }
 
 function visibleAt(cookie, url) {
   return (
     (url.hostname === cookie.domain || url.hostname.endsWith(`.${cookie.domain}`))
-    && url.pathname.startsWith(cookie.path)
-    && (!cookie.secure || url.protocol === "https:")
+    && pathMatchesCookie(cookie.path, url.pathname)
+    && (!cookie.secure || isSecureOrigin(url))
   );
+}
+
+/**
+ * RFC6265 的 path-match。
+ *
+ * cookie path 与 request path 相同，或 cookie path 是 request path 的前缀且
+ * cookie path 以 "/" 结尾，或前缀之后的第一个字符是 "/"。
+ * 迁移前用裸 `startsWith`：`Path=/foo` 会错误匹配 `/foobar`。
+ */
+function pathMatchesCookie(cookiePath, requestPath) {
+  if (cookiePath === requestPath) return true;
+  if (!requestPath.startsWith(cookiePath)) return false;
+  if (cookiePath.endsWith("/")) return true;
+  return requestPath.charAt(cookiePath.length) === "/";
+}
+
+function isSecureOrigin(url) {
+  return url.protocol === "https:" || url.protocol === "wss:";
 }
 
 function publicCookie(cookie) {

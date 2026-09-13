@@ -6,10 +6,21 @@ import {
 import { createMutationRecord } from "./mutation-record-state.js";
 
 const observerState = new WeakMap();
-const observers = new Set();
+// 活着的 observer 用 WeakRef 集合跟踪：disconnect 立即移除；被 GC 的
+// observer 由 FinalizationRegistry 清理。迁移前是强引用 Set，只增不减，
+// 大量创建/丢弃 MutationObserver 会让每次 DOM 变更都遍历全部历史 observer。
+const observerRefs = new Set();
+const observerFinalization = new FinalizationRegistry((ref) => {
+  observerRefs.delete(ref);
+});
 
 registerMutationHook((record) => {
-  for (const observer of observers) {
+  for (const ref of observerRefs) {
+    const observer = ref.deref();
+    if (observer === undefined) {
+      observerRefs.delete(ref);
+      continue;
+    }
     enqueueForObserver(observer, record);
   }
 });
@@ -20,9 +31,29 @@ export function initializeMutationObserver(observer, callback) {
     registrations: new Map(),
     records: [],
     scheduled: false,
+    ref: new WeakRef(observer),
+    registered: true,
   };
   observerState.set(observer, state);
-  observers.add(observer);
+  observerRefs.add(state.ref);
+  observerFinalization.register(observer, state.ref, state);
+}
+
+/**
+ * 当前仍被跟踪的 observer 数量（测试用）。
+ *
+ * 顺带清掉已经失活的 WeakRef，因此断言不受 GC 时机影响。
+ */
+export function liveMutationObserverCount() {
+  let count = 0;
+  for (const ref of observerRefs) {
+    if (ref.deref() === undefined) {
+      observerRefs.delete(ref);
+    } else {
+      count += 1;
+    }
+  }
+  return count;
 }
 
 export function requireMutationObserver(value) {
@@ -42,12 +73,23 @@ export function observeTarget(observer, target, rawOptions) {
   }
   const options = normalizeOptions(rawOptions);
   state.registrations.set(target, options);
+  // disconnect 之后重新 observe 要重新纳入跟踪。
+  if (!state.registered) {
+    state.registered = true;
+    observerRefs.add(state.ref);
+    observerFinalization.register(observer, state.ref, state);
+  }
 }
 
 export function disconnectObserver(observer) {
   const state = requireMutationObserver(observer);
   state.registrations.clear();
   state.records.length = 0;
+  if (state.registered) {
+    state.registered = false;
+    observerRefs.delete(state.ref);
+    observerFinalization.unregister(state);
+  }
 }
 
 export function takeObserverRecords(observer) {

@@ -9,7 +9,8 @@ import {
 } from "./node-state.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
 
-// 迁移前这些是模块级状态，会跨宿主图 Realm 共享。
+// 迁移前这些是模块级状态，会跨宿主图 Realm 共享。live collection 用
+// WeakRef 跟踪，避免历史集合同样常驻并参与每次全量刷新。
 const allCollectionSlot = createRealmSlot(() => ({
   liveCollections: new Set(),
 }), "allCollection");
@@ -19,6 +20,9 @@ function allCollectionState() {
 }
 
 const collectionState = new WeakMap();
+const collectionFinalization = new FinalizationRegistry((ref) => {
+  allCollectionState().liveCollections.delete(ref);
+});
 
 export function createHTMLAllCollection(document) {
   const collection = (...arguments_) => callCollection(collection, arguments_);
@@ -31,9 +35,22 @@ export function createHTMLAllCollection(document) {
     indexedLength: 0,
     namedProperties: new Set(),
   });
-  allCollectionState().liveCollections.add(collection);
+  const ref = new WeakRef(collection);
+  allCollectionState().liveCollections.add(ref);
+  collectionFinalization.register(collection, ref);
   refreshHTMLAllCollection(collection);
   return collection;
+}
+
+/**
+ * 当前仍被跟踪的 live HTMLAllCollection 数量（测试用）。
+ */
+export function liveHTMLAllCollectionCount() {
+  const refs = allCollectionState().liveCollections;
+  for (const ref of refs) {
+    if (ref.deref() === undefined) refs.delete(ref);
+  }
+  return refs.size;
 }
 
 export function requireHTMLAllCollection(value) {
@@ -125,8 +142,14 @@ export function refreshHTMLAllCollection(collection) {
 }
 
 registerMutationHook(() => {
-  for (const collection of allCollectionState().liveCollections) {
-    refreshHTMLAllCollection(collection);
+  const refs = allCollectionState().liveCollections;
+  for (const ref of refs) {
+    const collection = ref.deref();
+    if (collection === undefined) {
+      refs.delete(ref);
+    } else {
+      refreshHTMLAllCollection(collection);
+    }
   }
 });
 

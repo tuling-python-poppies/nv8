@@ -223,4 +223,20 @@ export function validateProfileLockPlan(lockPlan) {
   if (!lockPlan.digest || typeof lockPlan.digest !== 'string') {
     throw new Error('Profile lock plan must have a valid "digest"');
   }
+
+  // 消费者（profile-factory.js 的 validateLockPlan / loadProfileFromLockPlan）
+  // 直接读 `host.nodeVersion.split('.')`。缺 host 或 nodeVersion 不是字符串时，
+  // 他们拿到的是 TypeError 而不是结构化校验错误，且 validateLockPlan 还会
+  // 在 catch 之前就把错误信息拼进 errors。这里补齐 host 校验。
+  if (
+    lockPlan.host === null
+    || typeof lockPlan.host !== 'object'
+    || Array.isArray(lockPlan.host)
+  ) {
+    throw new Error('Profile lock plan must have a valid "host" object');
+  }
+  
+  if (typeof lockPlan.host.nodeVersion !== 'string' || lockPlan.host.nodeVersion.length === 0) {
+    throw new Error('Profile lock plan must have a valid "host.nodeVersion" string');
+  }
 }

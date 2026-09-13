@@ -23,15 +23,14 @@ export const removeEventListener = {
   const options = toEventListenerOptions(arguments[2]);
   const listeners = state.listeners.get(normalizedType);
   if (listeners !== undefined) {
-    for (const listener of listeners) {
-      if (
-        listener.callback === callback
-        && listener.capture === options.capture
-        && !listener.removed
-      ) {
-        listener.removed = true;
-        break;
-      }
+    // 从数组里真删除而不是只标 removed：迁移前 add 的判重不看 removed，
+    // remove → 重新 add 会被当成重复条目，监听器永久失效。
+    const index = listeners.findIndex(listener => (
+      listener.callback === callback
+      && listener.capture === options.capture
+    ));
+    if (index !== -1) {
+      listeners.splice(index, 1);
     }
   }
   traceCall(

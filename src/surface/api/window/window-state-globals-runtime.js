@@ -238,26 +238,15 @@ function requireStyleMedia(value, state) {
   if (!state.has(value)) throw new TypeError("Illegal invocation");
 }
 
-function replaceDimension(width, height) {
-  replaceGlobalNumber("innerWidth", width);
-  replaceGlobalNumber("innerHeight", height);
-  replaceGlobalNumber("outerWidth", width);
-  replaceGlobalNumber("outerHeight", height);
-}
-
 function setViewportDimensions(width, height) {
+  // 只更新 viewState，不把 innerWidth / outerWidth 从访问器替换成数据属性。
+  //
+  // 迁移前这里对四个全局调用 Object.defineProperty 重写成数据属性，
+  // `resizeTo()` 之后 `finalizeWindowSurfaceOrder()` 的形状一致性检查
+  // （表声明访问器、实际是数据属性）会抛错，页面里任何一次 resize 都会
+  // 让 Realm 创建失败。浏览器语义里 resize 改的是值，不是 descriptor 形状。
   viewState.viewportWidth = width;
   viewState.viewportHeight = height;
-  replaceDimension(width, height);
-}
-
-function replaceGlobalNumber(name, value) {
-  Object.defineProperty(globalThis, name, {
-    value,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  });
 }
 
 function finiteNumber(value) {

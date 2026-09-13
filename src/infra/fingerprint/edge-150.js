@@ -32,6 +32,10 @@ const navigatorProfile = Object.freeze({
     bitness: "64",
     model: "",
     platformVersion: "19.0.0",
+    // TODO(采集): 仓库内没有任何 Edge 150 真实 build 号证据（fixtures /
+    // docs / 采集脚本产物均无），因此这里**不填** uaFullVersion，运行时回退到
+    // 占位值 `${major}.0.0.0`（见 navigator-ua-data-state.js buildVersions）。
+    // 拿到真实 Edge 150 的 `uaFullVersion` 后在此登记，并保持与运行时表一致。
     wow64: false,
     formFactors: Object.freeze(["Desktop"]),
     mobile: false,

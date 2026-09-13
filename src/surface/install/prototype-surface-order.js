@@ -1024,13 +1024,26 @@ export const EDGE_152_PROTOTYPE_ORDER = Object.freeze({
   ]
 });
 
-export function finalizePrototypeSurfaceOrder(browserMajorVersion = 150) {
-  if (browserMajorVersion !== 152) return;
+/**
+ * 版本门控的修正表清单。
+ *
+ * `since` / `before` 是数据：修正一旦在某个版本生效，之后的版本继续生效，
+ * 直到显式给出 `before`。迁移前这里写死 `browserMajorVersion !== 152`，
+ * 153+ 会静默跳过重排——新 profile 下 Surface 顺序悄悄退回安装顺序。
+ */
+const PROTOTYPE_ORDER_TABLES = Object.freeze([
+  Object.freeze({ table: EDGE_152_PROTOTYPE_ORDER, since: 152 }),
+]);
 
-  for (const [name, expected] of Object.entries(EDGE_152_PROTOTYPE_ORDER)) {
-    const Constructor = globalThis[name];
-    if (typeof Constructor !== "function" || !Constructor.prototype) continue;
-    reorderPrototype(Constructor.prototype, expected, name);
+export function finalizePrototypeSurfaceOrder(browserMajorVersion = 150) {
+  for (const { table, since, before } of PROTOTYPE_ORDER_TABLES) {
+    if (since !== undefined && browserMajorVersion < since) continue;
+    if (before !== undefined && browserMajorVersion >= before) continue;
+    for (const [name, expected] of Object.entries(table)) {
+      const Constructor = globalThis[name];
+      if (typeof Constructor !== "function" || !Constructor.prototype) continue;
+      reorderPrototype(Constructor.prototype, expected, name);
+    }
   }
 }
 

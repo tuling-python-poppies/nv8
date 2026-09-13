@@ -181,7 +181,12 @@ function invokeListeners(
       continue;
     }
     if (listener.once) {
-      listener.removed = true;
+      // once 也要真删除：只标 removed 会让「触发后重新 add」被判重而失效。
+      // 遍历的是 listeners.slice()，此处从原数组删除不影响快照。
+      const index = listeners.indexOf(listener);
+      if (index !== -1) {
+        listeners.splice(index, 1);
+      }
     }
     eventRecord.inPassiveListener = listener.passive;
     try {

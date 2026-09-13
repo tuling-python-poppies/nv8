@@ -1,10 +1,16 @@
 import { Storage } from "./storage-constructor.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
+import { originScopedState } from "../dom/same-origin-shared-state.js";
 
 const storageState = new WeakMap();
 
 // 迁移前 localStorage/sessionStorage/初始数据是模块级单例，会跨宿主 Realm
 // 共享。按 Realm 宿主键控后，每个 Window/Worker 都拥有独立状态。
+//
+// 存储对象本身仍按 Realm 创建（同源 iframe 里 `localStorage instanceof Storage`
+// 必须成立），但底层记录按 origin 经 `originScopedState()` 共享——同源 iframe
+// 与父页面互通，跨源仍隔离。初始数据只在 origin 记录首次建立时灌入，
+// 避免子 Realm 的 configureStorage("") 清掉父页面的数据。
 const storageSlot = createRealmSlot(() => ({
   localStorage: null,
   sessionStorage: null,
@@ -30,7 +36,10 @@ export function configureStorage(localData = "", sessionData = "", host) {
 export function currentLocalStorage(host) {
   const state = storageSlot.get(resolveHost(host));
   if (state.localStorage === null) {
-    state.localStorage = createStorage(state.initialLocalData);
+    state.localStorage = createStorage(sharedRecord(
+      "localStorage",
+      state.initialLocalData,
+    ));
   }
   return state.localStorage;
 }
@@ -38,9 +47,17 @@ export function currentLocalStorage(host) {
 export function currentSessionStorage(host) {
   const state = storageSlot.get(resolveHost(host));
   if (state.sessionStorage === null) {
-    state.sessionStorage = createStorage(state.initialSessionData);
+    state.sessionStorage = createStorage(sharedRecord(
+      "sessionStorage",
+      state.initialSessionData,
+    ));
   }
   return state.sessionStorage;
+}
+
+function sharedRecord(kind, initialEncoded) {
+  const { value } = originScopedState(kind, () => decodeRecord(initialEncoded));
+  return value;
 }
 
 export function releaseStorage(host) {
@@ -63,9 +80,8 @@ export function encodeSessionStorage() {
   return encodeRecord(requireStorage(currentSessionStorage()));
 }
 
-function createStorage(encoded) {
+function createStorage(record) {
   const target = Object.create(Storage.prototype);
-  const record = decodeRecord(encoded);
   const value = new Proxy(target, {
     get(object, property, receiver) {
       const own = Reflect.get(object, property, receiver);

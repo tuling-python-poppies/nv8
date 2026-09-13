@@ -32,7 +32,7 @@ import {
   registerNativeGetter,
 } from "../../engine/webidl/native-function.js";
 
-export function installCrypto(realm = globalThis) {
+export function installCrypto(realm = globalThis, entropy = null) {
   do {
     delete ((([Crypto, SubtleCrypto, CryptoKey])[0])).prototype.constructor;
     defineGlobalConstructor(((([Crypto, SubtleCrypto, CryptoKey])[0])).name, ((([Crypto, SubtleCrypto, CryptoKey])[0])));
@@ -45,7 +45,7 @@ do {
     delete ((([Crypto, SubtleCrypto, CryptoKey])[2])).prototype.constructor;
     defineGlobalConstructor(((([Crypto, SubtleCrypto, CryptoKey])[2])).name, ((([Crypto, SubtleCrypto, CryptoKey])[2])));
   } while (false);
-  const { crypto, subtle } = createCryptoObjects(realm);
+  const { crypto, subtle } = createCryptoObjects(realm, entropy);
   method(Crypto, "getRandomValues", 1, cryptoGetRandomValues);
   defineConstructorBacklink(Crypto.prototype, Crypto);
   getter(Crypto, "subtle", value => cryptoSubtle(value, subtle));

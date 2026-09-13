@@ -1,3 +1,5 @@
+// WebGL 安装器：按真实 Edge 采集基准展开的安装语句。
+// 直接编辑本文件；导出由 `npm run check:generated` 校验。
 import { Event } from "../api/event/event-constructor.js";
 import {
   WebGL2RenderingContext,
@@ -24,7 +26,6 @@ import {
   webglOperation,
   webglValueProperty,
 } from "../api/webgl/webgl-runtime.js";
-import { WEBGL_SURFACES } from "../api/webgl/webgl-surface.js";
 import {
   defineConstructorBacklink,
   defineGlobalConstructor,
@@ -190,10 +191,9 @@ do {
       Object.setPrototypeOf((((resourceConstructors)[10])), WebGLObject);
     }
   } while (false);
-do {
-    
-  } while (false);
-do {
+  // resourceConstructors[11]（WebGLUniformLocation）按规范不继承 WebGLObject，
+  // 这里没有要执行的安装步骤；迁移前的空 do/while 块已删除。
+  do {
     {
       Object.setPrototypeOf((((resourceConstructors)[12])).prototype, WebGLObject.prototype);
       Object.setPrototypeOf((((resourceConstructors)[12])), WebGLObject);

@@ -12,17 +12,35 @@ const keyState = new WeakMap();
 const realmCryptoState = new WeakMap();
 
 /**
- * Initialize crypto state for a Realm
+ * Initialize crypto state for a Realm.
+ *
+ * `entropy` 是宿主在 Realm 外准备好、经 moduleLoader 传进来的熵源，形如
+ * `{ randomFill(bytes), randomUUID() }`。Plugin 路径由 `cryptoPlugin.activate`
+ * 从 `node:crypto` 注入；legacy bootstrap 拿不到宿主对象时保持为 null，
+ * 由 `crypto-runtime.js` 用按 Realm 采集的种子初始化 HMAC-DRBG。
+ *
+ * 迁移前这里保存的是固定种子 0x6d2b79f5 的 xorshift32 状态——每个 Realm
+ * 的随机序列完全一样，跨沙箱可预测，等于没有随机源。
+ *
+ * @param {object} realm
+ * @param {{randomFill?: Function, randomUUID?: Function}|null} [entropy]
  */
-export function initializeCryptoState(realm) {
-  if (realmCryptoState.has(realm)) {
-    return realmCryptoState.get(realm);
+export function initializeCryptoState(realm, entropy = null) {
+  const existing = realmCryptoState.get(realm);
+  if (existing !== undefined) {
+    if (existing.entropy === null && entropy !== null) {
+      existing.entropy = normalizeEntropy(entropy);
+    }
+    return existing;
   }
-  
+
   const state = {
-    randomState: 0x6d2b79f5,
+    // 宿主熵源；没有时由 crypto-runtime.js 的 DRBG 兜底。
+    entropy: normalizeEntropy(entropy),
+    // HMAC-SHA256 DRBG 延迟创建——没有宿主熵源时才需要。
+    drbg: null,
   };
-  
+
   realmCryptoState.set(realm, state);
   return state;
 }
@@ -39,14 +57,21 @@ export function getCryptoState(realm) {
 }
 
 /**
- * Generate a random byte using the Realm's PRNG state
+ * 过滤宿主熵源：只有真的可调用才接受，避免把页面对象误当熵源。
+ *
+ * @param {{randomFill?: Function, randomUUID?: Function}|null|undefined} value
+ * @returns {{randomFill?: Function, randomUUID?: Function}|null}
  */
-export function randomByte(realm) {
-  const state = getCryptoState(realm);
-  state.randomState ^= state.randomState << 13;
-  state.randomState ^= state.randomState >>> 17;
-  state.randomState ^= state.randomState << 5;
-  return state.randomState & 0xff;
+function normalizeEntropy(value) {
+  if (value === null || typeof value !== "object") return null;
+  const randomFill = typeof value.randomFill === "function"
+    ? value.randomFill
+    : null;
+  const randomUUID = typeof value.randomUUID === "function"
+    ? value.randomUUID
+    : null;
+  if (randomFill === null && randomUUID === null) return null;
+  return Object.freeze({ randomFill, randomUUID });
 }
 
 /**

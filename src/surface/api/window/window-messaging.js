@@ -16,6 +16,9 @@ const facadeState = new WeakMap();
 // 键控，保留现有无参数 API。
 const messagingSlot = createRealmSlot(() => ({
   windowHandlers: new Map(),
+  // onmessage / onmessageerror 的代理监听器：赋值即注册（但只注册一次），
+  // 重新赋值不改变触发位置。
+  windowHandlerListeners: new Map(),
   localOrigin: "null",
   parentFacade: null,
   topFacade: null,
@@ -323,7 +326,33 @@ export function windowHandler(name) {
 }
 
 export function setWindowHandler(name, value) {
-  messagingState().windowHandlers.set(name, typeof value === "function" ? value : null);
+  const state = messagingState();
+  state.windowHandlers.set(name, isWindowHandlerValue(value) ? value : null);
+  // 规范把 onmessage 实现为一个事件监听器：赋值时注册，与
+  // addEventListener 注册的监听器按注册顺序触发。重新赋值复用同一个代理，
+  // 因此位置不变（与 event-handler-attribute.js 同一语义）。
+  if (state.windowHandlerListeners.has(name)) return;
+  if (!isWindowHandlerValue(value)) return;
+  const type = name.slice(2);
+  const listener = event => {
+    const current = messagingState().windowHandlers.get(name) ?? null;
+    if (typeof current === "function") {
+      return Reflect.apply(current, globalThis, [event]);
+    }
+    if (isWindowHandlerValue(current)) {
+      return Reflect.apply(current.handleEvent, current, [event]);
+    }
+    return undefined;
+  };
+  state.windowHandlerListeners.set(name, listener);
+  globalThis.addEventListener(type, listener);
+}
+
+function isWindowHandlerValue(value) {
+  if (typeof value === "function") return true;
+  return value !== null
+    && typeof value === "object"
+    && typeof value.handleEvent === "function";
 }
 
 export function receiveParentWindowMessage(
@@ -354,9 +383,9 @@ export function enqueueWindowMessage(message, origin, source, options) {
         Object.prototype.toString.call(value) === "[object MessagePort]"),
     });
     markEventTrusted(event);
+    // 只 dispatch：onmessage 已在赋值时注册为监听器，不再手工调用，
+    // 否则会重复触发且破坏与 addEventListener 的先后顺序。
     globalThis.dispatchEvent(event);
-    const handler = messagingState().windowHandlers.get("onmessage") ?? null;
-    if (handler !== null) Reflect.apply(handler, globalThis, [event]);
   });
 }
 

@@ -149,6 +149,20 @@ export function traverseHistoryToIndex(index) {
   return false;
 }
 
+/**
+ * 真实 Edge 的会话历史上限是 50 条。
+ *
+ * 超出后从最旧一端裁剪；`go()` 的索引随之平移，当前条目始终指向同一份记录。
+ */
+const MAX_HISTORY_ENTRIES = 50;
+
+function trimHistoryEntries(scope) {
+  const excess = scope.entries.length - MAX_HISTORY_ENTRIES;
+  if (excess <= 0) return;
+  scope.entries.splice(0, excess);
+  scope.currentIndex = Math.max(0, scope.currentIndex - excess);
+}
+
 export function pushHistoryState(state, title, url) {
   const scope = nav();
   const target = resolveHistoryUrl(url);
@@ -159,6 +173,7 @@ export function pushHistoryState(state, title, url) {
     title,
   }));
   scope.currentIndex = scope.entries.length - 1;
+  trimHistoryEntries(scope);
 }
 
 export function replaceHistoryState(state, title, url) {
@@ -217,6 +232,7 @@ function navigateToRecord(url, mode, state, title) {
   scope.entries.push(createNavigationEntry({ url, state, title }));
   scope.originOverride = originOverride;
   scope.currentIndex = scope.entries.length - 1;
+  trimHistoryEntries(scope);
   if (needsDocumentReplacement) scope.navigateHook?.({ url: targetHref, mode });
   return true;
 }

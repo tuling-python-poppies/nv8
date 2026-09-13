@@ -491,10 +491,10 @@ function decodeEntities(value) {
     (match, entity) => {
       const normalized = entity.toLowerCase();
       if (normalized.startsWith("#x")) {
-        return String.fromCodePoint(Number.parseInt(normalized.slice(2), 16));
+        return codePointToString(Number.parseInt(normalized.slice(2), 16));
       }
       if (normalized.startsWith("#")) {
-        return String.fromCodePoint(Number.parseInt(normalized.slice(1), 10));
+        return codePointToString(Number.parseInt(normalized.slice(1), 10));
       }
       return {
         amp: "&",
@@ -506,4 +506,26 @@ function decodeEntities(value) {
       }[normalized] ?? match;
     },
   );
+}
+
+/**
+ * 数字字符引用 → 字符串。
+ *
+ * 超过 U+10FFFF 或落在代理区的码点按 HTML 规范替换成 U+FFFD；直接交给
+ * `String.fromCodePoint` 会抛 RangeError，页面里写一个 `&#x110000;` 就能
+ * 让创建 Realm/解析 HTML 整体失败（可被用来 DoS）。
+ *
+ * @param {number} codePoint
+ * @returns {string}
+ */
+function codePointToString(codePoint) {
+  if (
+    !Number.isInteger(codePoint)
+    || codePoint < 0
+    || codePoint > 0x10ffff
+    || (codePoint >= 0xd800 && codePoint <= 0xdfff)
+  ) {
+    return "\uFFFD";
+  }
+  return String.fromCodePoint(codePoint);
 }

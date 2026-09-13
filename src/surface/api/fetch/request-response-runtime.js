@@ -236,7 +236,9 @@ function consume(map, value, operation) {
   if (state === undefined) throw new TypeError("Illegal invocation");
   if (state.bodyUsed) return Promise.reject(new TypeError("Body has already been used"));
   state.bodyUsed = true;
-  return Promise.resolve(operation(state.bytes.slice(), state));
+  // operation 必须异步执行：像 `JSON.parse` 失败这类同步异常应变成
+  // rejected promise，而不是从 `response.json()` 调用点同步抛出。
+  return Promise.resolve().then(() => operation(state.bytes.slice(), state));
 }
 
 function bodyRecord(value) {

@@ -62,6 +62,22 @@ const SPECIAL_SCHEMES = new Set([
   "wss:",
 ]);
 
+/**
+ * 特殊 scheme 的默认端口。
+ *
+ * `file:` 的默认端口是 `null`——它没有端口概念，因此没有可剥离的默认端口。
+ * 只认 http/https 会让 `ws://x:80/`、`wss://x:443/`、`ftp://x:21/` 的
+ * `host` 与 `origin` 都多出一个端口，与真实浏览器不一致。
+ */
+const DEFAULT_PORTS = Object.freeze({
+  "ftp:": "21",
+  "file:": null,
+  "http:": "80",
+  "https:": "443",
+  "ws:": "80",
+  "wss:": "443",
+});
+
 /** domain 主机里导致**解析失败**的 ASCII 字符（另加 C0 控制符与 DEL）。 */
 const FORBIDDEN_DOMAIN_CHARS = new Set([
   "%",
@@ -127,7 +143,7 @@ const IPV6_PATTERN = new RegExp(
 );
 
 export function parseUrl(value, base = null) {
-  const input = `${value}`;
+  const input = applySpecialSchemeBackslashes(`${value}`, base);
   if (input.startsWith("blob:")) {
     return parseBlobUrl(input);
   }
@@ -174,6 +190,30 @@ export function parseUrl(value, base = null) {
   };
 }
 
+/**
+ * 特殊 scheme 里 `\` 与 `/` 等价（WHATWG 的 "special" 判定）。
+ *
+ * 原实现把 `\` 当普通字符送进主机解析，于是 `http://a\b/` 抛 TypeError；
+ * 真实浏览器把它当分隔符，解析成 host=`a`、path=`/b/`。
+ *
+ * 只替换 `?` / `#` 之前的部分：query 与 fragment 里的 `\` 是普通字符。
+ * 这一步必须发生在正则切分之前，否则 `http:\\a\b` 这类输入连 scheme 都识别不出。
+ */
+function applySpecialSchemeBackslashes(input, base) {
+  const schemeMatch = /^([A-Za-z][A-Za-z0-9+.-]*):/u.exec(input);
+  const protocol = schemeMatch === null
+    ? base?.protocol ?? null
+    : `${schemeMatch[1].toLowerCase()}:`;
+  if (protocol === null || !SPECIAL_SCHEMES.has(protocol)) {
+    return input;
+  }
+  const terminator = input.search(/[?#]/u);
+  if (terminator === -1) {
+    return input.replaceAll("\\", "/");
+  }
+  return `${input.slice(0, terminator).replaceAll("\\", "/")}${input.slice(terminator)}`;
+}
+
 export function serializeUrl(record) {
   if (record.protocol === "blob:") {
     return `blob:${record.pathname}${record.search}${record.hash}`;
@@ -182,7 +222,9 @@ export function serializeUrl(record) {
     // opaque path 不带 `//`，也没有 authority
     return `${record.protocol}${record.pathname}${record.search}${record.hash}`;
   }
-  const credentials = record.username === ""
+  // username 为空但 password 非空时必须保留 `:password@`：
+  // `new URL('http://:secret@x/')` 的 href 就带这个前导冒号，丢掉它等于吞凭据。
+  const credentials = record.username === "" && record.password === ""
     ? ""
     : `${record.username}${record.password === "" ? "" : `:${record.password}`}@`;
   return `${record.protocol}//${credentials}${record.host}${record.pathname}${record.search}${record.hash}`;
@@ -237,9 +279,12 @@ export function updateUrlComponent(record, component, value) {
         pathname: normalizePath(input.startsWith("/") ? input : `/${input}`),
       };
     case "search":
+      // `URL.search` setter 语义：先剥掉一个前导 `?`，再按 query 的
+      // percent-encode 集合编码。不编码的话 `#` 会在后续解析中被当成
+      // fragment 起点，把用户写的查询截断。
       return {
         ...record,
-        search: input === "" ? "" : `?${input.replace(/^\?/u, "")}`,
+        search: input === "" ? "" : `?${encodeQuery(input.replace(/^\?/u, ""))}`,
       };
     case "hash":
       return {
@@ -399,20 +444,59 @@ function directoryOf(pathname) {
   return slash === -1 ? "/" : pathname.slice(0, slash + 1);
 }
 
+/**
+ * WHATWG 的 path state。
+ *
+ * 按段处理而不是「split 后丢掉空段」：
+ *
+ * | 输入 | 原行为 | 真实 Edge / 规范 |
+ * |---|---|---|
+ * | `/a//b` | `/a/b`（吞空段） | `/a//b` |
+ * | `/a/b/..` | `/a`（丢尾斜杠） | `/a/` |
+ * | `/a/b/.` | `/a/b` | `/a/b/` |
+ * | `/a/%2e%2e/b` | 原样 | `/b`（`.%2e` 等也算 dot segment） |
+ *
+ * 规则：路径以根空段开头并**保留**它（`..` 不再把它弹掉）；遇到 `..` 弹栈，
+ * `.` 归并；`.` / `..` 位于末尾时补一个空段，序列化时表现为尾斜杠。
+ * 分隔符之间的空段一律入栈，所以 `/a//b` 不会被吞成 `/a/b`。
+ */
 function normalizePath(pathname) {
-  const segments = pathname.split("/");
-  const normalized = [];
-  for (const segment of segments) {
-    if (segment === "" || segment === ".") {
+  const rooted = pathname.startsWith("/");
+  // 根路径的路径列表以空段开头（序列化时每个段前加 `/`，第一个空段就是根斜杠）。
+  const segments = rooted ? [""] : [];
+  const floor = rooted ? 1 : 0;
+  let start = rooted ? 1 : 0;
+  for (let index = start; index <= pathname.length; index += 1) {
+    const atEnd = index === pathname.length;
+    if (!atEnd && pathname[index] !== "/") {
       continue;
     }
-    if (segment === "..") {
-      normalized.pop();
+    const segment = pathname.slice(start, index);
+    if (isDoubleDotPathSegment(segment)) {
+      if (segments.length > floor) {
+        segments.pop();
+      }
+      if (atEnd) {
+        segments.push("");
+      }
+    } else if (isSingleDotPathSegment(segment)) {
+      if (atEnd) {
+        segments.push("");
+      }
     } else {
-      normalized.push(segment);
+      segments.push(segment);
     }
+    start = index + 1;
   }
-  return `/${normalized.join("/")}${pathname.endsWith("/") && normalized.length > 0 ? "/" : ""}`;
+  return segments.join("/");
+}
+
+function isDoubleDotPathSegment(segment) {
+  return /^(?:\.\.|\.%2e|%2e\.|%2e%2e)$/iu.test(segment);
+}
+
+function isSingleDotPathSegment(segment) {
+  return segment === "." || /^%2e$/iu.test(segment);
 }
 
 // ------------------------------------------------------------- 主机与端口
@@ -646,8 +730,8 @@ function withPort(record, port) {
 }
 
 function isDefaultPort(protocol, port) {
-  return (protocol === "http:" && port === "80")
-    || (protocol === "https:" && port === "443");
+  const defaultPort = DEFAULT_PORTS[protocol];
+  return typeof defaultPort === "string" && defaultPort === port;
 }
 
 function updateProtocol(record, value) {
@@ -665,8 +749,69 @@ function updateProtocol(record, value) {
   };
 }
 
+/**
+ * userinfo 的 percent-encode 集合：path 集合加 `/ : ; = @ [ \ ] ^ |`。
+ *
+ * 与旧实现的差别有两条，都是可检测偏差：
+ *
+ * 1. **不再二次编码**。旧实现用 `encodeURIComponent`，把输入里合法的
+ *    `%3A` 变成 `%253A`；WHATWG 对 `%` 不做编码，合法/非法转义都原样保留。
+ * 2. **`:` 编码成 `%3A` 而不是还原成字面 `:`**。旧实现把 `%3A` 反解成 `:`,
+ *    于是用户名里的冒号会重新被解析成 user/password 分隔符。
+ */
+const USERINFO_PERCENT_ENCODE = new Set([
+  " ",
+  "\"",
+  "#",
+  "<",
+  ">",
+  "?",
+  "`",
+  "{",
+  "}",
+  "/",
+  ":",
+  ";",
+  "=",
+  "@",
+  "[",
+  "\\",
+  "]",
+  "^",
+  "|",
+]);
+
 function encodeUserInfo(value) {
-  return encodeURIComponent(value)
-    .replaceAll("%3A", ":")
-    .replaceAll("%3a", ":");
+  return percentEncodeForSet(value, USERINFO_PERCENT_ENCODE);
+}
+
+/** query 的 percent-encode 集合。`'` 在真实 Chromium 中一律编码。 */
+const QUERY_PERCENT_ENCODE = new Set([" ", "\"", "#", "<", ">", "'"]);
+
+function encodeQuery(value) {
+  return percentEncodeForSet(value, QUERY_PERCENT_ENCODE);
+}
+
+function percentEncodeForSet(value, encodeSet) {
+  let output = "";
+  for (const character of value) {
+    const code = character.codePointAt(0);
+    if (code <= 0x1f || code > 0x7e || encodeSet.has(character)) {
+      output += percentEncodeCharacter(character);
+      continue;
+    }
+    // `%` 不属于任何 encode 集合：合法转义与孤立 `%` 都原样保留。
+    output += character;
+  }
+  return output;
+}
+
+function percentEncodeCharacter(character) {
+  const code = character.codePointAt(0);
+  if (code <= 0x7f) {
+    return percentEncodeByte(code);
+  }
+  // 非 ASCII 走 UTF-8 百分号编码；`encodeURIComponent` 对单个码点
+  // 的处理与规范的 "UTF-8 percent-encode" 一致，且正确合并代理对。
+  return encodeURIComponent(character);
 }

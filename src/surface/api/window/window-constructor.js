@@ -1,6 +1,7 @@
 import {
   defineConstructorBacklink,
   defineGlobalConstructor,
+  defineGlobalFunction,
   defineToStringTag,
 } from "../../../engine/webidl/descriptor.js";
 import {
@@ -53,27 +54,18 @@ export function installWindowConstructor() {
   defineToStringTag(Window.prototype, "Window");
   defineGlobalConstructor("Window", Window);
   defineConstructorBacklink(Window.prototype, Window);
-  const postMessage = {
-    postMessage(message) {
-      return windowPostMessage(
-        globalThis,
-        message,
-        arguments[1],
-        arguments[2],
-      );
-    },
-  }.postMessage;
-  Object.defineProperty(postMessage, "length", {
-    value: 1,
-    configurable: true,
-  });
-  registerNativeFunction(postMessage, "postMessage");
-  Object.defineProperty(globalThis, "postMessage", {
-    value: postMessage,
-    writable: true,
-    enumerable: true,
-    configurable: true,
-  });
+  // 全局函数统一走 `defineGlobalFunction`：原生 toString、报错文案与
+  // descriptor 安装都由它保证，避免这里手写一套 globalThis 定义。
+  // postMessage 的最后一个必选参数是 message，length 为 1。
+  const postMessage = function postMessage(message) {
+    return windowPostMessage(
+      globalThis,
+      message,
+      arguments[1],
+      arguments[2],
+    );
+  };
+  defineGlobalFunction("postMessage", postMessage);
   for (const name of ["onmessage", "onmessageerror"]) {
     const descriptor = Object.getOwnPropertyDescriptor({
       get [name]() {

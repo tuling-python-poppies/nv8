@@ -12,6 +12,8 @@ import { reserveTimer } from "../../../infra/scheduler/timer-state.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
 
 const state = new WeakMap();
+// IDB 对象的 on* 代理监听器：target -> Map<onname, listener>
+const handlerListenerState = new WeakMap();
 
 // 数据库注册表和 IDBFactory 原先是模块级状态，会跨 Realm 共享数据库。
 const indexedDBSlot = createRealmSlot(() => ({
@@ -85,6 +87,9 @@ export function setIndexedDBProperty(value, name, input) {
   const record = requireRecord(value);
   if (record.handlers?.has(name)) {
     record.handlers.set(name, typeof input === "function" ? input : null);
+    // 规范语义：on* 赋值即注册一个监听器，与 addEventListener 的注册顺序
+    // 共同决定触发顺序。第一次赋非空值时代理注册，重新赋值复用同一位置。
+    if (typeof input === "function") ensureHandlerListener(record.object, name);
     return;
   }
   if (record.kind === "objectStore" && name === "name") {
@@ -190,14 +195,19 @@ function openDatabase(inputName, inputVersion) {
         version,
         stores: new Map(),
         connections: new Set(),
+        pendingDelete: null,
       };
       runtime.databases.set(name, metadata);
     }
+    const existed = oldVersion > 0;
     const database = createDatabase(metadata);
     const requestRecord = requireRecord(request);
     requestRecord.result = database;
     const upgrade = version > oldVersion;
     if (upgrade) {
+      // 版本/schema 快照必须在 upgradeneeded 派发前取：事务 abort 后
+      // 版本号与全部 schema 变更都要回滚到升级前（真实 Edge 语义）。
+      const snapshot = snapshotDatabaseSchema(metadata);
       metadata.version = version;
       const transaction = createTransaction(
         database,
@@ -216,11 +226,58 @@ function openDatabase(inputName, inputVersion) {
       });
       fire(request, "upgradeneeded", event);
       requireRecord(database).upgradeTransaction = null;
+      if (!transactionRecord.active) {
+        // abort() 已把事务置为 inactive（并派发了 abort 事件）：不提交
+        // 版本与 schema，open request 以 AbortError 结束，连接作废。
+        rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime);
+        const databaseRecord = requireRecord(database);
+        databaseRecord.closed = true;
+        metadata.connections.delete(database);
+        failRequest(
+          request,
+          transactionRecord.error ?? domError("Transaction aborted", "AbortError"),
+        );
+        return;
+      }
       finishTransaction(transactionRecord);
     }
     succeedRequest(request, database);
   });
   return request;
+}
+
+/**
+ * 升级事务开始前的 schema 快照。
+ *
+ * 只复制容器（stores / records / indexes 的 Map 引用在删除时会被替换，
+ * 但 Map 本身的内容变更需要浅拷贝才可回滚），store 元数据对象保留引用，
+ * 回滚时把字段写回去。
+ */
+function snapshotDatabaseSchema(metadata) {
+  const stores = new Map();
+  for (const [storeName, store] of metadata.stores) {
+    stores.set(storeName, {
+      store,
+      records: new Map(store.records),
+      indexes: new Map(store.indexes),
+      nextKey: store.nextKey,
+    });
+  }
+  return { version: metadata.version, stores };
+}
+
+function rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime) {
+  metadata.stores = new Map();
+  for (const [storeName, saved] of snapshot.stores) {
+    saved.store.records = saved.records;
+    saved.store.indexes = saved.indexes;
+    saved.store.nextKey = saved.nextKey;
+    metadata.stores.set(storeName, saved.store);
+  }
+  metadata.version = snapshot.version;
+  if (!existed) {
+    runtime.databases.delete(name);
+  }
 }
 
 function deleteDatabase(inputName) {
@@ -229,23 +286,46 @@ function deleteDatabase(inputName) {
   const request = createRequest(null, null, true);
   Promise.resolve().then(() => {
     const metadata = runtime.databases.get(name);
-    const oldVersion = metadata?.version ?? 0;
-    if (metadata !== undefined) {
-      for (const connection of metadata.connections) {
-        fire(
-          connection,
-          "versionchange",
-          new IDBVersionChangeEvent("versionchange", {
-            oldVersion,
-            newVersion: null,
-          }),
-        );
-      }
-      runtime.databases.delete(name);
+    if (metadata === undefined) {
+      succeedRequest(request, undefined);
+      return;
     }
-    succeedRequest(request, undefined);
+    const oldVersion = metadata.version;
+    // 先给每个活动连接派发 versionchange，让页面有机会 close()。
+    // 规范语义：仍有连接存活时 delete 保持 blocked，直到全部关闭。
+    for (const connection of [...metadata.connections]) {
+      fire(
+        connection,
+        "versionchange",
+        new IDBVersionChangeEvent("versionchange", {
+          oldVersion,
+          newVersion: null,
+        }),
+      );
+    }
+    if (metadata.connections.size === 0) {
+      runtime.databases.delete(name);
+      succeedRequest(request, undefined);
+      return;
+    }
+    metadata.pendingDelete = { request };
+    fire(request, "blocked");
   });
   return request;
+}
+
+/**
+ * 活动连接关闭后完成挂起的 deleteDatabase。
+ *
+ * `blocked` 已派发、请求保持 pending；最后一个连接关闭时在这里删除并成功。
+ */
+function maybeCompletePendingDelete(metadata) {
+  const pending = metadata.pendingDelete;
+  if (pending === null || pending === undefined) return;
+  if (metadata.connections.size > 0) return;
+  metadata.pendingDelete = null;
+  indexedDBState().databases.delete(metadata.name);
+  succeedRequest(pending.request, undefined);
 }
 
 function createDatabase(metadata) {
@@ -271,6 +351,8 @@ function databaseOperation(record, name, args) {
   if (name === "close") {
     record.closed = true;
     record.metadata.connections.delete(record.object);
+    // 某个 deleteDatabase 可能正 blocked 等待全部连接关闭
+    maybeCompletePendingDelete(record.metadata);
     return undefined;
   }
   if (name === "createObjectStore") {
@@ -947,16 +1029,37 @@ function requireOpenDatabase(record) {
 }
 
 function requireVersionchange(record) {
-  if (record.upgradeTransaction === null) {
+  const transaction = record.upgradeTransaction;
+  // abort() 之后 upgradeTransaction 仍是对象（要到 upgradeneeded 派发返回才清），
+  // 但事务已 inactive——此时 schema 变更必须立刻无效，不能写进待回滚的元数据。
+  if (transaction === null || !requireRecord(transaction).active) {
     throw domError("No versionchange transaction is active", "InvalidStateError");
   }
 }
 
+function ensureHandlerListener(target, name) {
+  let listeners = handlerListenerState.get(target);
+  if (listeners === undefined) {
+    listeners = new Map();
+    handlerListenerState.set(target, listeners);
+  }
+  if (listeners.has(name)) return;
+  const type = name.slice(2);
+  const listener = event => {
+    const record = state.get(target);
+    const handler = record?.handlers?.get(name) ?? null;
+    if (typeof handler === "function") {
+      Reflect.apply(handler, target, [event]);
+    }
+  };
+  listeners.set(name, listener);
+  target.addEventListener(type, listener);
+}
+
 function fire(target, type, event = new Event(type)) {
+  // 只 dispatch：on* 处理器已在赋值时注册为监听器。迁移前在这里额外手工
+  // 调一次，会让 on* 无视注册顺序、永远排在 addEventListener 之后。
   target.dispatchEvent(event);
-  const record = requireRecord(target);
-  const handler = record.handlers?.get(`on${type}`) ?? null;
-  if (handler !== null) Reflect.apply(handler, target, [event]);
 }
 
 function handlerMap(...names) {

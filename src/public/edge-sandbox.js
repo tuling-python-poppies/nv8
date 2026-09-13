@@ -10,7 +10,19 @@ export class EdgeSandbox {
   static async create(options = {}) {
     const normalized = normalizeRuntimeOptions(options);
     const controller = new RuntimeController(normalized);
-    await controller.start();
+    try {
+      await controller.start();
+    } catch (error) {
+      // start() 失败时 controller 已经建了一半：可能已拉起子进程 / 线程。
+      // 不 close 就重抛会让这些资源失去唯一句柄。close() 对未启动成功的
+      // 连接是安全的（就绪则发 CLOSE，否则 terminate）。
+      try {
+        await controller.close();
+      } catch {
+        // 清理失败不能覆盖原始错误——调用方要看到的是 init 失败的原因。
+      }
+      throw error;
+    }
     return new EdgeSandbox(controller, normalized);
   }
 

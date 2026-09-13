@@ -106,8 +106,9 @@ function wrapIntlConstructor(original, name, locale) {
       : Reflect.construct(original, patched, new.target);
   };
 
-  // name / length 必须与原构造器一致——`Intl.NumberFormat.length` 被读到的概率
-  // 不高，但 arity 那一层（edge-lengths fixture）会逐个比。
+  // name / length 必须与原构造器一致。当前没有逐项比 Intl arity 的断言
+  // （behavior probe 只抽查少数接口，edge-lengths fixture 只是采集产物），
+  // 但包装函数少这两个属性就多一个可检测面，保持一致零成本。
   Object.defineProperty(wrapper, "name", { value: name, configurable: true });
   Object.defineProperty(wrapper, "length", {
     value: original.length,

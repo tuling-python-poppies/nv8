@@ -1,3 +1,5 @@
+// SVG 属性元素安装器：按真实 Edge 采集基准展开的安装语句。
+// 直接编辑本文件；导出由 `npm run check:generated` 校验。
 import { SVGClipPathElement } from "../api/dom/svgclip-path-element-factory-constructor.js";
 import { SVGAnimationElement } from "../api/dom/svganimation-element-factory-constructor.js";
 import { SVGFEComponentTransferElement } from "../api/dom/svgfecomponent-transfer-element-factory-constructor.js";

@@ -5,10 +5,10 @@ import {
 import { aesDecrypt, aesEncrypt } from "./aes.js";
 import { sha1, sha384, sha512 } from "./hash.js";
 import {
+  getCryptoState,
   initializeCryptoState,
   markCryptoObject,
   markSubtleObject,
-  randomByte as realmRandomByte,
   requireCrypto,
   requireSubtle,
   requireKey,
@@ -28,9 +28,9 @@ for (const constructor of [Crypto, SubtleCrypto, CryptoKey]) {
   registerNativeFunction(constructor, constructor.name);
 }
 
-export function createCryptoObjects(realm) {
+export function createCryptoObjects(realm, entropy = null) {
   // Initialize crypto state for this Realm
-  initializeCryptoState(realm);
+  initializeCryptoState(realm, entropy);
   
   const subtle = Object.create(SubtleCrypto.prototype);
   markSubtleObject(subtle);
@@ -61,23 +61,139 @@ export function cryptoGetRandomValues(crypto, array) {
       "QuotaExceededError",
     );
   }
-  const realm = crypto.__nv8Realm;
+  const state = getCryptoState(crypto.__nv8Realm);
   const bytes = new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
-  for (let index = 0; index < bytes.length; index += 1) {
-    bytes[index] = realmRandomByte(realm);
-  }
+  fillCryptoRandom(state, bytes);
   return array;
 }
 
 export function cryptoRandomUUID(crypto) {
   requireCrypto(crypto);
-  const bytes = cryptoGetRandomValues(crypto, new Uint8Array(16));
+  const state = getCryptoState(crypto.__nv8Realm);
+  if (state.entropy !== null && typeof state.entropy.randomUUID === "function") {
+    return `${state.entropy.randomUUID()}`;
+  }
+  const bytes = new Uint8Array(16);
+  fillCryptoRandom(state, bytes);
   bytes[6] = (bytes[6] & 0x0f) | 0x40;
   bytes[8] = (bytes[8] & 0x3f) | 0x80;
   const hex = [...bytes].map(value => value.toString(16).padStart(2, "0"));
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}`
     + `-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}`
     + `-${hex.slice(10).join("")}`;
+}
+
+/**
+ * 用 Realm 的随机源填满字节。
+ *
+ * 优先级：
+ *   1. 宿主注入的 `randomFill`（Plugin 路径来自 `node:crypto.randomFillSync`）
+ *   2. 本 Realm 的 HMAC-SHA256 DRBG，种子在首次使用时从
+ *      `Math.random()`（V8 按 context 用宿主熵初始化）+ 时钟采集
+ *
+ * 迁移前是所有 Realm 共享固定种子的 xorshift32，输出可预测。DRBG 只作为
+ * 拿不到 node:crypto 的 legacy 路径兜底；它至少保证跨 Realm / 跨沙箱不同。
+ *
+ * @param {object} state getCryptoState() 的返回值
+ * @param {Uint8Array} bytes
+ */
+function fillCryptoRandom(state, bytes) {
+  if (state.entropy !== null && typeof state.entropy.randomFill === "function") {
+    state.entropy.randomFill(bytes);
+    return bytes;
+  }
+  const block = drbgFor(state).generate(bytes.length);
+  bytes.set(block);
+  return bytes;
+}
+
+function drbgFor(state) {
+  if (state.drbg === null) {
+    state.drbg = createHmacDrbg(collectRealmEntropy());
+  }
+  return state.drbg;
+}
+
+/**
+ * 采集本 Realm 可用的熵。
+ *
+ * `Math.random()` 在 V8 里是每个 context 独立、由宿主熵源播种的序列，
+ * 因此不同 Realm 采到的种子不同。再混入时钟，避免同一微任务内两个 Realm
+ * 采到相同序列。
+ */
+function collectRealmEntropy() {
+  const seed = new Uint8Array(48);
+  const view = new DataView(new ArrayBuffer(8));
+  let offset = 0;
+  const write = (value) => {
+    view.setFloat64(0, value);
+    for (let index = 0; index < 8 && offset < seed.length; index += 1) {
+      seed[offset] = view.getUint8(index);
+      offset += 1;
+    }
+  };
+  const wallClock = Date.now();
+  const monotonic = typeof globalThis.performance?.now === "function"
+    ? globalThis.performance.now()
+    : 0;
+  while (offset < seed.length) {
+    write(Math.random() * 0x100000000);
+    write(wallClock + Math.random());
+    write(monotonic);
+  }
+  return seed;
+}
+
+/**
+ * HMAC-SHA256 DRBG（NIST SP 800-90A 的 HMAC_DRBG 简化实现）。
+ *
+ * 状态只有 `key` / `value` 两个 32 字节块，每次输出后重新更新状态，
+ * 因此连续两次调用不会给出相同字节。
+ */
+function createHmacDrbg(seed) {
+  let key = new Uint8Array(32);
+  let value = new Uint8Array(32).fill(0x01);
+
+  const update = (additional) => {
+    const first = new Uint8Array(value.length + 1 + (additional?.length ?? 0));
+    first.set(value);
+    first[value.length] = 0x00;
+    if (additional !== null && additional !== undefined) {
+      first.set(additional, value.length + 1);
+    }
+    key = hmacBytes(key, first);
+    value = hmacBytes(key, value);
+    if (additional !== null && additional !== undefined) {
+      const second = new Uint8Array(value.length + 1 + additional.length);
+      second.set(value);
+      second[value.length] = 0x01;
+      second.set(additional, value.length + 1);
+      key = hmacBytes(key, second);
+      value = hmacBytes(key, value);
+    }
+  };
+
+  update(seed);
+
+  return {
+    generate(length) {
+      const output = new Uint8Array(length);
+      let offset = 0;
+      while (offset < length) {
+        value = hmacBytes(key, value);
+        const block = hmacBytes(key, value);
+        const count = Math.min(block.length, length - offset);
+        output.set(block.subarray(0, count), offset);
+        offset += count;
+      }
+      update(null);
+      return output;
+    },
+  };
+}
+
+function hmacBytes(key, data) {
+  return hmac("SHA-256", key, data);
 }
 
 export function cryptoSubtle(crypto, subtle) {
@@ -261,13 +377,11 @@ export async function subtleGenerateKey(
   keyUsages,
 ) {
   requireSubtle(subtle);
-  const realm = subtle.__nv8Realm;
+  const state = getCryptoState(subtle.__nv8Realm);
   const normalized = normalizeKeyAlgorithm(algorithm);
   const bitLength = Number(normalized.length ?? (normalized.name === "HMAC" ? 256 : 256));
   const bytes = new Uint8Array(bitLength / 8);
-  for (let index = 0; index < bytes.length; index += 1) {
-    bytes[index] = realmRandomByte(realm);
-  }
+  fillCryptoRandom(state, bytes);
   return createKey(bytes, normalized, Boolean(extractable), normalizeUsages(keyUsages));
 }
 
@@ -466,8 +580,6 @@ function digestBytes(name, input) {
 function rotate(value, bits) {
   return (value >>> bits) | (value << (32 - bits));
 }
-
-// randomByte is now imported from crypto-state.js
 
 function toArrayBuffer(bytes) {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
