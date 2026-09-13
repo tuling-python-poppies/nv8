@@ -12,6 +12,7 @@
     "baseline:observability": "node --experimental-vm-modules scripts/capture-observability.mjs",
     "baseline:surface": "node --experimental-vm-modules scripts/capture-full-surface.mjs",
     "benchmark": "node --experimental-vm-modules scripts/benchmark.mjs",
+    "benchmark:matrix": "node scripts/benchmark-matrix.mjs",
     "build:bundle": "node scripts/build-module-bundle.mjs",
     "build:css-defaults": "node scripts/build-css-ua-defaults.mjs",
     "capabilities": "node --experimental-vm-modules scripts/report-host-capabilities.mjs",

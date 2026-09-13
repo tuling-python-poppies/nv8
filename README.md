@@ -854,7 +854,8 @@ node scripts/build-window-surface-order.mjs --write
 ```bash
 npm test              # 全量，918 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
-npm run benchmark     # 性能基准
+npm run benchmark     # 当前 Node / backend 的性能基准
+npm run benchmark:matrix # Node 18/20/22/24 × 两种 backend 性能矩阵
 npm run baseline      # 重新生成基线快照
 npm run audit:state   # 模块级可变状态审计
 npm run capabilities  # 宿主能力探测报告
@@ -908,6 +909,11 @@ npm run capabilities  # 宿主能力探测报告
 还有个具体原因：**第一次采样包含宿主 ESM 图的加载**（约 1700 个模块，每进程
 一次），那不是每次建沙箱都要付的成本。拿它去比 `benchmark` 报的 490ms，
 比的是两件不同的事。
+
+性能矩阵使用 `npm run benchmark:matrix` 采集 Node 18/20/22/24 与
+`child-process` / `worker-thread` 的中位数、p90、最小值、最大值和 RSS 变化。
+矩阵报告是描述性基线，不把机器相关的绝对毫秒数写成行为契约；跨版本比较时应
+使用相同机器、相同迭代数和相同 backend。
 
 ### 测试入口不许手写路径
 
@@ -967,6 +973,24 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 泄漏判据是**跨轮次增长**，不是绝对值。句柄数稳定在 6（5 个 PipeWrap +
 1 个 ProcessWrap，是进程池的常驻子进程），只有单调增长才算泄漏。
 
+一次本机矩阵采集（每格 2 轮）的结果如下；这些数字用于同机回归参考，不是跨机器
+的硬阈值。每个单元格为「中位数 / p90」，单位为毫秒：
+
+| Node | backend | 冷启动 | 热复用 run | Realm 创建+销毁 |
+|---|---|---:|---:|---:|
+| 18.20.8 | child-process | 512.52 / 512.52 | 0.18 / 1.04 | 453.06 / 453.06 |
+| 18.20.8 | worker-thread | 450.70 / 450.70 | 0.15 / 0.50 | 432.60 / 432.60 |
+| 20.20.2 | child-process | 472.05 / 472.05 | 0.19 / 0.65 | 426.37 / 426.37 |
+| 20.20.2 | worker-thread | 408.99 / 408.99 | 0.14 / 0.47 | 413.49 / 413.49 |
+| 22.23.2 | child-process | 460.98 / 460.98 | 0.21 / 0.54 | 419.84 / 419.84 |
+| 22.23.2 | worker-thread | 435.41 / 435.41 | 0.11 / 0.40 | 444.58 / 444.58 |
+| 24.20.0 | child-process | 433.80 / 433.80 | 0.18 / 0.42 | 426.81 / 426.81 |
+| 24.20.0 | worker-thread | 427.76 / 427.76 | 0.23 / 0.65 | 373.80 / 373.80 |
+
+RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生负值或平台相关长尾。
+需要重采集时可执行 `npm run benchmark:matrix -- --iterations 4 --json`，也可用
+`NV8_NODE_VERSIONS=18.20.8,24.20.0` 限定版本。
+
 ---
 
 ## 命令一览
@@ -976,7 +1000,8 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 | `npm test` | 全量测试（918 项 / 93 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
-| `npm run benchmark` | 冷启动 / 热执行 / Realm 创建销毁 |
+| `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、Realm 创建销毁 |
+| `npm run benchmark:matrix` | Node 18/20/22/24 × child-process/worker-thread 性能矩阵 |
 | `npm run baseline` | 重新生成引导顺序 + 表面 + 可观测性基线 |
 | `npm run audit:state` | 模块级可变状态审计（当前 0 项待处理） |
 | `npm run capabilities` | 宿主能力三态报告 |

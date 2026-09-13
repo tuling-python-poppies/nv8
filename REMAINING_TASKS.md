@@ -690,9 +690,9 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   - 并行写入各自全局再并行读回、各自 `location.origin` 独立、
     单沙箱 32 个并发求值全部 resolve
   - 一条断言覆盖「失败的求值不污染后续」——错误处理不能把连接搞坏
-- [ ] **性能预算的多版本/多后端基线** - 当前预算按 Node 24 + 默认后端实测
-  设定（冷启动 3000ms 上限留了 6 倍余量）。Node 18/20 与 worker-thread
-  后端的实际数字尚未采集
+- [x] **性能预算的多版本/多后端基线** - `npm run benchmark:matrix` 支持 Node 18/20/22/24 ×
+  child-process/worker-thread，输出中位数、p90、min、max 和 RSS 变化；本机 2 轮采集结果
+  已记录在 README。性能数据是描述性基线，不将机器相关的绝对毫秒数写成行为契约
 - [ ] **安全边界文档** - vm.Context、plugin、Evidence、Protocol 的信任边界
 - [ ] **API 文档** - 完整的内部 API 参考
 - [ ] **示例代码** - 常见场景的示例项目
