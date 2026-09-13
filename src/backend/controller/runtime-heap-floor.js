@@ -34,6 +34,15 @@
  * V8 上限用**钳制后的值**。所以 `maxHeapBytes: 64MB` 仍然得到
  * `heapSafeRealmLimit = 1`，仍然会返回 `LIMIT_HEAP_BYTES`——只是子进程
  * 不会在返回它之前先崩掉。
+ *
+ * ## 为什么还要加 GC 余量
+ *
+ * 顺序构建 Realm（INIT / setPage 反复重建）会在模块图编译时产生数倍于
+ * 存活集的短命对象。余量只留「能引导一个 Realm」时，V8 可能在完成回收前
+ * 撞上硬上限并 OOM（worker_threads 下这会被 Node 变成
+ * `ERR_WORKER_OUT_OF_MEMORY`，进程内无法结构化拦截）。实测在 512MB 配置
+ * 下连续重建 Realm，没有余量时稳定在第三、四轮 OOM；加入 384MB 余量后
+ * 连续 6 轮重建稳定通过。逻辑配额仍由配置值独立把关，不受余量影响。
  */
 
 /**
@@ -44,6 +53,14 @@
 export const MINIMUM_RUNTIME_HEAP_MB = 128;
 
 /**
+ * V8 硬上限的 GC 余量（MB）。
+ *
+ * 覆盖「顺序重建 Realm 时尚未回收的构建垃圾」。按实测（512MB 配置、
+ * resource-stress 连续重建）取值：256MB 仍会在第 5 轮 OOM，384MB 起稳定。
+ */
+export const RUNTIME_GC_HEADROOM_MB = 384;
+
+/**
  * 算出实际要传给 V8 的老生代上限。
  *
  * @param {number} maxHeapBytes 配置的堆预算
@@ -51,7 +68,7 @@ export const MINIMUM_RUNTIME_HEAP_MB = 128;
  */
 export function resolveRuntimeHeapMegabytes(maxHeapBytes) {
   const requested = Math.floor(maxHeapBytes / (1024 * 1024));
-  return Math.max(MINIMUM_RUNTIME_HEAP_MB, requested);
+  return Math.max(MINIMUM_RUNTIME_HEAP_MB, requested) + RUNTIME_GC_HEADROOM_MB;
 }
 
 /**

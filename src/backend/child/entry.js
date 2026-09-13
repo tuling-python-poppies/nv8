@@ -3,24 +3,36 @@ import { FrameReader } from "../protocol/frame-reader.js";
 import { encodeFramedValue } from "../protocol/frame-writer.js";
 import { decodeValue } from "../protocol/value-decoder.js";
 import { errorRecord } from "../protocol/typed-values.js";
+import { reportBackendDiagnostic } from "../protocol/diagnostics.js";
 import { RequestHandler } from "./request-handler.js";
 
 const handler = new RequestHandler();
+let reader = null;
 let queue = Promise.resolve();
 let closing = false;
 
-process.on("unhandledRejection", () => {
+process.on("unhandledRejection", (reason) => {
   // Browsers report an unhandled Promise rejection to the owning global; they
-  // do not terminate the entire renderer process. Realm event delivery needs
-  // promise ownership metadata, but the Node default must never kill the
-  // sandbox child in the meantime.
+  // do not terminate the entire renderer process. Keep the isolate alive but
+  // leave a diagnosable record instead of an empty handler.
+  reportBackendDiagnostic("unhandled sandbox rejection", reason);
 });
 
-const reader = new FrameReader({
+reader = new FrameReader({
   onFrame(frame) {
-    queue = queue.then(() => processFrame(frame));
+    queue = queue
+      .then(() => processFrame(frame))
+      .catch((error) => {
+        // 一个帧的失败不能把后续帧一起跳过；记录后尽力回 ERROR 响应。
+        reportBackendDiagnostic(
+          `frame ${frame.requestId} (opcode=${frame.opcode}) failed`,
+          error,
+        );
+        writeBestEffortError(frame, error);
+      });
   },
-  onError() {
+  onError(error) {
+    reportBackendDiagnostic("sandbox frame reader failed", error);
     process.exitCode = 70;
     process.stdin.destroy();
   },
@@ -32,7 +44,8 @@ process.stdin.on("end", () => {
     process.exitCode = 0;
   }
 });
-process.stdin.on("error", () => {
+process.stdin.on("error", (error) => {
+  reportBackendDiagnostic("sandbox stdin failed", error);
   process.exitCode = 74;
 });
 
@@ -42,6 +55,11 @@ async function processFrame(frame) {
   try {
     const payload = decodeValue(frame.payload, handler.protocolValueLimits());
     value = await handler.handle(frame.opcode, payload);
+    if (frame.opcode === Opcode.INIT) {
+      // INIT 本身按默认限制解析；处理完成后把用户配置同步给 reader，
+      // 后续大于默认 8MiB 的合法帧才进得来（IKFD9N）。
+      reader.setLimits(handler.protocolValueLimits());
+    }
   } catch (error) {
     responseOpcode = Opcode.ERROR;
     value = handler.toErrorValue(error);
@@ -55,25 +73,53 @@ async function processFrame(frame) {
       handler.responseLimits(),
     );
   } catch (error) {
-    responseOpcode = Opcode.ERROR;
-    error.code = 'LIMIT_PAYLOAD_BYTES';
-    error.message = 'Sandbox response exceeds limits.maxPayloadBytes';
-    response = encodeFramedValue(
-      responseOpcode,
-      frame.requestId,
-      errorRecord(
-        'PayloadLimitError',
-        'Sandbox response exceeds limits.maxPayloadBytes',
-        'LIMIT_PAYLOAD_BYTES',
-        '',
-      ),
-      handler.responseLimits(),
-    );
+    // 保留真实错误码（LIMIT_STRING_BYTES / LIMIT_BYTES / ...），
+    // 不再把任何编码失败伪装成 maxPayloadBytes 超限。
+    response = encodeErrorResponse(frame.requestId, error);
   }
-  await writeResponse(response);
+  try {
+    await writeResponse(response);
+  } catch (error) {
+    reportBackendDiagnostic("failed to write sandbox response", error);
+    return;
+  }
   if (frame.opcode === Opcode.CLOSE) {
     closing = true;
     process.stdin.destroy();
+  }
+}
+
+function encodeErrorResponse(requestId, error) {
+  const limits = handler.responseLimits();
+  try {
+    return encodeFramedValue(
+      Opcode.ERROR,
+      requestId,
+      errorRecord(
+        `${error?.name ?? "Error"}`,
+        `${error?.message ?? error}`,
+        typeof error?.code === "string" ? error.code : "ERR_EDGE_RESPONSE_ENCODE",
+        "",
+      ),
+      limits,
+    );
+  } catch {
+    // 连错误记录都放不进极小的限制时，退回最小可编码记录。
+    return encodeFramedValue(
+      Opcode.ERROR,
+      requestId,
+      errorRecord("PayloadLimitError", "", "LIMIT_PAYLOAD_BYTES", ""),
+      limits,
+    );
+  }
+}
+
+function writeBestEffortError(frame, error) {
+  try {
+    const response = encodeErrorResponse(frame.requestId, error);
+    writeResponse(response).catch(() => {});
+  } catch {
+    // stdout 已不可用时诊断就是唯一记录。
   }
 }
 

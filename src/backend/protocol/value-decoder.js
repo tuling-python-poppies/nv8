@@ -55,7 +55,10 @@ class ValueReader {
   rawString() {
     const length = this.uint32();
     if (length > this.limits.maxStringBytes) {
-      throw new ProtocolError("String exceeds the configured limit");
+      throw new ProtocolError(
+        "String exceeds the configured limit",
+        "LIMIT_STRING_BYTES",
+      );
     }
     this.ensure(length);
     const value = this.buffer.toString("utf8", this.offset, this.offset + length);
@@ -89,15 +92,15 @@ class ValueReader {
       case ValueTag.BYTES:
         return this.bytes();
       case ValueTag.ARRAY:
-        return this.array(depth + 1);
+        return this.array(depth);
       case ValueTag.RECORD:
-        return this.record(depth + 1);
+        return this.record(depth);
       case ValueTag.EVALUATION_RESULT:
-        return this.record(depth + 1);
+        return this.record(depth);
       case ValueTag.ERROR:
-        return new RemoteSandboxError(this.record(depth + 1));
+        return new RemoteSandboxError(this.record(depth));
       case ValueTag.TRACE_ENTRY:
-        return this.record(depth + 1);
+        return this.record(depth);
       default:
         throw new ProtocolError(`Unknown value tag: ${tag}`);
     }
@@ -106,7 +109,10 @@ class ValueReader {
   bytes() {
     const length = this.uint32();
     if (length > this.limits.maxBytesLength) {
-      throw new ProtocolError("Byte sequence exceeds the configured limit");
+      throw new ProtocolError(
+        "Byte sequence exceeds the configured limit",
+        "LIMIT_BYTES",
+      );
     }
     this.ensure(length);
     const value = new Uint8Array(
@@ -121,7 +127,10 @@ class ValueReader {
   array(depth) {
     const length = this.uint32();
     if (length > this.limits.maxArrayLength) {
-      throw new ProtocolError("Array exceeds the configured limit");
+      throw new ProtocolError(
+        "Array exceeds the configured limit",
+        "LIMIT_ARRAY_LENGTH",
+      );
     }
     const value = new Array(length);
     for (let index = 0; index < length; index += 1) {
@@ -133,7 +142,10 @@ class ValueReader {
   record(depth) {
     const fieldCount = this.uint32();
     if (fieldCount > this.limits.maxFieldCount) {
-      throw new ProtocolError("Record field count exceeds the configured limit");
+      throw new ProtocolError(
+        "Record field count exceeds the configured limit",
+        "LIMIT_FIELD_COUNT",
+      );
     }
     const value = Object.create(null);
     for (let index = 0; index < fieldCount; index += 1) {
@@ -150,7 +162,10 @@ class ValueReader {
 export function decodeValue(buffer, options = {}) {
   const limits = { ...DEFAULT_PROTOCOL_LIMITS, ...options };
   if (buffer.length > limits.maxPayloadBytes) {
-    throw new ProtocolError("Payload exceeds the configured limit");
+    throw new ProtocolError(
+      "Payload exceeds the configured limit",
+      "LIMIT_PAYLOAD_BYTES",
+    );
   }
   const reader = new ValueReader(buffer, limits);
   const value = reader.value(0);

@@ -36,6 +36,12 @@ Payload 使用 `ValueTag` typed value 编码，而不是 JSON：
 `FrameReader` 先验证 magic、version 和 payload 长度，再把 `{ opcode, requestId,
 payload }` 交给上层解码。上层必须使用同一组协议限制调用 `decodeValue()`。
 
+协议限制（payload/深度/字符串/字节数等）来自双方同源的 `limits` 配置：`INIT`
+帧本身总是按 `DEFAULT_PROTOCOL_LIMITS` 解析，处理完成后后端调用
+`FrameReader.setLimits()` 应用配置值，之后的帧两侧使用同一组上限。编码失败时
+后端必须回结构化 `ERROR`，并保留真实错误码（`LIMIT_STRING_BYTES`、`LIMIT_BYTES`、
+`LIMIT_PAYLOAD_BYTES` 等），不得改写成与根因无关的限制名。
+
 ## 生命周期和失败规则
 
 - `requestId` 只在连接内关联请求和响应，不能作为跨进程安全凭据；

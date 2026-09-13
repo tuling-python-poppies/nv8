@@ -6,6 +6,7 @@ import {
   PROTOCOL_VERSION,
 } from "./constants.js";
 import { ProtocolError } from "./protocol-error.js";
+import { PROTOCOL_LIMIT_KEYS } from "./limits.js";
 
 export class FrameReader {
   constructor({ onFrame, onError, ...options }) {
@@ -15,6 +16,24 @@ export class FrameReader {
     this.chunks = [];
     this.totalLength = 0;
     this.failed = false;
+  }
+
+  /**
+   * 运行期更新限制（INIT 携带用户配置后由 entry 调用）。
+   *
+   * 只采纳协议限制白名单中的值，避免把任意 options 字段塞进 limits。
+   * 已经缓冲的帧会在下一次 drain 时按新限制校验。
+   */
+  setLimits(options) {
+    if (this.failed || options === null || typeof options !== "object") {
+      return;
+    }
+    for (const key of PROTOCOL_LIMIT_KEYS) {
+      const value = options[key];
+      if (Number.isSafeInteger(value) && value >= 1) {
+        this.limits[key] = value;
+      }
+    }
   }
 
   push(chunk) {
@@ -54,7 +73,10 @@ export class FrameReader {
         throw new ProtocolError(`Unsupported protocol version: ${version}`);
       }
       if (payloadLength > this.limits.maxPayloadBytes) {
-        throw new ProtocolError("Frame payload exceeds the configured limit");
+        throw new ProtocolError(
+          "Frame payload exceeds the configured limit",
+          "LIMIT_PAYLOAD_BYTES",
+        );
       }
       const frameLength = FRAME_HEADER_BYTES + payloadLength;
       if (this.totalLength < frameLength) {

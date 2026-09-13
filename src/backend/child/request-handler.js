@@ -1,5 +1,6 @@
 import { Opcode } from "../protocol/constants.js";
 import { errorRecord } from "../protocol/typed-values.js";
+import { resolveProtocolLimits } from "../protocol/limits.js";
 import { sanitizeErrorRecord } from "../../engine/bootstrap/sanitize-stack.js";
 import { RuntimePool } from "./runtime-pool.js";
 
@@ -52,10 +53,9 @@ export class RequestHandler {
       throw protocolRequestError("Child runtime was initialized twice");
     }
     this.options = options;
-    this.protocolLimits = {
-      maxPayloadBytes: options.limits?.maxPayloadBytes,
-      maxValueDepth: options.limits?.maxValueDepth,
-    };
+    // 与父侧 ConnectionBase.protocolLimits() 共用同一解析器：字符串/字节数
+    // 等限制必须两边一致，否则合法请求会在子侧被打死（IKFD9N）。
+    this.protocolLimits = resolveProtocolLimits(options?.limits);
     this.runtime = new RuntimePool(options);
     await this.runtime.initialize();
     return undefined;
@@ -75,12 +75,23 @@ export class RequestHandler {
     // Destroy current realm and recreate with new page, preserving module cache.
     const persistence = this.runtime.exportPersistence();
     this.runtime.close();
+    // 父侧 setPage 会把新的 page/fingerprint/proxyTrace 等一并发来；漏掉
+    // proxyTrace 会让 enableTrace() 之后的 setPage 静默关掉 trace（IKF DAD）。
     const newOptions = {
       ...this.options,
-      page: payload.page,
+      page: payload.page ?? this.options.page,
+      fingerprint: payload.fingerprint ?? this.options.fingerprint,
+      proxyTrace: payload.proxyTrace === undefined
+        ? this.options.proxyTrace
+        : { ...this.options.proxyTrace, ...payload.proxyTrace },
+      networkCapture: payload.networkCapture ?? this.options.networkCapture,
+      replay: payload.replay ?? this.options.replay,
+      evidence: payload.evidence ?? this.options.evidence,
+      limits: payload.limits ?? this.options.limits,
       persistence,
     };
     this.options = newOptions;
+    this.protocolLimits = resolveProtocolLimits(newOptions.limits);
     this.runtime = new RuntimePool(newOptions);
     await this.runtime.initialize();
     this.runtime.preWarmShell();

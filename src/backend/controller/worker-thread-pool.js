@@ -15,6 +15,7 @@ function threadExitError(code) {
   );
   error.name = "SandboxThreadExitError";
   error.code = "ERR_EDGE_THREAD_EXIT";
+  error.exitCode = code ?? null;
   return error;
 }
 
@@ -51,10 +52,14 @@ function detachIdleListeners(entry) {
   entry.worker.removeListener?.("exit", entry.onExit);
 }
 
-function acquireIdleWorker(heapMegabytes) {
-  // Find a compatible idle worker (same heap limit).
+function acquireIdleWorker(heapMegabytes, timezone) {
+  // 只有堆上限与指纹时区都一致的线程才能复用：Realm 内的 Intl/时区钩子
+  // 由引擎按 INIT 指纹安装，池匹配是最外层的防线（IKFD9O）。
   for (let i = 0; i < idlePool.length; i++) {
-    if (idlePool[i].heapMegabytes === heapMegabytes) {
+    if (
+      idlePool[i].heapMegabytes === heapMegabytes
+      && idlePool[i].timezone === timezone
+    ) {
       const entry = idlePool.splice(i, 1)[0];
       detachIdleListeners(entry);
       return entry;
@@ -63,7 +68,7 @@ function acquireIdleWorker(heapMegabytes) {
   return null;
 }
 
-function returnToPool(worker, heapMegabytes) {
+function returnToPool(worker, heapMegabytes, timezone) {
   if (idlePool.length >= MAX_IDLE_THREADS) {
     // Pool is full, terminate the oldest idle thread.
     const oldest = idlePool.shift();
@@ -73,6 +78,7 @@ function returnToPool(worker, heapMegabytes) {
   const entry = {
     worker,
     heapMegabytes,
+    timezone,
     returnedAt: Date.now(),
     onError: null,
     onExit: null,
@@ -99,7 +105,9 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     super(limits);
     this.worker = null;
     this.heapMegabytes = resolveRuntimeHeapMegabytes(limits.maxHeapBytes);
+    this.timezone = null;
     this.reused = false;
+    this.postChain = Promise.resolve();
   }
 
   async start(initPayload) {
@@ -108,8 +116,9 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
       throw new Error("Sandbox worker thread is already starting");
     }
 
+    const timezone = initPayload.fingerprint.timezone;
     // Try to acquire an idle worker with warm SOURCE_CACHE.
-    const idle = acquireIdleWorker(this.heapMegabytes);
+    const idle = acquireIdleWorker(this.heapMegabytes, timezone);
     let worker;
     if (idle !== null) {
       worker = idle.worker;
@@ -121,12 +130,13 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
         resourceLimits: {
           maxOldGenerationSizeMb: this.heapMegabytes,
         },
-        env: threadEnvironment(initPayload.fingerprint.timezone),
+        env: threadEnvironment(timezone),
       });
       this.reused = false;
     }
 
     this.worker = worker;
+    this.timezone = timezone;
     const reader = this.createFrameReader();
     worker.on("message", chunk => {
       reader.push(Buffer.from(
@@ -140,12 +150,19 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     worker.once("exit", code => {
       this.handleExit(worker, threadExitError(code));
     });
-    await this.rawRequest(
-      Opcode.INIT,
-      initPayload,
-      Math.max(this.limits.timeoutMs, MINIMUM_REALM_BOOTSTRAP_TIMEOUT_MS),
-    );
-    this.ready = true;
+    try {
+      await this.rawRequest(
+        Opcode.INIT,
+        initPayload,
+        Math.max(this.limits.timeoutMs, MINIMUM_REALM_BOOTSTRAP_TIMEOUT_MS),
+      );
+      this.ready = true;
+    } catch (error) {
+      // INIT 失败必须终止线程；否则 "already starting" 守卫永久阻塞重试，
+      // 且远端线程句柄会拖住宿主退出（IKFD9M）。
+      this.terminate(error);
+      throw error;
+    }
   }
 
   async request(opcode, payload, timeoutMs = this.limits.timeoutMs) {
@@ -156,11 +173,25 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
   }
 
   sendFrame(frame, requestId) {
-    try {
-      this.worker.postMessage(frame);
-    } catch (error) {
-      this.terminate(error);
-    }
+    const worker = this.worker;
+    if (worker === null) return;
+    // postMessage 无 drain 信号；用串行链在每次投递后让出事件循环，
+    // 配合 ConnectionBase 的帧字节计量为 worker 队列提供有界背压。
+    this.postChain = this.postChain.then(() => new Promise((resolve) => {
+      setImmediate(() => {
+        if (this.worker !== worker) {
+          resolve();
+          return;
+        }
+        try {
+          worker.postMessage(frame);
+        } catch (error) {
+          this.terminate(error);
+          this.reportConnectionExit(error);
+        }
+        resolve();
+      });
+    })).catch(() => {});
   }
 
   handleProtocolFailure(cause) {
@@ -170,6 +201,7 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     error.name = "SandboxThreadProtocolError";
     error.code = "ERR_EDGE_THREAD_PROTOCOL";
     this.terminate(error);
+    this.reportConnectionExit(error);
   }
 
   handleExit(worker, error) {
@@ -178,6 +210,7 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     this.ready = false;
     void worker.terminate().catch(() => {});
     this.rejectAllPending(error);
+    this.reportConnectionExit(error);
   }
 
   /**
@@ -186,7 +219,12 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
    */
   async closeAndRecycle() {
     const worker = this.worker;
-    if (worker === null || !this.ready) return;
+    if (worker === null) return;
+    if (!this.ready) {
+      // 失败态（INIT 失败 / 协议错误）同样要回收句柄，否则 close 也关不掉。
+      this.terminate();
+      return;
+    }
     try {
       await this.rawRequest(
         Opcode.CLOSE,
@@ -205,7 +243,7 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     worker.removeAllListeners("messageerror");
     worker.removeAllListeners("error");
     worker.removeAllListeners("exit");
-    returnToPool(worker, this.heapMegabytes);
+    returnToPool(worker, this.heapMegabytes, this.timezone);
   }
 
   terminate(reason = threadExitError(null)) {

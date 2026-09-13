@@ -20,7 +20,10 @@ export function encodeFrame(opcode, requestId, payload, options = {}) {
     throw new ProtocolError("Frame payload must be bytes");
   }
   if (payload.byteLength > limits.maxPayloadBytes) {
-    throw new ProtocolError("Frame payload exceeds the configured limit");
+    throw new ProtocolError(
+      "Frame payload exceeds the configured limit",
+      "LIMIT_PAYLOAD_BYTES",
+    );
   }
 
   const frame = Buffer.allocUnsafe(FRAME_HEADER_BYTES + payload.byteLength);
@@ -49,7 +52,10 @@ export function encodeFramedValue(opcode, requestId, value, options = {}) {
   const frame = writer.finishWithPrefix();
   const payloadLength = frame.length - FRAME_HEADER_BYTES;
   if (payloadLength > limits.maxPayloadBytes) {
-    throw new ProtocolError("Frame payload exceeds the configured limit");
+    throw new ProtocolError(
+      "Frame payload exceeds the configured limit",
+      "LIMIT_PAYLOAD_BYTES",
+    );
   }
   writeFrameHeader(frame, opcode, requestId, payloadLength);
   return frame;

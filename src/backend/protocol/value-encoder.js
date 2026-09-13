@@ -28,7 +28,10 @@ class ValueWriter {
 
   checkLimit() {
     if (this.offset > this.limits.maxPayloadBytes) {
-      throw new ProtocolError("Encoded payload exceeds the configured limit");
+      throw new ProtocolError(
+        "Encoded payload exceeds the configured limit",
+        "LIMIT_PAYLOAD_BYTES",
+      );
     }
   }
 
@@ -72,7 +75,10 @@ class ValueWriter {
   rawString(value) {
     const bytes = Buffer.from(value, "utf8");
     if (bytes.length > this.limits.maxStringBytes) {
-      throw new ProtocolError("String exceeds the configured limit");
+      throw new ProtocolError(
+        "String exceeds the configured limit",
+        "LIMIT_STRING_BYTES",
+      );
     }
     this.uint32(bytes.length);
     this.appendBytes(bytes);
@@ -89,7 +95,7 @@ class ValueWriter {
     const kind = typedValueKind(value);
     if (kind === "evaluation-result") {
       this.uint8(ValueTag.EVALUATION_RESULT);
-      this.recordFields({ type: value.type, value: value.value }, depth + 1);
+      this.recordFields({ type: value.type, value: value.value }, depth);
       return;
     }
     if (kind === "error") {
@@ -99,13 +105,13 @@ class ValueWriter {
         message: value.message,
         code: value.code,
         stack: value.stack,
-      }, depth + 1);
+      }, depth);
       return;
     }
     if (kind === "trace-entry") {
       this.uint8(ValueTag.TRACE_ENTRY);
       const fields = { ...value };
-      this.recordFields(fields, depth + 1);
+      this.recordFields(fields, depth);
       return;
     }
 
@@ -142,7 +148,10 @@ class ValueWriter {
     }
     if (value instanceof Uint8Array) {
       if (value.byteLength > this.limits.maxBytesLength) {
-        throw new ProtocolError("Byte sequence exceeds the configured limit");
+        throw new ProtocolError(
+          "Byte sequence exceeds the configured limit",
+          "LIMIT_BYTES",
+        );
       }
       this.uint8(ValueTag.BYTES);
       this.uint32(value.byteLength);
@@ -151,7 +160,10 @@ class ValueWriter {
     }
     if (Array.isArray(value)) {
       if (value.length > this.limits.maxArrayLength) {
-        throw new ProtocolError("Array exceeds the configured limit");
+        throw new ProtocolError(
+          "Array exceeds the configured limit",
+          "LIMIT_ARRAY_LENGTH",
+        );
       }
       this.uint8(ValueTag.ARRAY);
       this.uint32(value.length);
@@ -162,7 +174,7 @@ class ValueWriter {
     }
     if (isPlainRecord(value)) {
       this.uint8(ValueTag.RECORD);
-      this.recordFields(value, depth + 1);
+      this.recordFields(value, depth);
       return;
     }
     throw new ProtocolError(`Unsupported protocol value: ${typeof value}`);
@@ -171,7 +183,10 @@ class ValueWriter {
   recordFields(record, depth) {
     const keys = Object.keys(record);
     if (keys.length > this.limits.maxFieldCount) {
-      throw new ProtocolError("Record field count exceeds the configured limit");
+      throw new ProtocolError(
+        "Record field count exceeds the configured limit",
+        "LIMIT_FIELD_COUNT",
+      );
     }
     this.uint32(keys.length);
     for (const key of keys) {

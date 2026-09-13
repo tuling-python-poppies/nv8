@@ -5,18 +5,34 @@ import {
 } from "./child-process.js";
 import { PooledWorkerThreadConnection } from "./worker-thread-pool.js";
 
+const RESTART_POLICY_FAIL_FAST = "fail-fast";
+const RESTART_POLICY_RESTART = "restart";
+
 export class RuntimeController {
   constructor(options) {
     this.options = options;
-    this.connection = this.createConnection();
     this.closed = false;
     this.starting = null;
     this.persistence = null;
     this.traceEnabled = options.proxyTrace.enabled;
+    this.restartPolicy = options.execution?.restart === RESTART_POLICY_RESTART
+      ? RESTART_POLICY_RESTART
+      : RESTART_POLICY_FAIL_FAST;
+    this.onCrash = typeof options.onCrash === "function" ? options.onCrash : null;
+    this.lastCrash = null;
+    this.crashCause = null;
+    this.lastRestart = null;
+    this.connection = this.createConnection();
   }
 
   async start() {
     this.assertOpen();
+    if (this.lastCrash !== null) {
+      if (this.restartPolicy !== RESTART_POLICY_RESTART) {
+        throw this.crashError();
+      }
+      await this.restartFromCrash();
+    }
     if (this.starting === null) {
       this.starting = this.connection.start(this.initPayload())
         .finally(() => {
@@ -67,6 +83,7 @@ export class RuntimeController {
     );
     const updatedOptions = Object.freeze({ ...this.options, page });
     // Fast path: reset the realm in-process, preserving the module cache.
+    let resetError = null;
     try {
       const persistence = await this.send(
         Opcode.RESET_REALM,
@@ -88,16 +105,28 @@ export class RuntimeController {
       this.persistence = persistence;
       this.options = updatedOptions;
       return;
-    } catch {
-      // Fallback: old-style kill-and-restart for children that don't
-      // support the RESET_REALM opcode.
+    } catch (error) {
+      resetError = error;
     }
-    // Slow path: export persistence, kill child, and cold-start a new one.
-    this.persistence = await this.send(
-      Opcode.SET_PAGE,
-      { page },
-      resetTimeout,
-    );
+    if (!isUnsupportedResetRealm(resetError)) {
+      // 真实失败不降级 kill/restart：那会把 Realm 生命周期错误吞成一次
+      // 静默冷启，调用方只看到一个无关的错误（IKF39Z-7）。
+      throw resetError;
+    }
+    // Slow path: old-style kill-and-restart for children that don't
+    // support the RESET_REALM opcode.
+    try {
+      this.persistence = await this.send(
+        Opcode.SET_PAGE,
+        { page },
+        resetTimeout,
+      );
+    } catch (error) {
+      if (error !== null && error !== undefined && error.cause === undefined) {
+        error.cause = resetError;
+      }
+      throw error;
+    }
     this.connection.terminate();
     this.options = updatedOptions;
     this.connection = this.createConnection();
@@ -105,10 +134,62 @@ export class RuntimeController {
   }
 
   createConnection() {
-    if (this.options.execution.backend === "worker-thread") {
-      return new PooledWorkerThreadConnection(this.options.limits);
+    const connection = this.options.execution.backend === "worker-thread"
+      ? new PooledWorkerThreadConnection(this.options.limits)
+      : new ChildProcessConnection(this.options.limits);
+    connection.onExit = error => this.handleConnectionExit(error);
+    return connection;
+  }
+
+  handleConnectionExit(cause) {
+    if (this.closed) return;
+    const crash = Object.freeze({
+      code: cause?.code ?? "ERR_EDGE_RUNTIME_CRASHED",
+      message: `${cause?.message ?? cause}`,
+      signal: cause?.signal ?? null,
+      exitCode: cause?.exitCode ?? null,
+      stderrTail: cause?.stderrTail ?? "",
+    });
+    this.lastCrash = crash;
+    this.crashCause = cause;
+    if (this.onCrash !== null) {
+      try {
+        this.onCrash(crash);
+      } catch {
+        // 崩溃观察者自身的异常不能掩盖崩溃本身。
+      }
     }
-    return new ChildProcessConnection(this.options.limits);
+  }
+
+  async restartFromCrash() {
+    const crash = this.lastCrash;
+    this.lastCrash = null;
+    this.crashCause = null;
+    // Realm 状态随进程丢失；持久化只能在重启后重新导出，不能假装还在。
+    this.persistence = null;
+    this.connection = this.createConnection();
+    this.starting = this.connection.start(this.initPayload())
+      .finally(() => {
+        this.starting = null;
+      });
+    await this.starting;
+    this.lastRestart = crash;
+  }
+
+  crashError() {
+    const crash = this.lastCrash;
+    const detail = crash === null
+      ? ""
+      : ` (${crash.code}${crash.signal === null ? "" : ` signal=${crash.signal}`})`;
+    const error = new Error(`Sandbox runtime crashed${detail}`);
+    error.name = "SandboxRuntimeCrashError";
+    error.code = "ERR_EDGE_RUNTIME_CRASHED";
+    error.crash = crash;
+    error.signal = crash?.signal ?? null;
+    error.exitCode = crash?.exitCode ?? null;
+    error.stderrTail = crash?.stderrTail ?? "";
+    if (this.crashCause !== null) error.cause = this.crashCause;
+    return error;
   }
 
   async enableTrace() {
@@ -169,4 +250,9 @@ export class RuntimeController {
       throw new Error("EdgeSandbox is closed");
     }
   }
+}
+
+function isUnsupportedResetRealm(error) {
+  return error?.code === "ERR_EDGE_PROTOCOL_REQUEST"
+    && /unknown request opcode/i.test(`${error.message ?? ""}`);
 }

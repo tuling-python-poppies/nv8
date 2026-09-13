@@ -2,6 +2,7 @@ import { Opcode } from "../protocol/constants.js";
 import { FrameReader } from "../protocol/frame-reader.js";
 import { encodeFramedValue } from "../protocol/frame-writer.js";
 import { decodeValue } from "../protocol/value-decoder.js";
+import { resolveProtocolLimits } from "../protocol/limits.js";
 import { createDeadline, SandboxTimeoutError } from "./deadline.js";
 
 const DISABLE_TIMEOUT_ENV = "EDGE_SANDBOX_DISABLE_TIMEOUT";
@@ -14,12 +15,12 @@ export class ConnectionBase {
     this.queuedFrameBytes = 0;
     this.nextRequestId = 1;
     this.ready = false;
+    this.onExit = null;
   }
 
   createFrameReader() {
     return new FrameReader({
-      maxPayloadBytes: this.limits.maxPayloadBytes,
-      maxValueDepth: this.limits.maxValueDepth,
+      ...this.protocolLimits(),
       onFrame: frame => this.handleFrame(frame),
       onError: error => this.handleProtocolFailure(error),
     });
@@ -29,8 +30,12 @@ export class ConnectionBase {
     const requestId = this.allocateRequestId();
     const frame = encodeFramedValue(opcode, requestId, payload, this.protocolLimits());
     const queueLimit = this.limits.maxFrameQueueBytes;
+    // INIT 是每个 transport 的第一帧：它必须在用户配置的队列上限之前发出，
+    // 否则极小的 maxFrameQueueBytes 会让沙箱根本无法启动。除此之外的每一帧
+    // （包括与 INIT 并发的帧）都按累计字节计量。
+    const bootstrapFrame = !this.ready && this.pending.size === 0;
     if (
-      this.ready
+      !bootstrapFrame
       && Number.isSafeInteger(queueLimit)
       && this.queuedFrameBytes + frame.byteLength > queueLimit
     ) {
@@ -48,6 +53,7 @@ export class ConnectionBase {
           const timeout = new SandboxTimeoutError(timeoutMs);
           reject(timeout);
           this.terminate(timeout);
+          this.reportConnectionExit(timeout);
         });
       this.pending.set(requestId, {
         opcode,
@@ -110,23 +116,18 @@ export class ConnectionBase {
     this.queuedFrameBytes = 0;
   }
 
-  rejectPending(requestId, error) {
-    const pending = this.pending.get(requestId);
-    if (pending === undefined) return;
-    this.pending.delete(requestId);
-    this.queuedFrameBytes = Math.max(
-      0,
-      this.queuedFrameBytes - pending.frameBytes,
-    );
-    pending.cancelDeadline();
-    pending.reject(error);
+  reportConnectionExit(error) {
+    const listener = this.onExit;
+    if (typeof listener !== "function") return;
+    try {
+      listener(error);
+    } catch {
+      // 崩溃通知的观察者异常不能反向影响 transport 清理。
+    }
   }
 
   protocolLimits() {
-    return {
-      maxPayloadBytes: this.limits.maxPayloadBytes,
-      maxValueDepth: this.limits.maxValueDepth,
-    };
+    return resolveProtocolLimits(this.limits);
   }
 
   // Subclasses must implement:

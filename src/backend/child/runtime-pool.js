@@ -1,4 +1,5 @@
 import vm from "node:vm";
+import v8 from "node:v8";
 import { Buffer } from "node:buffer";
 import { isPromise } from "node:util/types";
 import { setTimeout as hostDelay } from "node:timers/promises";
@@ -97,22 +98,96 @@ function createWorkerLimitError(code, limit, message) {
   return error;
 }
 
+const DEFAULT_BATCH_CONCURRENCY = 4;
+const MAX_BATCH_CONCURRENCY = 64;
+
+function normalizeBatchConcurrency(value) {
+  if (!Number.isSafeInteger(value) || value < 1) {
+    return DEFAULT_BATCH_CONCURRENCY;
+  }
+  return Math.min(value, MAX_BATCH_CONCURRENCY);
+}
+
 // Module-level pre-warmed shell survives across RuntimePool instances.
 let pendingShell = null;
+let pendingShellPromise = null;
+
+function disposeRealmShell(shell) {
+  try {
+    shell?.moduleLoader?.dispose?.();
+  } catch {
+    // Shell 尚未激活，模块加载器是唯一持有的资源；取消失败也不能拖垮调用方。
+  }
+}
+
+/**
+ * 预建 shell 是一次完整 Realm 的分配尖峰（数千模块，~50MB+）。当进程堆已经
+ * 处于高位时继续预建，会在 GC 追上之前触发 worker_threads 的
+ * resourceLimits（默认 maxOldGenerationSizeMb 由 maxHeapBytes=512MB 推导）
+ * 并报 ERR_WORKER_OUT_OF_MEMORY。
+ *
+ * 这里不做「永远关闭预建」：空闲 Worker 的暖启动收益仍然保留；只在堆压力
+ * 已经过半时让出，冷启动路径会在堆回落后按需构建。
+ */
+const PREWARM_HEAP_PRESSURE_RATIO = 0.5;
+
+function heapUnderPressure() {
+  try {
+    const stats = v8.getHeapStatistics();
+    return stats.used_heap_size / stats.heap_size_limit
+      >= PREWARM_HEAP_PRESSURE_RATIO;
+  } catch {
+    return false;
+  }
+}
+
+function scheduleShellPrewarm() {
+  // 单槽 + 在途 promise 守卫：initialize 与 resetRealm 重入时不会同时建两个
+  // 完整 Realm shell，先到的保留、后到的直接复用（IKF39Z-4）。
+  if (pendingShell !== null || pendingShellPromise !== null) return;
+  if (heapUnderPressure()) return;
+  pendingShellPromise = createRealmShellAsync().then(
+    (shell) => {
+      pendingShellPromise = null;
+      if (pendingShell !== null) {
+        // 理论上不可达；真出现时销毁旧槽而不是泄漏。
+        disposeRealmShell(pendingShell);
+      }
+      pendingShell = shell;
+    },
+    () => {
+      pendingShellPromise = null;
+    },
+  );
+}
+
+function takePendingShell() {
+  if (pendingShell === null) return null;
+  const shell = pendingShell;
+  pendingShell = null;
+  return shell;
+}
 
 // LRU script cache — vm.Script is context-independent, safe to reuse across realms.
 const SCRIPT_CACHE = new Map();
 const SCRIPT_CACHE_MAX = 256;
+const SCRIPT_CACHE_MAX_BYTES = 64 * 1024 * 1024;
+let scriptCacheBytes = 0;
+
+function scriptCacheEntryBytes(source) {
+  // 源码字节 + 固定开销；编译产物的精确大小 V8 不暴露。
+  return Buffer.byteLength(source, "utf8") + 64;
+}
 
 function getCachedScript(source) {
-  let script = SCRIPT_CACHE.get(source);
-  if (script) {
+  let entry = SCRIPT_CACHE.get(source);
+  if (entry) {
     // Move to end (most recently used)
     SCRIPT_CACHE.delete(source);
-    SCRIPT_CACHE.set(source, script);
-    return script;
+    SCRIPT_CACHE.set(source, entry);
+    return entry.script;
   }
-  script = new vm.Script(source, {
+  const script = new vm.Script(source, {
     filename: "eval",
     // eval 脚本没有稳定的 Realm 归属（SCRIPT_CACHE 跨 Realm 复用编译结果），
     // 因此这里无法绑定 per-Realm 的模块缓存。动态 import 在 eval 里保持拒绝；
@@ -121,13 +196,27 @@ function getCachedScript(source) {
       rejectDynamicImport(specifier, "cached eval scripts");
     },
   });
-  if (SCRIPT_CACHE.size >= SCRIPT_CACHE_MAX) {
-    // Evict oldest entry
+  entry = { script, bytes: scriptCacheEntryBytes(source) };
+  while (
+    SCRIPT_CACHE.size > 0
+    && (
+      SCRIPT_CACHE.size >= SCRIPT_CACHE_MAX
+      || scriptCacheBytes + entry.bytes > SCRIPT_CACHE_MAX_BYTES
+    )
+  ) {
     const oldest = SCRIPT_CACHE.keys().next().value;
+    const oldestEntry = SCRIPT_CACHE.get(oldest);
     SCRIPT_CACHE.delete(oldest);
+    scriptCacheBytes -= oldestEntry?.bytes ?? 0;
   }
-  SCRIPT_CACHE.set(source, script);
+  SCRIPT_CACHE.set(source, entry);
+  scriptCacheBytes += entry.bytes;
   return script;
+}
+
+function clearScriptCache() {
+  SCRIPT_CACHE.clear();
+  scriptCacheBytes = 0;
 }
 
 export class RuntimePool {
@@ -305,20 +394,30 @@ export class RuntimePool {
       return null;
     }
 
-    const handle = this.idlePrewarmedHandles.pop();
-    if (handle.realm.destroyed) return null;
-    handle.realm.bootstrap.reparentRealm(
-      options.parentWindow ?? null,
-      options.topWindow ?? options.parentWindow ?? null,
-      options.parentOrigin ?? "",
-      options.parentPostMessage ?? null,
-      true,
-      options.frameElement ?? null,
-      options.pageUrl ?? "about:blank",
-      options.origin ?? parentOrigin,
-    );
-    options.onContext?.(handle.window);
-    return handle;
+    // 先弹后验会把「已销毁/重配失败」的池位直接丢掉却不补货（IKF39Z-5）。
+    // 这里改为取到第一个可用池位为止：销毁的跳过，重配失败的销毁并继续。
+    while (this.idlePrewarmedHandles.length > 0) {
+      const handle = this.idlePrewarmedHandles.pop();
+      if (handle.realm.destroyed) continue;
+      try {
+        handle.realm.bootstrap.reparentRealm(
+          options.parentWindow ?? null,
+          options.topWindow ?? options.parentWindow ?? null,
+          options.parentOrigin ?? "",
+          options.parentPostMessage ?? null,
+          true,
+          options.frameElement ?? null,
+          options.pageUrl ?? "about:blank",
+          options.origin ?? parentOrigin,
+        );
+      } catch {
+        this.destroyChildRealm(handle.realm);
+        continue;
+      }
+      options.onContext?.(handle.window);
+      return handle;
+    }
+    return null;
   }
 
   async createChildRealmAsync(options) {
@@ -460,13 +559,7 @@ export class RuntimePool {
     // Build a spare realm shell (context + 3984 modules loaded) in the background.
     // Module-level so it survives across RuntimePool instances (request-handler
     // creates a new pool on each RESET_REALM).
-    setImmediate(async () => {
-      try {
-        pendingShell = await createRealmShellAsync();
-      } catch {
-        pendingShell = null;
-      }
-    });
+    scheduleShellPrewarm();
   }
 
   async createRootRealm() {
@@ -511,10 +604,14 @@ export class RuntimePool {
       objectURLRegistry: this.objectURLRegistry,
     };
     // Use pre-warmed shell if available (saves ~170ms warm module loading).
-    if (pendingShell !== null) {
-      const shell = pendingShell;
-      pendingShell = null;
-      return activateRealmShell(shell, realmOptions);
+    const shell = takePendingShell();
+    if (shell !== null) {
+      try {
+        return activateRealmShell(shell, realmOptions);
+      } catch (error) {
+        disposeRealmShell(shell);
+        throw error;
+      }
     }
     return createRealm(realmOptions);
   }
@@ -615,6 +712,50 @@ export class RuntimePool {
     };
   }
 
+  /**
+   * Worker Realm 构造参数的公共部分。
+   *
+   * dedicated / shared / service 三类 Worker 只在 postMessage、close 回调、
+   * label 和 recorder 种类上有差异；参数化构建器把它们收敛到一处，
+   * 避免三份近乎逐字复制的选项对象漂移（IKF3A7）。
+   */
+  workerRealmBuildOptions({ kind, label, options, postMessage, close }) {
+    const recorderKind = kind === "dedicated"
+      ? "dedicated-worker"
+      : `${kind}-worker`;
+    return {
+      label,
+      browserMajorVersion: this.options.fingerprint.browserMajorVersion,
+      timingProfile: this.options.fingerprint.timing,
+      workerUrl: options.url,
+      workerName: kind === "service" ? "" : options.name,
+      workerType: options.type,
+      workerKind: kind,
+      traceEnabled: this.traceEnabled,
+      maxTraceEntries: this.options.proxyTrace.maxEntries,
+      navigatorProfile: this.options.fingerprint.navigator,
+      replay: this.options.replay,
+      networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
+        kind: recorderKind,
+        url: options.url,
+        topLevel: false,
+      }),
+      postMessage,
+      close,
+      nestedWorkerFactory: workerOptions =>
+        this.createDedicatedWorker(workerOptions),
+      nestedSharedWorkerFactory: workerOptions =>
+        this.createSharedWorkerConnection(workerOptions),
+      broadcastConnector: this.createBroadcastConnector(
+        new URL(options.url).origin,
+      ),
+      renderingProfile: this.options.fingerprint.rendering,
+      capabilitiesProfile: this.options.fingerprint.capabilities,
+      objectURLRegistry: this.objectURLRegistry,
+      workerDepth: options.workerDepth,
+    };
+  }
+
   async createDedicatedWorker(options) {
     const generation = this.captureGeneration();
     const source = resolveWorkerSource(
@@ -633,23 +774,10 @@ export class RuntimePool {
     }
     let realm = null;
     try {
-      realm = await createWorkerRealm({
+      realm = await createWorkerRealm(this.workerRealmBuildOptions({
+        kind: "dedicated",
         label: `edge-dedicated-worker-${this.childRealms.size + 1}`,
-        browserMajorVersion: this.options.fingerprint.browserMajorVersion,
-        timingProfile: this.options.fingerprint.timing,
-        workerUrl: options.url,
-        workerName: options.name,
-        workerType: options.type,
-        workerKind: "dedicated",
-        traceEnabled: this.traceEnabled,
-        maxTraceEntries: this.options.proxyTrace.maxEntries,
-        navigatorProfile: this.options.fingerprint.navigator,
-        replay: this.options.replay,
-        networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
-          kind: "dedicated-worker",
-          url: options.url,
-          topLevel: false,
-        }),
+        options,
         postMessage: (message, ports) => {
           options.onMessage(message, ports);
         },
@@ -657,18 +785,7 @@ export class RuntimePool {
           reservation.releaseConnection();
           if (realm !== null) this.destroyChildRealm(realm);
         },
-        nestedWorkerFactory: workerOptions =>
-          this.createDedicatedWorker(workerOptions),
-        nestedSharedWorkerFactory: workerOptions =>
-          this.createSharedWorkerConnection(workerOptions),
-        broadcastConnector: this.createBroadcastConnector(
-          new URL(options.url).origin,
-        ),
-        renderingProfile: this.options.fingerprint.rendering,
-        capabilitiesProfile: this.options.fingerprint.capabilities,
-        objectURLRegistry: this.objectURLRegistry,
-        workerDepth: options.workerDepth,
-      });
+      }));
     } catch (error) {
       reservation.releaseConnection();
       throw error;
@@ -718,23 +835,32 @@ export class RuntimePool {
     const generation = this.captureGeneration();
     const releaseConnection = this.reserveWorkerConnection(options.workerDepth);
     const key = `${options.creatorOrigin}\0${options.url}\0${options.name}`;
-    let creating = this.sharedWorkers.get(key);
-    if (creating === undefined) {
-      creating = this.createSharedWorkerRealm(key, options);
-      this.sharedWorkers.set(key, creating);
+    let shared = this.sharedWorkers.get(key);
+    if (shared === undefined) {
+      // 创建期就登记占位（空 connections/connectionReleases）：close 与
+      // destroyChildRealms 在 await 期间遍历到的永远是可解构对象，而不是
+      // 一个未 resolve 的 Promise（IKF39I）。
+      shared = {
+        realm: null,
+        key,
+        url: options.url,
+        name: options.name,
+        type: options.type,
+        connections: new Set(),
+        connectionReleases: new Set(),
+        creation: null,
+      };
+      shared.creation = this.createSharedWorkerRealm(key, options, shared);
+      this.sharedWorkers.set(key, shared);
     }
-    let shared;
     try {
-      shared = await creating;
+      await shared.creation;
     } catch (error) {
-      if (this.sharedWorkers.get(key) === creating) {
+      if (this.sharedWorkers.get(key) === shared) {
         this.sharedWorkers.delete(key);
       }
       releaseConnection();
       throw error;
-    }
-    if (this.sharedWorkers.get(key) === creating) {
-      this.sharedWorkers.set(key, shared);
     }
     try {
       this.assertGenerationActive(generation);
@@ -756,7 +882,7 @@ export class RuntimePool {
     const pool = this;
     return {
       deliverOwnerMessage(message, ports) {
-        if (!shared.realm.destroyed) {
+        if (shared.realm !== null && !shared.realm.destroyed) {
           connection.deliverOwnerMessage(message, ports);
         }
       },
@@ -775,7 +901,7 @@ export class RuntimePool {
     };
   }
 
-  async createSharedWorkerRealm(key, options, generation = this.captureGeneration()) {
+  async createSharedWorkerRealm(key, options, shared, generation = this.captureGeneration()) {
     const source = resolveWorkerSource(
       options.url,
       this.options.replay,
@@ -791,47 +917,23 @@ export class RuntimePool {
     }
     let realm = null;
     try {
-      realm = await createWorkerRealm({
+      realm = await createWorkerRealm(this.workerRealmBuildOptions({
+        kind: "shared",
         label: `edge-shared-worker-${this.childRealms.size + 1}`,
-        browserMajorVersion: this.options.fingerprint.browserMajorVersion,
-        timingProfile: this.options.fingerprint.timing,
-        workerUrl: options.url,
-        workerName: options.name,
-        workerType: options.type,
-        workerKind: "shared",
-        traceEnabled: this.traceEnabled,
-        maxTraceEntries: this.options.proxyTrace.maxEntries,
-        navigatorProfile: this.options.fingerprint.navigator,
-        replay: this.options.replay,
-        networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
-          kind: "shared-worker",
-          url: options.url,
-          topLevel: false,
-        }),
+        options,
         postMessage: null,
         close: () => {
-          const shared = this.sharedWorkers.get(key);
-          if (shared?.connectionReleases) {
-            for (const release of shared.connectionReleases) release();
-            shared.connectionReleases.clear();
+          const current = this.sharedWorkers.get(key);
+          if (current?.connectionReleases) {
+            for (const release of current.connectionReleases) release();
+            current.connectionReleases.clear();
           }
           if (realm !== null) {
             this.destroyChildRealm(realm);
             this.sharedWorkers.delete(key);
           }
         },
-        nestedWorkerFactory: workerOptions =>
-          this.createDedicatedWorker(workerOptions),
-        nestedSharedWorkerFactory: workerOptions =>
-          this.createSharedWorkerConnection(workerOptions),
-        broadcastConnector: this.createBroadcastConnector(
-          new URL(options.url).origin,
-        ),
-        renderingProfile: this.options.fingerprint.rendering,
-        capabilitiesProfile: this.options.fingerprint.capabilities,
-        objectURLRegistry: this.objectURLRegistry,
-        workerDepth: options.workerDepth,
-      });
+      }));
     } finally {
       this.pendingRealmCreations -= 1;
       reservation.releasePending();
@@ -842,6 +944,7 @@ export class RuntimePool {
     }
     this.childRealms.add(realm);
     this.workerRealms.add(realm);
+    shared.realm = realm;
     try {
       await evaluateWorkerSource(
         realm,
@@ -855,15 +958,7 @@ export class RuntimePool {
       this.destroyChildRealm(realm);
       throw error;
     }
-    return {
-      realm,
-      key,
-      url: options.url,
-      name: options.name,
-      type: options.type,
-      connections: new Set(),
-      connectionReleases: new Set(),
-    };
+    return shared;
   }
 
   async createServiceWorker(options) {
@@ -883,23 +978,10 @@ export class RuntimePool {
     }
     let realm = null;
     try {
-      realm = await createWorkerRealm({
+      realm = await createWorkerRealm(this.workerRealmBuildOptions({
+        kind: "service",
         label: `edge-service-worker-${this.childRealms.size + 1}`,
-        browserMajorVersion: this.options.fingerprint.browserMajorVersion,
-        timingProfile: this.options.fingerprint.timing,
-        workerUrl: options.url,
-        workerName: "",
-        workerType: options.type,
-        workerKind: "service",
-        traceEnabled: this.traceEnabled,
-        maxTraceEntries: this.options.proxyTrace.maxEntries,
-        navigatorProfile: this.options.fingerprint.navigator,
-        replay: this.options.replay,
-        networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
-          kind: "service-worker",
-          url: options.url,
-          topLevel: false,
-        }),
+        options,
         postMessage: (message, ports) => {
           options.onMessage(message, ports);
         },
@@ -907,18 +989,7 @@ export class RuntimePool {
           reservation.releaseConnection();
           if (realm !== null) this.destroyChildRealm(realm);
         },
-        nestedWorkerFactory: workerOptions =>
-          this.createDedicatedWorker(workerOptions),
-        nestedSharedWorkerFactory: workerOptions =>
-          this.createSharedWorkerConnection(workerOptions),
-        broadcastConnector: this.createBroadcastConnector(
-          new URL(options.url).origin,
-        ),
-        renderingProfile: this.options.fingerprint.rendering,
-        capabilitiesProfile: this.options.fingerprint.capabilities,
-        objectURLRegistry: this.objectURLRegistry,
-        workerDepth: options.workerDepth,
-      });
+      }));
     } catch (error) {
       reservation.releaseConnection();
       throw error;
@@ -1059,21 +1130,36 @@ export class RuntimePool {
   }
 
   async batchEvaluate(sources) {
-    const realm = assertLiveRealm(this.realm);
-    const results = [];
-    for (const source of sources) {
-      const script = getCachedScript(source);
-      this.runScheduledTasks();
-      const rawValue = script.runInContext(realm.context);
-      if (isPromise(rawValue)) {
-        results.push(await settleRealmPromise(rawValue, realm, this));
-      } else {
-        results.push(normalizeEvaluationResult(
-          rawValue,
-          this.options.limits.maxOutputBytes,
-        ));
+    assertLiveRealm(this.realm);
+    const concurrency = normalizeBatchConcurrency(
+      this.options.limits.maxBatchConcurrency,
+    );
+    const results = new Array(sources.length);
+    let nextIndex = 0;
+    let failure = null;
+    const runWorker = async () => {
+      for (;;) {
+        if (failure !== null) return;
+        const index = nextIndex;
+        nextIndex += 1;
+        if (index >= sources.length) return;
+        try {
+          results[index] = await this.evaluateCompiled(
+            getCachedScript(sources[index]),
+          );
+        } catch (error) {
+          // 与串行语义一致：首个失败后不再启动新的求值，但仍等在途项收口。
+          failure = failure ?? error;
+          return;
+        }
       }
+    };
+    const workers = new Array(Math.min(concurrency, sources.length));
+    for (let index = 0; index < workers.length; index += 1) {
+      workers[index] = runWorker();
     }
+    await Promise.all(workers);
+    if (failure !== null) throw failure;
     this.runScheduledTasks();
     return results;
   }
@@ -1258,7 +1344,7 @@ export class RuntimePool {
   readWorkerGraphFingerprints() {
     const graphs = [];
     for (const shared of this.sharedWorkers.values()) {
-      if (shared === null || typeof shared !== "object" || shared.realm === undefined) continue;
+      if (shared === null || typeof shared !== "object" || shared.realm == null) continue;
       const moduleCache = moduleCacheSnapshot(shared.realm);
       const fingerprint = createWorkerGraphFingerprint({
         kind: "shared-worker",
@@ -1343,20 +1429,49 @@ export class RuntimePool {
       this.realm = null;
     }
     this.objectURLRegistry.clear();
+    // 编译缓存跨 Realm 复用，但不跨 close 活：close 后旧脚本的字节数
+    // 不再被任何活着的池约束（IKF3A7）。
+    clearScriptCache();
   }
 
   destroyChildRealms() {
-    for (const shared of this.sharedWorkers.values()) {
-      for (const connection of [...shared.connections]) {
-        connection.close?.();
+    // 每个 shared 条目都可能是创建中的占位（realm=null，只有空 Set），
+    // 任何一项清理失败都不能中断其余清理；失败也只吞在单项上（IKF39I）。
+    for (const shared of [...this.sharedWorkers.values()]) {
+      const connections = shared?.connections;
+      if (connections !== undefined && connections !== null) {
+        for (const connection of [...connections]) {
+          try {
+            connection.close?.();
+          } catch {
+            // 继续清理剩余连接与 Realm。
+          }
+        }
+        if (typeof connections.clear === "function") connections.clear();
       }
-      shared.connections.clear();
+      const releases = shared?.connectionReleases;
+      if (releases !== undefined && releases !== null) {
+        for (const release of [...releases]) {
+          try {
+            release();
+          } catch {
+            // 释放函数是幂等的，重复调用无副作用。
+          }
+        }
+        if (typeof releases.clear === "function") releases.clear();
+      }
     }
-    for (const realm of [...this.childRealms]) this.destroyChildRealm(realm);
+    this.sharedWorkers.clear();
+    for (const realm of [...this.childRealms]) {
+      try {
+        this.destroyChildRealm(realm);
+      } catch {
+        // 个别 Realm 销毁失败时索引也要清干净，close 才能完成并可重试。
+      }
+    }
     this.childRealms.clear();
     // 池位在 childRealms 里，上一行已经销毁；这里只清索引
     this.idlePrewarmedHandles.length = 0;
-    this.sharedWorkers.clear();
     this.workerRealms.clear();
     this.workletRealms.clear();
     this.workletStates.clear();
