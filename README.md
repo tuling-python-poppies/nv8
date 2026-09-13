@@ -231,7 +231,12 @@ import { createNv8 } from './src/index.js';
 const nv8 = await createNv8({
   runtimeMode: 'plugin',
   profile: 'minimal-fetch',
-  limits: { timeoutMs: 3000 },
+  limits: {
+    timeoutMs: 3000,
+    maxStateContexts: 256,
+    maxStateKeysPerStore: 4096,
+    maxStateTotalKeys: 65536,
+  },
 });
 ```
 

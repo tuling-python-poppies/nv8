@@ -121,14 +121,20 @@ export async function createNv8(options = {}) {
   
   logger.info(`[Nv8] Creating instance with ${resolvedPlugins.length} plugins`);
   
-  // 创建状态注册表
-  const stateRegistry = createStateRegistry();
+  const normalizedLimits = normalizeCoreLimits(limits);
+
+  // 创建状态注册表；容量属于 Sandbox 实例而不是宿主全局配置
+  const stateRegistry = createStateRegistry({
+    maxContexts: normalizedLimits.maxStateContexts,
+    maxKeysPerStore: normalizedLimits.maxStateKeysPerStore,
+    maxTotalKeys: normalizedLimits.maxStateTotalKeys,
+  });
   
   // 创建沙箱
   const sandbox = await createSandbox({
     appId,
     profile: effectiveProfile,
-    limits: normalizeCoreLimits(limits),
+    limits: normalizedLimits,
     plugins: resolvedPlugins,
     stateRegistry,
     trace,
@@ -230,6 +236,24 @@ function normalizeCoreLimits(input) {
       input.maxLifecycleEntries,
       10_000,
       'limits.maxLifecycleEntries',
+      1,
+    ),
+    maxStateContexts: integer(
+      input.maxStateContexts,
+      256,
+      'limits.maxStateContexts',
+      1,
+    ),
+    maxStateKeysPerStore: integer(
+      input.maxStateKeysPerStore,
+      4_096,
+      'limits.maxStateKeysPerStore',
+      1,
+    ),
+    maxStateTotalKeys: integer(
+      input.maxStateTotalKeys,
+      65_536,
+      'limits.maxStateTotalKeys',
       1,
     ),
   });

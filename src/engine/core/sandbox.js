@@ -1583,6 +1583,9 @@ export async function createSandbox(config) {
         workerRealms: workerRealms.size,
         pendingWorkerCreations,
         workerConnections,
+        state: typeof stateRegistry.stats === 'function'
+          ? { limits: stateRegistry.limits(), stats: stateRegistry.stats() }
+          : null,
         limits: { ...limits },
       };
     },

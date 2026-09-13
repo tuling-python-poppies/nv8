@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 980 项（`npm test`，106 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 988 项（`npm test`，107 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -797,7 +797,9 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 
 ### Phase 2 (Plugin SDK)
 - [ ] Node 18 ModuleLoader 实现策略（当前 Node 24）
-- [ ] StateRegistry 容量和回收策略
+- [x] StateRegistry 容量和回收策略 - Core StateRegistry 支持 `maxStateContexts`、
+  `maxStateKeysPerStore`、`maxStateTotalKeys` 实例级配额；拒绝原子化，Realm bucket
+  在 destroy/clear 后回收，`stats()`/`limits()` 提供不含状态值的诊断；专项 8 项测试
 
 ### Phase 3-5 (插件和 Evidence)
 - [x] Protocol schema 和版本策略 - 新增 Protocol 层独立 `schemaVersion`（当前 `1.0`），registry lock
@@ -1655,7 +1657,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：980 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：988 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1751,5 +1753,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（980 项 / 106 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（988 项 / 107 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
