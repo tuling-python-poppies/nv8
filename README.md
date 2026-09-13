@@ -1335,6 +1335,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 | [docs/baseline.md](docs/baseline.md) | 基线快照机制 |
 | [docs/protocol-collector.md](docs/protocol-collector.md) | 协议层与采集层 |
 | [docs/evidence-contract.md](docs/evidence-contract.md) | Evidence 接口契约 |
+| [docs/security-boundaries.md](docs/security-boundaries.md) | 组件信任边界与安全模型 |
 | [docs/state-scope.md](docs/state-scope.md) | 状态作用域规则 |
 | [docs/node-compatibility.md](docs/node-compatibility.md) | Node 18–24 兼容矩阵 |
 | [docs/rust-migration-map.json](docs/rust-migration-map.json) | Rust 原实现 → JS 实现对应关系 |
