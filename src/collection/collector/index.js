@@ -16,8 +16,11 @@ export {
   CredentialStore,
   SENSITIVE_HEADERS,
   REDACTED,
-  redactHeaders,
+  isSensitiveHeader,
   redactCookies,
+  redactHeaders,
+  redactRequestUrl,
+  registerSensitiveHeader,
 } from './credentials.js';
 
 export { RetryPolicy, createNoRetryPolicy, readRetryAfter } from './retry-policy.js';

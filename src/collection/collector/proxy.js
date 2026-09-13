@@ -134,10 +134,23 @@ function fromUrl(text) {
     protocol: url.protocol,
     host: url.hostname,
     port: url.port,
-    // URL 会做百分号编码，密码里的 `@`、`:` 必须解回来
-    username: url.username === '' ? undefined : decodeURIComponent(url.username),
-    password: url.password === '' ? undefined : decodeURIComponent(url.password),
+    // URL 会做百分号编码，密码里的 `@`、`:` 必须解回来。
+    // 畸形转义（如 `p%zz`）会让 decodeURIComponent 抛裸 URIError——
+    // 调用方按 CollectorConfigError 分类就会漏捕。这里统一转成配置错误，
+    // 且错误消息里的凭据段必须脱敏。
+    username: url.username === '' ? undefined : decodeCredential(url.username, text),
+    password: url.password === '' ? undefined : decodeCredential(url.password, text),
   };
+}
+
+function decodeCredential(part, text) {
+  try {
+    return decodeURIComponent(part);
+  } catch {
+    throw new CollectorConfigError(
+      `proxy url contains malformed percent-encoding: ${redactUrl(text)}`
+    );
+  }
 }
 
 /**

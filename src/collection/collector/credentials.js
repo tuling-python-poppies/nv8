@@ -22,6 +22,58 @@ export const SENSITIVE_HEADERS = Object.freeze(new Set([
   'x-csrf-token',
 ]));
 
+/**
+ * 部署方自定义凭据 header 名（小写）。
+ *
+ * 静态白名单不可能覆盖所有凭据形态（`X-Api-Key`、`X-Signature`…）。
+ * CredentialStore 在配置阶段把用到的 header 名注册进来，之后所有
+ * `redactHeaders()` 调用都会强制脱敏这些名字，避免自定义凭据值
+ * 进入审计或错误消息。
+ */
+const registeredSensitiveHeaders = new Set();
+
+/**
+ * 注册一个需要脱敏的 header 名。幂等。
+ * @param {string} name
+ */
+export function registerSensitiveHeader(name) {
+  if (typeof name !== 'string' || name.length === 0) return;
+  registeredSensitiveHeaders.add(name.toLowerCase());
+}
+
+/**
+ * 判断 header 名是否需要脱敏。
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isSensitiveHeader(name) {
+  const key = String(name).toLowerCase();
+  return SENSITIVE_HEADERS.has(key) || registeredSensitiveHeaders.has(key);
+}
+
+/**
+ * URL 脱敏：只保留 origin + path，查询参数只保留**键名**，值一律隐藏。
+ *
+ * 采集 URL 常带 `?token=` / `?sign=` 等一次性凭据；审计与错误消息里
+ * 直插原串等于把凭据写进日志与工单。不可解析的串直接抹掉查询段。
+ *
+ * @param {string} input
+ * @returns {string}
+ */
+export function redactRequestUrl(input) {
+  if (typeof input !== 'string' || input.length === 0) return `${input ?? ''}`;
+  let url;
+  try {
+    url = new URL(input);
+  } catch {
+    return `${input}`.replace(/\?.*$/su, '?[redacted]');
+  }
+  const base = `${url.origin}${url.pathname}`;
+  if (url.search === '') return base;
+  const keys = [...new Set([...url.searchParams.keys()])];
+  return `${base}?${keys.map((key) => `${key}=[redacted]`).join('&')}`;
+}
+
 export class CredentialStore {
   /** @type {Map<string, { headers: Map<string,string>, cookies: Map<string,string> }>} */
   #byOrigin = new Map();
@@ -68,6 +120,8 @@ export class CredentialStore {
           );
         }
         headers.set(name.toLowerCase(), value);
+        // 自定义凭据 header 名注册后强制脱敏：审计/错误消息不依赖静态白名单
+        registerSensitiveHeader(name);
       }
 
       const cookies = new Map();
@@ -164,7 +218,7 @@ export function redactHeaders(headers) {
 
   for (const [name, value] of entries) {
     const key = String(name).toLowerCase();
-    if (SENSITIVE_HEADERS.has(key)) {
+    if (isSensitiveHeader(key)) {
       output[key] = REDACTED;
     } else {
       output[key] = value;

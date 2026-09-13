@@ -13,7 +13,7 @@
  */
 
 import { createRequestPlan } from '../request-protocol/request-plan.js';
-import { CredentialStore, redactCookies, redactHeaders } from './credentials.js';
+import { CredentialStore, redactCookies, redactHeaders, redactRequestUrl } from './credentials.js';
 import { NetworkPolicy } from './network-policy.js';
 import { RetryPolicy } from './retry-policy.js';
 import { CircuitBreaker } from './circuit-breaker.js';
@@ -24,6 +24,7 @@ import {
   CollectorError,
   CollectorErrorCode,
   CollectorPolicyError,
+  CollectorRequestError,
   CollectorRetryExhaustedError,
 } from './errors.js';
 
@@ -124,11 +125,7 @@ export class Collector {
     // 策略检查在任何 IO 之前发生
     this.#policy.assert(normalized.url, normalized.method);
 
-    // 熔断检查紧随策略之后、仍在任何 IO 之前。
-    // 顺序有意义：策略违规不该计入熔断（那是配置错误，不是对方挂了），
-    // 所以必须先让策略把违规请求挡掉。
-    this.#breaker.assert(normalized.url);
-
+    // 凭据要求在取熔断探针之前检查：配置错误不该占用 half-open 探针
     if (options.requireCredentials === true) {
       this.#credentials.require(normalized.url);
     }
@@ -144,14 +141,23 @@ export class Collector {
       const startedAt = Date.now();
 
       let releaseSlot = null;
+      let sentToTransport = false;
       try {
         // 限流在每次**尝试**内取许可：每次重试都是一次新请求。
         // 放在 send() 外面只会限住"逻辑请求数"，重试就绕过了限速。
-        releaseSlot = await this.#rateLimiter.acquire(prepared.url, {
+        releaseSlot = await this.#rateLimiter.acquire(normalized.url, {
           signal: options.signal,
         });
-        const response = await this.#transport.send(prepared, { signal: options.signal });
-        this.#cookieJar.acceptFromResponse(prepared.url, response);
+
+        // 熔断检查移到真正发送之前，且每次尝试都做：
+        // - half-open 探针在会真正发送时才取得，本地排队/配置失败不会泄漏它，
+        //   否则该 origin 会永久停在半开、拒绝所有后续请求
+        // - 重试不再绕过已跳闸的电路（在 breaker.assert 之后才发送）
+        this.#breaker.assert(normalized.url);
+        sentToTransport = true;
+
+        const { response, redirected } =
+          await this.#sendFollowingRedirects(prepared, normalized, options.signal);
 
         attempts.push({
           attempt,
@@ -160,9 +166,13 @@ export class Collector {
           error: null,
         });
 
-        this.#breaker.record(prepared.url, { response });
+        this.#breaker.record(normalized.url, { response });
 
-        if (this.#retry.shouldRetry({ attempt, method: prepared.method, response })) {
+        if (this.#retry.shouldRetry({
+          attempt,
+          method: normalized.method,
+          response,
+        })) {
           const delay = this.#retry.delayFor({ attempt, response });
           this.#record(prepared, { response, attempt, retriedAfterMs: delay });
           await this.#sleep(delay);
@@ -173,7 +183,7 @@ export class Collector {
           request: prepared,
           response,
           attempts: Object.freeze(attempts.map((entry) => Object.freeze(entry))),
-          redirected: response.redirected,
+          redirected: redirected || response.redirected,
         });
         this.#record(prepared, { response, attempt });
         return result;
@@ -193,7 +203,11 @@ export class Collector {
           error: collectorError.code,
         });
         lastError = collectorError;
-        this.#breaker.record(prepared.url, { error: collectorError });
+        // 只有真正进入发送路径的失败才反馈给熔断器：CIRCUIT_OPEN / RATE_LIMITED
+        // 等本地拒绝记录进去会误清并发探针的占用，或把本地节流当目标故障。
+        if (sentToTransport) {
+          this.#breaker.record(normalized.url, { error: collectorError });
+        }
 
         // 策略违规立即失败，绝不重试
         if (collectorError.isPolicyViolation) {
@@ -201,7 +215,7 @@ export class Collector {
           throw collectorError;
         }
 
-        if (this.#retry.shouldRetry({ attempt, method: prepared.method, error: collectorError })) {
+        if (this.#retry.shouldRetry({ attempt, method: normalized.method, error: collectorError })) {
           const delay = this.#retry.delayFor({ attempt });
           this.#record(prepared, { error: collectorError, attempt, retriedAfterMs: delay });
           await this.#sleep(delay);
@@ -223,6 +237,90 @@ export class Collector {
   }
 
   /**
+   * 发送请求并按 NetworkPolicy 跟随重定向。
+   *
+   * 传输层固定 `redirect: 'manual'`，重定向语义集中在这里：
+   * - 每一跳都重新过 `assertRedirect`（followRedirects 开关、目标 origin 的
+   *   allowlist、跨 origin 默认拒绝），重定向不能成为绕过准入的后门
+   * - 超过 `maxRedirects` 抛 REDIRECT_LIMIT
+   * - 跨 origin 时丢弃原 plan 的显式 header/cookie，避免把 origin 绑定凭据
+   *   带去新 origin；新 origin 的凭据与 jar cookie 由 #prepare 重新解析
+   * - 303 以及 301/302 的 POST 按 Fetch 语义改成 GET 并丢弃 body
+   *
+   * @param {object} prepared 已完成凭据/cookie 注入的首跳计划
+   * @param {object} plan 已规范化的原始 RequestPlan（用于重建后续跳）
+   * @param {AbortSignal|undefined} signal
+   * @returns {Promise<{response: object, request: object, redirected: boolean}>}
+   */
+  async #sendFollowingRedirects(prepared, plan, signal) {
+    let current = prepared;
+    let redirected = false;
+    let redirects = 0;
+
+    for (;;) {
+      const response = await this.#transport.send(current, { signal });
+      // 每一跳的 Set-Cookie 都要入 jar，重定向链上的会话变更不能丢
+      this.#cookieJar.acceptFromResponse(current.url, response);
+
+      const location = getResponseHeader(response, 'location');
+      if (
+        !REDIRECT_STATUS.has(response.status)
+        || location === undefined
+        || location === null
+      ) {
+        return { response, request: current, redirected };
+      }
+      if (!this.#policy.followRedirects) {
+        // 策略未开启跟随：3xx 是最终响应，原样返回
+        return { response, request: current, redirected };
+      }
+
+      redirects += 1;
+      if (redirects > this.#policy.maxRedirects) {
+        throw new CollectorRequestError(
+          CollectorErrorCode.REDIRECT_LIMIT,
+          `redirect limit of ${this.#policy.maxRedirects} exceeded`,
+          {
+            retryable: false,
+            context: { url: redactRequestUrl(current.url), redirects },
+          }
+        );
+      }
+
+      let nextUrl;
+      try {
+        nextUrl = new URL(location, current.url).href;
+      } catch {
+        throw new CollectorRequestError(
+          CollectorErrorCode.REDIRECT_NOT_ALLOWED,
+          'redirect location is not a valid URL',
+          { retryable: false, context: { fromUrl: redactRequestUrl(current.url) } }
+        );
+      }
+
+      // 逐跳校验：跟随时也必须过策略，且默认拒绝跨 origin
+      this.#policy.assertRedirect(current.url, nextUrl, current.method);
+
+      const sameOrigin = new URL(nextUrl).origin === current.origin;
+      const nextMethod = redirectMethod(response.status, current.method);
+      const keepBody = nextMethod === current.method;
+
+      current = this.#prepare(createRequestPlan({
+        method: nextMethod,
+        url: nextUrl,
+        headers: sameOrigin
+          ? plan.headers.flatMap((entry) =>
+            entry.values.map((value) => ({ name: entry.name, value })))
+          : [],
+        cookies: sameOrigin ? plan.cookies.map((entry) => ({ ...entry })) : [],
+        body: keepBody ? plan.body : null,
+        metadata: plan.metadata,
+      }));
+      redirected = true;
+    }
+  }
+
+  /**
    * 注入凭据和会话 cookie，产出实际要发送的请求。
    * 凭据注入发生在策略检查之后，因此不会把凭据发往未授权 origin。
    */
@@ -240,12 +338,17 @@ export class Collector {
       if (!cookies.has(name)) cookies.set(name, value);
     }
 
+    // 凭据只**填空缺**：优先级是 plan 显式 header/cookie > jar > 凭据。
+    // 无条件追加会让 plan 的 Authorization 被凭据覆盖、产生重复 Authorization；
+    // 无条件覆盖 cookie 会把调用方显式值换掉。
     if (credentials) {
+      const presentHeaders = new Set(headers.map((entry) => entry.name));
       for (const [name, value] of credentials.headers) {
+        if (presentHeaders.has(name)) continue;
         headers.push({ name, value });
       }
       for (const [name, value] of credentials.cookies) {
-        cookies.set(name, value);
+        if (!cookies.has(name)) cookies.set(name, value);
       }
     }
 
@@ -267,7 +370,7 @@ export class Collector {
     this.#audit.push(Object.freeze({
       timestamp: Date.now(),
       method: request.method,
-      url: request.url,
+      url: redactRequestUrl(request.url),
       origin: request.origin,
       headers: redactHeaders(request.headers),
       cookies: redactCookies(request.cookies),
@@ -318,4 +421,23 @@ export class Collector {
  */
 export function createCollector(config) {
   return new Collector(config);
+}
+
+/** 需要跟随的重定向状态码。 */
+const REDIRECT_STATUS = new Set([301, 302, 303, 307, 308]);
+
+/**
+ * 重定向后的方法语义（与 Fetch 对齐）：
+ * 303 一律改为 GET（HEAD 保持）；301/302 的 POST 改为 GET；
+ * 307/308 保持原方法（因此 body 也要保留）。
+ *
+ * @param {number} status
+ * @param {string} method
+ * @returns {string}
+ */
+function redirectMethod(status, method) {
+  if (method === 'HEAD') return method;
+  if (status === 303) return 'GET';
+  if ((status === 301 || status === 302) && method === 'POST') return 'GET';
+  return method;
 }

@@ -9,6 +9,7 @@ import {
   CollectorTimeoutError,
 } from './errors.js';
 import { buildRequestPayload, createCollectorResponse } from './transport.js';
+import { redactRequestUrl } from './credentials.js';
 
 const WEBSOCKET_GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const DEFAULT_MAX_FRAMES = 1;
@@ -825,7 +826,7 @@ function normalizeWebSocketError(error, url) {
   if (error?.code === CollectorErrorCode.REQUEST_TIMEOUT) return error;
   return new CollectorRequestError(
     CollectorErrorCode.REQUEST_FAILED,
-    `WebSocket transport failure for ${url}: ${error?.message ?? error}`,
+    `WebSocket transport failure for ${redactRequestUrl(url)}: ${error?.message ?? error}`,
     { cause: error, retryable: false },
   );
 }

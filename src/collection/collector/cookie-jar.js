@@ -169,11 +169,16 @@ export class CookieJar {
    */
   acceptFromResponse(url, response) {
     const requestUrl = new URL(url);
-    const entry = response.headers?.find?.((header) => header.name === 'set-cookie');
-    if (!entry) return;
-    for (const raw of entry.values) {
-      const cookie = parseSetCookie(raw, requestUrl);
-      if (cookie) this.set(cookie);
+    // 必须收集**所有** set-cookie 条目，不能只取第一条：undici（fetch 传输）
+    // 会把同一响应里的多个 Set-Cookie 拆成多个同名条目，find 只会入 jar 一个。
+    // 聚合形态（proxy 传输的 rawHeaders）则把多值放在同一条目的 values 里，
+    // 两种形态都要逐个解析。
+    const entries = response.headers?.filter?.((header) => header.name === 'set-cookie') ?? [];
+    for (const entry of entries) {
+      for (const raw of entry.values) {
+        const cookie = parseSetCookie(raw, requestUrl);
+        if (cookie) this.set(cookie);
+      }
     }
   }
 

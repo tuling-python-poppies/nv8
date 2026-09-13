@@ -348,6 +348,21 @@ export function createRequestPlan(input) {
     if (size > limits.maxBodyBytes) {
       throw invalid('body exceeds maxBodyBytes', { actual: size, limit: limits.maxBodyBytes });
     }
+  } else if (body.encoding === BodyEncoding.JSON || body.encoding === BodyEncoding.FORM) {
+    // json/form 在传输层才序列化。上限必须按**序列化后**的 UTF-8 字节计，
+    // 否则超大对象/表单会绕过此处检查，直到真正发送时才暴露。
+    let serialized;
+    try {
+      serialized = body.encoding === BodyEncoding.JSON
+        ? JSON.stringify(body.value)
+        : new URLSearchParams(body.value).toString();
+    } catch (error) {
+      throw invalid(`body is not serializable: ${error.message}`, {});
+    }
+    const size = serialized === undefined ? 0 : Buffer.byteLength(serialized, 'utf8');
+    if (size > limits.maxBodyBytes) {
+      throw invalid('body exceeds maxBodyBytes', { actual: size, limit: limits.maxBodyBytes });
+    }
   }
 
   if (body.encoding !== BodyEncoding.NONE && SAFE_METHODS.has(method)) {

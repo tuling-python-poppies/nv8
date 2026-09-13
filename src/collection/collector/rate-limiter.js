@@ -150,7 +150,7 @@ export class RateLimiter {
 
     if (bucket.queue.length >= this.#maxQueued) {
       throw new CollectorError(
-        CollectorErrorCode.REQUEST_FAILED,
+        CollectorErrorCode.RATE_LIMITED,
         `rate limiter queue for ${origin} is full (${this.#maxQueued})`,
         { retryable: true, context: { origin, queued: bucket.queue.length } }
       );

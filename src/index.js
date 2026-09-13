@@ -83,7 +83,11 @@ export async function createNv8(options = {}) {
       trustedScriptPolicy: evidence.trustedScriptPolicy,
     }));
   const configuredReplay = normalizeCoreReplay(options.replay);
-  const replay = configuredReplay.length > 0 || evidenceSource === null
+  // 显式 options.replay 永远优先；useNetworkReplay:false 只禁用**证据 Bundle**
+  // 的自动回放装载，不会覆盖调用方显式传入的 replay 记录。
+  const replay = configuredReplay.length > 0
+    || evidenceSource === null
+    || evidence.useNetworkReplay === false
     ? configuredReplay
     : await loadCoreReplay(evidenceSource);
   const effectiveProfile = {
@@ -349,12 +353,19 @@ function normalizeCoreEvidence(input) {
   if (value.scriptAllowlist !== undefined && !Array.isArray(value.scriptAllowlist)) {
     throw new TypeError('evidence.scriptAllowlist must be an array');
   }
+  const useNetworkReplay = value.useNetworkReplay ?? true;
+  if (typeof useNetworkReplay !== 'boolean') {
+    throw new TypeError('evidence.useNetworkReplay must be a boolean');
+  }
   return Object.freeze({
     bundlePath: value.bundlePath,
     trustedScriptPolicy,
     scriptAllowlist: Object.freeze([...(value.scriptAllowlist || [])]),
     usePage: value.usePage ?? true,
     executeScripts: value.executeScripts ?? true,
+    // 必须透传给下游（runtime-pool 依据它决定是否装载证据回放）；
+    // 与 public 路径 edge-runtime-options 的默认值保持一致
+    useNetworkReplay,
   });
 }
 

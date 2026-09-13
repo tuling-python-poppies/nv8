@@ -110,6 +110,18 @@ export function inspectCheckpoint(candidate, expectedFingerprint) {
   if (!Number.isInteger(candidate.pageIndex) || candidate.pageIndex < 0) {
     return { usable: false, reason: 'corrupt' };
   }
+  // pagination 直接使用这两个字段：totalItems 参与上限判断，seenCursors 进入
+  // 环检测集合。损坏的值（负数、非整数、非字符串数组）必须在这里挡掉，
+  // 否则会在续采时变成静默的数据错误。
+  if (!Number.isInteger(candidate.totalItems) || candidate.totalItems < 0) {
+    return { usable: false, reason: 'corrupt' };
+  }
+  if (
+    !Array.isArray(candidate.seenCursors)
+    || candidate.seenCursors.some((cursor) => typeof cursor !== 'string')
+  ) {
+    return { usable: false, reason: 'corrupt' };
+  }
   return { usable: true, reason: null };
 }
 

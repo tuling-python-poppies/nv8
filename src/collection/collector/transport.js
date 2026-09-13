@@ -10,6 +10,7 @@
  */
 
 import { CollectorConfigError, CollectorErrorCode, CollectorRequestError, CollectorTimeoutError } from './errors.js';
+import { redactRequestUrl } from './credentials.js';
 
 /**
  * 归一化传输响应
@@ -120,7 +121,9 @@ export function withTimeout(transport, timeoutMs) {
       const timeout = new Promise((_, reject) => {
         timer = setTimeout(() => {
           controller.abort();
-          reject(new CollectorTimeoutError(timeoutMs, { context: { url: request.url } }));
+          reject(new CollectorTimeoutError(timeoutMs, {
+            context: { url: redactRequestUrl(request.url) },
+          }));
         }, timeoutMs);
         // 不阻止进程退出
         if (typeof timer.unref === 'function') timer.unref();
@@ -221,6 +224,10 @@ export function createFetchTransport(options = {}) {
           method: request.method,
           headers,
           body,
+          // 保持 manual：重定向的跟随与逐跳校验由 Collector 依据
+          // NetworkPolicy（followRedirects/maxRedirects/assertRedirect）完成。
+          // 让 fetch 自动跟随后，跨 origin 跳转既不经过 allowlist，也会把
+          // origin 绑定凭据带过去——这是安全边界，不是可选项。
           redirect: 'manual',
           signal: sendOptions.signal,
         });
@@ -228,30 +235,18 @@ export function createFetchTransport(options = {}) {
         if (error?.name === 'AbortError') {
           throw new CollectorRequestError(
             CollectorErrorCode.ABORTED,
-            `request aborted: ${request.url}`,
-            { context: { url: request.url }, cause: error, retryable: false }
+            `request aborted: ${redactRequestUrl(request.url)}`,
+            { context: { url: redactRequestUrl(request.url) }, cause: error, retryable: false }
           );
         }
         throw new CollectorRequestError(
           CollectorErrorCode.REQUEST_FAILED,
-          `transport failure for ${request.url}: ${error.message}`,
-          { context: { url: request.url }, cause: error, retryable: true }
+          `transport failure for ${redactRequestUrl(request.url)}: ${error.message}`,
+          { context: { url: redactRequestUrl(request.url) }, cause: error, retryable: true }
         );
       }
 
-      const buffer = Buffer.from(await response.arrayBuffer());
-      if (buffer.byteLength > maxResponseBytes) {
-        throw new CollectorRequestError(
-          CollectorErrorCode.RESPONSE_TOO_LARGE,
-          `response body exceeds maxResponseBytes`,
-          {
-            context: { url: request.url },
-            limit: maxResponseBytes,
-            actual: buffer.byteLength,
-            retryable: false,
-          }
-        );
-      }
+      const buffer = await readBodyWithLimit(response, maxResponseBytes, request.url);
 
       return createCollectorResponse({
         status: response.status,
@@ -264,6 +259,87 @@ export function createFetchTransport(options = {}) {
       });
     },
   };
+}
+
+/**
+ * 流式读取响应体并同步判限。
+ *
+ * `arrayBuffer()` 之后才比较大小是无效防护：超限响应会先被完整读进内存，
+ * 判定时内存已经被撑爆。这里边读边累加，一超限立即取消读取并抛错，
+ * 与 proxy-transport 的语义对齐。
+ *
+ * @param {Response} response
+ * @param {number} maxResponseBytes
+ * @param {string} url
+ * @returns {Promise<Buffer>}
+ */
+async function readBodyWithLimit(response, maxResponseBytes, url) {
+  const stream = response?.body;
+  if (stream === null || stream === undefined || typeof stream.getReader !== 'function') {
+    // 没有可读流（204、测试替身）时退回整体读取
+    let buffer;
+    try {
+      buffer = Buffer.from(await response.arrayBuffer());
+    } catch (error) {
+      throw mapBodyReadError(error, url);
+    }
+    if (buffer.byteLength > maxResponseBytes) throw tooLargeError(url, maxResponseBytes, buffer.byteLength);
+    return buffer;
+  }
+
+  const reader = stream.getReader();
+  const chunks = [];
+  let received = 0;
+  try {
+    for (;;) {
+      let step;
+      try {
+        step = await reader.read();
+      } catch (error) {
+        throw mapBodyReadError(error, url);
+      }
+      if (step.done) break;
+      const chunk = Buffer.from(step.value);
+      received += chunk.byteLength;
+      if (received > maxResponseBytes) {
+        // 先定结果再取消：反过来的话取消触发的错误会盖过真正的原因
+        await reader.cancel().catch(() => {});
+        throw tooLargeError(url, maxResponseBytes, received);
+      }
+      chunks.push(chunk);
+    }
+  } finally {
+    try { reader.releaseLock(); } catch { /* reader 已取消或已释放 */ }
+  }
+  return Buffer.concat(chunks);
+}
+
+function tooLargeError(url, limit, actual) {
+  return new CollectorRequestError(
+    CollectorErrorCode.RESPONSE_TOO_LARGE,
+    'response body exceeds maxResponseBytes',
+    {
+      context: { url: redactRequestUrl(url) },
+      limit,
+      actual,
+      retryable: false,
+    }
+  );
+}
+
+function mapBodyReadError(error, url) {
+  if (error?.name === 'AbortError') {
+    return new CollectorRequestError(
+      CollectorErrorCode.ABORTED,
+      `request aborted: ${redactRequestUrl(url)}`,
+      { context: { url: redactRequestUrl(url) }, cause: error, retryable: false }
+    );
+  }
+  return new CollectorRequestError(
+    CollectorErrorCode.REQUEST_FAILED,
+    `transport failure for ${redactRequestUrl(url)}: ${error.message}`,
+    { context: { url: redactRequestUrl(url) }, cause: error, retryable: true }
+  );
 }
 
 /**
@@ -289,8 +365,8 @@ export function createStubTransport(routes = []) {
       }
       throw new CollectorRequestError(
         CollectorErrorCode.REQUEST_FAILED,
-        `stub transport has no route for ${request.method} ${request.url}`,
-        { context: { url: request.url }, retryable: false }
+        `stub transport has no route for ${request.method} ${redactRequestUrl(request.url)}`,
+        { context: { url: redactRequestUrl(request.url) }, retryable: false }
       );
     },
   };

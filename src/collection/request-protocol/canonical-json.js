@@ -45,9 +45,15 @@ function encode(value, path, depth, seen) {
   seen.add(value);
   try {
     if (Array.isArray(value)) {
-      const items = value.map((item, index) =>
-        encode(item, [...path, String(index)], depth + 1, seen)
-      );
+      // 必须按索引循环：`Array.prototype.map` 会跳过稀疏数组的空洞，
+      // join 之后产出 "[1,,3]" 这种非法 JSON，且与 [1,null,3] 摘要不同。
+      // 空洞按 null 输出，与 JSON.stringify 对齐。
+      const items = [];
+      for (let index = 0; index < value.length; index += 1) {
+        items.push(index in value
+          ? encode(value[index], [...path, String(index)], depth + 1, seen)
+          : 'null');
+      }
       return `[${items.join(',')}]`;
     }
 

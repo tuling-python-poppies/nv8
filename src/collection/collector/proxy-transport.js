@@ -9,6 +9,7 @@ import {
 } from './errors.js';
 import { ProxyPool, connectThroughProxy, isProxyError } from './proxy.js';
 import { buildRequestPayload, createCollectorResponse } from './transport.js';
+import { redactRequestUrl } from './credentials.js';
 
 /**
  * 走代理的传输实现。
@@ -166,8 +167,8 @@ function performRequest(params) {
       outgoing.destroy();
       finish(new CollectorRequestError(
         CollectorErrorCode.ABORTED,
-        `request aborted: ${request.url}`,
-        { context: { url: request.url }, retryable: false }
+        `request aborted: ${redactRequestUrl(request.url)}`,
+        { context: { url: redactRequestUrl(request.url) }, retryable: false }
       ));
     }
 
@@ -176,8 +177,8 @@ function performRequest(params) {
 
     outgoing.on('error', (error) => finish(new CollectorRequestError(
       CollectorErrorCode.REQUEST_FAILED,
-      `transport failure for ${request.url}: ${error.message}`,
-      { context: { url: request.url }, cause: error, retryable: true }
+      `transport failure for ${redactRequestUrl(request.url)}: ${error.message}`,
+      { context: { url: redactRequestUrl(request.url) }, cause: error, retryable: true }
     )));
 
     outgoing.on('response', (incoming) => {
@@ -193,7 +194,7 @@ function performRequest(params) {
             CollectorErrorCode.RESPONSE_TOO_LARGE,
             'response body exceeds maxResponseBytes',
             {
-              context: { url: request.url },
+              context: { url: redactRequestUrl(request.url) },
               limit: maxResponseBytes,
               actual: received,
               retryable: false,
@@ -210,8 +211,8 @@ function performRequest(params) {
 
       incoming.on('aborted', () => finish(new CollectorRequestError(
         CollectorErrorCode.REQUEST_FAILED,
-        `response aborted for ${request.url}`,
-        { context: { url: request.url }, retryable: true }
+        `response aborted for ${redactRequestUrl(request.url)}`,
+        { context: { url: redactRequestUrl(request.url) }, retryable: true }
       )));
 
       incoming.on('end', () => {

@@ -8,6 +8,16 @@ const PROXY_ERROR_CODES = new Set([
 ]);
 
 /**
+ * 本地侧错误码。恒定不计入目标健康度。
+ *
+ * 限流队列满是我们自己的背压：目标可能完全健康，只是本地排队到上限。
+ * 计进去会让一次队列溢出把 origin 熔断掉——自伤，而且掩盖真实原因。
+ */
+const LOCAL_ERROR_CODES = new Set([
+  CollectorErrorCode.RATE_LIMITED,
+]);
+
+/**
  * 按 origin 的熔断器。
  *
  * 重试解决的是**偶发**失败；熔断解决的是**持续**失败。目标站点挂了之后继续重试
@@ -264,6 +274,8 @@ export class CircuitBreaker {
       // 会跳闸所有 origin 并归咎于目标——运维看到"所有站点都挂了"，真实原因
       // 被完全掩盖。这里做硬排除，即使调用方把 PROXY_* 配进 tripErrors 也不生效。
       if (PROXY_ERROR_CODES.has(error.code)) return false;
+      // 本地背压（限流队列满）同理：目标没挂，是我们自己该等。
+      if (LOCAL_ERROR_CODES.has(error.code)) return false;
       return this.#tripErrors.has(error.code);
     }
 

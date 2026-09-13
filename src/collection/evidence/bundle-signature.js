@@ -123,15 +123,22 @@ function isBase64(value) {
 
 function trustedKey(trustedKeys, keyId) {
   if (trustedKeys instanceof Map) return trustedKeys.get(keyId);
-  if (trustedKeys !== null && typeof trustedKeys === 'object') return trustedKeys[keyId];
-  if (typeof trustedKeys !== 'string'
-    && trustedKeys !== undefined
-    && trustedKeys !== null
-    && Symbol.iterator in Object(trustedKeys)) {
-    for (const [candidate, key] of trustedKeys) {
+  // iterable 必须**先于**普通对象判断：数组/Set 也是对象，先走对象分支会把
+  // `trustedKeys[keyId]` 当成属性查找（对数组多半是 undefined），
+  // 于是 `[[keyId, key]]` 这种入参永远取不到 key。
+  if (
+    trustedKeys !== null
+    && typeof trustedKeys === 'object'
+    && typeof trustedKeys[Symbol.iterator] === 'function'
+  ) {
+    for (const entry of trustedKeys) {
+      if (!Array.isArray(entry) || entry.length < 2) continue;
+      const [candidate, key] = entry;
       if (candidate === keyId) return key;
     }
+    return undefined;
   }
+  if (trustedKeys !== null && typeof trustedKeys === 'object') return trustedKeys[keyId];
   return undefined;
 }
 

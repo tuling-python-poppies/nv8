@@ -28,6 +28,9 @@ export const CollectorErrorCode = {
   RETRY_EXHAUSTED: 'ERR_NV8_COLLECTOR_RETRY_EXHAUSTED',
   CIRCUIT_OPEN: 'ERR_NV8_COLLECTOR_CIRCUIT_OPEN',
   RESPONSE_TOO_LARGE: 'ERR_NV8_COLLECTOR_RESPONSE_TOO_LARGE',
+  // 本地背压：队列/并发限流是我们这一侧的节流，不是目标故障。
+  // 用独立错误码以便熔断器硬排除，也便于调用方区分退避原因。
+  RATE_LIMITED: 'ERR_NV8_COLLECTOR_RATE_LIMITED',
 
   // 代理故障必须与目标故障分开。混在一起的话，一个代理挂掉会让熔断器
   // 跳闸所有 origin 并归咎于目标——运维看到"所有站点都挂了"，
