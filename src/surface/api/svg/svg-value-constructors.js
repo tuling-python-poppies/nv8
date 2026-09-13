@@ -4,7 +4,9 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 export function SVGNumber() { throw new TypeError("Illegal constructor"); }
 export function SVGPoint() { throw new TypeError("Illegal constructor"); }
 export function SVGRect() { throw new TypeError("Illegal constructor"); }
-export function SVGLength() { throw new TypeError("Illegal constructor"); }
+export function SVGLength() {
+  throw new TypeError("Failed to construct 'SVGLength': Illegal constructor");
+}
 export function SVGAngle() { throw new TypeError("Illegal constructor"); }
 export function SVGMatrix() { throw new TypeError("Illegal constructor"); }
 export function SVGTransform() { throw new TypeError("Illegal constructor"); }

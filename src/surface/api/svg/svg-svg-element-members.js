@@ -112,7 +112,11 @@ function animatedRect(element) {
   const values = (getAttributeValue(element, "viewBox") ?? "")
     .match(/[-+]?(?:\d*\.)?\d+(?:e[-+]?\d+)?/giu)?.map(Number) ?? [];
   const rect = values.length === 4 ? createSVGRect(...values) : createSVGRect();
-  return createSVGAnimatedValue(SVGAnimatedRect, rect, rect);
+  // SVGAnimatedRect.baseVal and animVal are distinct wrapper values in Edge even
+  // when no animation is active. Sharing the same object is observable through
+  // identity checks and also lets a base-value mutation leak into animVal state.
+  const animRect = values.length === 4 ? createSVGRect(...values) : createSVGRect();
+  return createSVGAnimatedValue(SVGAnimatedRect, rect, animRect);
 }
 
 function animatedAspectRatio() {

@@ -41,6 +41,8 @@
  * - `eventTiming` —— 事件阶段、传播中断、once / 重复监听器语义
  * - `crossRealm` —— iframe Realm 的对象身份、跨 Realm `instanceof`、自引用
  * - `urlParsing` —— `new URL()` 的校验与规范化
+ * - `svg` —— SVG 元素、命名空间和几何接口的稳定语义
+ * - `observers` —— Mutation/Resize/IntersectionObserver 的同步接口语义
  */
 
 /**
@@ -1772,6 +1774,125 @@ export const BEHAVIOR_PROBES = Object.freeze([
     category: 'typeTag',
     expression: '() => Object.prototype.toString.call(Document.prototype)',
   },
+
+  // ---------------------------------------------- SVG 同步接口语义
+  {
+    id: 'svg/element-namespace-and-tag',
+    category: 'svg',
+    expression: `() => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      return [svg.namespaceURI, svg.localName, Object.prototype.toString.call(svg)].join('|');
+    }`,
+  },
+  {
+    id: 'svg/element-interface-shape',
+    category: 'svg',
+    expression: `() => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      return [
+        typeof svg.createSVGPoint,
+        typeof svg.createSVGMatrix,
+        rect instanceof SVGRectElement,
+        Object.prototype.toString.call(rect),
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'svg/viewbox-animated-rect',
+    category: 'svg',
+    expression: `() => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      const viewBox = svg.viewBox;
+      return [
+        Object.prototype.toString.call(viewBox),
+        Object.prototype.toString.call(viewBox.baseVal),
+        viewBox.baseVal.x,
+        viewBox.baseVal.width,
+        viewBox.animVal === viewBox.baseVal,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'svg/point-default-and-mutation',
+    category: 'svg',
+    expression: `() => {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      const point = svg.createSVGPoint();
+      const before = point.x + '|' + point.y;
+      point.x = 3;
+      point.y = -4;
+      return [before, point.x, point.y, Object.prototype.toString.call(point)].join('|');
+    }`,
+  },
+  {
+    id: 'svg/length-constructor-guard',
+    category: 'svg',
+    expression: '() => new SVGLength()',
+  },
+
+  // ---------------------------------------------- Observer 同步接口语义
+  {
+    id: 'observers/mutation-shape',
+    category: 'observers',
+    expression: `() => {
+      const observer = new MutationObserver(() => {});
+      const result = [
+        Object.prototype.toString.call(observer),
+        typeof observer.observe,
+        typeof observer.disconnect,
+        typeof observer.takeRecords,
+      ].join('|');
+      observer.disconnect();
+      return result;
+    }`,
+  },
+  {
+    id: 'observers/mutation-empty-records',
+    category: 'observers',
+    expression: `() => {
+      const observer = new MutationObserver(() => {});
+      const records = observer.takeRecords();
+      observer.disconnect();
+      return [Array.isArray(records), records.length, Object.prototype.toString.call(records)].join('|');
+    }`,
+  },
+  {
+    id: 'observers/resize-shape',
+    category: 'observers',
+    expression: `() => {
+      const observer = new ResizeObserver(() => {});
+      const result = [
+        Object.prototype.toString.call(observer),
+        typeof observer.observe,
+        typeof observer.disconnect,
+        typeof observer.unobserve,
+      ].join('|');
+      observer.disconnect();
+      return result;
+    }`,
+  },
+  {
+    id: 'observers/intersection-shape',
+    category: 'observers',
+    expression: `() => {
+      const observer = new IntersectionObserver(() => {});
+      const result = [
+        Object.prototype.toString.call(observer),
+        typeof observer.observe,
+        typeof observer.disconnect,
+        typeof observer.unobserve,
+        observer.root,
+      ].join('|');
+      observer.disconnect();
+      return result;
+    }`,
+  },
+  {
+    id: 'observers/mutation-illegal-disconnect',
+    category: 'observers',
+    expression: '() => MutationObserver.prototype.disconnect.call({})',
+  },
 ]);
 
 /** 允许的探针分类。分类是报告和对等测试的稳定维度，不能由拼写漂移产生新组。 */
@@ -1801,6 +1922,8 @@ export const BEHAVIOR_PROBE_CATEGORIES = Object.freeze([
   'audio',
   'intl',
   'performance',
+  'svg',
+  'observers',
 ]);
 
 /**

@@ -1,7 +1,7 @@
 {
-  "collectedAt": "2026-09-07T08:48:16.664Z",
+  "collectedAt": "2026-09-13T10:51:21.034Z",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-  "probeCount": 186,
+  "probeCount": 196,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -779,6 +779,48 @@
     "tag/documentPrototype": {
       "threw": false,
       "value": "[object Document]"
+    },
+    "svg/element-namespace-and-tag": {
+      "threw": false,
+      "value": "http://www.w3.org/2000/svg|svg|[object SVGSVGElement]"
+    },
+    "svg/element-interface-shape": {
+      "threw": false,
+      "value": "function|function|true|[object SVGRectElement]"
+    },
+    "svg/viewbox-animated-rect": {
+      "threw": false,
+      "value": "[object SVGAnimatedRect]|[object SVGRect]|0|0|false"
+    },
+    "svg/point-default-and-mutation": {
+      "threw": false,
+      "value": "0|0|3|-4|[object SVGPoint]"
+    },
+    "svg/length-constructor-guard": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'SVGLength': Illegal constructor"
+    },
+    "observers/mutation-shape": {
+      "threw": false,
+      "value": "[object MutationObserver]|function|function|function"
+    },
+    "observers/mutation-empty-records": {
+      "threw": false,
+      "value": "true|0|[object Array]"
+    },
+    "observers/resize-shape": {
+      "threw": false,
+      "value": "[object ResizeObserver]|function|function|function"
+    },
+    "observers/intersection-shape": {
+      "threw": false,
+      "value": "[object IntersectionObserver]|function|function|function|"
+    },
+    "observers/mutation-illegal-disconnect": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
     }
   }
 }
