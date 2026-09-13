@@ -77,18 +77,39 @@ export function createBatchingResultSink(config = {}) {
   }
 
   const keyOf = config.keyOf ?? null;
+  // `seen` 只表示已经成功持久化或由调用方声明已存在的 key。
+  // 正在等待落地的 key 单独放在 `pendingKeys`：persist 失败时必须释放它们，
+  // 否则调用方重试同一批会被误判为重复，造成静默丢数据。
   const seen = keyOf === null ? null : new Set(config.knownKeys ?? []);
+  const pendingKeys = keyOf === null ? null : new Set();
   let buffer = [];
+  let bufferKeys = [];
   let closed = false;
   const stats = { received: 0, written: 0, duplicates: 0, batches: 0 };
 
   async function flushBuffer() {
     if (buffer.length === 0) return;
     const batch = buffer;
+    const batchKeys = bufferKeys;
     // 先清空再写：persist 抛错时缓冲区不该留着重复内容，
-    // 否则下一次 flush 会把同一批再写一遍
+    // 否则下一次 flush 会把同一批再写一遍。key 仍保留在 pendingKeys，
+    // 失败分支会释放它们，允许调用方安全重试。
     buffer = [];
-    await persist(batch);
+    bufferKeys = [];
+    try {
+      await persist(batch);
+    } catch (error) {
+      if (pendingKeys !== null) {
+        for (const key of batchKeys) pendingKeys.delete(key);
+      }
+      throw error;
+    }
+    if (seen !== null) {
+      for (const key of batchKeys) {
+        pendingKeys.delete(key);
+        seen.add(key);
+      }
+    }
     stats.written += batch.length;
     stats.batches += 1;
   }
@@ -112,15 +133,17 @@ export function createBatchingResultSink(config = {}) {
       let accepted = 0;
       for (const item of items) {
         stats.received += 1;
+        let key = null;
         if (seen !== null) {
-          const key = `${keyOf(item)}`;
-          if (seen.has(key)) {
+          key = `${keyOf(item)}`;
+          if (seen.has(key) || pendingKeys.has(key)) {
             stats.duplicates += 1;
             continue;
           }
-          seen.add(key);
+          pendingKeys.add(key);
         }
         buffer.push(item);
+        if (key !== null) bufferKeys.push(key);
         accepted += 1;
         if (buffer.length >= batchSize) await flushBuffer();
       }

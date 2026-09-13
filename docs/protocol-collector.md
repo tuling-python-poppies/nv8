@@ -237,6 +237,24 @@ Collector 的 `CookieJar` 与 Realm 内的 `document.cookie` 完全隔离。
 每次请求产生一条脱敏记录，含 method、URL、origin、状态码、尝试次数和
 错误码。审计条目数受 `maxAuditEntries` 限制，超出后淘汰最早记录。
 
+### 结果落地与故障恢复
+
+Collector 的请求执行与结果落地是两个独立契约。`createMemoryResultSink()` 和
+`createNdjsonResultSink()` 是内置的轻量实现；Postgres、SQLite 等真实存储由调用方
+通过 `createBatchingResultSink({ persist })` 接入，不把数据库驱动放进核心运行时。
+外部 sink 必须实现 `write(items)`、`flush()` 和 `close()`，并遵守以下顺序：
+
+1. `write()` 可以批量接收条目；达到 `batchSize` 时调用 `persist(batch)`；
+2. 只有 `persist` 成功后，key 才提交到去重集合。持久化失败会释放 pending key，
+   因而上层可以安全地重试同一批，不会因为内存状态提前更新而静默丢数据；
+3. 检查点前必须先 `flush()`，任务结束必须 `close()`，后者会冲干最后一个不满批次；
+4. `keyOf` 和 `knownKeys` 必须由调用方明确提供。续采时可用 `readNdjsonKeys()` 读取
+   已落地 key；不提供 key 时不猜主键，也不去重。
+
+NDJSON 按行追加，末尾残缺行可以跳过并计数；这不会把前面已经完整落地的记录变成
+不可读的整体。`stats()` 中的 `written`、`duplicates`、`buffered` 和 `batches` 用于
+故障诊断，但不包含凭据或完整状态值。
+
 ## 错误码
 
 Protocol 层（`ERR_NV8_ARTIFACT_*`、`ERR_NV8_PROTOCOL_*`、`ERR_NV8_TRANSFORM_*`）

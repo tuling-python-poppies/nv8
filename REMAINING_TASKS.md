@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 997 项（`npm test`，110 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 1001 项（`npm test`，111 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -595,7 +595,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     的 JSON，等于丢掉全部进度。有断言检查无 `.tmp` 残留
   - 损坏的检查点返回 null 而不是抛——应当导致"重新开始"，不该让整个任务起不来
   - jobId 清洗防目录穿越（`../../escape`），并附摘要防 `a/b` 与 `a_b` 撞名
-- [x] **结果落地与增量去重** - `src/collection/collector/result-sink.js`，23 项测试
+- [x] **结果落地与增量去重** - `src/collection/collector/result-sink.js`，27 项测试
   - 与检查点配套：**续采一定重复交付条目**，落地端必须能幂等吸收
   - **按 key 去重不按整体相等**：条目常带易变字段（`fetchedAt`、排序分数、
     A/B 分桶），按整体相等去重等于不去重
@@ -609,10 +609,13 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
     否则下次 flush 会把同一批再写一遍
   - `stats().duplicates` 直接暴露续采重叠量
   - `keyByFields` 要求显式列字段——全字段摘要会把易变字段算进去，等于不去重
-- [ ] **真实存储适配** - 内存与 NDJSON 两个实现已就位，Postgres/SQLite 等
+- [x] **真实存储适配契约** - 内存与 NDJSON 两个实现已就位；Postgres/SQLite 等
   由调用方按 `write/flush/close` 接口提供（刻意不内置 DB 驱动）
+  - `createBatchingResultSink({ persist })` 提供外部存储适配边界，批量写入、冲干和去重逻辑统一复用
+  - 持久化成功后才提交 key；失败会释放 pending key，调用方可安全重试而不会静默丢数据
+  - `tests/result-sink-recovery-test.js` 覆盖失败恢复、续采 key、批量去重和显式字段 key
 
-**状态**: ✅ Gate 5 核心边界完成（130 项测试）。剩余为上层编排能力，非边界问题。
+**状态**: ✅ Gate 5 核心边界完成（134 项测试）。剩余为上层编排能力，非边界问题。
 
 ---
 
@@ -1133,11 +1136,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     选项 C 仍要拒，但理由是「`contentWindow.document === undefined` 比 `null` 是更
     强的信号，且表面随时间长出来是任何浏览器都没有的状态」
   - 测试 8 项（`tests/iframe-prewarm-pool-test.js`）
-- [ ] **池深 N 只覆盖建 ≤N 个 iframe 的目标** - 超出退回原行为
-  - 缓解不是根治。有专门断言把这条写死——以为「iframe 已经修好了」比知道自己在赌
-    更危险
-  - 默认配置（0）下 `contentWindow` 仍同步为 `null`，
-    `edge-behavior-parity-test.js` 的两条登记差异保持不变
+- [x] **池深 N 只覆盖建 ≤N 个 iframe 的目标** - 超出退回原行为
+  - `RuntimePool.takePrewarmedRealm()` 只消费有限池位，池耗尽后回到异步创建路径
+  - `tests/iframe-prewarm-pool-test.js` 明确断言第 N+1 个 iframe 的 `contentWindow` 仍为 `null`
+  - 默认配置（0）下 `contentWindow` 仍同步为 `null`，`edge-behavior-parity-test.js` 的两条登记差异保持不变
 - [x] **子进程 SIGABRT 根因定位并修复** - `src/backend/controller/runtime-heap-floor.js`，
   6 项测试
   - 起因是那条被放过三次的偶发失败 `realm guard returns a structured error on
@@ -1663,7 +1665,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：997 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：1001 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1759,5 +1761,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（997 项 / 110 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（1001 项 / 111 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
