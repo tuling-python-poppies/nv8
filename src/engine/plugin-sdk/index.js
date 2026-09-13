@@ -6,6 +6,12 @@
 
 export { definePlugin, parseVersionRange, satisfiesVersionRange, compareVersions } from './define-plugin.js';
 export {
+  CURRENT_PLUGIN_API_VERSION,
+  SUPPORTED_PLUGIN_API_MAJORS,
+  normalizePluginApiVersion,
+  assertSupportedPluginApiVersion,
+} from './api-version.js';
+export {
   buildCapabilityIndex,
   resolvePluginDependencies,
   canRunInRealm,

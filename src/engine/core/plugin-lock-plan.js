@@ -1,4 +1,8 @@
 import { createHash } from 'node:crypto';
+import {
+  assertSupportedPluginApiVersion,
+  CURRENT_PLUGIN_API_VERSION,
+} from '../plugin-sdk/api-version.js';
 
 export const PLUGIN_LOCK_SCHEMA = 'nv8.plugin-lock/v1';
 
@@ -9,6 +13,10 @@ export function createPluginLockPlan({
   runtimeMode = 'legacy',
 }) {
   const entries = plugins.map(plugin => ({
+    apiVersion: assertSupportedPluginApiVersion(
+      plugin.apiVersion ?? plugin.manifest?.apiVersion ?? CURRENT_PLUGIN_API_VERSION,
+      plugin.id,
+    ),
     id: plugin.id,
     version: plugin.version,
     requires: normalizeRequirements(plugin.requires || plugin.manifest?.requires || []),

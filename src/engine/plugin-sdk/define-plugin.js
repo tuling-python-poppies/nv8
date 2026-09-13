@@ -22,6 +22,8 @@
  * });
  */
 
+import { normalizePluginApiVersion } from './api-version.js';
+
 /**
  * 定义一个插件
  * 
@@ -33,6 +35,7 @@ export function definePlugin(definition) {
   
   return {
     // 基本信息
+    apiVersion: normalizePluginApiVersion(definition.apiVersion),
     id: definition.id,
     version: definition.version,
     description: definition.description || '',
@@ -81,6 +84,10 @@ function validatePluginDefinition(def) {
   
   if (!def.version || typeof def.version !== 'string') {
     throw new Error(`Plugin "${def.id}" must have a string "version"`);
+  }
+
+  if (def.apiVersion !== undefined) {
+    normalizePluginApiVersion(def.apiVersion);
   }
   
   if (!def.install || typeof def.install !== 'function') {

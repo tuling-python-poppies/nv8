@@ -647,7 +647,28 @@ const profile = createProfile('legacy-full');
 - 插件在 Sandbox 初始化期间**不得改动宿主 `globalThis`**
 - 依赖按能力匹配解析，缺能力时给结构化诊断而**不修改全局**——
   破坏 `typeof` 特性检测比缺诊断更糟（[ADR-0002](docs/adr/0002-missing-capability-diagnostics.md)）
-- 可生成 **Lock Plan** 锁定装配结果，保证跨环境一致
+- 可生成 **Lock Plan** 锁定装配结果，保证跨环境一致；每个插件声明独立于实现版本的
+  Plugin SDK `apiVersion`（当前支持 major `1`），Core 在 lock-plan 阶段拒绝未知 major
+
+### Plugin SDK API 版本
+
+`plugin.version` 表示插件实现版本，`apiVersion` 表示插件与 Core 之间的 SDK
+契约 major，二者不能混用。插件可以省略 `apiVersion`，SDK 会填入当前值；也可以
+显式声明数字 major 字符串：
+
+```js
+const plugin = definePlugin({
+  apiVersion: '1',
+  id: 'example-plugin',
+  version: '1.0.0',
+  install() {},
+});
+```
+
+`apiVersion` 只接受类似 `'1'` 的数字 major 字符串，不接受 `'1.0'` 或数字类型。
+未来 major 可以被插件定义以便提前开发，但 Core 会在生成 Lock Plan 时以
+`PLUGIN_SDK_API_UNSUPPORTED` 拒绝尚未支持的 major；这样失败发生在安装和 Realm
+创建之前，而不是插件执行到一半才失败。
 
 ### 宿主能力降级
 
