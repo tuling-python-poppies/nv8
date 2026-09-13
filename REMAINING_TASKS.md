@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 915 项（`npm test`，92 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 918 项（`npm test`，93 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -673,7 +673,7 @@ DOMContentLoaded 前按**文档顺序**执行，已合并为单队列。
   实测方式是直接调 nvm 里各版本的 node.exe，不切换全局符号链接
 
 ### 未完成项
-- [ ] **Backend 兼容性矩阵实际差异测试** - CI 已配置，缺针对性断言
+- [x] **Backend 兼容性矩阵实际差异测试** - `tests/backend-contract-test.js` 对 child-process / worker-thread 的求值、模块、Worker、SharedWorker、iframe、错误和 reset 资源契约做逐字段比较；CI 的 `NV8_BACKEND` 矩阵变量会选择对应后端
 - [x] **性能基准** - `npm run benchmark`（中位数 + p90，不报平均值）
   - 实测 Node 24：冷启动中位数 **487ms**（p90 584ms）、
     热复用单次 run **0.15ms**、Realm 创建+销毁一轮 **476ms**
@@ -1732,5 +1732,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（915 项 / 92 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（918 项 / 93 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
