@@ -670,6 +670,11 @@ const plugin = definePlugin({
 `PLUGIN_SDK_API_UNSUPPORTED` 拒绝尚未支持的 major；这样失败发生在安装和 Realm
 创建之前，而不是插件执行到一半才失败。
 
+Plugin Lock 可以选择使用 Ed25519 签名。`signPluginLockPlan()` 只把去掉
+`signature` 字段后的 canonical Lock Plan 作为签名输入；Bundle/Lock 本身不携带
+信任根，验证方必须按 `keyId` 从调用方的密钥目录提供公钥。验证端明确拒绝私钥，
+签名缺失、算法未知、keyId 不匹配或内容被篡改时均 fail closed。
+
 ### Core SemVer 策略
 
 Core 版本独立于 Plugin SDK、Evidence 和 Frame Protocol，当前版本为 `0.1.0`。
