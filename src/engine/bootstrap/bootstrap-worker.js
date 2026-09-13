@@ -11,6 +11,12 @@ import {
   installIntlV8BreakIterator,
 } from "../../surface/install/install-intl-v8-break-iterator.js";
 import {
+  installIntlDefaultLocale,
+} from "../../surface/install/install-intl-default-locale.js";
+import {
+  installIntlDefaultTimeZone,
+} from "../../surface/install/install-intl-timezone.js";
+import {
   clearTrace,
   configureTrace,
   disableTrace,
@@ -222,6 +228,7 @@ export function bootstrapWorker(
   timingProfile = null,
   navigatorMetadata = null,
   workerDepth = 0,
+  timezone = null,
 ) {
   hideNodeGlobals();
   configureTimingProfile(timingProfile);
@@ -232,6 +239,11 @@ export function bootstrapWorker(
   installModernBuiltins();
   installDateProfile();
   installIntlV8BreakIterator(browserMajorVersion >= 151);
+  // Worker Realm 与 root 对齐：Intl 默认 locale 跟随 navigator.language
+  // （IKFD9O）。worker_threads 与宿主共享 ICU，线程级 TZ 改不了默认时区，
+  // 因此默认 timeZone 必须在 Realm 内 hook（install-intl-timezone.js）。
+  installIntlDefaultLocale(navigatorLanguage);
+  installIntlDefaultTimeZone(timezone ?? navigatorMetadata?.timezone ?? null);
   configureTrace(traceEnabled, maxTraceEntries);
   configureNavigatorProfile(
     navigatorUserAgent,

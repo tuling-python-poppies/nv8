@@ -86,12 +86,13 @@ function state() {
 `origin` 作用域用 `createKeyedStateSlot()`：宿主是 Sandbox，二级键是 origin
 字符串，带 `maxKeys` 上限防止无界增长。
 
-Core 的 `StateRegistry` 还对显式的 sandbox/realm 状态提供实例级配额：
+Core 的 `StateRegistry` 还对显式的 sandbox/realm/app/plugin 状态提供实例级配额：
 `maxContexts` 限制 Realm bucket 数，`maxKeysPerStore` 限制单个 bucket 的键数，
 `maxTotalKeys` 限制所有 bucket 的键总数。覆盖写入已有 key 不消耗配额；新 Realm
 插入若被拒绝不会留下空 bucket。`destroyContext()`、`destroyRealm()` 和按 Realm
 `clear()` 会删除 bucket，而不是只清空 Map，使已销毁 Realm 的上下文不会长期占用容量。
-`limits()` 与 `stats()` 只返回可序列化诊断快照，不暴露状态值。
+`limits()` 与 `stats()` 只返回可序列化诊断快照，不暴露状态值；`stats()` 按
+`sandboxKeys` / `appKeys` / `realmKeys` / `pluginContexts` 分桶报告容量占用。
 
 槽会拒绝原始值宿主（`null`、数字、字符串），避免退化成共享单例。
 

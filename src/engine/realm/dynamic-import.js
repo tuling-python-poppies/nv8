@@ -204,20 +204,65 @@ export function createDynamicImporter(options) {
 
   /**
    * 链接模块图。linker 只创建实例，不递归链接。
+   *
+   * per-module in-flight promise：并发 `import()` 同一个模块时，第二个
+   * 调用者必须等待第一次链接完成，而不是看到 status==='linking' 就直接
+   * 去 evaluate（那会抛 ERR_VM_MODULE_STATUS，IKFD9L）。
    */
-  async function linkGraph(module) {
+  const linkInFlight = new WeakMap();
+
+  function linkGraph(module) {
     assertActive();
-    if (module.status !== 'unlinked') return;
-    await module.link(async (specifier, referencingModule) => {
-      const referrer = normalizeReferrer(referencingModule, module.identifier);
-      const target = resolveModuleSpecifier(specifier, referrer);
-      assertUrlAllowed(target.url, specifier, referrer);
-      const childSource = target.kind === 'data'
-        ? decodeDataModule(target.url)
-        : requireSource(target.url, specifier, referrer);
-      return instantiate(target.url, childSource);
-    });
+    if (module.status === 'linked' || module.status === 'evaluated') {
+      return Promise.resolve();
+    }
+    let inFlight = linkInFlight.get(module);
+    if (inFlight !== undefined) return inFlight;
+    inFlight = (async () => {
+      if (module.status === 'unlinked') {
+        await module.link(async (specifier, referencingModule) => {
+          const referrer = normalizeReferrer(referencingModule, module.identifier);
+          const target = resolveModuleSpecifier(specifier, referrer);
+          assertUrlAllowed(target.url, specifier, referrer);
+          const childSource = target.kind === 'data'
+            ? decodeDataModule(target.url)
+            : requireSource(target.url, specifier, referrer);
+          return instantiate(target.url, childSource);
+        });
+      }
+      assertActive();
+    })();
+    inFlight.finally(() => {
+      if (linkInFlight.get(module) === inFlight) linkInFlight.delete(module);
+    }).catch(() => {});
+    linkInFlight.set(module, inFlight);
+    return inFlight;
+  }
+
+  /**
+   * 求值一个已（或正在）链接的模块，同样按模块缓存 in-flight promise。
+   */
+  const evaluateInFlight = new WeakMap();
+
+  function evaluateModule(module) {
     assertActive();
+    if (module.status === 'evaluated') return Promise.resolve(module);
+    let inFlight = evaluateInFlight.get(module);
+    if (inFlight !== undefined) return inFlight;
+    inFlight = (async () => {
+      await linkGraph(module);
+      assertActive();
+      if (module.status !== 'evaluated') {
+        await module.evaluate();
+        assertActive();
+      }
+      return module;
+    })();
+    inFlight.finally(() => {
+      if (evaluateInFlight.get(module) === inFlight) evaluateInFlight.delete(module);
+    }).catch(() => {});
+    evaluateInFlight.set(module, inFlight);
+    return inFlight;
   }
 
   function assertUrlAllowed(url, specifier, referrer) {
@@ -260,12 +305,7 @@ export function createDynamicImporter(options) {
         : requireSource(target.url, specifier, referrerUrl);
 
       const module = instantiate(target.url, source);
-      await linkGraph(module);
-      assertActive();
-      if (module.status !== 'evaluated') {
-        await module.evaluate();
-        assertActive();
-      }
+      await evaluateModule(module);
       return module.namespace;
     });
   }
@@ -292,12 +332,7 @@ export function createDynamicImporter(options) {
   async function evaluateEntryModule(source, url) {
     return track(async () => {
       const module = instantiate(url, source);
-      await linkGraph(module);
-      assertActive();
-      if (module.status !== 'evaluated') {
-        await module.evaluate();
-        assertActive();
-      }
+      await evaluateModule(module);
       return module;
     });
   }

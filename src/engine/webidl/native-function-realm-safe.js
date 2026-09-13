@@ -10,6 +10,11 @@ const nativeSources = new WeakMap();
 const nativeImplementations = new WeakMap();
 const realmContexts = new Map(); // Use Map instead of WeakMap for realm IDs
 
+// 上限与淘汰：正常路径由 webidl 插件 dispose 调 removeNativeFunctionContext
+// 清理；但 dispose 失败/漏调时这个 Map 会按 realm 数无限增长（IKF39V(c)）。
+// 达到上限时淘汰最旧条目，保证内存有界。
+const MAX_REALM_CONTEXTS = 256;
+
 /**
  * Create a Realm-local native function context
  * @returns {Object} Context with registration functions
@@ -173,6 +178,10 @@ export function getNativeFunctionContext(realmId) {
   if (!context) {
     context = createNativeFunctionContext();
     realmContexts.set(realmId, context);
+    if (realmContexts.size > MAX_REALM_CONTEXTS) {
+      const oldest = realmContexts.keys().next().value;
+      realmContexts.delete(oldest);
+    }
   }
   return context;
 }

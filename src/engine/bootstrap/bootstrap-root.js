@@ -55,6 +55,9 @@ import {
   installIntlDefaultLocale,
 } from "../../surface/install/install-intl-default-locale.js";
 import {
+  installIntlDefaultTimeZone,
+} from "../../surface/install/install-intl-timezone.js";
+import {
   configureStandardFontFamily,
 } from "../../surface/api/css/css-computed-value.js";
 import {
@@ -899,6 +902,9 @@ export function bootstrapRoot(
   documentBaseUrl = null,
   serviceWorkerPageUrl = null,
   workerDepth = 0,
+  // profile 的 fingerprint.timezone：默认时区必须在 Realm 内 hook，
+  // worker_threads 共享 ICU 时线程级 TZ 不可靠（IKFD9O）
+  timezone = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -986,6 +992,7 @@ export function bootstrapRoot(
   // en-US 时 `Intl.DateTimeFormat().resolvedOptions().locale` 仍是宿主的 zh-CN。
   // 详见 install-intl-default-locale.js。
   installIntlDefaultLocale(navigatorLanguage);
+  installIntlDefaultTimeZone(timezone);
   // UA 默认样式表的标准字体族也必须跟着 locale 切，否则 `navigator.language`
   // 与 `getComputedStyle(document.body).fontFamily` 会对不上。
   // 实测表见 src/fingerprint/ua-default-fonts.js。
@@ -993,332 +1000,374 @@ export function bootstrapRoot(
   installWorklet();
   configureStorage(localStorageData, sessionStorageData);
   configureCookies(cookieData);
-  installConsole();
-  installDOMException();
-  installLocation();
-  installHistory();
-  installEventTarget();
-  installGPU();
-  installWebGL();
-  installNodeList();
-  installNode();
-  installCharacterData();
-  installText();
-  installComment();
-  installCDATASection();
-  installProcessingInstruction();
-  installDocumentFragment();
-  installDocumentType();
-  installAttr();
-  installNamedNodeMap();
-  installHTMLCollection();
-  installRadioNodeList();
-  installHTMLFormControlsCollection();
-  installDOMTokenList();
-  installMutationRecord();
-  installMutationObserver();
-  installCustomElementRegistry();
-  installCSSStyleValue();
-  installCSSTypedOMValues();
-  installCSSNamespace();
-  installCSSTransformValues();
-  installCSSStyleDeclaration();
-  installStylePropertyMapReadOnly();
-  installStylePropertyMap();
-  installCustomStateSet();
-  installElementInternals();
-  installMediaList();
-  installStyleSheet();
-  installStyleSheetList();
-  installCSSRule();
-  installCSSRuleList();
-  installCSSGroupingRule();
-  installCSSConditionRule();
-  installCSSMediaRule();
-  installCSSSupportsRule();
-  installCSSImportRule();
-  installCSSDeclarationRules();
-  installCSSPositionTryDescriptors();
-  installCSSGroupingSpecialRules();
-  installCSSDescriptorRules();
-  installCSSFunctionRules();
-  installCSSKeyframesRule();
-  installCSSKeyframeRule();
-  installCSSStyleRule();
-  installCSSStyleSheet();
-  installMediaQueryList();
-  installWindowCSS();
-  installCSSPseudoElement();
-  installViewTransitionTypeSet();
-  installViewTransition();
-  installAnimationTimeline();
-  installDocumentTimeline();
-  installAnimationEffect();
-  installKeyframeEffect();
-  installAnimation();
-  installCSSAnimations();
-  installElement();
-  installHTMLElement();
-  installHTMLUnknownElement();
-  installHTMLHtmlElement();
-  installHTMLHeadElement();
-  installHTMLBodyElement();
-  installHTMLAnchorElement();
-  installHTMLAreaElement();
-  installHTMLLinkElement();
-  installHTMLMarqueeElement();
-  installHTMLGeolocationElement();
-  if (browserMajorVersion >= 151) installHTMLUserMediaElement();
-  installFencedFrameConfig();
-  installHTMLFencedFrameElement();
-  installHTMLFrameElement();
-  installHTMLIFrameElement();
-  installTextTrackCue();
-  installVTTCue();
-  installTextTrackCueList();
-  installTextTrack();
-  installHTMLTrackElement();
-  installHTMLFrameSetElement();
-  installHTMLObjectElement();
-  installTimeRanges();
-  installTextTrackList();
-  installRemotePlayback();
-  installMediaError();
-  installOverconstrainedError();
-  installMediaStreamTrackAudioStats();
-  installMediaStreamTrack();
-  installMediaStream();
-  installHTMLMediaElement();
-  installHTMLAudioElement();
-  installAudioConstructor();
-  installVideoPlaybackQuality();
-  installPictureInPictureWindow();
-  installHTMLVideoElement();
-  installHeaders();
-  installFormData();
-  installStreams();
-  installBlob();
-  installFileAndReader();
-  installRequestResponse();
-  configureFetchReplay(replay, networkRequestRecorder);
-  installFetch();
-  installXMLHttpRequest();
-  installImageBitmap();
-  installImageBitmapRenderingContext();
-  installExecutionObservers();
-  installDocumentProcessing();
-  installImageData();
-  installTextMetrics();
-  installCanvasGradient();
-  installCanvasPattern();
-  installPath2D();
-  installDOMPointReadOnly();
-  installDOMPoint();
-  installDOMMatrixReadOnly();
-  installDOMMatrix();
-  installSVGValues();
-  installSVGLists();
-  installSVGAnimatedValues();
-  installDOMRectReadOnly();
-  installDOMRect();
-  installDOMRectList();
-  installOffscreenCanvasRenderingContext2D();
-  installCanvasRenderingContext2D();
-  installOffscreenCanvas();
-  installCanvasCaptureMediaStreamTrack();
-  installHTMLCanvasElement();
-  installHTMLDivElement();
-  installHTMLPreElement();
-  installHTMLSpanElement();
-  installHTMLParagraphElement();
-  installHTMLHeadingElement();
-  installHTMLImageElement();
-  installImageConstructor();
-  installHTMLScriptElement();
-  installHTMLPictureElement();
-  installHTMLSelectedContentElement();
-  installHTMLBRElement();
-  installHTMLDataElement();
-  installHTMLDirectoryElement();
-  installHTMLDListElement();
-  installHTMLMenuElement();
-  installHTMLQuoteElement();
-  installHTMLTimeElement();
-  installHTMLTableCaptionElement();
-  installHTMLTitleElement();
-  installHTMLDataListElement();
-  installHTMLBaseElement();
-  installHTMLDetailsElement();
-  installHTMLLIElement();
-  installHTMLModElement();
-  installHTMLOptGroupElement();
-  installHTMLUListElement();
-  installHTMLFontElement();
-  installHTMLHRElement();
-  installHTMLParamElement();
-  installHTMLOListElement();
-  installHTMLMetaElement();
-  installHTMLStyleElement();
-  installHTMLLegendElement();
-  installHTMLMapElement();
-  installHTMLLabelElement();
-  installHTMLProgressElement();
-  installHTMLTableColElement();
-  installHTMLSourceElement();
-  installHTMLTemplateElement();
-  installHTMLEmbedElement();
-  installHTMLTableCellElement();
-  installHTMLTableRowElement();
-  installHTMLTableSectionElement();
-  installHTMLTableElement();
-  installHTMLMeterElement();
-  installHTMLDialogElement();
-  installHTMLOptionElement();
-  installOptionConstructor();
-  installHTMLOptionsCollection();
-  installValidityState();
-  installHTMLSelectElement();
-  installHTMLFormElement();
-  installHTMLFieldSetElement();
-  installHTMLOutputElement();
-  installHTMLButtonElement();
-  installHTMLTextAreaElement();
-  installFileList();
-  installHTMLInputElement();
-  installMathMLElement();
-  installSVGElement();
-  installSVGGraphicsElement();
-  installSVGGeometryElement();
-  installSVGCircleElement();
-  installSVGPathElement();
-  installSVGSVGElement();
-  installReconstructedSVGFactories();
-  installHTMLAllCollection();
-  installHTMLSlotElement();
-  installShadowRoot();
-  installWindow();
-  installHTMLDocument();
-  installXMLDocument();
-  installDOMImplementation();
-  installDocument();
-  installAbstractRange(browserMajorVersion >= 152);
-  if (browserMajorVersion >= 152) installEdge152Ranges();
-  installRange(browserMajorVersion >= 152);
-  installCookie();
-  installSelection();
-  installNodeFilter();
-  installTreeWalker();
-  installNodeIterator();
-  installEvent();
-  installCustomEvent();
-  installAudio();
-  installMediaSource();
-  installCodecs();
-  installSpeech();
-  installWebRTC();
-  installXRCore();
-  installXRExtensions();
-  installUserAgency();
-  installDeviceAPIs();
-  installExternalDeviceAPIs();
-  installFileSystem();
-  installCredentialPayment();
-  installMediaAgency();
-  installObserverGeometry();
-  installOfflineSocket();
-  installInputEvents(browserMajorVersion >= 151);
-  installGeneralEvents(browserMajorVersion >= 151);
-  installDOMUtilities(browserMajorVersion >= 152);
-  installTrustedTypes();
-  installURLPattern();
-  installHighlight();
-  installNavigationAPI();
-  installCoordination();
-  installCacheAPI();
-  installScheduling();
-  installNavigatorServices();
-  installLongtailEvents();
-  installScrollTimeline();
-  installReporting();
-  installIndexedDB();
-  installLegacyConstructorAliases();
-  installMIDI();
-  installPresentation();
-  installSpeechRecognition();
-  installPressure();
-  installServiceWorkerManagers();
-  installBackgroundFetch();
-  installSharedStorage();
-  installTimelineTrigger();
-  installWebTransport();
-  installScreenDetails();
-  installLocalLanguage();
-  installLocalFonts({ exposeGlobal: browserMajorVersion >= 151 });
-  installUserInteraction();
-  installIdentityServices();
-  installLaunchHandling();
-  installGlobalServices();
-  installFetchLater();
-  installOrigin();
-  installErrorObjects();
-  installEditContext();
-  installCaptureTargets();
-  installNavigationDiagnostics();
-  installObservable();
-  installChapterInformation();
-  installFeaturePolicy(browserMajorVersion >= 152);
-  installWGSLLanguageFeatures();
-  installSVGUnitTypes();
-  installPerformanceEntry(browserMajorVersion >= 151);
-  installPerformanceMark();
-  installPerformanceMeasure();
-  installPerformanceLongtail(browserMajorVersion >= 151);
-  installPerformance({ edge151Surface: browserMajorVersion >= 151 });
-  installWindowTimers();
-  installScreenOrientation();
-  installScreen();
-  installNavigatorUAData();
-  installNavigator();
-  if (browserMajorVersion >= 152) installEdge152Members();
-  installWindowStateGlobals();
-  installWindowEventHandlerGlobals();
-  installWindowLegacyGlobals();
-  installStorage();
-  installURLSearchParams();
-  installURL();
-  installTextEncoding();
-  installTextStreams();
-  installCompressionStreams();
-  installCrypto();
-  installBase64();
-  installAbort();
-  installStructuredClone();
-  configureBroadcastConnector(broadcastConnector);
-  installMessaging();
-  configureWorkers(workerFactory, pageUrl, workerDepth);
-  installWorker();
-  configureSharedWorkers(sharedWorkerFactory, pageUrl, workerDepth);
-  installSharedWorker();
-  installServiceWorker();
-  installWindowSelfReferences();
-  configureWindowMessaging(
-    realmOrigin ?? new URL(pageUrl).origin,
-    parentWindow,
-    topWindow,
-    parentOrigin,
-    parentPostMessage,
-    parentSameOrigin,
-  );
-  // 跨源时一律 null：规范要求容器文档不同源时 `frameElement` 返回 null。
-  configureFrameElement(parentSameOrigin ? frameElement : null);
-  configureDocumentDefaultView(outerWindow);
-  configureDocument(pageReferrer, pageContentType);
+  stageCoreSurfaceInstalls();
 
-  parsePageHTML(pageHtml);
-  installEdgeStaticFunctions();
-  installEdgeAccessorSemantics();
-  finalizePrototypeSurfaceOrder(browserMajorVersion);
-  finalizeWindowSurfaceOrder(browserMajorVersion);
+  /**
+   * DOM / CSS / 动画基础面。
+   *
+   * 以下 6 个 stage/finish helper 是**嵌套**在 bootstrapRoot 内的，不要提到顶层：
+   * `fixtures/baseline/bootstrap-order.json` 用文本捕获本函数体内的
+   * install/configure/finalize 调用行作为行为契约；嵌套函数体仍在捕获范围内，
+   * 顺序逐位不变，提到顶层会让整段安装序列从 baseline 里消失。
+   */
+  function stageCoreSurfaceInstalls() {
+    installConsole();
+    installDOMException();
+    installLocation();
+    installHistory();
+    installEventTarget();
+    installGPU();
+    installWebGL();
+    installNodeList();
+    installNode();
+    installCharacterData();
+    installText();
+    installComment();
+    installCDATASection();
+    installProcessingInstruction();
+    installDocumentFragment();
+    installDocumentType();
+    installAttr();
+    installNamedNodeMap();
+    installHTMLCollection();
+    installRadioNodeList();
+    installHTMLFormControlsCollection();
+    installDOMTokenList();
+    installMutationRecord();
+    installMutationObserver();
+    installCustomElementRegistry();
+    installCSSStyleValue();
+    installCSSTypedOMValues();
+    installCSSNamespace();
+    installCSSTransformValues();
+    installCSSStyleDeclaration();
+    installStylePropertyMapReadOnly();
+    installStylePropertyMap();
+    installCustomStateSet();
+    installElementInternals();
+    installMediaList();
+    installStyleSheet();
+    installStyleSheetList();
+    installCSSRule();
+    installCSSRuleList();
+    installCSSGroupingRule();
+    installCSSConditionRule();
+    installCSSMediaRule();
+    installCSSSupportsRule();
+    installCSSImportRule();
+    installCSSDeclarationRules();
+    installCSSPositionTryDescriptors();
+    installCSSGroupingSpecialRules();
+    installCSSDescriptorRules();
+    installCSSFunctionRules();
+    installCSSKeyframesRule();
+    installCSSKeyframeRule();
+    installCSSStyleRule();
+    installCSSStyleSheet();
+    installMediaQueryList();
+    installWindowCSS();
+    installCSSPseudoElement();
+    installViewTransitionTypeSet();
+    installViewTransition();
+    installAnimationTimeline();
+    installDocumentTimeline();
+    installAnimationEffect();
+    installKeyframeEffect();
+    installAnimation();
+    installCSSAnimations();
+  }
+
+  stageHtmlSurfaceInstalls();
+
+  /** Element / HTML 元素构造器。 */
+  function stageHtmlSurfaceInstalls() {
+    installElement();
+    installHTMLElement();
+    installHTMLUnknownElement();
+    installHTMLHtmlElement();
+    installHTMLHeadElement();
+    installHTMLBodyElement();
+    installHTMLAnchorElement();
+    installHTMLAreaElement();
+    installHTMLLinkElement();
+    installHTMLMarqueeElement();
+    installHTMLGeolocationElement();
+    if (browserMajorVersion >= 151) installHTMLUserMediaElement();
+    installFencedFrameConfig();
+    installHTMLFencedFrameElement();
+    installHTMLFrameElement();
+    installHTMLIFrameElement();
+    installTextTrackCue();
+    installVTTCue();
+    installTextTrackCueList();
+    installTextTrack();
+    installHTMLTrackElement();
+    installHTMLFrameSetElement();
+    installHTMLObjectElement();
+    installTimeRanges();
+    installTextTrackList();
+    installRemotePlayback();
+    installMediaError();
+    installOverconstrainedError();
+    installMediaStreamTrackAudioStats();
+    installMediaStreamTrack();
+    installMediaStream();
+    installHTMLMediaElement();
+    installHTMLAudioElement();
+    installAudioConstructor();
+    installVideoPlaybackQuality();
+    installPictureInPictureWindow();
+    installHTMLVideoElement();
+    installHeaders();
+    installFormData();
+    installStreams();
+    installBlob();
+    installFileAndReader();
+    installRequestResponse();
+    configureFetchReplay(replay, networkRequestRecorder);
+    installFetch();
+    installXMLHttpRequest();
+    installImageBitmap();
+    installImageBitmapRenderingContext();
+    installExecutionObservers();
+    installDocumentProcessing();
+    installImageData();
+    installTextMetrics();
+    installCanvasGradient();
+    installCanvasPattern();
+    installPath2D();
+    installDOMPointReadOnly();
+    installDOMPoint();
+    installDOMMatrixReadOnly();
+    installDOMMatrix();
+    installSVGValues();
+    installSVGLists();
+    installSVGAnimatedValues();
+    installDOMRectReadOnly();
+    installDOMRect();
+    installDOMRectList();
+    installOffscreenCanvasRenderingContext2D();
+    installCanvasRenderingContext2D();
+    installOffscreenCanvas();
+    installCanvasCaptureMediaStreamTrack();
+    installHTMLCanvasElement();
+    installHTMLDivElement();
+    installHTMLPreElement();
+    installHTMLSpanElement();
+    installHTMLParagraphElement();
+    installHTMLHeadingElement();
+    installHTMLImageElement();
+    installImageConstructor();
+    installHTMLScriptElement();
+    installHTMLPictureElement();
+    installHTMLSelectedContentElement();
+    installHTMLBRElement();
+    installHTMLDataElement();
+    installHTMLDirectoryElement();
+    installHTMLDListElement();
+    installHTMLMenuElement();
+    installHTMLQuoteElement();
+    installHTMLTimeElement();
+    installHTMLTableCaptionElement();
+    installHTMLTitleElement();
+    installHTMLDataListElement();
+    installHTMLBaseElement();
+    installHTMLDetailsElement();
+    installHTMLLIElement();
+    installHTMLModElement();
+    installHTMLOptGroupElement();
+    installHTMLUListElement();
+    installHTMLFontElement();
+    installHTMLHRElement();
+    installHTMLParamElement();
+    installHTMLOListElement();
+    installHTMLMetaElement();
+    installHTMLStyleElement();
+    installHTMLLegendElement();
+    installHTMLMapElement();
+    installHTMLLabelElement();
+    installHTMLProgressElement();
+    installHTMLTableColElement();
+    installHTMLSourceElement();
+    installHTMLTemplateElement();
+    installHTMLEmbedElement();
+    installHTMLTableCellElement();
+    installHTMLTableRowElement();
+    installHTMLTableSectionElement();
+    installHTMLTableElement();
+    installHTMLMeterElement();
+    installHTMLDialogElement();
+    installHTMLOptionElement();
+    installOptionConstructor();
+    installHTMLOptionsCollection();
+    installValidityState();
+    installHTMLSelectElement();
+    installHTMLFormElement();
+    installHTMLFieldSetElement();
+    installHTMLOutputElement();
+    installHTMLButtonElement();
+    installHTMLTextAreaElement();
+    installFileList();
+    installHTMLInputElement();
+    installMathMLElement();
+    installSVGElement();
+    installSVGGraphicsElement();
+    installSVGGeometryElement();
+    installSVGCircleElement();
+    installSVGPathElement();
+    installSVGSVGElement();
+    installReconstructedSVGFactories();
+    installHTMLAllCollection();
+    installHTMLSlotElement();
+    installShadowRoot();
+  }
+
+  stageWindowSurfaceInstalls();
+
+  /** Window / Document / 事件核心。 */
+  function stageWindowSurfaceInstalls() {
+    installWindow();
+    installHTMLDocument();
+    installXMLDocument();
+    installDOMImplementation();
+    installDocument();
+    installAbstractRange(browserMajorVersion >= 152);
+    if (browserMajorVersion >= 152) installEdge152Ranges();
+    installRange(browserMajorVersion >= 152);
+    installCookie();
+    installSelection();
+    installNodeFilter();
+    installTreeWalker();
+    installNodeIterator();
+    installEvent();
+    installCustomEvent();
+  }
+
+  stagePlatformSurfaceInstalls();
+
+  /** 媒体、设备、权限与长尾平台 API。 */
+  function stagePlatformSurfaceInstalls() {
+    installAudio();
+    installMediaSource();
+    installCodecs();
+    installSpeech();
+    installWebRTC();
+    installXRCore();
+    installXRExtensions();
+    installUserAgency();
+    installDeviceAPIs();
+    installExternalDeviceAPIs();
+    installFileSystem();
+    installCredentialPayment();
+    installMediaAgency();
+    installObserverGeometry();
+    installOfflineSocket();
+    installInputEvents(browserMajorVersion >= 151);
+    installGeneralEvents(browserMajorVersion >= 151);
+    installDOMUtilities(browserMajorVersion >= 152);
+    installTrustedTypes();
+    installURLPattern();
+    installHighlight();
+    installNavigationAPI();
+    installCoordination();
+    installCacheAPI();
+    installScheduling();
+    installNavigatorServices();
+    installLongtailEvents();
+    installScrollTimeline();
+    installReporting();
+    installIndexedDB();
+    installLegacyConstructorAliases();
+    installMIDI();
+    installPresentation();
+    installSpeechRecognition();
+    installPressure();
+    installServiceWorkerManagers();
+    installBackgroundFetch();
+    installSharedStorage();
+    installTimelineTrigger();
+    installWebTransport();
+    installScreenDetails();
+    installLocalLanguage();
+    installLocalFonts({ exposeGlobal: browserMajorVersion >= 151 });
+    installUserInteraction();
+    installIdentityServices();
+    installLaunchHandling();
+    installGlobalServices();
+    installFetchLater();
+    installOrigin();
+    installErrorObjects();
+    installEditContext();
+    installCaptureTargets();
+    installNavigationDiagnostics();
+    installObservable();
+    installChapterInformation();
+    installFeaturePolicy(browserMajorVersion >= 152);
+    installWGSLLanguageFeatures();
+    installSVGUnitTypes();
+  }
+
+  stageServiceSurfaceInstalls();
+
+  /** 性能、状态、网络原语与 Worker。 */
+  function stageServiceSurfaceInstalls() {
+    installPerformanceEntry(browserMajorVersion >= 151);
+    installPerformanceMark();
+    installPerformanceMeasure();
+    installPerformanceLongtail(browserMajorVersion >= 151);
+    installPerformance({ edge151Surface: browserMajorVersion >= 151 });
+    installWindowTimers();
+    installScreenOrientation();
+    installScreen();
+    installNavigatorUAData();
+    installNavigator();
+    if (browserMajorVersion >= 152) installEdge152Members();
+    installWindowStateGlobals();
+    installWindowEventHandlerGlobals();
+    installWindowLegacyGlobals();
+    installStorage();
+    installURLSearchParams();
+    installURL();
+    installTextEncoding();
+    installTextStreams();
+    installCompressionStreams();
+    installCrypto();
+    installBase64();
+    installAbort();
+    installStructuredClone();
+    configureBroadcastConnector(broadcastConnector);
+    installMessaging();
+    configureWorkers(workerFactory, pageUrl, workerDepth);
+    installWorker();
+    configureSharedWorkers(sharedWorkerFactory, pageUrl, workerDepth);
+    installSharedWorker();
+    installServiceWorker();
+  }
+
+  finishRootWiring();
+
+  /** 父窗口关系、文档与 finalize。 */
+  function finishRootWiring() {
+    installWindowSelfReferences();
+    configureWindowMessaging(
+      realmOrigin ?? new URL(pageUrl).origin,
+      parentWindow,
+      topWindow,
+      parentOrigin,
+      parentPostMessage,
+      parentSameOrigin,
+    );
+    // 跨源时一律 null：规范要求容器文档不同源时 `frameElement` 返回 null。
+    configureFrameElement(parentSameOrigin ? frameElement : null);
+    configureDocumentDefaultView(outerWindow);
+    configureDocument(pageReferrer, pageContentType);
+
+    parsePageHTML(pageHtml);
+    installEdgeStaticFunctions();
+    installEdgeAccessorSemantics();
+    finalizePrototypeSurfaceOrder(browserMajorVersion);
+    finalizeWindowSurfaceOrder(browserMajorVersion);
+  }
 }
 
 function installWindowSelfReferences() {

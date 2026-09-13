@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 344,
-      "callSequenceSha256": "ccc8eb534af966083722ab1cee3bf0e3dd7419c870ce8ecee5ed44157163a506",
+      "callCount": 345,
+      "callSequenceSha256": "50108c30a1cc576bb8979e6ff961b9d161be09131c91e765bff4b2dc0ce77a6a",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -33,6 +33,7 @@
         "configure:configureDeviceProfile",
         "configure:configureSpeechProfile",
         "install:installIntlDefaultLocale",
+        "install:installIntlDefaultTimeZone",
         "configure:configureStandardFontFamily",
         "install:installWorklet",
         "configure:configureStorage",
@@ -355,16 +356,16 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "5edc88daa9e38cc70f101b651090061fb6489644463f828991557dd322c4c875",
-        "functionStartLine": 850,
-        "functionEndLine": 1316
+        "sourceSha256": "7da1d1a8aaf5305aa5d6f534d91c6bbfb9a60b856f5eb7a161db947c4e4a413b",
+        "functionStartLine": 853,
+        "functionEndLine": 1329
       }
     },
     "worker": {
       "file": "bootstrap/bootstrap-worker.js",
       "function": "bootstrapWorker",
-      "callCount": 109,
-      "callSequenceSha256": "3f74d1a69dfd8e929a8085efcae3bf251eb837f2b15ebcd8b525329741dfbc67",
+      "callCount": 111,
+      "callSequenceSha256": "3045d6ca7bb40b075e8855d83076800f7d5de7ff399c32d656b21ab1e162b98c",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWorkerSurfaceOrder",
       "sequence": [
@@ -377,6 +378,8 @@
         "install:installModernBuiltins",
         "install:installDateProfile",
         "install:installIntlV8BreakIterator",
+        "install:installIntlDefaultLocale",
+        "install:installIntlDefaultTimeZone",
         "configure:configureTrace",
         "configure:configureNavigatorProfile",
         "configure:configureGPUProfile",
@@ -479,9 +482,9 @@
         "finalize:finalizeWorkerSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "44983574f8a362d5fd3580e3894a86e67307d78accf611b1aa5647960adc628c",
-        "functionStartLine": 198,
-        "functionEndLine": 368
+        "sourceSha256": "32e92766cd12ec519c2d6392f9b3327a59ab22d40bbdbc098a4026d3a6474b4b",
+        "functionStartLine": 204,
+        "functionEndLine": 381
       }
     },
     "worklet": {

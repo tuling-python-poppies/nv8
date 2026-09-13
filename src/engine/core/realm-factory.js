@@ -16,6 +16,7 @@
 
 import vm from 'node:vm';
 import { RealmModuleLoader } from '../realm/module-loader.js';
+import { createStateAccessor } from '../plugin-sdk/state-registry.js';
 import {
   createParserScriptExecutor,
   executePageScripts,
@@ -227,7 +228,7 @@ export async function createRealm(config) {
   await moduleLoader.preload(SYNC_CALLBACK_MODULE_URLS);
   
   // 2. 初始化基础全局对象
-  initializeBaseGlobals(context, realmId, logger);
+  const baseGlobals = initializeBaseGlobals(context, realmId, logger);
   if (runtime.windowContext) {
     const windowContextModule = await moduleLoader.importUrlAsync(WINDOW_CONTEXT_URL);
     if (!windowContextModule?.namespace?.installWindowContext) {
@@ -331,9 +332,17 @@ export async function createRealm(config) {
       );
     } catch (error) {
       logger.error(`[Realm ${realmId}] Plugin activation failed:`, error);
-      throw new Error(
-        `Failed to activate plugin "${plugin.id}" in realm "${realmId}": ${error.message}`
+      // 保留 code / cause 透传：错误边界（IKF39T）要求安装失败的原始
+      // 分类（如 ERR_SCRIPT_EXECUTION_TIMEOUT、ERR_NV8_SCRIPT_POLICY_REJECTED）
+      // 在包装后仍可判定。
+      const wrapped = new Error(
+        `Failed to activate plugin "${plugin.id}" in realm "${realmId}": ${error.message}`,
+        { cause: error },
       );
+      wrapped.code = error.code ?? 'ERR_NV8_PLUGIN_ACTIVATION_FAILED';
+      wrapped.pluginId = plugin.id;
+      wrapped.realmId = realmId;
+      throw wrapped;
     }
   }
 
@@ -394,17 +403,31 @@ export async function createRealm(config) {
     if (!parserModule?.namespace?.parsePageHTML) {
       throw new Error('Realm module loader cannot install page parser');
     }
-    lifecycleModule.namespace.setDocumentParserScriptExecutorForPage?.(
-      createParserScriptExecutor({
-        context,
-        pageUrl,
-        replay,
-        lifecycleModule,
-        scriptPolicy: runtime.scriptPolicy,
-        executedScripts: parserExecutedScripts,
-      }),
-    );
+    const parserExecutor = createParserScriptExecutor({
+      context,
+      pageUrl,
+      replay,
+      lifecycleModule,
+      scriptPolicy: runtime.scriptPolicy,
+      executedScripts: parserExecutedScripts,
+      timeoutMs: limits.timeoutMs ?? 5000,
+    });
+    lifecycleModule.namespace.setDocumentParserScriptExecutorForPage?.(parserExecutor);
     parserModule.namespace.parsePageHTML(pageHtml);
+    const parserFailures = parserExecutor.getFailures?.() ?? [];
+    if (parserFailures.length > 0) {
+      // 内联脚本超时是致命错误：Realm 已经被死循环拖死，创建流程必须
+      // 以结构化错误失败，而不是吞成一个 error 事件（IKF39K）。
+      const failure = parserFailures[0];
+      const error = new Error(
+        `Inline script execution timed out: ${failure.url}`,
+        { cause: failure.error },
+      );
+      error.code = failure.error?.code ?? 'ERR_SCRIPT_EXECUTION_TIMEOUT';
+      error.url = failure.url;
+      error.timeoutMs = limits.timeoutMs ?? 5000;
+      throw error;
+    }
     const pageScripts = await executePageScripts({
       context,
       document: context.document,
@@ -413,6 +436,7 @@ export async function createRealm(config) {
       lifecycleModule,
       scriptPolicy: runtime.scriptPolicy,
       executedScripts: parserExecutedScripts,
+      timeoutMs: limits.timeoutMs ?? 5000,
     });
     pageScriptAsyncComplete = pageScripts.asyncComplete;
     pageScriptObserver = pageScripts.observer;
@@ -428,6 +452,7 @@ export async function createRealm(config) {
         lifecycleModule,
         scriptPolicy: runtime.scriptPolicy,
         executedScripts: parserExecutedScripts,
+        timeoutMs: limits.timeoutMs ?? 5000,
       });
       pageScriptAsyncComplete = nextScripts.asyncComplete;
       pageScriptObserver?.disconnect?.();
@@ -482,11 +507,19 @@ export async function createRealm(config) {
   }
 
   logger.info(`[Realm ${realmId}] Realm created successfully`);
-  
-  return {
+
+  // 生命周期闸门：destroy() 是可重入的（sandbox 的销毁路径可能从多个入口
+  // 触发），但真正的清理只做一次。`realm.destroyed` 供 sandbox/导航回调
+  // 判断 Realm 是否还活着（IKFD9F）。
+  let disposed = false;
+
+  const realm = {
     id: realmId,
     type,
     sandboxId,
+    // 生命周期标志。realm-factory 的 destroy() 必须同步置位：
+    // sandbox 的 onNavigate / replaceRootWindowClient 都以此为闸门。
+    destroyed: false,
     moduleLoader,
     pageScriptAsyncComplete,
     pageScriptObserver,
@@ -593,10 +626,25 @@ export async function createRealm(config) {
      * 清理所有资源和状态
      */
     async destroy() {
+      // 二次 destroy 直接返回，保证清理逻辑只执行一次
+      if (disposed) return;
+      disposed = true;
+      realm.destroyed = true;
+
+      // 先清掉 realm 作用域的宿主定时器：页面脚本用 setTimeout 排的
+      // location.href 导航在销毁后必须不再触发（IKFD9F）。
+      baseGlobals.disposeTimers();
+
       pageScriptObserver?.disconnect?.();
       pageScriptObserver = null;
       pageScriptDispose?.();
       pageScriptDispose = null;
+      // 关闭模块加载器的在途求值（IKFD9L 的取消路径）
+      try {
+        moduleLoader?.dispose?.();
+      } catch (error) {
+        logger.warn(`[Realm ${realmId}] Module loader dispose failed: ${error.message}`);
+      }
       logger.info(`[Realm ${realmId}] Destroying realm`);
       
       // 调用所有插件的 dispose 钩子
@@ -642,110 +690,151 @@ export async function createRealm(config) {
       };
     },
   };
+
+  return realm;
 }
 
-/**
- * 初始化基础全局对象
- * 
- * 将 Node.js 的内置对象注入到 vm.Context
- */
 function encodeNavigatorLanguages(languages) {
   return languages.map(language => `${language}`)
     .map(language => `${language.length}:${language}`)
     .join('');
 }
 
+/**
+ * 初始化基础全局对象
+ *
+ * ## 为什么不再注入宿主内建（IKF399）
+ * 迁移前这里逐项把宿主的 `Object` / `Function` / `Array` / `Error` / `Promise` /
+ * `JSON` 等赋给 vm context。`vm.createContext()` 创建的 context 本身已经自带
+ * **一整套独立的内建**，覆盖它们既没有收益，还把宿主 realm 直接交给了目标脚本：
+ *
+ *   nv8Eval('Function("return process")()')   // 拿到宿主的 process
+ *
+ * 因此这里只保留 vm context 缺失的宿主能力（调度原语），其余一律使用 realm
+ * 自带内建。宿主函数不再直接挂到全局，而是在 realm 内建一层转发闭包：
+ * 转发函数由 realm 求值创建，`setTimeout.constructor` 是 realm 的 Function，
+ * 不会经由 `.constructor` 链泄漏宿主 Function。
+ *
+ * 所有计时器句柄都登记在 `activeTimers`，`destroy()` 时统一清除，避免
+ * 销毁后的页面定时器继续执行甚至触发导航重建 Realm（IKFD9F）。
+ */
 function initializeBaseGlobals(context, realmId, logger) {
-  // Host scheduling primitives are required for browser-like async callbacks.
-  context.setTimeout = setTimeout;
-  context.clearTimeout = clearTimeout;
-  context.setInterval = setInterval;
-  context.clearInterval = clearInterval;
-  context.queueMicrotask = queueMicrotask;
-  
-  // 基础类型和构造函数
-  context.Object = Object;
-  context.Function = Function;
-  context.Array = Array;
-  context.String = String;
-  context.Number = Number;
-  context.Boolean = Boolean;
-  context.Symbol = Symbol;
-  context.BigInt = BigInt;
-  context.Date = Date;
+  const activeTimers = new Set();
+
+  const installHostBridge = vm.runInContext(
+    `(host, timers) => {
+      const define = (name, value) => {
+        Object.defineProperty(globalThis, name, {
+          value,
+          writable: true,
+          enumerable: false,
+          configurable: true,
+        });
+      };
+      const assertHandler = (name, handler) => {
+        if (typeof handler !== 'function') {
+          throw new TypeError(
+            "Failed to execute '" + name + "': handler must be a function",
+          );
+        }
+      };
+      define('setTimeout', function setTimeout(handler, timeout, ...args) {
+        assertHandler('setTimeout', handler);
+        let handle = null;
+        handle = host.setTimeout(() => {
+          timers.delete(handle);
+          handler(...args);
+        }, timeout);
+        timers.add(handle);
+        return handle;
+      });
+      define('setInterval', function setInterval(handler, timeout, ...args) {
+        assertHandler('setInterval', handler);
+        const handle = host.setInterval(() => {
+          if (!timers.has(handle)) return;
+          handler(...args);
+        }, timeout);
+        timers.add(handle);
+        return handle;
+      });
+      define('clearTimeout', function clearTimeout(handle) {
+        timers.delete(handle);
+        host.clearTimeout(handle);
+      });
+      define('clearInterval', function clearInterval(handle) {
+        timers.delete(handle);
+        host.clearInterval(handle);
+      });
+      define('queueMicrotask', function queueMicrotask(callback) {
+        assertHandler('queueMicrotask', callback);
+        host.queueMicrotask(callback);
+      });
+
+      // 内建表面镜像：vm 的 globalThis 内建不是宿主可从 context 对象上读到的
+      // 自有属性，插件（在宿主侧求值）访问 context.global.Function.prototype
+      // 会拿到 undefined。这里把它们重写为同名自有属性——值仍是 realm 自己
+      // 的内建，不引入任何宿主对象，只恢复宿主侧插件的可见性。
+      const mirror = [
+        'Object', 'Function', 'Array', 'String', 'Number', 'Boolean', 'Symbol',
+        'BigInt', 'Date', 'RegExp', 'Error', 'EvalError', 'RangeError',
+        'ReferenceError', 'SyntaxError', 'TypeError', 'URIError', 'AggregateError',
+        'Map', 'Set', 'WeakMap', 'WeakSet',
+        'ArrayBuffer', 'SharedArrayBuffer', 'DataView',
+        'Int8Array', 'Uint8Array', 'Uint8ClampedArray', 'Int16Array',
+        'Uint16Array', 'Int32Array', 'Uint32Array', 'Float32Array',
+        'Float64Array', 'BigInt64Array', 'BigUint64Array',
+        'Promise', 'Proxy', 'Reflect', 'JSON', 'Math',
+        'parseInt', 'parseFloat', 'isNaN', 'isFinite',
+        'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
+        'escape', 'unescape',
+      ];
+      for (const name of mirror) {
+        globalThis[name] = globalThis[name];
+      }
+    }`,
+    context,
+  );
+
+  installHostBridge(
+    { setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask },
+    activeTimers,
+  );
+
+  // 兼容性表面：URL / TextEncoder 系列不是 ECMAScript 内建，vm context 默认
+  // 没有，而若干 Realm 内模块在 Plugin 未覆盖时仍会用到。它们本身不携带
+  // 宿主全局可见性（无 process / require），保留现状。
   context.URL = URL;
   context.URLSearchParams = URLSearchParams;
   context.TextEncoder = TextEncoder;
   context.TextDecoder = TextDecoder;
-  context.RegExp = RegExp;
-  context.Error = Error;
-  context.EvalError = EvalError;
-  context.RangeError = RangeError;
-  context.ReferenceError = ReferenceError;
-  context.SyntaxError = SyntaxError;
-  context.TypeError = TypeError;
-  context.URIError = URIError;
-  context.AggregateError = AggregateError;
-  
-  // 集合类型
-  context.Map = Map;
-  context.Set = Set;
-  context.WeakMap = WeakMap;
-  context.WeakSet = WeakSet;
-  
-  // 类型化数组
-  context.ArrayBuffer = ArrayBuffer;
-  context.SharedArrayBuffer = SharedArrayBuffer;
-  context.DataView = DataView;
-  context.Int8Array = Int8Array;
-  context.Uint8Array = Uint8Array;
-  context.Uint8ClampedArray = Uint8ClampedArray;
-  context.Int16Array = Int16Array;
-  context.Uint16Array = Uint16Array;
-  context.Int32Array = Int32Array;
-  context.Uint32Array = Uint32Array;
-  context.Float32Array = Float32Array;
-  context.Float64Array = Float64Array;
-  context.BigInt64Array = BigInt64Array;
-  context.BigUint64Array = BigUint64Array;
-  
-  // Promise 和异步
-  context.Promise = Promise;
-  context.console = console;
-  
-  // 代理和反射
-  context.Proxy = Proxy;
-  context.Reflect = Reflect;
-  
-  // JSON
-  context.JSON = JSON;
-  
-  // Math
-  context.Math = Math;
-  
-  // 全局函数
-  context.parseInt = parseInt;
-  context.parseFloat = parseFloat;
-  context.isNaN = isNaN;
-  context.isFinite = isFinite;
-  context.decodeURI = decodeURI;
-  context.decodeURIComponent = decodeURIComponent;
-  context.encodeURI = encodeURI;
-  context.encodeURIComponent = encodeURIComponent;
-  context.escape = escape;
-  context.unescape = unescape;
-  
+
   // 全局变量
   context.undefined = undefined;
   context.NaN = NaN;
   context.Infinity = Infinity;
-  
+
   // globalThis 指向自己
   context.globalThis = context;
-  
+
   // 使 context 看起来像浏览器全局对象
   context.self = context;
   context.global = context; // Node.js 兼容
+
+  return {
+    /**
+     * 清空 realm 作用域的宿主定时器。
+     *
+     * setInterval 的包装会在回调里检查句柄是否还在集合中：销毁后再触发的
+     * 已过期 interval 回调会被丢弃，即使宿主事件循环里还有残余调度。
+     */
+    disposeTimers() {
+      for (const handle of activeTimers) {
+        clearTimeout(handle);
+        clearInterval(handle);
+      }
+      activeTimers.clear();
+    },
+  };
 }
 
 /**
@@ -835,21 +924,15 @@ function createPluginContext(
     pageHtml,
     runtime,
     
-    // 状态管理（简化版，直接访问 StateRegistry）
-    state: {
-      get(key) {
-        return stateRegistry.get(`${plugin.id}.${key}`, 'realm', realmId);
-      },
-      set(key, value) {
-        stateRegistry.set(`${plugin.id}.${key}`, value, 'realm', realmId);
-      },
-      has(key) {
-        return stateRegistry.has(`${plugin.id}.${key}`, 'realm', realmId);
-      },
-      delete(key) {
-        stateRegistry.delete(`${plugin.id}.${key}`, 'realm', realmId);
-      },
-    },
+    // 状态管理（IKF39V(b)/(d)）：与 sandbox 侧 install 上下文共用同一套
+    // createStateAccessor / 同一 pluginInstanceId，install 写入的状态在
+    // activate 里能读到；realm 作用域经 getScoped('realm') 访问。
+    state: createStateAccessor(
+      stateRegistry,
+      `${plugin.id}@${plugin.version}#${sandboxId}`,
+      realmId,
+      sandboxId,
+    ),
     
     // 全局配置和注册表
     globals,

@@ -212,7 +212,19 @@ export function normalizePlugin(plugin) {
   
   const requires = plugin.requires || plugin.dependencies || [];
   const provides = plugin.provides || plugin.capabilities || [];
-  const isLegacy = plugin.install.length >= 2;
+  // legacy 判定：显式标记优先，`install.length >= 2` 只作为未标记时的
+  // 向后兼容兜底（IKFD9P）。
+  //
+  // - `legacy: false`：插件明确声明 install 不触碰宿主全局，可以按现代
+  //   单参数契约执行（真正安装走 activate）。
+  // - `legacy: true`：显式声明为旧式插件，保持「标记已安装并跳过 install」
+  //   的保守策略。
+  // - 未标记：沿用三参数签名推断。
+  const isLegacy = plugin.legacy === true
+    ? true
+    : plugin.legacy === false
+      ? false
+      : plugin.install.length >= 2;
   const legacyInstall = plugin.install;
   const legacyReset = plugin.reset;
   const legacyDispose = plugin.dispose;
@@ -257,7 +269,7 @@ export function normalizePlugin(plugin) {
         context.surfaceRegistry,
       )
       : plugin.uninstall,
-    legacy: true,
+    legacy: isLegacy,
     _installed: false,
     _exports: null,
   };

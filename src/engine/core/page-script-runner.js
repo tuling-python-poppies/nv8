@@ -3,9 +3,48 @@ import { Buffer } from 'node:buffer';
 import { createDynamicImporter } from '../realm/dynamic-import.js';
 import { normalizeScriptPolicy, scriptPolicyAllows } from './script-policy.js';
 
-export function createParserScriptExecutor({ context, pageUrl, replay, lifecycleModule, executedScripts, scriptPolicy }) {
+/**
+ * 判定 vm 的超时错误。
+ *
+ * vm.runInContext 超过 timeout 时抛 `ERR_SCRIPT_EXECUTION_TIMEOUT`。
+ * 各 Node 版本的 message 不完全一致，因此以 code 为主、message 兜底。
+ *
+ * @param {unknown} error
+ * @returns {boolean}
+ */
+function isTimeoutError(error) {
+  return error?.code === 'ERR_SCRIPT_EXECUTION_TIMEOUT'
+    || /Script execution timed out/.test(`${error?.message ?? ''}`);
+}
+
+/**
+ * 给脚本错误补充结构化字段，供 error 事件与上层错误边界消费（IKF39T）。
+ *
+ * 不覆盖已有的 code/cause：安装器抛出的策略错误（
+ * ERR_NV8_SCRIPT_POLICY_REJECTED 等）必须原样透传。
+ *
+ * @param {unknown} error
+ * @returns {Error}
+ */
+function normalizeScriptError(error) {
+  // 不能用 `instanceof Error`：vm 的超时错误来自另一个 realm
+  // （宿主 Error.prototype 与它不是同一条链），会被误判成普通值而丢失
+  // code/cause（IKF39T 实测）。按 Error-like 形状判定即可。
+  if (error !== null && typeof error === 'object' && 'message' in error) {
+    return error;
+  }
+  const wrapped = new Error(`${error}`);
+  wrapped.code = 'ERR_NV8_SCRIPT_ERROR';
+  return wrapped;
+}
+
+export function createParserScriptExecutor({ context, pageUrl, replay, lifecycleModule, executedScripts, scriptPolicy, timeoutMs = 5000 }) {
   const normalizedPolicy = normalizeScriptPolicy(scriptPolicy);
-  return script => {
+  // timeout 是**致命**错误：内联脚本死循环意味着这个 Realm 已不可用。
+  // 普通脚本异常仍按浏览器语义派发 error 事件后继续解析（见
+  // tests/page-script-inline-error-test.js），只有超时向上抛（IKF39K）。
+  const failures = [];
+  const executor = script => {
     if (executedScripts?.has(script) || script.__nv8ParserExecuted === true) return;
     const type = `${script.getAttribute?.('type') ?? ''}`.trim().toLowerCase();
     const sourceUrl = script.getAttribute?.('src');
@@ -37,21 +76,27 @@ export function createParserScriptExecutor({ context, pageUrl, replay, lifecycle
         ? `${script.textContent ?? ''}`
         : resolveReplaySource(scriptUrl, replay);
       lifecycleModule?.namespace?.setCurrentScriptElement?.(script);
-      vm.runInContext(source, context, { filename: scriptUrl });
+      vm.runInContext(source, context, { filename: scriptUrl, timeout: timeoutMs });
       lifecycleModule?.namespace?.clearCurrentScript?.();
       dispatchScriptEvent(context, script, 'load');
       executedScripts?.add(script);
       script.__nv8ParserExecuted = true;
     } catch (error) {
       lifecycleModule?.namespace?.clearCurrentScript?.();
-      dispatchScriptEvent(context, script, 'error', error);
+      const scriptError = normalizeScriptError(error);
+      dispatchScriptEvent(context, script, 'error', scriptError);
       executedScripts?.add(script);
       script.__nv8ParserExecuted = true;
+      if (isTimeoutError(scriptError)) {
+        failures.push({ url: isInline ? pageUrl : `${sourceUrl}`, error: scriptError });
+      }
     }
   };
+  executor.getFailures = () => [...failures];
+  return executor;
 }
 
-export async function executePageScripts({ context, document, pageUrl, replay, lifecycleModule, executedScripts = new WeakSet(), scriptPolicy }) {
+export async function executePageScripts({ context, document, pageUrl, replay, lifecycleModule, executedScripts = new WeakSet(), scriptPolicy, timeoutMs = 5000 }) {
   const normalizedPolicy = normalizeScriptPolicy(scriptPolicy);
   lifecycleModule?.namespace?.ensureDocumentEventTargetForPage?.();
   const scripts = [...(document?.getElementsByTagName?.('script') ?? [])];
@@ -119,6 +164,9 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
   const asyncComplete = Promise.all(asyncScripts.map(entry => runLater(() => (
     entry.isModule ? runModule(entry) : runClassic(entry)
   ))));
+  // 在 Realm 创建流程挂上 await 之前先接一个空 handler：否则 async 脚本的
+  // 超时拒绝可能在 completePageLifecycle 等待前触发 unhandledRejection。
+  asyncComplete.catch(() => {});
   for (const entry of blocking) await runClassic(entry);
   for (const entry of deferredOrModules) {
     if (entry.isModule) await runModule(entry);
@@ -143,16 +191,19 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
       if (!permission.allowed) throw scriptPolicyError(entry.url, permission.reason);
       const source = entry.source ?? resolveReplay(entry.url);
       lifecycleModule?.namespace?.setCurrentScriptElement?.(entry.script);
-      vm.runInContext(source, context, { filename: entry.url });
+      vm.runInContext(source, context, { filename: entry.url, timeout: timeoutMs });
       lifecycleModule?.namespace?.clearCurrentScript?.();
       dispatchScriptEvent(context, entry.script, 'load');
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;
     } catch (error) {
       lifecycleModule?.namespace?.clearCurrentScript?.();
-      dispatchScriptEvent(context, entry.script, 'error', error);
+      const scriptError = normalizeScriptError(error);
+      dispatchScriptEvent(context, entry.script, 'error', scriptError);
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;
+      // 超时不可继续：脚本已把 Realm 拖死，结构化上报（IKF39K）
+      if (isTimeoutError(scriptError)) throw scriptError;
     }
   }
 
@@ -167,14 +218,21 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
       });
       if (!permission.allowed) throw scriptPolicyError(entry.url, permission.reason);
       const source = entry.source ?? resolveReplay(entry.url);
-      await pageModuleImporter.evaluateEntryModule(source, entry.url);
+      await withModuleTimeout(
+        pageModuleImporter.evaluateEntryModule(source, entry.url),
+        entry.url,
+        timeoutMs,
+        () => pageModuleImporter.dispose(),
+      );
       dispatchScriptEvent(context, entry.script, 'load');
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;
     } catch (error) {
-      dispatchScriptEvent(context, entry.script, 'error', error);
+      const scriptError = normalizeScriptError(error);
+      dispatchScriptEvent(context, entry.script, 'error', scriptError);
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;
+      if (isTimeoutError(scriptError)) throw scriptError;
     }
   }
 
@@ -247,10 +305,63 @@ function resolveReplaySource(url, replay) {
   return `${record.body ?? ''}`;
 }
 
+/**
+ * 给模块求值加超时（IKF39K）。
+ *
+ * vm 的 `SourceTextModule.evaluate()` 不支持 timeout 选项，因此只能竞速。
+ * 超时后调用方传入的 `cancel`（通常是 importer.dispose）取消在途求值，
+ * 并把结构化超时错误交给上层。
+ *
+ * @param {Promise<unknown>} promise
+ * @param {string} url
+ * @param {number} timeoutMs
+ * @param {() => void} [cancel]
+ * @returns {Promise<unknown>}
+ */
+function withModuleTimeout(promise, url, timeoutMs, cancel = null) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return promise;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      try {
+        cancel?.();
+      } catch {
+        // 取消失败不影响错误上报
+      }
+      const error = new Error(
+        `Script execution timed out after ${timeoutMs}ms: ${url}`,
+      );
+      error.code = 'ERR_SCRIPT_EXECUTION_TIMEOUT';
+      error.url = url;
+      error.timeoutMs = timeoutMs;
+      reject(error);
+    }, timeoutMs);
+    promise.then(
+      value => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
 function runLater(callback) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
-      Promise.resolve(callback()).then(resolve, resolve);
+      // 不再 `then(resolve, resolve)` 吞掉错误：致命的超时错误必须让
+      // asyncComplete 拒绝，普通脚本错误已在 runClassic/runModule 内转为
+      // error 事件（IKF39K）。
+      Promise.resolve(callback()).then(resolve, reject);
     }, 0);
   });
 }
@@ -272,6 +383,13 @@ function dispatchScriptEvent(context, script, type, error = null) {
       value: `${error.message ?? error}`,
       enumerable: true,
     });
+    // code 结构化透传：错误边界与测试都依赖它区分超时/策略拒绝等（IKF39T）
+    if (error.code !== undefined) {
+      Object.defineProperty(event, 'code', {
+        value: error.code,
+        enumerable: true,
+      });
+    }
   }
   script.dispatchEvent(event);
 }

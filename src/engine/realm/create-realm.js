@@ -38,6 +38,12 @@ function createRealmShellContext(label, origin) {
       wasm: true,
     },
   });
+  // 宿主泄漏审计必须在**任何页面脚本执行之前**跑（IKFD9K）。
+  // 以前它挂在 activateRealmShell 末尾，而 bootstrapRoot() 内部就执行
+  // 页面 inline 脚本——页面写一个 `window.process = {}` 就会被误判成
+  // 宿主泄漏。审计语义是「realm 里有没有宿主全局」，不是「页面定义了什么」，
+  // 因此紧跟 context 创建执行最准确。
+  auditRealmGlobals(context);
   installPendingWindowIdentity(context);
   return { context, moduleLoader: new RealmModuleLoader(context) };
 }
@@ -81,6 +87,7 @@ export function activateRealmShell(shell, options) {
     documentBaseUrl = null,
     serviceWorkerPageUrl = null,
     workerDepth = 0,
+    timezone = null,
     onContext = null,
   } = options;
   const { context, moduleLoader, bootstrap } = shell;
@@ -137,9 +144,9 @@ export function activateRealmShell(shell, options) {
     documentBaseUrl,
     serviceWorkerPageUrl,
     workerDepth,
+    timezone,
   );
   if (typeof onContext === "function") onContext(context);
-  auditRealmGlobals(context);
   return {
     context,
     moduleLoader,

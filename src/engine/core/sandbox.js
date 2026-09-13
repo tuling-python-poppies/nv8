@@ -26,7 +26,6 @@ import {
 } from './script-injector.js';
 import {
   assertEvidenceSource,
-  isEvidenceSource,
   resolveTrustedScriptIds,
 } from './evidence-contract.js';
 
@@ -58,131 +57,185 @@ const SERVICE_WORKER_RUNTIME_URL = new URL(
 );
 
 /**
- * 创建 Sandbox
- * 
- * @param {SandboxConfig} config - 配置
- * @returns {Promise<Sandbox>}
+ * Worker 生命周期错误。
+ *
+ * 纯构造函数，不依赖沙箱状态；从 `createSandbox` 的闭包里提出来，
+ * 既缩短巨型函数，也让调用方在创建 Realm 前就可复用。
  */
-export async function createSandbox(config) {
-  const sandboxId = `sandbox-${++sandboxIdCounter}`;
-  const {
-    appId,
-    profile,
-    plugins,
-    stateRegistry,
-    trace,
-    logger,
-    replay = [],
-    runtime = {},
-    limits = {},
-  } = config;
-  
-  // Realm 管理
-  const realms = new Map(); // realm-id -> Realm
-  const workerRealms = new Set();
-  const workerConnectionReleases = new WeakMap();
-  let pendingWorkerCreations = 0;
-  const workerCreationWaiters = new Set();
-  let workerConnections = 0;
-  let lifecycleGeneration = 0;
-  let lifecycleClosed = false;
+function createWorkerLifecycleError() {
+  const error = new Error('Sandbox worker lifecycle is no longer active');
+  error.code = 'ERR_NV8_WORKER_LIFECYCLE';
+  return error;
+}
 
-  // 插件实例
-  const pluginInstances = [];
-  
-  // 能力索引
-  const capabilityIndex = new Map(); // capability-name -> Plugin
-  const evidenceResources = new Map(); // realm-id -> injector/observer
-  const { evidence = null } = config;
-  // Core 只接受抽象 EvidenceSource。兼容旧的 `evidenceBundle` 配置名：
-  // 已经符合契约的直接使用，否则交由调用方包装。
-  const evidenceSourceInput = config.evidenceSource ?? config.evidenceBundle ?? null;
-  const evidenceSource = evidenceSourceInput === null
-    ? null
-    : assertEvidenceSource(
-      isEvidenceSource(evidenceSourceInput)
-        ? evidenceSourceInput
-        : evidenceSourceInput,
-      'config.evidenceSource',
-    );
-  
-  // 全局注册表（跨 Realm 共享）
-  const nativeFunctionRegistry = createNativeFunctionRegistry();
-  const eventListenerRegistry = createEventListenerRegistry();
-  const objectURLRegistry = createObjectURLRegistry();
-  const surfaceRegistry = createSurfaceRegistry();
-  const broadcastGroups = new Map();
-  const sharedWorkerRecords = new Map();
-  const workletRealmsByOwner = new WeakMap();
-  const workletRealms = new Set();
-  const workerReplayState = createWorkerReplayState(replay);
-  const serviceWorkerHandles = new Map();
-  const windowClients = new Map();
-  let nextWindowClientId = 1;
-  const serviceWorkerContainers = new Map();
-  const lifecycle = createLifecycleRecorder({
-    maxEntries: limits.maxLifecycleEntries,
+/** Realm 生命周期错误（destroy/reset 之后的创建与导航都必须拒绝）。 */
+function createRealmLifecycleError() {
+  const error = new Error('Sandbox realm lifecycle is no longer active');
+  error.code = 'ERR_NV8_REALM_LIFECYCLE';
+  return error;
+}
+
+/** Worker 额度错误（深度 / realm 数 / 连接数）。 */
+function createWorkerLimitError(code, limit, message) {
+  const error = new DOMException(message, 'QuotaExceededError');
+  Object.defineProperties(error, {
+    nv8Code: { value: code, enumerable: true },
+    limit: { value: limit, enumerable: true },
   });
-  lifecycle.emit('sandbox.created', { sandboxId, appId });
-  const defaultBroadcastConnector = (name, receive) => {
-    const key = `${new URL(profile.url || 'https://example.com/').origin}\0${name}`;
-    let group = broadcastGroups.get(key);
-    if (group === undefined) {
-      group = new Set();
-      broadcastGroups.set(key, group);
+  return error;
+}
+
+/**
+ * Worker 额度账本：嵌套深度、realm 数、连接数与创建等待队列。
+ *
+ * 这些计数原先散落在 `createSandbox` 闭包里的三个 `let` 加两个集合，
+ * 只有 worker 创建路径会动它们。集中进工厂后计数不外泄，
+ * `diagnose()` / `inspect()` 通过只读 getter 取快照。
+ *
+ * `workerRealms` 由调用方持有（destroy/reset 也要遍历），这里只读 `size`。
+ *
+ * @param {object} limits
+ * @param {Set<object>} workerRealms
+ */
+function createWorkerBudget(limits, workerRealms) {
+  let pendingCreations = 0;
+  const creationWaiters = new Set();
+  let connections = 0;
+  const connectionReleases = new WeakMap();
+
+  function trackWorkerConnection(realm, release) {
+    let releases = connectionReleases.get(realm);
+    if (releases === undefined) {
+      releases = new Set();
+      connectionReleases.set(realm, releases);
     }
-    const endpoint = { receive };
-    group.add(endpoint);
+    releases.add(release);
+  }
+
+  function releaseWorkerConnections(realm) {
+    const releases = connectionReleases.get(realm);
+    if (releases === undefined) return;
+    connectionReleases.delete(realm);
+    for (const release of releases) release();
+    releases.clear();
+  }
+
+  function reserveWorker(depth, connection) {
+    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
+    const maxWorkerRealms = limits.maxWorkerRealms ?? limits.maxRealms ?? 64;
+    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
+    if (workerDepth > maxWorkerDepth) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_DEPTH',
+        maxWorkerDepth,
+        'The sandbox worker nesting depth limit has been reached.',
+      );
+    }
+    if (workerRealms.size + pendingCreations >= maxWorkerRealms) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_REALMS',
+        maxWorkerRealms,
+        'The sandbox worker realm limit has been reached.',
+      );
+    }
+    if (connection && connections >= maxWorkerConnections) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_CONNECTIONS',
+        maxWorkerConnections,
+        'The sandbox worker connection limit has been reached.',
+      );
+    }
+    pendingCreations += 1;
+    if (connection) connections += 1;
+    const state = { released: false, connectionReleased: !connection };
     return {
-      publish(message) {
-        for (const candidate of group) {
-          if (candidate !== endpoint) candidate.receive(message);
+      depth: workerDepth,
+      releasePending() {
+        pendingCreations = Math.max(0, pendingCreations - 1);
+        if (pendingCreations === 0) {
+          for (const resolve of creationWaiters) resolve();
+          creationWaiters.clear();
         }
       },
-      close() {
-        group.delete(endpoint);
-        if (group.size === 0) broadcastGroups.delete(key);
+      releaseConnection() {
+        if (!state.connectionReleased) {
+          state.connectionReleased = true;
+          connections = Math.max(0, connections - 1);
+        }
       },
     };
-  };
-  
-  // 全局配置对象
-  const globals = {
-    nativeFunctionRegistry,
-    eventListenerRegistry,
-    objectURLRegistry,
-  };
-  
-  logger.info(`[Sandbox ${sandboxId}] Initializing with ${plugins.length} plugins`);
-  
-  // 1. 安装所有插件（按依赖顺序）
-  for (const plugin of plugins) {
-    await installPlugin(
-      plugin,
-      sandboxId,
-      stateRegistry,
-      globals,
-      surfaceRegistry,
-      logger,
-      trace,
-    );
-    pluginInstances.push(plugin);
-    
-    // 建立能力索引，兼容 provides/capabilities 两种声明格式
-    const declaredCapabilities = plugin.provides || plugin.capabilities || [];
-    for (const capability of declaredCapabilities) {
-      const name = typeof capability === 'string'
-        ? capability
-        : capability.name;
-      if (name) capabilityIndex.set(name, plugin);
-    }
   }
-  
-  logger.info(`[Sandbox ${sandboxId}] All plugins installed`);
 
+  function waitForWorkerCreations() {
+    if (pendingCreations === 0) return Promise.resolve();
+    return new Promise(resolve => creationWaiters.add(resolve));
+  }
+
+  function reserveWorkerConnection(depth) {
+    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
+    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
+    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
+    if (workerDepth > maxWorkerDepth) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_DEPTH',
+        maxWorkerDepth,
+        'The sandbox worker nesting depth limit has been reached.',
+      );
+    }
+    if (connections >= maxWorkerConnections) {
+      throw createWorkerLimitError(
+        'LIMIT_WORKER_CONNECTIONS',
+        maxWorkerConnections,
+        'The sandbox worker connection limit has been reached.',
+      );
+    }
+    connections += 1;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      connections = Math.max(0, connections - 1);
+    };
+  }
+
+  return {
+    reserveWorker,
+    reserveWorkerConnection,
+    waitForWorkerCreations,
+    trackWorkerConnection,
+    releaseWorkerConnections,
+    get pendingCreations() {
+      return pendingCreations;
+    },
+    get connections() {
+      return connections;
+    },
+  };
+}
+
+/**
+ * ServiceWorker 客户端视图与 controller 索引。
+ *
+ * `findServiceWorkerController` / `getServiceWorkerClients` /
+ * `notifyServiceWorkerClients` 原先直接写在 `createSandbox` 里，共享
+ * `serviceWorkerHandles`、`windowClients`、`realms` 三个注册表。集中到一个
+ * 工厂后，这三张表的读写语义在一处维护，`createSandbox` 只解构入口。
+ */
+function createServiceWorkerClientRegistry({
+  realms,
+  windowClients,
+  serviceWorkerHandles,
+}) {
   function findServiceWorkerController(url) {
     let selected = null;
     for (const [scope, handle] of serviceWorkerHandles) {
+      // 已销毁的 handle 是 stale：reset()/destroy() 之后不能再把
+      // 已终止的 controller 交给新 Realm（IKFD9G）。
+      if (handle.destroyed === true || handle.realm?.destroyed === true) {
+        serviceWorkerHandles.delete(scope);
+        continue;
+      }
       if (!serviceWorkerScopeMatches(scope, url)) continue;
       if (selected === null || scope.length > selected.scope.length) {
         selected = { scope, handle };
@@ -195,28 +248,6 @@ export async function createSandbox(config) {
       version: selected.handle.version ?? null,
       handle: selected.handle,
     };
-  }
-
-  function getServiceWorkerClients(options = {}) {
-    const includeUncontrolled = options.includeUncontrolled === true;
-    const type = `${options.type ?? 'window'}`;
-    const windowType = options.windowType ?? null;
-    const scope = options.scope ?? null;
-    const targetHandle = options.handle ?? null;
-    const originSource = options.origin ?? targetHandle?.scriptURL ?? scope;
-    let origin = null;
-    try {
-      origin = originSource === null ? null : new URL(originSource).origin;
-    } catch {
-      return [];
-    }
-    if (type !== 'window' && type !== 'all') return [];
-    return [...windowClients.values()]
-      .filter(client => origin === null || new URL(client.url).origin === origin)
-      .filter(client => scope === null || serviceWorkerScopeMatches(scope, client.url))
-      .filter(client => windowType === null || client.frameType === windowType)
-      .map(client => createWindowClientSnapshot(client, targetHandle))
-      .filter(client => includeUncontrolled || client.controlled);
   }
 
   function findWindowClientById(id) {
@@ -271,6 +302,28 @@ export async function createSandbox(config) {
     };
   }
 
+  function getServiceWorkerClients(options = {}) {
+    const includeUncontrolled = options.includeUncontrolled === true;
+    const type = `${options.type ?? 'window'}`;
+    const windowType = options.windowType ?? null;
+    const scope = options.scope ?? null;
+    const targetHandle = options.handle ?? null;
+    const originSource = options.origin ?? targetHandle?.scriptURL ?? scope;
+    let origin = null;
+    try {
+      origin = originSource === null ? null : new URL(originSource).origin;
+    } catch {
+      return [];
+    }
+    if (type !== 'window' && type !== 'all') return [];
+    return [...windowClients.values()]
+      .filter(client => origin === null || new URL(client.url).origin === origin)
+      .filter(client => scope === null || serviceWorkerScopeMatches(scope, client.url))
+      .filter(client => windowType === null || client.frameType === windowType)
+      .map(client => createWindowClientSnapshot(client, targetHandle))
+      .filter(client => includeUncontrolled || client.controlled);
+  }
+
   function notifyServiceWorkerClients(scope, handle) {
     const snapshot = handle === null ? null : {
       scriptURL: handle.scriptURL,
@@ -295,6 +348,165 @@ export async function createSandbox(config) {
     notifyServiceWorkerClients(null, null);
   }
 
+  return {
+    findServiceWorkerController,
+    getServiceWorkerClients,
+    createWindowClientSnapshot,
+    notifyServiceWorkerClients,
+    disposeServiceWorkerHandles,
+  };
+}
+
+/**
+ * 创建 Sandbox
+ * 
+ * @param {SandboxConfig} config - 配置
+ * @returns {Promise<Sandbox>}
+ */
+export async function createSandbox(config) {
+  const sandboxId = `sandbox-${++sandboxIdCounter}`;
+  const {
+    appId,
+    profile,
+    plugins,
+    stateRegistry,
+    trace,
+    logger,
+    replay = [],
+    runtime = {},
+    limits = {},
+  } = config;
+  
+  // Realm 管理
+  const realms = new Map(); // realm-id -> Realm
+  const workerRealms = new Set();
+  const workerBudget = createWorkerBudget(limits, workerRealms);
+  const {
+    reserveWorker,
+    reserveWorkerConnection,
+    waitForWorkerCreations,
+    trackWorkerConnection,
+    releaseWorkerConnections,
+  } = workerBudget;
+  let lifecycleGeneration = 0;
+  let lifecycleClosed = false;
+  // 真正的 root realm id（形如 `${sandboxId}-realm-N`）。
+  // 以前 `realms.get('root')` 永远取不到——id 从来不是字面量 'root'
+  // （IKF39V(a)）。这里记录实际句柄，evaluate 用它解析。
+  let rootRealmId = null;
+
+  // 插件实例
+  const pluginInstances = [];
+  
+  // 能力索引
+  const capabilityIndex = new Map(); // capability-name -> Plugin
+  const evidenceResources = new Map(); // realm-id -> injector/observer
+  const { evidence = null } = config;
+  // Core 只接受抽象 EvidenceSource。兼容旧的 `evidenceBundle` 配置名：
+  // 已经符合契约的直接使用，否则交由调用方包装。
+  const evidenceSourceInput = config.evidenceSource ?? config.evidenceBundle ?? null;
+  const evidenceSource = evidenceSourceInput === null
+    ? null
+    : assertEvidenceSource(evidenceSourceInput, 'config.evidenceSource');
+  
+  // 全局注册表（跨 Realm 共享）
+  const nativeFunctionRegistry = createNativeFunctionRegistry();
+  const eventListenerRegistry = createEventListenerRegistry();
+  const objectURLRegistry = createObjectURLRegistry();
+  const surfaceRegistry = createSurfaceRegistry();
+  const broadcastGroups = new Map();
+  const sharedWorkerRecords = new Map();
+  // 同 key 的 SharedWorker 创建互斥：key -> in-flight promise（IKFD9H）
+  const sharedWorkerCreations = new Map();
+  const workletRealmsByOwner = new WeakMap();
+  const workletRealms = new Set();
+  const workerReplayState = createWorkerReplayState(replay);
+  const serviceWorkerHandles = new Map();
+  const windowClients = new Map();
+  const {
+    findServiceWorkerController,
+    getServiceWorkerClients,
+    notifyServiceWorkerClients,
+    disposeServiceWorkerHandles,
+  } = createServiceWorkerClientRegistry({
+    realms,
+    windowClients,
+    serviceWorkerHandles,
+  });
+  let nextWindowClientId = 1;
+  const serviceWorkerContainers = new Map();
+  const lifecycle = createLifecycleRecorder({
+    maxEntries: limits.maxLifecycleEntries,
+  });
+  lifecycle.emit('sandbox.created', { sandboxId, appId });
+  const defaultBroadcastConnector = (name, receive) => {
+    const key = `${new URL(profile.url || 'https://example.com/').origin}\0${name}`;
+    let group = broadcastGroups.get(key);
+    if (group === undefined) {
+      group = new Set();
+      broadcastGroups.set(key, group);
+    }
+    const endpoint = { receive };
+    group.add(endpoint);
+    return {
+      publish(message) {
+        for (const candidate of group) {
+          if (candidate !== endpoint) candidate.receive(message);
+        }
+      },
+      close() {
+        group.delete(endpoint);
+        if (group.size === 0) broadcastGroups.delete(key);
+      },
+    };
+  };
+  
+  // 全局配置对象
+  const globals = {
+    nativeFunctionRegistry,
+    eventListenerRegistry,
+    objectURLRegistry,
+  };
+
+  /** 构造插件钩子上下文（sandbox 级安装，realm 为 null）。 */
+  const pluginContextFor = plugin => createPluginContext(
+    plugin,
+    sandboxId,
+    null,
+    stateRegistry,
+    globals,
+    surfaceRegistry,
+    logger,
+    trace,
+  );
+  
+  logger.info(`[Sandbox ${sandboxId}] Initializing with ${plugins.length} plugins`);
+  
+  // 1. 安装所有插件（按依赖顺序）
+  for (const plugin of plugins) {
+    await installPlugin(
+      plugin,
+      sandboxId,
+      stateRegistry,
+      globals,
+      surfaceRegistry,
+      logger,
+      trace,
+    );
+    pluginInstances.push(plugin);
+    
+    // 建立能力索引，兼容 provides/capabilities 两种声明格式
+    const declaredCapabilities = plugin.provides || plugin.capabilities || [];
+    for (const capability of declaredCapabilities) {
+      const name = typeof capability === 'string'
+        ? capability
+        : capability.name;
+      if (name) capabilityIndex.set(name, plugin);
+    }
+  }
+  
+  logger.info(`[Sandbox ${sandboxId}] All plugins installed`);
+
   function disposeSharedWorkerRecords() {
     for (const record of new Set(sharedWorkerRecords.values())) {
       for (const connection of [...record.connections]) {
@@ -317,118 +529,9 @@ export async function createSandbox(config) {
     return selected === null ? null : selected.handle.fetch(request);
   }
 
-  function createWorkerLimitError(code, limit, message) {
-    const error = new DOMException(message, 'QuotaExceededError');
-    Object.defineProperties(error, {
-      nv8Code: { value: code, enumerable: true },
-      limit: { value: limit, enumerable: true },
-    });
-    return error;
-  }
-
-  function createWorkerLifecycleError() {
-    const error = new Error('Sandbox worker lifecycle is no longer active');
-    error.code = 'ERR_NV8_WORKER_LIFECYCLE';
-    return error;
-  }
-
-  function trackWorkerConnection(realm, release) {
-    let releases = workerConnectionReleases.get(realm);
-    if (releases === undefined) {
-      releases = new Set();
-      workerConnectionReleases.set(realm, releases);
-    }
-    releases.add(release);
-  }
-
-  function releaseWorkerConnections(realm) {
-    const releases = workerConnectionReleases.get(realm);
-    if (releases === undefined) return;
-    workerConnectionReleases.delete(realm);
-    for (const release of releases) release();
-    releases.clear();
-  }
-
-  function reserveWorker(depth, connection) {
-    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
-    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
-    const maxWorkerRealms = limits.maxWorkerRealms ?? limits.maxRealms ?? 64;
-    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
-    if (workerDepth > maxWorkerDepth) {
-      throw createWorkerLimitError(
-        'LIMIT_WORKER_DEPTH',
-        maxWorkerDepth,
-        'The sandbox worker nesting depth limit has been reached.',
-      );
-    }
-    if (workerRealms.size + pendingWorkerCreations >= maxWorkerRealms) {
-      throw createWorkerLimitError(
-        'LIMIT_WORKER_REALMS',
-        maxWorkerRealms,
-        'The sandbox worker realm limit has been reached.',
-      );
-    }
-    if (connection && workerConnections >= maxWorkerConnections) {
-      throw createWorkerLimitError(
-        'LIMIT_WORKER_CONNECTIONS',
-        maxWorkerConnections,
-        'The sandbox worker connection limit has been reached.',
-      );
-    }
-    pendingWorkerCreations += 1;
-    if (connection) workerConnections += 1;
-    const state = { released: false, connectionReleased: !connection };
-    return {
-      depth: workerDepth,
-      releasePending() {
-        pendingWorkerCreations = Math.max(0, pendingWorkerCreations - 1);
-        if (pendingWorkerCreations === 0) {
-          for (const resolve of workerCreationWaiters) resolve();
-          workerCreationWaiters.clear();
-        }
-      },
-      releaseConnection() {
-        if (!state.connectionReleased) {
-          state.connectionReleased = true;
-          workerConnections = Math.max(0, workerConnections - 1);
-        }
-      },
-    };
-  }
-
-  function waitForWorkerCreations() {
-    if (pendingWorkerCreations === 0) return Promise.resolve();
-    return new Promise(resolve => workerCreationWaiters.add(resolve));
-  }
-
-  function reserveWorkerConnection(depth) {
-    const workerDepth = Number.isSafeInteger(depth) && depth >= 0 ? depth : 1;
-    const maxWorkerDepth = limits.maxWorkerDepth ?? 64;
-    const maxWorkerConnections = limits.maxWorkerConnections ?? 4096;
-    if (workerDepth > maxWorkerDepth) {
-      throw createWorkerLimitError(
-        'LIMIT_WORKER_DEPTH',
-        maxWorkerDepth,
-        'The sandbox worker nesting depth limit has been reached.',
-      );
-    }
-    if (workerConnections >= maxWorkerConnections) {
-      throw createWorkerLimitError(
-        'LIMIT_WORKER_CONNECTIONS',
-        maxWorkerConnections,
-        'The sandbox worker connection limit has been reached.',
-      );
-    }
-    workerConnections += 1;
-    let released = false;
-    return () => {
-      if (released) return;
-      released = true;
-      workerConnections = Math.max(0, workerConnections - 1);
-    };
-  }
-
   async function createIframeChildRealm(options) {
+    if (lifecycleClosed) throw createRealmLifecycleError();
+    const generation = lifecycleGeneration;
     if (realms.size >= (limits.maxRealms ?? 64)) {
       const error = new Error('Realm capacity limit exceeded');
       error.code = 'LIMIT_REALM_CAPACITY';
@@ -447,6 +550,9 @@ export async function createSandbox(config) {
         headers: { accept: 'text/html' },
         body: null,
       });
+      if (lifecycleClosed || generation !== lifecycleGeneration) {
+        throw createRealmLifecycleError();
+      }
       if (navigationResponse?.body !== undefined) {
         pageHtml = decodeNavigationBody(navigationResponse.body);
       }
@@ -500,6 +606,11 @@ export async function createSandbox(config) {
         },
       },
     });
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      childRealm.destroyed = true;
+      await childRealm.destroy().catch(() => {});
+      throw createRealmLifecycleError();
+    }
     realms.set(childRealm.id, childRealm);
     const clientId = options.clientId ?? `window-client-${nextWindowClientId++}`;
     windowClients.set(childRealm.id, {
@@ -556,6 +667,10 @@ export async function createSandbox(config) {
     originalOptions,
     navigationOptions = {},
   ) {
+    // 生命周期闸门：销毁/重置之后的导航（含页面定时器触发的延迟导航）
+    // 一律拒绝，不得复活 Realm（IKFD9F）。
+    if (lifecycleClosed || oldRealm.destroyed) return null;
+    const generation = lifecycleGeneration;
     if (
       navigationOptions.beforeUnloadChecked !== true
       && oldRealm.moduleLoader
@@ -572,6 +687,9 @@ export async function createSandbox(config) {
       headers: { accept: 'text/html' },
       body: null,
     });
+    if (lifecycleClosed || generation !== lifecycleGeneration || oldRealm.destroyed) {
+      return null;
+    }
     if (navigationResponse?.body !== undefined) {
       pageHtml = decodeNavigationBody(navigationResponse.body);
     }
@@ -649,6 +767,11 @@ export async function createSandbox(config) {
         ),
       },
     });
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      replacement.destroyed = true;
+      await replacement.destroy().catch(() => {});
+      throw createRealmLifecycleError();
+    }
     if (evidenceSource !== null && evidence?.executeScripts === true) {
       const resource = await injectEvidenceScripts(
         replacement,
@@ -659,7 +782,15 @@ export async function createSandbox(config) {
       );
       evidenceResources.set(replacement.id, resource);
     }
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      evidenceResources.get(replacement.id)?.dispose();
+      evidenceResources.delete(replacement.id);
+      replacement.destroyed = true;
+      await replacement.destroy().catch(() => {});
+      throw createRealmLifecycleError();
+    }
     realms.set(replacement.id, replacement);
+    rootRealmId = replacement.id;
     oldClient.realmId = replacement.id;
     oldClient.url = targetUrl;
     oldClient.navigatePage = value => replaceRootWindowClient(
@@ -757,6 +888,7 @@ export async function createSandbox(config) {
         options.type,
         options.url,
         workerReplayState,
+        limits.timeoutMs ?? 5000,
       ) ?? version;
     } catch (error) {
       destroyWorkerRealm(workerRealm);
@@ -882,6 +1014,7 @@ export async function createSandbox(config) {
         options.type,
         options.url,
         workerReplayState,
+        limits.timeoutMs ?? 5000,
       );
       version = evaluatedVersion ?? version;
       await workerRuntime?.dispatchServiceWorkerLifecycle?.('install');
@@ -897,6 +1030,14 @@ export async function createSandbox(config) {
       scriptURL: options.url,
       scope: workerScope,
       version,
+      // 生命周期只读视图：让 findServiceWorkerController / 客户端快照
+      // 能识别已终止的 handle（IKFD9G）。
+      get destroyed() {
+        return workerRealm.destroyed === true;
+      },
+      get realm() {
+        return workerRealm;
+      },
       deliverOwnerMessage(message, transferOptions, ports) {
         if (workerRealm.destroyed) return;
         workerRuntime?.receiveOwnerMessage?.(message, transferOptions, ports);
@@ -940,99 +1081,35 @@ export async function createSandbox(config) {
     const generation = lifecycleGeneration;
     const key = `${options.creatorOrigin}\0${options.url}\0${options.name}`;
     let record = sharedWorkerRecords.get(key);
+    // 复用前先检查 record 生命周期：worker 侧 self.close() / 生命周期销毁
+    // 之后残留的 record 不合法，必须重建（IKFD9H）。
+    if (record !== undefined && record.realm?.destroyed === true) {
+      sharedWorkerRecords.delete(key);
+      record = undefined;
+    }
     const source = record === undefined
       ? resolveCoreWorkerSource(options.url, workerReplayState)
       : null;
     const releaseConnection = reserveWorkerConnection(options.workerDepth);
     if (record === undefined) {
-      let workerRealm;
-      let reservation;
+      // 并发 new SharedWorker(同 key)：第一个调用者负责创建，其余等待同一个
+      // in-flight promise。否则两个调用者会各自建一个全局作用域（IKFD9H）。
+      let creation = sharedWorkerCreations.get(key);
+      if (creation === undefined) {
+        creation = createSharedWorkerRecord(key, options, source, generation);
+        sharedWorkerCreations.set(key, creation);
+        void creation.finally(() => {
+          if (sharedWorkerCreations.get(key) === creation) {
+            sharedWorkerCreations.delete(key);
+          }
+        }).catch(() => {});
+      }
       try {
-        reservation = reserveWorker(options.workerDepth, false);
+        record = await creation;
       } catch (error) {
         releaseConnection();
         throw error;
       }
-      const workerNavigatorProfile = {
-        ...(profile.navigator || {}),
-        languages: profile.navigator?.languages || ['en-US', 'en'],
-        language: profile.navigator?.language || 'en-US',
-      };
-      try {
-        workerRealm = await createRealm({
-          sandboxId,
-          type: 'worker',
-          plugins: pluginInstances,
-          stateRegistry,
-          globals,
-          trace,
-          logger,
-          pageUrl: options.url,
-          pageHtml: '',
-          replay,
-          navigatorProfile: workerNavigatorProfile,
-          timingProfile: profile.timing || null,
-          workerDepth: reservation.depth,
-          runtime: {
-            ...runtime,
-            workerDepth: reservation.depth,
-            workerFactory: createDedicatedWorker,
-            sharedWorkerFactory: createSharedWorkerConnection,
-            workletFactory: createWorkletModule,
-            broadcastConnector: defaultBroadcastConnector,
-            networkRequestRecorder: scopeNetworkRecorder(
-              runtime.networkRequestRecorder,
-              'shared-worker',
-              options.url,
-            ),
-            workerGlobal: {
-              kind: 'shared',
-              name: `${options.name ?? ''}`,
-              url: options.url,
-              type: options.type,
-              replay,
-              navigatorProfile: workerNavigatorProfile,
-              renderingProfile: profile.rendering ?? null,
-              postMessage: null,
-              close() {
-                destroyWorkerRealm(workerRealm);
-              },
-            },
-          },
-        });
-      } catch (error) {
-        reservation.releasePending();
-        releaseConnection();
-        throw error;
-      }
-      reservation.releasePending();
-      if (lifecycleClosed || generation !== lifecycleGeneration) {
-        releaseConnection();
-        destroyWorkerRealm(workerRealm);
-        throw createWorkerLifecycleError();
-      }
-      realms.set(workerRealm.id, workerRealm);
-      workerRealms.add(workerRealm);
-      try {
-        await evaluateCoreWorkerSource(
-          workerRealm,
-          source,
-          options.type,
-          options.url,
-          workerReplayState,
-        );
-      } catch (error) {
-        destroyWorkerRealm(workerRealm);
-        releaseConnection();
-        throw error;
-      }
-      record = {
-        realm: workerRealm,
-        runtime: workerRealm.moduleLoader
-          .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace,
-        connections: new Set(),
-      };
-      sharedWorkerRecords.set(key, record);
     }
     if (lifecycleClosed || generation !== lifecycleGeneration) {
       releaseConnection();
@@ -1065,6 +1142,105 @@ export async function createSandbox(config) {
         }
       },
     };
+  }
+
+  /**
+   * 创建 SharedWorker 全局作用域（record）。调用方通过
+   * `sharedWorkerCreations` 做同 key 互斥，本函数自身不查缓存。
+   */
+  async function createSharedWorkerRecord(key, options, source, generation) {
+    let workerRealm;
+    let reservation;
+    try {
+      reservation = reserveWorker(options.workerDepth, false);
+    } catch (error) {
+      throw error;
+    }
+    const workerNavigatorProfile = {
+      ...(profile.navigator || {}),
+      languages: profile.navigator?.languages || ['en-US', 'en'],
+      language: profile.navigator?.language || 'en-US',
+    };
+    try {
+      workerRealm = await createRealm({
+        sandboxId,
+        type: 'worker',
+        plugins: pluginInstances,
+        stateRegistry,
+        globals,
+        trace,
+        logger,
+        pageUrl: options.url,
+        pageHtml: '',
+        replay,
+        navigatorProfile: workerNavigatorProfile,
+        timingProfile: profile.timing || null,
+        workerDepth: reservation.depth,
+        runtime: {
+          ...runtime,
+          workerDepth: reservation.depth,
+          workerFactory: createDedicatedWorker,
+          sharedWorkerFactory: createSharedWorkerConnection,
+          workletFactory: createWorkletModule,
+          broadcastConnector: defaultBroadcastConnector,
+          networkRequestRecorder: scopeNetworkRecorder(
+            runtime.networkRequestRecorder,
+            'shared-worker',
+            options.url,
+          ),
+          workerGlobal: {
+            kind: 'shared',
+            name: `${options.name ?? ''}`,
+            url: options.url,
+            type: options.type,
+            replay,
+            navigatorProfile: workerNavigatorProfile,
+            renderingProfile: profile.rendering ?? null,
+            postMessage: null,
+            close() {
+              // worker 侧 self.close()：作废 record，后续同 key 的
+              // new SharedWorker 必须重建而不是复用死掉的 realm。
+              const current = sharedWorkerRecords.get(key);
+              if (current !== undefined && current.realm === workerRealm) {
+                sharedWorkerRecords.delete(key);
+              }
+              destroyWorkerRealm(workerRealm);
+            },
+          },
+        },
+      });
+    } catch (error) {
+      reservation.releasePending();
+      throw error;
+    }
+    reservation.releasePending();
+    if (lifecycleClosed || generation !== lifecycleGeneration) {
+      destroyWorkerRealm(workerRealm);
+      throw createWorkerLifecycleError();
+    }
+    realms.set(workerRealm.id, workerRealm);
+    workerRealms.add(workerRealm);
+    try {
+      await evaluateCoreWorkerSource(
+        workerRealm,
+        source,
+        options.type,
+        options.url,
+        workerReplayState,
+        limits.timeoutMs ?? 5000,
+      );
+    } catch (error) {
+      destroyWorkerRealm(workerRealm);
+      throw error;
+    }
+    const record = {
+      realm: workerRealm,
+      runtime: workerRealm.moduleLoader
+        .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace,
+      connections: new Set(),
+    };
+    sharedWorkerRecords.set(key, record);
+    return record;
   }
 
   async function createWorkletModule(options) {
@@ -1123,6 +1299,10 @@ export async function createSandbox(config) {
      * @returns {Promise<Realm>}
      */
     async createRealm(options = {}) {
+      if (this._disposed) {
+        throw createRealmLifecycleError();
+      }
+      const generation = lifecycleGeneration;
       if (realms.size >= (limits.maxRealms ?? 64)) {
         const error = new Error('Realm capacity limit exceeded');
         error.code = 'LIMIT_REALM_CAPACITY';
@@ -1141,6 +1321,9 @@ export async function createSandbox(config) {
           headers: { accept: 'text/html' },
           body: null,
         });
+        if (lifecycleClosed || generation !== lifecycleGeneration) {
+          throw createRealmLifecycleError();
+        }
         if (
           navigationResponse !== null
           && navigationResponse !== undefined
@@ -1190,6 +1373,7 @@ export async function createSandbox(config) {
               ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
               ?.namespace?.dispatchBeforeUnload?.() !== false,
             onNavigate: ({ url, mode }) => {
+              if (lifecycleClosed || generation !== lifecycleGeneration) return;
               if (realm?.destroyed) return;
               if (rootClient === null) {
                 pendingNavigation = { url, mode };
@@ -1225,18 +1409,43 @@ export async function createSandbox(config) {
         },
       });
       
-      if (evidenceSource !== null && evidence?.executeScripts === true) {
-        const resource = await injectEvidenceScripts(
-          realm,
-          evidenceSource,
-          evidence,
-          pageUrl,
-          logger,
-        );
-        evidenceResources.set(realm.id, resource);
+      try {
+        if (evidenceSource !== null && evidence?.executeScripts === true) {
+          const resource = await injectEvidenceScripts(
+            realm,
+            evidenceSource,
+            evidence,
+            pageUrl,
+            logger,
+          );
+          evidenceResources.set(realm.id, resource);
+        }
+        await completePageLifecycle(realm);
+      } catch (error) {
+        // 证据脚本 / 生命周期失败时必须回收这个半成品 Realm（IKFD9I）：
+        // 此时它还没进 realms 表，调用方无法寻址，但它的定时器/观察者
+        // 可能仍在执行。销毁并清理证据资源后再向上抛。
+        evidenceResources.get(realm.id)?.dispose();
+        evidenceResources.delete(realm.id);
+        realm.destroyed = true;
+        await realm.destroy().catch(destroyError => {
+          logger.warn(
+            `[Sandbox ${sandboxId}] Failed to dispose realm after creation error: ${destroyError.message}`,
+          );
+        });
+        stateRegistry.destroyContext('realm', realm.id);
+        throw error;
       }
-      await completePageLifecycle(realm);
+      if (lifecycleClosed || generation !== lifecycleGeneration) {
+        evidenceResources.get(realm.id)?.dispose();
+        evidenceResources.delete(realm.id);
+        realm.destroyed = true;
+        await realm.destroy().catch(() => {});
+        stateRegistry.destroyContext('realm', realm.id);
+        throw createRealmLifecycleError();
+      }
       realms.set(realm.id, realm);
+      if (realmType === 'root') rootRealmId = realm.id;
       lifecycle.emit('realm.created', {
         sandboxId,
         realmId: realm.id,
@@ -1293,6 +1502,7 @@ export async function createSandbox(config) {
       
       evidenceResources.get(realmId)?.dispose();
       evidenceResources.delete(realmId);
+      if (rootRealmId === realmId) rootRealmId = null;
       if (workerRealms.has(realm)) {
         destroyWorkerRealm(realm);
       } else {
@@ -1456,7 +1666,7 @@ export async function createSandbox(config) {
         throw new Error('Cannot evaluate on disposed sandbox');
       }
       
-      const rootRealm = realms.get('root');
+      const rootRealm = rootRealmId === null ? null : realms.get(rootRealmId);
       if (!rootRealm) {
         throw new Error('Root realm not found');
       }
@@ -1479,13 +1689,24 @@ export async function createSandbox(config) {
       
       logger.info(`[Sandbox ${sandboxId}] Resetting sandbox`);
       lifecycleGeneration += 1;
-      
+
       // 销毁所有 realm
       for (const [realmId] of [...realms]) {
         await this.destroyRealm(realmId);
       }
       await waitForWorkerCreations();
-      
+
+      // reset 的语义是「所有 Realm 全部失效」：ServiceWorker 注册与
+      // SharedWorker 全局作用域也必须随 Realm 一起作废，否则新 Realm
+      // 会拿到已销毁的 controller/record（IKFD9G / IKFD9H）。
+      disposeServiceWorkerHandles();
+      disposeSharedWorkerRecords();
+      for (const workletRealm of workletRealms) {
+        destroyWorkletRealm(workletRealm);
+      }
+      workletRealms.clear();
+      rootRealmId = null;
+
       lifecycle.emit('sandbox.reset', { sandboxId });
       logger.info(`[Sandbox ${sandboxId}] Sandbox reset completed`);
     },
@@ -1498,29 +1719,12 @@ export async function createSandbox(config) {
         throw new Error('Cannot snapshot disposed sandbox');
       }
       
-      const state = {};
-      
-      // 收集每个插件的状态
-      for (const plugin of pluginInstances) {
-        if (plugin.serialize) {
-          try {
-            const context = createPluginContext(
-              plugin,
-              sandboxId,
-              null,
-              stateRegistry,
-              globals,
-              surfaceRegistry,
-              logger,
-              trace
-            );
-            state[plugin.id] = await plugin.serialize(context);
-          } catch (error) {
-            logger.error(`[Sandbox ${sandboxId}] Plugin snapshot failed:`, error);
-            state[plugin.id] = null;
-          }
-        }
-      }
+      const state = await collectPluginSnapshots(
+        pluginInstances,
+        pluginContextFor,
+        logger,
+        sandboxId,
+      );
       
       return {
         sandboxId,
@@ -1545,26 +1749,13 @@ export async function createSandbox(config) {
       
       logger.info(`[Sandbox ${sandboxId}] Restoring from snapshot`);
       
-      // 恢复每个插件的状态
-      for (const plugin of pluginInstances) {
-        if (plugin.restore && snapshot.state[plugin.id]) {
-          try {
-            const context = createPluginContext(
-              plugin,
-              sandboxId,
-              null,
-              stateRegistry,
-              globals,
-              surfaceRegistry,
-              logger,
-              trace
-            );
-            await plugin.restore(context, snapshot.state[plugin.id]);
-          } catch (error) {
-            logger.error(`[Sandbox ${sandboxId}] Plugin restore failed:`, error);
-          }
-        }
-      }
+      await restorePluginSnapshots(
+        pluginInstances,
+        pluginContextFor,
+        snapshot,
+        logger,
+        sandboxId,
+      );
       
       lifecycle.emit('sandbox.restore', { sandboxId, timestamp: snapshot.timestamp });
       logger.info(`[Sandbox ${sandboxId}] Restore completed`);
@@ -1581,8 +1772,8 @@ export async function createSandbox(config) {
         realms: Array.from(realms.keys()),
         lifecycle: lifecycle.snapshot(),
         workerRealms: workerRealms.size,
-        pendingWorkerCreations,
-        workerConnections,
+        pendingWorkerCreations: workerBudget.pendingCreations,
+        workerConnections: workerBudget.connections,
         state: typeof stateRegistry.stats === 'function'
           ? { limits: stateRegistry.limits(), stats: stateRegistry.stats() }
           : null,
@@ -1599,7 +1790,7 @@ export async function createSandbox(config) {
         capabilities: Array.from(capabilityIndex.keys()),
         realms: Array.from(realms.keys()),
         workerRealms: workerRealms.size,
-        workerConnections,
+        workerConnections: workerBudget.connections,
       };
     },
   };
@@ -1649,8 +1840,9 @@ async function installPlugin(
     );
     
     // 调用统一的 install(context) 钩子。
-    // 未经 PluginRegistry 标准化的旧插件仍保留兼容分支。 
-    if (plugin.install.length >= 2) {
+    // 未经 PluginRegistry 标准化的旧插件仍保留兼容分支；显式标记
+    // `legacy: false` 的插件（IKFD9P）一律走现代单参数契约。 
+    if (plugin.install.length >= 2 && plugin.legacy !== false) {
       await plugin.install(
         { id: sandboxId, state: stateRegistry, globals },
         surfaceRegistry,
@@ -1670,6 +1862,44 @@ async function installPlugin(
     throw new Error(
       `Failed to install plugin "${plugin.id}@${plugin.version}": ${error.message}`
     );
+  }
+}
+
+/**
+ * 收集所有插件的 serialize 状态。
+ *
+ * 单个插件失败只记日志并把该项置 null，不打断整个快照——这是 snapshot()
+ * 既有契约。`createContext` 由调用方注入，避免把 Realm 级闭包搬出沙箱。
+ */
+async function collectPluginSnapshots(pluginInstances, createContext, logger, sandboxId) {
+  const state = {};
+  for (const plugin of pluginInstances) {
+    if (!plugin.serialize) continue;
+    try {
+      state[plugin.id] = await plugin.serialize(createContext(plugin));
+    } catch (error) {
+      logger.error(`[Sandbox ${sandboxId}] Plugin snapshot failed:`, error);
+      state[plugin.id] = null;
+    }
+  }
+  return state;
+}
+
+/** 把快照状态交给插件的 restore 钩子；单个失败只记日志。 */
+async function restorePluginSnapshots(
+  pluginInstances,
+  createContext,
+  snapshot,
+  logger,
+  sandboxId,
+) {
+  for (const plugin of pluginInstances) {
+    if (!plugin.restore || !snapshot.state[plugin.id]) continue;
+    try {
+      await plugin.restore(createContext(plugin), snapshot.state[plugin.id]);
+    } catch (error) {
+      logger.error(`[Sandbox ${sandboxId}] Plugin restore failed:`, error);
+    }
   }
 }
 
@@ -1972,6 +2202,7 @@ async function evaluateCoreWorkerSource(
   type,
   url,
   replayState,
+  timeoutMs = 5000,
 ) {
   if (type === 'module') {
     const modules = new Map();
@@ -2016,17 +2247,58 @@ async function evaluateCoreWorkerSource(
     });
     modules.set(url, module);
     await module.link(load);
-    await module.evaluate();
+    // vm 的模块求值没有 timeout 选项，只能竞速（IKF39K）。
+    await raceScriptTimeout(module.evaluate(), url, timeoutMs);
     return createModuleGraphVersion(sourceEntries);
   }
   const script = new vm.Script(source, { filename: url });
-  script.runInContext(realm.global);
+  // 经典 Worker 脚本与 evaluate 路径对齐：死循环必须在 limits.timeoutMs
+  // 内被终止（IKF39K）。
+  script.runInContext(realm.global, { timeout: timeoutMs, displayErrors: true });
   return createModuleGraphVersion(new Map([[url, source]]));
 }
 
 /**
- * 创建一个兼容旧插件的全局 surface registry。
+ * 给不支持 timeout 选项的异步脚本求值加超时。
+ *
+ * @param {Promise<unknown>} promise
+ * @param {string} url
+ * @param {number} timeoutMs
+ * @returns {Promise<unknown>}
  */
+function raceScriptTimeout(promise, url, timeoutMs) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return promise;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      const error = new Error(
+        `Worker script execution timed out after ${timeoutMs}ms: ${url}`,
+      );
+      error.code = 'ERR_SCRIPT_EXECUTION_TIMEOUT';
+      error.url = url;
+      error.timeoutMs = timeoutMs;
+      reject(error);
+    }, timeoutMs);
+    promise.then(
+      value => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      },
+      error => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+/** 计算 worker 模块图的版本摘要：URL 与源码逐项进 SHA-256。 */
 function createModuleGraphVersion(sourceEntries) {
   const hash = createHash('sha256');
   for (const [url, source] of [...sourceEntries].sort(([left], [right]) => (
@@ -2040,6 +2312,9 @@ function createModuleGraphVersion(sourceEntries) {
   return hash.digest('hex');
 }
 
+/**
+ * 创建一个兼容旧插件的全局 surface registry。
+ */
 function createSurfaceRegistry() {
   const surfaces = new Map();
   return {

@@ -12,10 +12,17 @@
 export function createStateRegistry(options = {}) {
   const limits = normalizeLimits(options);
   // 状态存储结构：
+  // app -> { key -> value }              （单例，插件 SDK 的 'app' 作用域）
   // sandbox -> { key -> value }
   // realm -> { realmId -> { key -> value } }
+  // plugin -> { pluginInstanceId -> { key -> value } }
+  //
+  // app/plugin 作用域与 plugin-sdk 的 createStateAccessor 对接，避免插件
+  // context.state.get 抛 `Invalid scope`（IKF39V(b)）。
+  const appState = new Map();
   const sandboxState = new Map();
   const realmStates = new Map();
+  const pluginStates = new Map();
 
   function contextStore(map, contextId, scope, create = false) {
     if (typeof contextId !== 'string' || contextId.length === 0) {
@@ -53,8 +60,9 @@ export function createStateRegistry(options = {}) {
   }
 
   function totalKeyCount() {
-    let count = sandboxState.size;
+    let count = sandboxState.size + appState.size;
     for (const store of realmStates.values()) count += store.size;
+    for (const store of pluginStates.values()) count += store.size;
     return count;
   }
 
@@ -91,6 +99,15 @@ export function createStateRegistry(options = {}) {
         const realmState = contextStore(realmStates, realmId, 'realm');
         return realmState?.get(key);
       }
+
+      if (scope === 'app') {
+        return appState.get(key);
+      }
+
+      if (scope === 'plugin') {
+        const pluginState = contextStore(pluginStates, realmId, 'plugin');
+        return pluginState?.get(key);
+      }
       
       throw new Error(`Invalid scope: ${scope}`);
     },
@@ -124,6 +141,25 @@ export function createStateRegistry(options = {}) {
         }
         return;
       }
+
+      if (scope === 'app') {
+        assertKeyCapacity(appState, key, scope);
+        appState.set(key, value);
+        return;
+      }
+
+      if (scope === 'plugin') {
+        const existed = pluginStates.has(realmId);
+        const pluginState = contextStore(pluginStates, realmId, scope, true);
+        try {
+          assertKeyCapacity(pluginState, key, scope);
+          pluginState.set(key, value);
+        } catch (error) {
+          if (!existed && pluginState.size === 0) pluginStates.delete(realmId);
+          throw error;
+        }
+        return;
+      }
       
       throw new Error(`Invalid scope: ${scope}`);
     },
@@ -144,6 +180,15 @@ export function createStateRegistry(options = {}) {
       if (scope === 'realm') {
         const realmState = contextStore(realmStates, realmId, 'realm');
         return realmState?.has(key) ?? false;
+      }
+
+      if (scope === 'app') {
+        return appState.has(key);
+      }
+
+      if (scope === 'plugin') {
+        const pluginState = contextStore(pluginStates, realmId, 'plugin');
+        return pluginState?.has(key) ?? false;
       }
       
       throw new Error(`Invalid scope: ${scope}`);
@@ -167,6 +212,18 @@ export function createStateRegistry(options = {}) {
         if (realmState === undefined) return false;
         const deleted = realmState.delete(key);
         if (realmState.size === 0) realmStates.delete(realmId);
+        return deleted;
+      }
+
+      if (scope === 'app') {
+        return appState.delete(key);
+      }
+
+      if (scope === 'plugin') {
+        const pluginState = contextStore(pluginStates, realmId, 'plugin');
+        if (pluginState === undefined) return false;
+        const deleted = pluginState.delete(key);
+        if (pluginState.size === 0) pluginStates.delete(realmId);
         return deleted;
       }
       
@@ -199,6 +256,24 @@ export function createStateRegistry(options = {}) {
         }
         return;
       }
+
+      if (scope === 'app') {
+        appState.clear();
+        return;
+      }
+
+      if (scope === 'plugin') {
+        if (realmId === null || realmId === undefined) {
+          pluginStates.clear();
+        } else {
+          const pluginState = contextStore(pluginStates, realmId, 'plugin');
+          if (pluginState !== undefined) {
+            pluginState.clear();
+            pluginStates.delete(realmId);
+          }
+        }
+        return;
+      }
       
       throw new Error(`Invalid scope: ${scope}`);
     },
@@ -219,6 +294,11 @@ export function createStateRegistry(options = {}) {
     destroyContext(scope, contextId) {
       if (scope === 'realm') {
         return realmStates.delete(contextId);
+      } else if (scope === 'plugin') {
+        return pluginStates.delete(contextId);
+      } else if (scope === 'app') {
+        appState.clear();
+        return true;
       } else if (scope === 'sandbox') {
         sandboxState.clear();
         return true;
@@ -235,10 +315,14 @@ export function createStateRegistry(options = {}) {
     },
 
     stats() {
+      let realmKeyCount = 0;
+      for (const store of realmStates.values()) realmKeyCount += store.size;
       return Object.freeze({
         sandboxKeys: sandboxState.size,
+        appKeys: appState.size,
         realmContexts: realmStates.size,
-        realmKeys: totalKeyCount() - sandboxState.size,
+        pluginContexts: pluginStates.size,
+        realmKeys: realmKeyCount,
         totalKeys: totalKeyCount(),
       });
     },
@@ -246,9 +330,16 @@ export function createStateRegistry(options = {}) {
     inspect() {
       return {
         sandbox: Object.fromEntries(sandboxState),
+        app: Object.fromEntries(appState),
         realms: Object.fromEntries(
           Array.from(realmStates.entries()).map(([realmId, state]) => [
             realmId,
+            Object.fromEntries(state),
+          ])
+        ),
+        plugins: Object.fromEntries(
+          Array.from(pluginStates.entries()).map(([pluginId, state]) => [
+            pluginId,
             Object.fromEntries(state),
           ])
         ),

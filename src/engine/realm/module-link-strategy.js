@@ -31,6 +31,10 @@ export const LINK_STRATEGY = Object.freeze({
   UNAVAILABLE: 'unavailable',
 });
 
+/** 模块图的 in-flight 链接/求值缓存（IKFD9L） */
+const linkInFlight = new WeakMap();
+const evaluateInFlight = new WeakMap();
+
 let cachedStrategy = null;
 
 /**
@@ -141,21 +145,36 @@ export function linkGraphSync(module, visited = new Set()) {
 /**
  * 异步链接一个模块图，适用于所有支持 vm modules 的 Node 版本。
  *
+ * per-module in-flight promise：并发调用（例如两个根模块共享同一个依赖，
+ * 或页面里 `Promise.all([import(x), import(x)])`）必须等待同一次链接，
+ * 而不是对 status==='linking' 的模块直接返回（IKFD9L）。
+ *
  * @param {object} module 根模块
  * @param {(specifier: string, referencingModule: object) => Promise<object>|object} resolveDependency
  * @returns {Promise<void>}
  */
 export async function linkGraphAsync(module, resolveDependency) {
-  if (module.status !== 'unlinked') return;
-  await module.link(async (specifier, referencingModule) => (
-    resolveDependency(specifier, referencingModule)
-  ));
+  if (module.status === 'linked' || module.status === 'evaluated') return;
+  let inFlight = linkInFlight.get(module);
+  if (inFlight === undefined) {
+    inFlight = (async () => {
+      if (module.status !== 'unlinked') return;
+      await module.link(async (specifier, referencingModule) => (
+        resolveDependency(specifier, referencingModule)
+      ));
 
-  // Node 24 的 link() 只解析依赖，不推进到 linked；
-  // 需要额外的 instantiate()。Node 18–22 的 link() 已经完成实例化。
-  if (module.status === 'unlinked' && typeof module.instantiate === 'function') {
-    module.instantiate();
+      // Node 24 的 link() 只解析依赖，不推进到 linked；
+      // 需要额外的 instantiate()。Node 18–22 的 link() 已经完成实例化。
+      if (module.status === 'unlinked' && typeof module.instantiate === 'function') {
+        module.instantiate();
+      }
+    })();
+    inFlight.finally(() => {
+      if (linkInFlight.get(module) === inFlight) linkInFlight.delete(module);
+    }).catch(() => {});
+    linkInFlight.set(module, inFlight);
   }
+  await inFlight;
 }
 
 /**
@@ -205,13 +224,27 @@ export function evaluateSync(module, label = 'trusted internal module') {
 /**
  * 求值一个已链接模块，允许异步完成。
  *
+ * 与 linkGraphAsync 相同，按模块缓存 in-flight promise：并发等待者共享
+ * 同一次求值，避免第二次 `evaluate()` 抛 ERR_VM_MODULE_STATUS（IKFD9L）。
+ *
  * @param {object} module
  * @returns {Promise<void>}
  */
 export async function evaluateAsync(module) {
   if (module.status === 'evaluated') return;
-  await module.evaluate();
-  if (module.status === 'errored') throw module.error;
+  let inFlight = evaluateInFlight.get(module);
+  if (inFlight === undefined) {
+    inFlight = (async () => {
+      if (module.status === 'evaluated') return;
+      await module.evaluate();
+      if (module.status === 'errored') throw module.error;
+    })();
+    inFlight.finally(() => {
+      if (evaluateInFlight.get(module) === inFlight) evaluateInFlight.delete(module);
+    }).catch(() => {});
+    evaluateInFlight.set(module, inFlight);
+  }
+  await inFlight;
 }
 
 /**

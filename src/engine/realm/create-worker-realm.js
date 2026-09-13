@@ -24,6 +24,10 @@ export async function createWorkerRealm({
   timingProfile = null,
   objectURLRegistry = null,
   workerDepth = 0,
+  // profile 的 fingerprint.timezone。worker_threads 与宿主共享 ICU，
+  // 线程级 TZ 不影响已初始化的默认时区，因此由 Realm 内 hook 覆盖
+  // （IKFD9O）。backend 侧通过 workerRealmBuildOptions 传入。
+  timezone = null,
 }) {
   const parsed = new URL(workerUrl);
   const sandboxGlobal = Object.create(null);
@@ -36,6 +40,10 @@ export async function createWorkerRealm({
     },
   });
   const moduleLoader = new RealmModuleLoader(context);
+  // 与 create-realm 一致：宿主泄漏审计先于 bootstrapWorker 执行（IKFD9K）：
+  // worker 无页面脚本，但保持各 Realm 入口时机一致，避免 bootstrap 注入
+  // 的宿主对象被后来的审计漏掉。
+  auditRealmGlobals(context);
   const bootstrap = await moduleLoader.importInternalAsync(
     "edge-internal:bootstrap-worker",
   );
@@ -67,8 +75,8 @@ export async function createWorkerRealm({
     timingProfile,
     navigatorProfile,
     workerDepth,
+    timezone,
   );
-  auditRealmGlobals(context);
   return {
     context,
     moduleLoader,

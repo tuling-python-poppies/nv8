@@ -1,9 +1,26 @@
+import { randomFillSync, randomUUID } from "node:crypto";
 import { installCrypto } from "../../surface/install/install-crypto.js";
 
 const CRYPTO_INSTALLER_URL = new URL(
   "../../surface/install/install-crypto.js",
   import.meta.url,
 );
+
+/**
+ * 传给 Realm 安装器的宿主熵源。
+ *
+ * 这个模块在宿主进程求值（Plugin 由 presets 静态 import），所以 `node:crypto`
+ * 在这里可用；Realm 内的模块加载器禁止 `node:` specifier，安装器自身拿不到。
+ * 两个函数都是纯函数对象，跨 vm context 调用合法，Realm 内的
+ * `crypto.getRandomValues` / `randomUUID` / `generateKey` 都经它们取熵。
+ */
+const HOST_CRYPTO_ENTROPY = Object.freeze({
+  randomFill(bytes) {
+    randomFillSync(bytes);
+    return bytes;
+  },
+  randomUUID,
+});
 
 /**
  * @nv8/plugin-crypto
@@ -37,8 +54,9 @@ export const cryptoPlugin = {
     if (!module?.namespace?.installCrypto) {
       throw new Error('Realm module loader cannot install Crypto');
     }
-    // Pass realm identifier for proper state scoping
-    module.namespace.installCrypto(context.realm);
+    // Pass realm identifier for proper state scoping and host entropy for
+    // CSPRNG-backed random output (the realm module graph cannot import node:crypto).
+    module.namespace.installCrypto(context.realm, HOST_CRYPTO_ENTROPY);
     context.exports.crypto = true;
   },
   

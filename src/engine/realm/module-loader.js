@@ -69,6 +69,11 @@ export class RealmModuleLoader {
     this.modules = new Map();
     this.closed = false;
     this.pending = new Set();
+    // per-module in-flight 链接/求值 promise：并发 import 同一 URL 时，
+    // 后来者等待同一个 promise，而不是看到 status==='linking' 就跳过
+    // 链接直接求值（IKFD9L）。
+    this.linkInFlight = new WeakMap();
+    this.evaluateInFlight = new WeakMap();
   }
 
   #lifecycleError() {
@@ -164,12 +169,61 @@ export class RealmModuleLoader {
       // 必须分阶段：循环依赖（如 navigator-state ↔ navigator-constructor）下，
       // 边递归边 link 会把未完成链接的模块交给 link() 回调而失败。
       const module = this.loadGraph(url);
-      await this.#linkGraphAsync(module, new Set());
+      await this.#linkModule(module, new Set());
       this.#assertOpen();
-      await evaluateAsync(module);
+      const evaluated = await this.#evaluateModule(module);
       this.#assertOpen();
-      return module;
+      return evaluated ?? module;
     });
+  }
+
+  /**
+   * 链接单个模块（共享 in-flight promise）。
+   *
+   * @param {object} module
+   * @param {Set<object>} visited
+   * @returns {Promise<void>}
+   */
+  #linkModule(module, visited) {
+    if (module.status === "linked" || module.status === "evaluated") {
+      return Promise.resolve();
+    }
+    let inFlight = this.linkInFlight.get(module);
+    if (inFlight !== undefined) return inFlight;
+    inFlight = this.#linkGraphAsync(module, visited);
+    inFlight.finally(() => {
+      if (this.linkInFlight.get(module) === inFlight) {
+        this.linkInFlight.delete(module);
+      }
+    }).catch(() => {});
+    this.linkInFlight.set(module, inFlight);
+    return inFlight;
+  }
+
+  /**
+   * 求值单个模块（共享 in-flight promise）。
+   *
+   * @param {object} module
+   * @returns {Promise<object>}
+   */
+  #evaluateModule(module) {
+    if (module.status === "evaluated") return Promise.resolve(module);
+    let inFlight = this.evaluateInFlight.get(module);
+    if (inFlight !== undefined) return inFlight;
+    inFlight = (async () => {
+      await this.#linkModule(module, new Set());
+      if (module.status !== "evaluated") {
+        await evaluateAsync(module);
+      }
+      return module;
+    })();
+    inFlight.finally(() => {
+      if (this.evaluateInFlight.get(module) === inFlight) {
+        this.evaluateInFlight.delete(module);
+      }
+    }).catch(() => {});
+    this.evaluateInFlight.set(module, inFlight);
+    return inFlight;
   }
 
   /**
@@ -183,7 +237,13 @@ export class RealmModuleLoader {
     visited.add(module);
 
     for (const dependency of module.internalDependencies ?? []) {
-      await this.#linkGraphAsync(dependency, visited);
+      // 环里的依赖已在 visited：直接跳过，否则会 await 当前这个 promise
+      // 自己（本模块的 link 尚未开始），形成死锁（IKFD9L）。Node 的 link()
+      // 本身能处理环，这里只负责把非环依赖先链完。
+      if (visited.has(dependency)) continue;
+      // 依赖也走共享 in-flight：并发根模块共享依赖时，第二个根会等待
+      // 第一个根把依赖链完，而不是看到 'linking' 直接略过（IKFD9L）。
+      await this.#linkModule(dependency, visited);
     }
 
     if (module.status !== "unlinked") return;

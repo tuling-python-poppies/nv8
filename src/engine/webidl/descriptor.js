@@ -10,6 +10,11 @@ import {
   registerNativeGetter,
 } from "./native-function.js";
 
+// 必须在任何 native toString 伪装接管之前捕获原始实现：安装器会先
+// `registerNativeFunction(callback)`，之后 `Function.prototype.toString`
+// 对已登记函数返回 "[native code]"，基于源码的结构判定会失效（IKF3A3）。
+const rawFunctionToString = Function.prototype.toString;
+
 export function defineGlobalConstructor(name, constructor) {
   const prototypeDescriptor = Object.getOwnPropertyDescriptor(
     constructor,
@@ -163,28 +168,69 @@ export function defineConstructorBacklink(prototype, constructor) {
 }
 
 /**
- * 不做**同步**实参个数检查的方法。
+ * 返回 Promise 的操作集合（IKF3A3）。
  *
- * 两类，都来自对真实 Edge 的实测（非推断）：
+ * WebIDL 规定**返回 Promise 的操作**参数错误转为 rejected promise，不同步抛。
+ * 以前这里靠一份 4 个硬编码名字的豁免名单，新增/更名方法时很容易漏。
+ * 现在改为机制判定：
  *
- * 1. **返回 Promise 的操作**。WebIDL 规定这类操作的参数错误转为
- *    **rejected promise**，不同步抛。实测真实 Edge 对
- *    `document.hasPrivateToken()` 不抛错。
- * 2. **自己做参数校验的迭代辅助方法**。`forEach` 类报的是
- *    `undefined is not a function`，而不是 WebIDL 的 arity 模板。
+ * 1. `markPromiseOperation(fn)` 显式登记（表面实现可用）；
+ * 2. `fn.promiseOperation === true` 元数据；
+ * 3. `async function` 实现（`constructor.name === 'AsyncFunction'`）。
  *
- * 键可以是裸方法名（对所有接口生效）或 `Interface.method`。
+ * 判定在方法安装时进行，不调用实现，避免为探测产生副作用。
  */
-const NO_SYNC_ARITY_CHECK = new Set([
-  // 迭代辅助里只有 DOMTokenList.forEach 是 JS 风格报错。
-  // 实测 `URLSearchParams.forEach` / `Headers.forEach` 反而走 WebIDL arity
-  // 模板——所以不能按裸方法名一刀切排除。
-  "DOMTokenList.forEach",
-  // 返回 Promise 的操作：实测不同步抛
-  "Document.requestStorageAccessFor",
-  "Document.hasPrivateToken",
-  "Document.hasRedemptionRecord",
-]);
+const promiseOperations = new WeakSet();
+
+/**
+ * 把实现函数标记为「返回 Promise 的操作」，豁免同步 arity 检查。
+ *
+ * @template {Function} T
+ * @param {T} callback
+ * @returns {T}
+ */
+export function markPromiseOperation(callback) {
+  if (typeof callback === "function") promiseOperations.add(callback);
+  return callback;
+}
+
+function isPromiseReturningOperation(callback) {
+  if (typeof callback !== "function") return false;
+  if (promiseOperations.has(callback)) return true;
+  if (callback.promiseOperation === true) return true;
+  return callback.constructor?.name === "AsyncFunction";
+}
+
+/**
+ * 实现自己做参数校验的操作（IKF3A3）。
+ *
+ * 少数迭代辅助方法在入口就检查回调参数并抛出**由缺失实参强制转换而来**的
+ * 错误（如 DOMTokenList.forEach 的 `` `${callback} is not a function` `` →
+ * `undefined is not a function`）。真实 Edge 报的是实现自己的错误，而不是
+ * WebIDL arity 模板，因此这类操作必须豁免同步 arity 检查。
+ *
+ * 判据按**结构**而不是办法名：在入口的 `typeof x !== "function"` 守卫里
+ * 抛出以模板字面量插值错误消息的 TypeError。URLSearchParams.forEach 虽然
+ * 也做入口校验，但抛的是固定字符串（实测走 WebIDL 模板），不会命中。
+ *
+ * 也可以在实现上显式标记 `callback.selfValidates = true`。
+ *
+ * 只在安装时检查一次，不调用实现（避免探测副作用）。
+ */
+const SELF_VALIDATING_SOURCE = new RegExp(
+  'typeof\\s+[A-Za-z_$][\\w$]*\\s*!==?\\s*["\']function["\']\\s*\\)'
+  + '\\s*\\{?\\s*throw\\s+new\\s+TypeError\\(\\s*`',
+);
+
+function isSelfValidatingOperation(callback) {
+  if (typeof callback !== "function") return false;
+  if (callback.selfValidates === true) return true;
+  try {
+    return SELF_VALIDATING_SOURCE.test(rawFunctionToString.call(callback));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * 推断声明该方法的接口名，用于 WebIDL 报错文案。
@@ -223,16 +269,14 @@ function createCrossRealmMethod(name, callback, displayName, prototype = null) {
   const required = callback.length;
   const checkArity = required > 0
     && prototype !== null
-    && !NO_SYNC_ARITY_CHECK.has(name);
+    && !isPromiseReturningOperation(callback)
+    && !isSelfValidatingOperation(callback);
   const invoke = (receiver, args) => {
     if (checkArity && args.length < required) {
       if (interfaceName === undefined) {
         interfaceName = resolveInterfaceName(prototype);
       }
-      if (
-        interfaceName !== null
-        && !NO_SYNC_ARITY_CHECK.has(`${interfaceName}.${name}`)
-      ) {
+      if (interfaceName !== null) {
         requireArguments(required, args.length, displayName, interfaceName);
       }
     }

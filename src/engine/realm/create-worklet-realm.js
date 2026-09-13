@@ -19,6 +19,8 @@ export async function createWorkletRealm({
     },
   });
   const moduleLoader = new RealmModuleLoader(context);
+  // 与 create-realm / create-worker-realm 一致：审计先于 bootstrapWorklet（IKFD9K）
+  auditRealmGlobals(context);
   const bootstrap = await moduleLoader.importInternalAsync(
     "edge-internal:bootstrap-worklet",
   );
@@ -28,7 +30,6 @@ export async function createWorkletRealm({
     maxTraceEntries,
     objectURLRegistry,
   );
-  auditRealmGlobals(context);
   return {
     context,
     moduleLoader,
