@@ -303,6 +303,7 @@ categoryTest('crossRealm', 'cross-realm object identity');
 categoryTest('urlParsing', 'URL validation and normalization');
 categoryTest('svg', 'SVG element and geometry behavior');
 categoryTest('observers', 'Observer interface behavior');
+categoryTest('animations', 'Web Animations interface behavior');
 
 // ------------------------------------------------------ 整体与登记
 

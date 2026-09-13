@@ -43,6 +43,7 @@
  * - `urlParsing` —— `new URL()` 的校验与规范化
  * - `svg` —— SVG 元素、命名空间和几何接口的稳定语义
  * - `observers` —— Mutation/Resize/IntersectionObserver 的同步接口语义
+ * - `animations` —— Web Animations 默认状态与接口语义
  */
 
 /**
@@ -1893,6 +1894,155 @@ export const BEHAVIOR_PROBES = Object.freeze([
     category: 'observers',
     expression: '() => MutationObserver.prototype.disconnect.call({})',
   },
+
+  // ---------------------------------------------- Web Animations 同步接口语义
+  {
+    id: 'animations/element-empty-list',
+    category: 'animations',
+    expression: `() => {
+      const element = document.createElement('div');
+      const animations = element.getAnimations();
+      return [Array.isArray(animations), animations.length, Object.prototype.toString.call(animations)].join('|');
+    }`,
+  },
+  {
+    id: 'animations/default-animation-state',
+    category: 'animations',
+    expression: `() => {
+      const animation = new Animation();
+      const result = [
+        Object.prototype.toString.call(animation),
+        animation.playState,
+        animation.pending,
+        animation.currentTime,
+        animation.playbackRate,
+      ].join('|');
+      animation.cancel();
+      return result;
+    }`,
+  },
+  {
+    id: 'animations/prototype-method-shape',
+    category: 'animations',
+    expression: `() => [
+      typeof Animation.prototype.play,
+      typeof Animation.prototype.pause,
+      typeof Animation.prototype.finish,
+      typeof Animation.prototype.cancel,
+      Animation.prototype.play.length,
+      Animation.prototype.cancel.length,
+    ].join('|')`,
+  },
+  {
+    id: 'animations/keyframe-effect-defaults',
+    category: 'animations',
+    expression: `() => {
+      const effect = new KeyframeEffect(null, [], {});
+      const timing = effect.getTiming();
+      return [
+        Object.prototype.toString.call(effect),
+        timing.duration,
+        timing.delay,
+        timing.iterations,
+        effect.composite,
+      ].join('|');
+    }`,
+  },
+  {
+    id: 'animations/animation-illegal-cancel',
+    category: 'animations',
+    expression: '() => Animation.prototype.cancel.call({})',
+  },
+
+  // ---------------------------------------------- 现有网络/存储接口的深层同步语义
+  {
+    id: 'storage/insertion-order-and-removal',
+    category: 'storage',
+    expression: `() => {
+      const storage = sessionStorage;
+      storage.clear();
+      storage.setItem('b', '2');
+      storage.setItem('a', '1');
+      const before = [storage.length, storage.key(0), storage.key(1)].join('|');
+      storage.removeItem('b');
+      return [before, storage.length, storage.key(0), storage.getItem('b')].join('|');
+    }`,
+  },
+  {
+    id: 'storage-property-access-coercion',
+    category: 'storage',
+    expression: `() => {
+      const storage = sessionStorage;
+      storage.clear();
+      storage.setItem('answer', 42);
+      return [storage.answer, storage.missing, Object.prototype.hasOwnProperty.call(storage, 'answer')].join('|');
+    }`,
+  },
+  {
+    id: 'fetch/request-header-normalization',
+    category: 'fetch',
+    expression: `() => {
+      const request = new Request('/items', { method: 'POST', headers: { 'X-Test': 'value' }, body: 'x' });
+      return [request.method, request.headers.get('x-test'), request.bodyUsed, request.credentials].join('|');
+    }`,
+  },
+  {
+    id: 'fetch/response-header-and-clone',
+    category: 'fetch',
+    expression: `() => {
+      const response = new Response('ok', { status: 201, headers: { 'X-Test': 'value' } });
+      const clone = response.clone();
+      return [response.status, response.ok, response.headers.get('x-test'), clone !== response, clone.bodyUsed].join('|');
+    }`,
+  },
+  {
+    id: 'crypto/random-values-view',
+    category: 'crypto',
+    expression: `() => {
+      const view = new Uint16Array(2);
+      const returned = crypto.getRandomValues(view);
+      return [returned === view, view.byteLength, view.length, Object.prototype.toString.call(returned)].join('|');
+    }`,
+  },
+  {
+    id: 'crypto/random-values-illegal-receiver',
+    category: 'crypto',
+    expression: '() => Crypto.prototype.getRandomValues.call({}, new Uint8Array(1))',
+  },
+  {
+    id: 'xhr/initial-state-deep',
+    category: 'xhr',
+    expression: `() => {
+      const xhr = new XMLHttpRequest();
+      return [xhr.readyState, xhr.responseType, xhr.withCredentials, xhr.timeout, Object.prototype.toString.call(xhr)].join('|');
+    }`,
+  },
+  {
+    id: 'xhr/response-type-validation',
+    category: 'xhr',
+    expression: `() => {
+      const xhr = new XMLHttpRequest();
+      try { xhr.responseType = 'invalid'; return 'no-throw'; }
+      catch (error) { return error.name + ':' + error.message; }
+    }`,
+  },
+  {
+    id: 'indexedDB/key-order-comparison',
+    category: 'indexedDB',
+    expression: `() => [
+      indexedDB.cmp(1, 2),
+      indexedDB.cmp('a', 'a'),
+      indexedDB.cmp([1], [2]),
+    ].join('|')`,
+  },
+  {
+    id: 'indexedDB/key-range-shape',
+    category: 'indexedDB',
+    expression: `() => {
+      const range = IDBKeyRange.bound(1, 5, true, false);
+      return [range.lower, range.upper, range.lowerOpen, range.upperOpen, range.includes(3)].join('|');
+    }`,
+  },
 ]);
 
 /** 允许的探针分类。分类是报告和对等测试的稳定维度，不能由拼写漂移产生新组。 */
@@ -1924,6 +2074,7 @@ export const BEHAVIOR_PROBE_CATEGORIES = Object.freeze([
   'performance',
   'svg',
   'observers',
+  'animations',
 ]);
 
 /**

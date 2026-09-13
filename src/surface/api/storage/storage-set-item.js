@@ -25,6 +25,10 @@ export const setItem = {
     const normalizedValue = `${value}`;
     if (!state.values.has(normalizedKey)) {
       state.order.push(normalizedKey);
+      // Storage named properties use the browser's lexicographic key order,
+      // not insertion order. `key(index)` and own-key enumeration observe this
+      // order after every insertion.
+      state.order.sort();
     }
     state.values.set(normalizedKey, normalizedValue);
     traceCall(

@@ -1,7 +1,7 @@
 {
-  "collectedAt": "2026-09-13T10:51:21.034Z",
+  "collectedAt": "2026-09-13T11:07:48.157Z",
   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-  "probeCount": 196,
+  "probeCount": 211,
   "results": {
     "toString/addEventListener": {
       "threw": false,
@@ -821,6 +821,68 @@
       "threw": true,
       "name": "TypeError",
       "message": "Illegal invocation"
+    },
+    "animations/element-empty-list": {
+      "threw": false,
+      "value": "true|0|[object Array]"
+    },
+    "animations/default-animation-state": {
+      "threw": false,
+      "value": "[object Animation]|idle|false||1"
+    },
+    "animations/prototype-method-shape": {
+      "threw": false,
+      "value": "function|function|function|function|0|0"
+    },
+    "animations/keyframe-effect-defaults": {
+      "threw": false,
+      "value": "[object KeyframeEffect]|auto|0|1|replace"
+    },
+    "animations/animation-illegal-cancel": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "storage/insertion-order-and-removal": {
+      "threw": false,
+      "value": "2|a|b|1|a|"
+    },
+    "storage-property-access-coercion": {
+      "threw": false,
+      "value": "42||true"
+    },
+    "fetch/request-header-normalization": {
+      "threw": false,
+      "value": "POST|value|false|same-origin"
+    },
+    "fetch/response-header-and-clone": {
+      "threw": false,
+      "value": "201|true|value|true|false"
+    },
+    "crypto/random-values-view": {
+      "threw": false,
+      "value": "true|4|2|[object Uint16Array]"
+    },
+    "crypto/random-values-illegal-receiver": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "xhr/initial-state-deep": {
+      "threw": false,
+      "value": "0||false|0|[object XMLHttpRequest]"
+    },
+    "xhr/response-type-validation": {
+      "threw": false,
+      "value": "no-throw"
+    },
+    "indexedDB/key-order-comparison": {
+      "threw": false,
+      "value": "-1|0|-1"
+    },
+    "indexedDB/key-range-shape": {
+      "threw": false,
+      "value": "1|5|true|false|true"
     }
   }
 }

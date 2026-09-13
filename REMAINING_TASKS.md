@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 1005 项（`npm test`，110 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 1006 项（`npm test`，110 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -1097,9 +1097,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     `"Noto Sans SC"`——那是采集机器的中文系统语言决定的。实测
     `--lang=en-US` 给 `"Times New Roman"`，而 NV8 的 profile 声明
     languages 为 en-US，两边必须一致。采集脚本现在锁定 locale
-- [ ] **布局相关计算值** - `width` / `height` / `blockSize` / `inlineSize` /
-  `transformOrigin` / `perspectiveOrigin` 及其 webkit 版共 10 项需要布局引擎，
-  刻意不建模（清单在 `css-ua-defaults.js` 的 `LAYOUT_DEPENDENT_PROPERTIES`）
+- [x] **布局相关计算值限制已收口** - `width` / `height` / `blockSize` / `inlineSize` /
+  `transformOrigin` / `perspectiveOrigin` 及其 webkit 版共 10 项依赖真实布局引擎，
+  明确列入 `css-ua-defaults.js` 的 `LAYOUT_DEPENDENT_PROPERTIES`，不伪造机器相关布局结果；
+  `edge-behavior-parity-test.js` 保留该非目标登记，避免将空值误报为已实现
 - [x] **跨 Realm 对象身份探针** - 14 项，全部指向同一个根因
 - [x] **动态 iframe 的 `contentWindow` 已可同步可用**（ADR-0004 定案：
       opt-in 预热池，默认关闭）
@@ -1331,7 +1332,9 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     继承链、`length`、`toStringTag`、`prototype` descriptor、非法构造/调用文案
     全部按真实 Edge 152 实测值对齐
   - 成员安装顺序按真实原型枚举顺序接线（`constructor` 夹在中间，不是排末尾）
-- [ ] **Node 18/20 上全局枚举顺序做不到与真实 Edge 一致**（宿主级，新发现）
+- [x] **Node 18/20 全局枚举顺序限制已收口**（宿主级）
+  - `vm.global-property-order` 能力探针报告 `broken` 时显式登记差异；Node 22+ 作为指纹敏感场景建议版本
+  - 反向回归会在宿主修复后主动变红，防止限制登记永久失效
   - V8 10.x / 11.x 在 dictionary 模式的 global object 上把**可枚举键排在不可枚举
     键之前**，不按插入序，违反 `[[OwnPropertyKeys]]`。V8 12.x（Node 22）已修正
   - 实测后果：238 个全局排到 V8 内建之前，`window` 落在索引 0 而真实 Edge 是 678。
@@ -1342,7 +1345,9 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
     `npm run capabilities` 可见；`NODE_SUPPORT_MATRIX` 的 notes 也已写入。
     测试用**反向断言**豁免——宿主哪天修好了会红，逼人删掉豁免
   - 结论写进 README「环境要求」：**指纹敏感场景请用 Node 22+**
-- [ ] **Node 18–22 的 V8 内建段顺序与 Chromium 不同**（宿主级，新发现）
+- [x] **Node 18–22 V8 内建段顺序限制已收口**（宿主级）
+  - TypedArray/Iterator 等不可由 NV8 重排的 V8 内建段保留已知差异登记；Node 24 逐位校验
+  - `window-surface-order-test.js` 对差异做反向门禁，宿主行为改变时要求重新评估
   - TypedArray 家族的组内次序：V8 12.4 是
     `Float32 Float64 Uint8Clamped BigUint64 BigInt64`，Chromium 152 是
     `BigUint64 BigInt64 Uint8Clamped Float32 Float64`
@@ -1495,7 +1500,10 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 测试 6 项（`tests/ua-default-font-locale-test.js`）：查表最长前缀、
     配对校验能抓到不匹配与缺值、表项都是带引号的计算值形态、默认 profile 一致、
     切 locale 四档一起跟着切、`<pre>` 的 monospace 不被破坏
-- [ ] **行为探针覆盖面仍是最大的缺口** - 同步基线 **196 项 / 27 类**，对 1239 全局 / 8957 成员；另有独立 Worker / ServiceWorker 异步基线 5 项
+- [x] **行为探针覆盖与边界收口** - 同步基线 **211 项 / 28 类**，对 1239 全局 / 8957 成员；另有独立 Worker / ServiceWorker 异步基线 5 项
+  - 真实 Edge 152.0.4191.66 双轮采集并逐类对等：新增 SVG、Observers、Web Animations，以及 Storage/Fetch/Crypto/XHR/IndexedDB 深层语义
+  - 211 项基线全部稳定；未覆盖的 Media 及布局/时序相关行为明确保留为非目标，不以未经采集的 fixture 冒充兼容性
+  - `validateBehaviorProbeDefinitions()`、fixture 集合校验和反向差异门禁已接入采集与测试流程
   - 已覆盖：`cssom` 22、`argumentCount` 19、`audio` 14、`fontMetrics` 5、`domRange` 5、
     `storage` 4、`fetch` 4、`crypto` 4、`xhr` 4、`websocket` 4、`indexedDB` 4、`worker` 8、`intl` 13、
     `performance`、`crossRealm`、URL、事件时序、**SVG 5**、**Observers 5** 和其他结构性行为；同步基线 192 项与真实 Edge 一致，
@@ -1513,7 +1521,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   - 行为层依然是发现真问题最多的地方。CSSOM 是证据：形状层报 0 差异是**对的**，
     行为层却查出 6 处
   - **换基准已完成**：本机 Edge 152.0.4191.66，fixture 和对等性测试均已切换到
-    Edge 152；实测 196 项行为探针双轮稳定，192 项与 NV8 一致，4 项为已登记差异
+    Edge 152；实测 211 项行为探针双轮稳定，207 项与 NV8 一致，4 项为已登记差异
   - **本轮新增 SVG / Observers**：真实 Edge 152 双轮采集新增 SVG 5 项、Observers 5 项；
     修复 `SVGAnimatedRect.animVal` 独立身份和 `SVGLength` 构造器文案后专项全绿
   - **定义门禁已共享**：`validateBehaviorProbeDefinitions()` 同时接入 Edge 采集脚本与对等测试，
@@ -1669,7 +1677,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：1005 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：1006 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1765,5 +1773,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（1005 项 / 110 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（1006 项 / 110 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

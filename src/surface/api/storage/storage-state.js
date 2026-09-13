@@ -64,9 +64,66 @@ export function encodeSessionStorage() {
 }
 
 function createStorage(encoded) {
-  const value = Object.create(Storage.prototype);
-  storageState.set(value, decodeRecord(encoded));
+  const target = Object.create(Storage.prototype);
+  const record = decodeRecord(encoded);
+  const value = new Proxy(target, {
+    get(object, property, receiver) {
+      const own = Reflect.get(object, property, receiver);
+      if (own !== undefined || typeof property !== "string") return own;
+      return record.values.get(property);
+    },
+    set(object, property, next, receiver) {
+      if (typeof property !== "string" || property in object) {
+        return Reflect.set(object, property, next, receiver);
+      }
+      setNamedValue(record, property, next);
+      return true;
+    },
+    has(object, property) {
+      return Reflect.has(object, property)
+        || (typeof property === "string" && record.values.has(property));
+    },
+    ownKeys(object) {
+      return [...Reflect.ownKeys(object), ...record.order];
+    },
+    getOwnPropertyDescriptor(object, property) {
+      const descriptor = Reflect.getOwnPropertyDescriptor(object, property);
+      if (descriptor !== undefined) return descriptor;
+      if (typeof property === "string" && record.values.has(property)) {
+        return {
+          value: record.values.get(property),
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        };
+      }
+      return undefined;
+    },
+    deleteProperty(object, property) {
+      if (typeof property !== "string" || !record.values.has(property)) {
+        return Reflect.deleteProperty(object, property);
+      }
+      removeNamedValue(record, property);
+      return true;
+    },
+  });
+  storageState.set(value, record);
   return value;
+}
+
+function setNamedValue(record, key, value) {
+  const normalized = `${value}`;
+  if (!record.values.has(key)) {
+    record.order.push(key);
+    record.order.sort();
+  }
+  record.values.set(key, normalized);
+}
+
+function removeNamedValue(record, key) {
+  record.values.delete(key);
+  const index = record.order.indexOf(key);
+  if (index !== -1) record.order.splice(index, 1);
 }
 
 function encodeRecord(record) {
