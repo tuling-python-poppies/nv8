@@ -76,8 +76,21 @@ const docs = await collectDocs();
 
 test('the doc set is actually being scanned', () => {
   assert.ok(docs.length >= 10, `expected the whole doc set, got ${docs.length}`);
-  for (const name of ['README.md', 'sandbox_manual.md', 'docs/edge-parity.md']) {
+  for (const name of ['README.md', 'sandbox_manual.md', 'docs/edge-parity.md', 'docs/api-reference.md']) {
     assert.ok(docs.some((doc) => doc.path === name), `${name} 没被扫到`);
+  }
+});
+
+test('the public API reference covers every supported entry boundary', () => {
+  const reference = docs.find((doc) => doc.path === 'docs/api-reference.md').source;
+  for (const heading of ['## package root', '## Protocol API', '## Collector API', '## 错误和生命周期']) {
+    assert.ok(reference.includes(heading), `api-reference.md 缺少 ${heading}`);
+  }
+  for (const exportPath of ['nv8/protocol', 'nv8/collector']) {
+    assert.ok(reference.includes(exportPath), `api-reference.md 缺少 ${exportPath}`);
+  }
+  for (const safetyRule of ['网络未显式开启时全部拒绝', '凭据按精确 origin 绑定', 'Protocol 不接受相对 URL']) {
+    assert.ok(reference.includes(safetyRule), `api-reference.md 缺少安全约束：${safetyRule}`);
   }
 });
 
