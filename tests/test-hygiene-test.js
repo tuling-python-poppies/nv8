@@ -29,6 +29,86 @@ const EXEMPT_PATHS = new Set([
  */
 const MAX_POLL_INTERVAL_MS = 2;
 
+/** 在源码里定位行号（1 起）。 */
+function lineNumberAt(source, offset) {
+  let line = 1;
+  for (let index = 0; index < offset; index += 1) {
+    if (source[index] === '\n') line += 1;
+  }
+  return line;
+}
+
+/**
+ * 扫描 `setTimeout(..., N)` 且 N 超过轮询上限的写法。
+ *
+ * 为什么用括号配平而不是一条正则：
+ *
+ * 固定等待的首参几乎都是箭头函数（`() => resolve('no-event')`），正则要么
+ * 匹配不到（旧实现只认标识符），要么被嵌套括号/顶层逗号带偏。逐字符配平后
+ * 按顶层逗号取**最后一个实参**，箭头函数、三元、模板字符串一视同仁，
+ * 多行写法也能覆盖。
+ *
+ * 注意：这里刻意不跳过字符串/模板字符串。测试常把被测源码写在模板字符串里，
+ * 那同样是把固定时长编译进被测脚本，必须一起抓。
+ *
+ * @returns {Array<{ line: number, delay: number }>}
+ */
+function findFixedSleeps(source) {
+  const offenders = [];
+  const token = 'setTimeout';
+  let searchFrom = 0;
+
+  for (;;) {
+    const found = source.indexOf(token, searchFrom);
+    if (found === -1) break;
+    searchFrom = found + token.length;
+
+    let cursor = searchFrom;
+    while (cursor < source.length && /\s/.test(source[cursor])) cursor += 1;
+    if (source[cursor] !== '(') continue;
+
+    const args = [];
+    let current = '';
+    let depth = 0;
+    let index = cursor;
+    for (; index < source.length; index += 1) {
+      const char = source[index];
+      if (char === '(' || char === '[' || char === '{') {
+        depth += 1;
+        current += char;
+        continue;
+      }
+      if (char === ')' || char === ']' || char === '}') {
+        depth -= 1;
+        if (depth === 0) {
+          args.push(current);
+          break;
+        }
+        current += char;
+        continue;
+      }
+      if (char === ',' && depth === 1) {
+        args.push(current);
+        current = '';
+        continue;
+      }
+      current += char;
+    }
+    // 括号没配平（字符串里的括号等），放弃这次匹配，避免整段误判。
+    if (index >= source.length) continue;
+    searchFrom = index + 1;
+
+    const delayText = args[args.length - 1].trim();
+    if (!/^\d+$/.test(delayText)) continue;
+    const delay = Number(delayText);
+    if (delay > MAX_POLL_INTERVAL_MS) {
+      offenders.push({ line: lineNumberAt(source, found), delay });
+    }
+  }
+
+  return offenders;
+}
+
 async function collectTestFiles(dir = TESTS_DIR, prefix = '') {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
@@ -55,15 +135,9 @@ test('test suite contains no fixed-duration sleep bets', async () => {
     if (EXEMPT_PATHS.has(file.path)) continue;
     const source = await readFile(file.url, 'utf8');
 
-    source.split('\n').forEach((line, index) => {
-      // 匹配 setTimeout(resolve, N) / setTimeout(r, N) 形式的延时
-      for (const match of line.matchAll(/setTimeout\(\s*\w+\s*,\s*(\d+)\s*\)/g)) {
-        const delay = Number(match[1]);
-        if (delay > MAX_POLL_INTERVAL_MS) {
-          offenders.push(`${file.path}:${index + 1}  setTimeout(..., ${delay})`);
-        }
-      }
-    });
+    for (const { line, delay } of findFixedSleeps(source)) {
+      offenders.push(`${file.path}:${line}  setTimeout(..., ${delay})`);
+    }
   }
 
   assert.deepEqual(

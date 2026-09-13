@@ -10,6 +10,8 @@ async function withSandbox(fingerprint, callback) {
   const sandbox = await createSandbox("https://edge-152.test/", {
     fingerprint,
     page: { html: "<!doctype html><html><body></body></html>" },
+    // 本测试验证 profile 门控，不做性能断言；并行跑全套时启动会超过默认 5s。
+    limits: { timeoutMs: 30_000 },
   });
   try {
     return await callback(sandbox);

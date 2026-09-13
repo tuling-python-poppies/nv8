@@ -83,9 +83,22 @@ test('a non-numeric port fails the whole parse', () => {
 });
 
 test('structural delimiters inside the host are rejected', () => {
-  for (const character of ['<', '>', '^', '|', '\\', ']']) {
+  for (const character of ['<', '>', '^', '|', ']']) {
     throws(`http://a${character}b/`);
   }
+});
+
+test('backslashes separate authority and path for special schemes', () => {
+  // `\` 不是主机字符，而是 `/` 的等价分隔符（WHATWG special scheme）。
+  // 旧实现把它当 forbidden host char，`http://a\b/` 直接抛 TypeError——
+  // 真实浏览器解析成 host=`a`、path=`/b/`。
+  assert.equal(href('http://a\\b/'), 'http://a/b/');
+  assert.equal(href('http:\\\\a\\b'), 'http://a/b');
+  assert.equal(href('\\x'), 'https://t.test/x');
+  // query 与 fragment 里的 `\` 是普通字符，不参与分隔符替换。
+  assert.equal(href('https://a\\b?q=\\#h'), 'https://a/b?q=\\#h');
+  // 非特殊 scheme 的主机仍把 `\` 当禁用字符。
+  throws('nv8-unknown://a\\b');
 });
 
 // ------------------------------------------------------ escape：编码而非失败

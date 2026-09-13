@@ -14,6 +14,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import { waitUntil } from './helpers/async-wait.js';
 
 import {
   CAPABILITY_STATUS,
@@ -441,17 +442,12 @@ test('abortSignalTimeout aborts with a TimeoutError', async () => {
   const signal = abortSignalTimeout(5);
   assert.equal(signal.aborted, false);
 
-  // 保持一个引用计时器：回退实现对 timer 调了 unref()，
-  // Node 18 的 test runner 会因事件循环提前排空而取消测试。
-  const keepAlive = setTimeout(() => {}, 1000);
-  try {
-    await new Promise((resolve, reject) => {
-      signal.addEventListener('abort', resolve, { once: true });
-      setTimeout(() => reject(new Error('signal did not abort within 1s')), 1000);
-    });
-  } finally {
-    clearTimeout(keepAlive);
-  }
+  // 回退实现给 timer 调了 unref()，不能靠「等信号」的裸 await：只要此刻没有
+  // 别的 refed 句柄，事件循环会提前排空。helpers 的轮询 sleep 不 unref，
+  // 它同时充当保活句柄，且等待的是正向条件而不是固定时长。
+  await waitUntil(() => signal.aborted, {
+    label: 'abortSignalTimeout abort event',
+  });
 
   assert.equal(signal.aborted, true);
   assert.equal(signal.reason?.name, 'TimeoutError');

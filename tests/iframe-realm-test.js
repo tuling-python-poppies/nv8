@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createNv8, domPreset } from '../src/index.js';
 import { windowPlugin } from '../src/plugins/window/index.js';
 import { messagingPlugin } from '../src/plugins/messaging/index.js';
-import { waitUntil } from './helpers/async-wait.js';
+import { drainTasks, waitUntil } from './helpers/async-wait.js';
 
 const logger = { info() {}, warn() {}, error() {}, trace() {} };
 
@@ -105,16 +105,26 @@ test('Core iframe unsupported scheme dispatches nothing', async () => {
   const nv8 = await createDomRuntime();
   const realm = await nv8.sandbox.createRealm({ type: 'root' });
   try {
-    const result = await realm.evaluate(`new Promise(resolve => {
+    // 「什么都不发生」是负向断言：没有可等的正向事件。协议改成先记录、再
+    // drain 事件循环、最后数事件——被测实现在坏 scheme 上是**同步中止**导航，
+    // 所以排一次任务队列就足以让它执行完。
+    const attached = await realm.evaluate(`(() => {
       const frame = document.createElement('iframe');
-      frame.addEventListener('load', () => resolve('unexpected-load'), { once: true });
-      frame.addEventListener('error', () => resolve('unexpected-error'), { once: true });
+      globalThis.unsupportedSchemeEvents = [];
+      frame.addEventListener('load', () => globalThis.unsupportedSchemeEvents.push('load'));
+      frame.addEventListener('error', () => globalThis.unsupportedSchemeEvents.push('error'));
       frame.setAttribute('src', 'nv8-unknown://x');
       document.body.appendChild(frame);
-      // 「什么都不发生」只能靠等若干任务之后确认没有事件到达
-      setTimeout(() => resolve('no-event'), 120);
-    })`);
-    assert.equal(result, 'no-event');
+      return frame.isConnected;
+    })()`);
+    assert.equal(attached, true);
+    await drainTasks();
+    // 跨 realm 的数组原型不同，deepEqual 会假失败；用 JSON 过桥。
+    assert.deepEqual(
+      JSON.parse(await realm.evaluate('JSON.stringify(globalThis.unsupportedSchemeEvents)')),
+      [],
+      'unsupported scheme must not dispatch load/error',
+    );
   } finally {
     await nv8.sandbox.destroyRealm(realm.id);
     await nv8.destroy();

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EdgeSandbox } from '../src/public/edge-sandbox.js';
+import { waitUntil } from './helpers/async-wait.js';
 
 const replay = [
   {
@@ -26,15 +27,22 @@ for (const backend of ['child-process', 'worker-thread']) {
       replay,
     });
     try {
-      const result = await sandbox.evaluate(`new Promise(resolve => {
+      // 只负责创建资源，不赌它们何时注册完成；注册完成由宿主侧轮询正向信号。
+      const result = await sandbox.evaluate(`(() => {
         const worker = new Worker('/worker.js');
         const shared = new SharedWorker('/shared.js');
         const frame = document.createElement('iframe');
         frame.srcdoc = '<!doctype html><html><body>frame</body></html>';
         document.body.appendChild(frame);
-        setTimeout(() => resolve('ready'), 50);
-      })`);
+        return 'ready';
+      })()`);
       assert.equal(result.value, 'ready');
+      await waitUntil(async () => {
+        const resources = await sandbox.resources();
+        return resources.childRealms >= 1
+          && resources.root.workers >= 1
+          && resources.root.sharedWorkers >= 1;
+      }, { label: 'worker, shared worker and iframe resources registered' });
       const before = await sandbox.resources();
       assert.ok(before.childRealms >= 1);
       assert.ok(before.root.workers >= 1);

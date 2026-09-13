@@ -17,6 +17,7 @@
     "build:css-defaults": "node scripts/build-css-ua-defaults.mjs",
     "capabilities": "node --experimental-vm-modules scripts/report-host-capabilities.mjs",
     "check:bundle": "node scripts/build-module-bundle.mjs --check",
+    "check:generated": "node scripts/check-generated-artifacts.mjs",
     "check:surface-order": "node scripts/build-window-surface-order.mjs",
     "fingerprint:behavior": "node scripts/collect-edge-behavior.mjs --out fixtures/fingerprint/edge-behavior.json",
     "fingerprint:async-behavior": "node scripts/collect-edge-async-behavior.mjs --out fixtures/fingerprint/edge-async-behavior.json",

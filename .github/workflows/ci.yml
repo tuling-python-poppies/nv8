@@ -7,28 +7,18 @@ on:
 
 jobs:
   # Node 版本矩阵。tier 与 src/engine/core/host-capabilities.js 的
-  # NODE_SUPPORT_MATRIX 保持一致：
-  #   supported   -> 失败即视为 bug，阻断合并
-  #   best-effort -> 允许失败，失败按兼容性改进处理
+  # NODE_SUPPORT_MATRIX 保持一致：四档全部 supported，失败即视为 bug。
   #
-  # 18/20 已在完整测试套件上验证通过，因此列为 supported。
+  # 旧配置给 best-effort 档设了 continue-on-error，四档全部转为 supported 后
+  # 它已经不可能命中——死配置会掩盖「什么时候真的允许失败」，已删除。
   # 本地可用 `npm run test:matrix` 复现同一矩阵。
   test:
-    name: Node ${{ matrix.node }} (${{ matrix.tier }})
+    name: Linux Node ${{ matrix.node }}
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.tier == 'best-effort' }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - node: '24.x'
-            tier: supported
-          - node: '22.x'
-            tier: supported
-          - node: '20.x'
-            tier: supported
-          - node: '18.18'
-            tier: supported
+        node: ['24.x', '22.x', '20.x', '18.18']
 
     steps:
       - uses: actions/checkout@v4
@@ -43,20 +33,60 @@ jobs:
       - name: Run tests
         run: npm test
 
-  # 后端矩阵：child-process 与 worker-thread 必须行为一致
+  # Windows 档：本仓库的开发环境就是 Windows，路径分隔符、进程句柄、
+  # CRLF 等差异必须持续覆盖，不能只靠 Linux runner。完整套件在本机已验证
+  # 全绿，这里直接跑全量。
+  windows:
+    name: Windows Node 24
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+
+      - name: Run tests
+        run: npm test
+
+  # 后端 × Node 交叉矩阵：child-process 与 worker-thread 在协议层必须行为一致。
+  #
+  # 取 Node 24（主目标）与 20（最老的在役 LTS）两档：更老的 18 已在 Linux
+  # 矩阵里跑全量，交叉矩阵只覆盖「后端差异是否随宿主版本放大」这个维度，
+  # 不再为 18 单独启一套环境。NV8_BACKEND 由 tests/backend-contract-test.js
+  # 读取，其余后端用例在套件内自行参数化；仍然跑全量以确保 env 不改变行为。
   backends:
-    name: Backend ${{ matrix.backend }}
+    name: Backend ${{ matrix.backend }} / Node ${{ matrix.node }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         backend: [child-process, worker-thread]
+        node: ['24.x', '20.x']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Run tests
+        run: npm test
+        env:
+          NV8_BACKEND: ${{ matrix.backend }}
+
+  # 生成物校验独立成 job：失败即红，不被测试矩阵的并行噪声掩盖。
+  # check:generated 同时把「头注声称由不存在的 tools/ 生成器生成」挡在仓库外。
+  generated:
+    name: Generated artifacts
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24.x'
-      - name: Run tests
-        run: npm test
-        env:
-          NV8_BACKEND: ${{ matrix.backend }}
+      - name: Check window surface order
+        run: npm run check:surface-order
+      - name: Check module bundle
+        run: npm run check:bundle
+      - name: Check generated artifact provenance
+        run: npm run check:generated

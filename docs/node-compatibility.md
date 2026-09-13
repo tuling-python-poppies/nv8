@@ -10,7 +10,7 @@
 | 18.18+ | `supported` | 最低版本；缺 Iterator helpers 与 `ArrayBuffer.transfer`；同上 |
 | < 18.18 | 不支持 | 启动即拒绝 |
 
-四个版本均已在完整测试套件（当前 988 项）上验证通过。本地复现：
+四个版本均已在完整测试套件（`npm test` 自动发现）上验证通过。本地复现：
 
 ```
 npm run test:matrix          # 自动发现 nvm 已安装版本
@@ -30,7 +30,9 @@ npm run test:matrix 18.20.8  # 指定版本
 - `best-effort` — CI 允许失败，问题按兼容性改进处理
 
 矩阵定义在 `src/engine/core/host-capabilities.js` 的 `NODE_SUPPORT_MATRIX`，
-CI workflow 的 tier 标注与它一一对应。
+CI workflow 的 Node 档位与它一一对应。当前落入 CI 的版本全部是 `supported`
+（18.18 / 20 / 22 / 24），因此 workflow 里没有任何 `continue-on-error`；
+`best-effort` 一旦重新出现，必须显式恢复「允许失败」配置而不是靠缺省行为。
 
 ## 能力探测：三态而非布尔
 
@@ -156,17 +158,22 @@ TypedArray 和循环引用。遇到这些输入抛 `ERR_NV8_STRUCTURED_CLONE_UNA
 
 ## CI 矩阵
 
-`.github/workflows/ci.yml` 两个 job：
+`.github/workflows/ci.yml` 四个 job，全部为阻断式：
 
-- `test` — Node 24 / 22 / 20 / 18.18，`best-effort` 版本设
-  `continue-on-error`
-- `backends` — `child-process` 与 `worker-thread` 必须行为一致
+- `test` — Linux 上 Node 24 / 22 / 20 / 18.18 全量测试
+- `windows` — windows-latest + Node 24 全量测试（本仓库的开发环境就是
+  Windows，路径与进程语义差异只能在 windows runner 上暴露）
+- `backends` — `child-process` × `worker-thread` 与 Node 24 / 20 的交叉矩阵，
+  用 `NV8_BACKEND` 固定后端；更老的 18 已在 Linux 矩阵跑全量
+- `generated` — 生成物校验（`check:surface-order` / `check:bundle` /
+  `check:generated`），独立 job、失败即红
 
 `fail-fast: false`，一个版本失败不影响其他版本继续跑。
 
-`best-effort` 版本设 `continue-on-error` 是历史遗留：Node 18 / 20 曾各有
-5 项固定失败（V8 内建缺口未接入版本门控 + `in` 触发 getter）。现在四档
-**988/988 全绿**，实测方式是直接调用 nvm 里各版本的 node.exe，不切换全局符号链接：
+四档 Node 全部是 `supported`，因此没有任何 `continue-on-error`。该配置曾用于
+`best-effort` 档：Node 18 / 20 曾各有 5 项固定失败（V8 内建缺口未接入版本
+门控 + `in` 触发 getter），四档全绿后它不再可能命中，已删除。实测方式是直接
+调用 nvm 里各版本的 node.exe，不切换全局符号链接：
 
 ```
 D:\...\nvm\v18.20.8\node.exe --experimental-vm-modules --test ...

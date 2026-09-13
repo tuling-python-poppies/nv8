@@ -29,17 +29,47 @@ import assert from 'node:assert/strict';
 const PAGE_HTML = '<!doctype html><html><head><title>budget</title></head>'
   + '<body><div id="app">budget</div></body></html>';
 
-/** 预算上限，单位毫秒。只允许在有实测依据时调整。 */
+/**
+ * 预算上限，单位毫秒。只允许在有实测依据时调整。
+ *
+ * ## 按后端分开标定（IKF3A6）
+ *
+ * 实测条件：Node 22.22.2 / Windows，同一台机器上每个后端各跑 3 次冷启动取
+ * **最小值**、20 次热求值取**中位数**：
+ *
+ * | 后端 | 冷启动最小值 | 热求值中位数 |
+ * |---|---|---|
+ * | child-process | ≈ 857ms | ≈ 0.42ms |
+ * | worker-thread | ≈ 1252ms | ≈ 0.27ms |
+ *
+ * worker-thread 冷启动更慢（线程池初始化 + 消息往返），所以它的冷启动预算
+ * 单独放宽到 6000ms：本机实测 1252ms，但「Windows runner + 全量并行测试」
+ * 这个组合没有历史数据，按最大约 4.8 倍余量给，宁可放宽也不制造新 flake。
+ * child-process 沿用 3000ms——它已在 Node 18/20/24 的 CI 矩阵上长期全绿。
+ *
+ * ## 版本维度
+ *
+ * 开发机 nvm 只有 Node 22 一档，无法逐版本实测；Node 18 是支持矩阵里最慢的
+ * 版本，旧预算 3000ms 在 Node 18 CI 上全绿。因此版本维度不细分，统一按
+ * 「最慢支持版本」取余量——有新的实测数据再拆。
+ */
 const BUDGETS = Object.freeze({
-  // 实测中位数 ~490ms；留 6 倍余量给负载波动与慢机器
-  coldStartMs: 3_000,
-  // 实测中位数 ~0.15ms；留很大余量，这条只防「热路径变成同步阻塞」
-  warmRunMs: 50,
+  'child-process': Object.freeze({
+    coldStartMs: 3_000,
+    warmRunMs: 50,
+  }),
+  'worker-thread': Object.freeze({
+    coldStartMs: 6_000,
+    warmRunMs: 50,
+  }),
 });
 
-async function withSandbox(body) {
+const BUDGET_BACKENDS = Object.freeze(Object.keys(BUDGETS));
+
+async function withSandbox(body, backend = 'child-process') {
   const { createSandbox } = await import('../src/public/create-sandbox.js');
   const sandbox = await createSandbox('https://budget.test/', {
+    backend,
     page: { html: PAGE_HTML },
     limits: { timeoutMs: 30_000 },
   });
@@ -78,43 +108,46 @@ function handleTally() {
  */
 const COLD_START_SAMPLES = 3;
 
-test('cold start stays within budget', async () => {
-  const samples = [];
-  for (let index = 0; index < COLD_START_SAMPLES; index += 1) {
-    const started = process.hrtime.bigint();
-    await withSandbox(sandbox => sandbox.run('document.title'));
-    samples.push(Number(process.hrtime.bigint() - started) / 1e6);
-  }
-  const fastest = Math.min(...samples);
-
-  assert.ok(
-    fastest < BUDGETS.coldStartMs,
-    `fastest cold start took ${fastest.toFixed(0)}ms, budget is `
-    + `${BUDGETS.coldStartMs}ms (samples: ${samples.map(v => v.toFixed(0)).join(', ')})`
-  );
-});
-
-test('warm evaluation stays within budget', async () => {
-  await withSandbox(async (sandbox) => {
-    // 先跑一次预热，避免把首次求值的一次性开销算进热路径
-    await sandbox.run('1 + 1');
-
+for (const backend of BUDGET_BACKENDS) {
+  test(`cold start stays within budget (${backend})`, async () => {
     const samples = [];
-    for (let index = 0; index < 20; index += 1) {
+    for (let index = 0; index < COLD_START_SAMPLES; index += 1) {
       const started = process.hrtime.bigint();
-      await sandbox.run('1 + 1');
+      await withSandbox(sandbox => sandbox.run('document.title'), backend);
       samples.push(Number(process.hrtime.bigint() - started) / 1e6);
     }
-    samples.sort((a, b) => a - b);
-    const median = samples[Math.floor(samples.length / 2)];
+    const fastest = Math.min(...samples);
 
-    // 取中位数而不是最大值：单次长尾（GC）不该让测试变红
     assert.ok(
-      median < BUDGETS.warmRunMs,
-      `warm run median ${median.toFixed(2)}ms, budget is ${BUDGETS.warmRunMs}ms`
+      fastest < BUDGETS[backend].coldStartMs,
+      `fastest ${backend} cold start took ${fastest.toFixed(0)}ms, budget is `
+      + `${BUDGETS[backend].coldStartMs}ms (samples: ${samples.map(v => v.toFixed(0)).join(', ')})`
     );
   });
-});
+
+  test(`warm evaluation stays within budget (${backend})`, async () => {
+    await withSandbox(async (sandbox) => {
+      // 先跑一次预热，避免把首次求值的一次性开销算进热路径
+      await sandbox.run('1 + 1');
+
+      const samples = [];
+      for (let index = 0; index < 20; index += 1) {
+        const started = process.hrtime.bigint();
+        await sandbox.run('1 + 1');
+        samples.push(Number(process.hrtime.bigint() - started) / 1e6);
+      }
+      samples.sort((a, b) => a - b);
+      const median = samples[Math.floor(samples.length / 2)];
+
+      // 取中位数而不是最大值：单次长尾（GC）不该让测试变红
+      assert.ok(
+        median < BUDGETS[backend].warmRunMs,
+        `${backend} warm run median ${median.toFixed(2)}ms, budget is `
+        + `${BUDGETS[backend].warmRunMs}ms`
+      );
+    }, backend);
+  });
+}
 
 test('a sandbox survives many sequential evaluations', async () => {
   await withSandbox(async (sandbox) => {

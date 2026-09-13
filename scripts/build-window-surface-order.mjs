@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 生成 / 校验 `src/install/window-surface-order.js`。
+ * 生成 / 校验 `src/surface/install/window-surface-order.js`。
  *
  * ## 为什么需要这个脚本
  *
@@ -47,7 +47,7 @@ import { WINDOW_GLOBAL_SHAPES } from '../src/surface/install/window-surface-orde
  * 它一并列在这里是因为它同样不由本表管理。
  *
  * `Iterator` 需要 Node 22+，在 18/20 上这段前缀会短一项——那是宿主差异，
- * 已由 `src/baseline/known-differences.js` 登记。
+ * 已由 `src/infra/baseline/known-differences.js` 登记。
  */
 export const V8_BUILTIN_PREFIX = Object.freeze([
   'Object', 'Function', 'Array', 'Number', 'parseFloat', 'parseInt', 'Infinity',

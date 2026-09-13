@@ -31,7 +31,9 @@ test('StateRegistry bounds keys per store without rejecting overwrites', () => {
   );
   assert.deepEqual(registry.stats(), {
     sandboxKeys: 1,
+    appKeys: 0,
     realmContexts: 0,
+    pluginContexts: 0,
     realmKeys: 0,
     totalKeys: 1,
   });
@@ -77,7 +79,9 @@ test('clear all Realm state releases every context at once', () => {
   registry.clear('realm');
   assert.deepEqual(registry.stats(), {
     sandboxKeys: 0,
+    appKeys: 0,
     realmContexts: 0,
+    pluginContexts: 0,
     realmKeys: 0,
     totalKeys: 0,
   });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 从 fixture 生成 `src/api/css/css-ua-defaults.js`。
+ * 从 fixture 生成 `src/surface/api/css/css-ua-defaults.js`。
  *
  * ## 为什么需要这个脚本
  *
@@ -130,7 +130,7 @@ export const LAYOUT_DEPENDENT_PROPERTIES = Object.freeze(${
 
 await writeFile(OUTPUT, source, 'utf8');
 console.log(
-  `已生成 src/api/css/css-ua-defaults.js：`
+  `已生成 src/surface/api/css/css-ua-defaults.js：`
   + `基线 ${Object.keys(baseline).length} 项，`
   + `${Object.keys(overrides).length} 个标签覆盖，`
   + `排除 ${layoutDependent.length} 个布局相关属性`

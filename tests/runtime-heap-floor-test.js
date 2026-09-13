@@ -26,6 +26,7 @@ import assert from 'node:assert/strict';
 
 import {
   MINIMUM_RUNTIME_HEAP_MB,
+  RUNTIME_GC_HEADROOM_MB,
   isRuntimeHeapClamped,
   resolveRuntimeHeapMegabytes,
 } from '../src/backend/controller/runtime-heap-floor.js';
@@ -40,25 +41,36 @@ test('the floor sits above the measured viable minimum', () => {
   assert.ok(MINIMUM_RUNTIME_HEAP_MB >= 80, 'must clear the measured 80MB mark');
 });
 
-test('a too-small budget is clamped up to the floor', () => {
+test('a too-small budget is clamped up to the floor plus GC headroom', () => {
   for (const megabytes of [1, 32, 48, 64]) {
-    assert.equal(resolveRuntimeHeapMegabytes(megabytes * MB), MINIMUM_RUNTIME_HEAP_MB);
+    assert.equal(
+      resolveRuntimeHeapMegabytes(megabytes * MB),
+      MINIMUM_RUNTIME_HEAP_MB + RUNTIME_GC_HEADROOM_MB,
+    );
     assert.equal(isRuntimeHeapClamped(megabytes * MB), true);
   }
 });
 
-test('a sufficient budget passes through untouched', () => {
-  assert.equal(resolveRuntimeHeapMegabytes(512 * MB), 512);
+test('a sufficient budget keeps its value plus GC headroom', () => {
+  // 顺序重建 Realm 会在模块图编译期产生成倍于存活集的短命对象；
+  // 余量只加在 V8 硬上限上，逻辑配额（heapSafeRealmLimit）不受影响。
+  assert.equal(
+    resolveRuntimeHeapMegabytes(512 * MB),
+    512 + RUNTIME_GC_HEADROOM_MB,
+  );
   assert.equal(isRuntimeHeapClamped(512 * MB), false);
 });
 
-test('the spawn arguments carry the clamped value', () => {
+test('the spawn arguments carry the clamped value plus GC headroom', () => {
   const connection = new ChildProcessConnection({ maxHeapBytes: 64 * MB });
   const spec = connection.createSpawnSpec({ fingerprint: { timezone: 'UTC' } });
 
   const heapArgument = spec.args.find((arg) => arg.startsWith('--max-old-space-size='));
   // 原先这里是 --max-old-space-size=64，子进程在引导 Realm 时 OOM abort
-  assert.equal(heapArgument, `--max-old-space-size=${MINIMUM_RUNTIME_HEAP_MB}`);
+  assert.equal(
+    heapArgument,
+    `--max-old-space-size=${MINIMUM_RUNTIME_HEAP_MB + RUNTIME_GC_HEADROOM_MB}`,
+  );
 });
 
 test('clamping the V8 cap does not weaken the realm guard', async () => {

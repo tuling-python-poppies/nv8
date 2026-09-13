@@ -3,7 +3,18 @@
  *
  * `edge-surface-parity-test.js` 比的是全局名的存在性——最表层的一维。
  * 这份比的是每个构造函数原型上的成员明细：`fetch` 存在不代表
- * `Response.prototype` 的成员齐全。
+ * `Response.prototype` 的成员齐全。成员名之后还要比 descriptor 形状
+ * （数据属性 vs 访问器，以及 writable/enumerable/configurable/get/set）：
+ * 名字对不代表检测脚本 `Object.getOwnPropertyDescriptor()` 能拿到同样的结果。
+ *
+ * 两个正交轴各自有独立的消费者与登记表：
+ * - **成员名**：`diffMembers()` + 下方三个名单。
+ * - **descriptor 形状**：`diffDescriptors()` + `KNOWN_DESCRIPTOR_DIFFERENCES`。
+ * - **方法 length**：`tests/edge-length-axis-test.js`（fixture 覆盖 3508 个方法）。
+ *
+ * 版本门控派生出的 153 profile 顺序不变量由
+ * `tests/prototype-order-version-gate-test.js` 单独覆盖；本文件只做
+ * 152 基准下的逐成员对等性，两者互补。
  *
  * 数据来源：
  * - 真实 Edge：`fixtures/fingerprint/edge-members.json`
@@ -69,7 +80,7 @@ const KNOWN_EXTRA_MEMBERS = Object.freeze({});
 /**
  * NV8 完全没有的原型。
  *
- * 从 `src/install/window-surface-order.js` 的 `pending` 字段读，不在这里另列
+ * 从 `src/surface/install/window-surface-order.js` 的 `pending` 字段读，不在这里另列
  * 一份名单——旧版本这里写死三个名字并注“理由见 edge-surface-parity-test.js”，
  * 那就是同一份账目拄在三处。
  */
@@ -84,7 +95,7 @@ const KNOWN_MISSING_PROTOTYPES = Object.freeze(
  *
  * `Iterator` / `ArrayBuffer.prototype.transfer` / `Set` 的集合运算都是 V8 语言
  * 内建，旧版 Node 的 V8 里压根没有。它们**不是** NV8 的缺口，登记在
- * `src/baseline/known-differences.js`（与 baseline 共用同一份登记表，
+ * `src/infra/baseline/known-differences.js`（与 baseline 共用同一份登记表，
  * 各写一份必然漂移）。
  *
  * 不这么做的后果是 Node 18/20 上永久红 5 项——而永久红的断言和没有断言等价，
@@ -168,6 +179,66 @@ function diffMembers(snapshot) {
     }
   }
   return rows;
+}
+
+/**
+ * 已登记的 descriptor 形状差异。
+ *
+ * 目标是保持为空。152 基准下实测 8957 个成员的形状逐字段一致，因此没有
+ * 条目。形状本身（可写数据属性 vs 访问器 / getter+setter 组合）就是可检测
+ * 特征，新增条目必须写明为什么对不上、由谁收敛。
+ */
+const KNOWN_DESCRIPTOR_DIFFERENCES = Object.freeze({});
+
+/**
+ * 把 fixture / NV8 采到的 descriptor 压成可比对、可读的形状。
+ *
+ * fixture 的 JSON 无法表达 `undefined`：数据属性的 `getter` / `setter` 是
+ * `false`、访问器的 `writable` 是 `null`。两边采集口径一致，所以直接逐字段
+ * 比较布尔与 null，不做 `undefined` 回填。
+ */
+function descriptorShapeOf(descriptor) {
+  return {
+    configurable: descriptor.configurable,
+    enumerable: descriptor.enumerable,
+    writable: descriptor.writable,
+    getter: descriptor.getter,
+    setter: descriptor.setter,
+    valueType: descriptor.valueType,
+  };
+}
+
+/**
+ * 逐成员比对 descriptor 形状，返回 `{ compared, diffs }`。
+ *
+ * 只断言 fixture 有信息的部分：descriptor 为 `null` 或 `unreadable` 的成员
+ * 跳过。NV8 侧缺失的成员（宿主 Node 版本的 V8 语言内建缺口）同样跳过——
+ * 「成员名缺失」由 `diffMembers()` 与登记表负责，这里不重复报。
+ */
+function diffDescriptors(snapshot) {
+  const diffs = [];
+  let compared = 0;
+  for (const [name, entry] of Object.entries(realPrototypes)) {
+    const nv8 = snapshot.globals[name];
+    if (nv8 === undefined || nv8.prototypeMembers === null) continue;
+    const nv8ByName = new Map(
+      nv8.prototypeMembers.map((member) => [member.name, member]),
+    );
+    for (const member of entry.members) {
+      const expectedDescriptor = member.descriptor;
+      if (expectedDescriptor === null || expectedDescriptor === undefined) continue;
+      if (expectedDescriptor.unreadable === true) continue;
+      const actualDescriptor = nv8ByName.get(member.name)?.descriptor ?? null;
+      if (actualDescriptor === null || actualDescriptor.unreadable === true) continue;
+      compared += 1;
+      const expected = descriptorShapeOf(expectedDescriptor);
+      const actual = descriptorShapeOf(actualDescriptor);
+      if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+        diffs.push({ key: `${name}.${member.name}`, expected, actual });
+      }
+    }
+  }
+  return { compared, diffs };
 }
 
 // ---------------------------------------------------- 前提
@@ -322,6 +393,54 @@ test('the registry has no stale entries', async () => {
   }
 
   assert.deepEqual(stale, [], 'these members now exist; drop them from KNOWN_MISSING_MEMBERS');
+});
+
+// ---------------------------------------------------- descriptor 形状
+
+test('descriptor shapes match real Edge for every comparable member', async () => {
+  const snapshot = await captureNv8Surface();
+  const { compared, diffs } = diffDescriptors(snapshot);
+  const total = Object.values(realPrototypes)
+    .reduce((sum, entry) => sum + entry.members.length, 0);
+
+  // 覆盖率下限而不是固定值：宿主 Node 版本会砍掉少数 V8 语言内建
+  // （见 `known-differences.js`），但 969 个原型的主体必须都比到。
+  // 只在可比对的子集上断言，避免把「宿主缺成员」误报成 descriptor 回归。
+  assert.ok(
+    compared >= 8500,
+    `descriptor sample too small: ${compared} of ${total} captured members`
+  );
+  assert.ok(
+    compared / total >= 0.9,
+    `descriptor sample covers only ${compared}/${total} captured members`
+  );
+
+  // 断言消息带成员名与期望/实际形状，失败时不需要再去翻 fixture
+  const failures = diffs
+    .filter((diff) => KNOWN_DESCRIPTOR_DIFFERENCES[diff.key] === undefined)
+    .map((diff) => `${diff.key}\n    真实: ${JSON.stringify(diff.expected)}`
+      + `\n    NV8 : ${JSON.stringify(diff.actual)}`);
+
+  assert.deepEqual(
+    failures,
+    [],
+    'these descriptor shapes are detectable deviations; fix them or register '
+    + 'them in KNOWN_DESCRIPTOR_DIFFERENCES with a reason'
+  );
+});
+
+test('the descriptor registry has no stale entries', async () => {
+  const snapshot = await captureNv8Surface();
+  const actual = new Set(diffDescriptors(snapshot).diffs.map((diff) => diff.key));
+
+  // 登记了但其实已经一致的条目要删掉，否则清单会慢慢变成谎言
+  const stale = [];
+  for (const [key, reason] of Object.entries(KNOWN_DESCRIPTOR_DIFFERENCES)) {
+    assert.ok(reason.length > 10, `${key} needs a real explanation, not a placeholder`);
+    if (!actual.has(key)) stale.push(key);
+  }
+
+  assert.deepEqual(stale, [], 'these descriptor shapes now match; drop them from the registry');
 });
 
 // ---------------------------------------------------- 覆盖率下限
