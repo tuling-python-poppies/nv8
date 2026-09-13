@@ -1365,6 +1365,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 | [docs/edge-parity.md](docs/edge-parity.md) | 三层对齐现状与方法 |
 | [docs/baseline.md](docs/baseline.md) | 基线快照机制 |
 | [docs/protocol-collector.md](docs/protocol-collector.md) | 协议层与采集层 |
+| [docs/frame-protocol.md](docs/frame-protocol.md) | 宿主↔后端二进制 Frame 表示格式 |
 | [docs/evidence-contract.md](docs/evidence-contract.md) | Evidence 接口契约 |
 | [docs/security-boundaries.md](docs/security-boundaries.md) | 组件信任边界与安全模型 |
 | [docs/state-scope.md](docs/state-scope.md) | 状态作用域规则 |
