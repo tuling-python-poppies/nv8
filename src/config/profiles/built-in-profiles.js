@@ -228,11 +228,18 @@ export const legacyFullProfile = createProfile({
   },
   nodeSupport: {
     minimum: '18.18.0',
-    tested: ['24.11.0'],
+    tested: ['18.20.8', '20.20.2', '22.23.2', '24.20.0'],
     limitations: {
-      '18.x': 'Some modern APIs may have degraded behavior',
-      '20.x': 'Async module loading may be slower',
+      '18.x': 'Window enumeration and V8 builtin order remain host-level differences; module loading is async',
+      '20.x': 'Window enumeration and V8 builtin order remain host-level differences; module loading is async',
+      '22.x': 'V8 builtin order has documented host-level differences',
+      '24.x': 'Primary development baseline',
     },
+  },
+  maintenance: {
+    policy: 'bugfix-and-parity-only',
+    requiredBaselines: ['edge-behavior', 'edge-members', 'edge-surface', 'bootstrap-order'],
+    pluginDrift: 'fail-closed',
   },
   degradations: [
     {

@@ -15,6 +15,7 @@ import { createEvidenceSource } from './collection/evidence/evidence-source.js';
 import { normalizeTrustedScriptPolicy } from './engine/core/evidence-contract.js';
 import { detectHostCapabilities } from './engine/core/host-capabilities.js';
 import { resolveProfileCapabilities } from './config/profiles/capability-policy.js';
+import { validateLegacyFullPolicy } from './config/profiles/legacy-full-policy.js';
 import {
   assertPluginLockPlan,
   createPluginLockPlan,
@@ -93,6 +94,9 @@ export async function createNv8(options = {}) {
   if (evidenceSource !== null && evidence.usePage) {
     const [page] = await evidenceSource.listPages();
     if (page) effectiveProfile.pageHtml = await evidenceSource.readText(page.id);
+  }
+  if (effectiveProfile.id === 'legacy-full') {
+    validateLegacyFullPolicy(effectiveProfile);
   }
   
   // 创建插件注册表

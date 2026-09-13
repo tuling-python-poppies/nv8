@@ -94,6 +94,13 @@ realm.evaluate('document.querySelector("#x")')
 「为需要全量兼容的场景提供一个 Profile 入口」。它可以直接复用 legacy
 bootstrap，而不必逐个插件化。
 
+它采用明确的 `bugfix-and-parity-only` 维护策略：保持 `experimental: true`、
+`legacy.compatibilityMode` 和 `bootstrapBehavior: preserve`，兼容关键插件不得
+被静默移除；任何 surface、成员顺序、行为或 bootstrap 顺序变更都必须同时通过
+对应的 Edge fixture/baseline 门禁。`pluginDrift: fail-closed` 表示插件清单漂移
+应在启动或锁计划阶段失败，而不是悄悄把 legacy-full 降级成另一个 Profile。
+策略元数据由 `src/config/profiles/legacy-full-policy.js` 校验。
+
 ## 不做的事
 
 - 不为了追平覆盖率而批量生成插件包装
