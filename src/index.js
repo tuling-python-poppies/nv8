@@ -14,6 +14,7 @@ import { loadEvidenceBundle } from './collection/evidence/loader.js';
 import { createEvidenceSource } from './collection/evidence/evidence-source.js';
 import { normalizeTrustedScriptPolicy } from './engine/core/evidence-contract.js';
 import { detectHostCapabilities } from './engine/core/host-capabilities.js';
+import { resolveProfileCapabilities } from './config/profiles/capability-policy.js';
 import {
   assertPluginLockPlan,
   createPluginLockPlan,
@@ -43,6 +44,7 @@ export async function createNv8(options = {}) {
     runtimeMode = 'legacy',
     pluginLockPlan = null,
     limits = {},
+    capabilityPolicy = 'degrade',
   } = options;
   const hasProfileInput = profileId !== null
     || typeof profileInput === 'string'
@@ -103,6 +105,11 @@ export async function createNv8(options = {}) {
   // 解析插件依赖
   const resolvedPlugins = pluginRegistry.resolve();
   const hostCapabilities = detectHostCapabilities();
+  const capabilityResolution = resolveProfileCapabilities(
+    effectiveProfile,
+    hostCapabilities,
+    { policy: capabilityPolicy },
+  );
   const lockPlan = createPluginLockPlan({
     plugins: resolvedPlugins,
     profile: effectiveProfile,
@@ -137,6 +144,7 @@ export async function createNv8(options = {}) {
     sandbox,
     lockPlan,
     hostCapabilities,
+    capabilityResolution,
     runtimeMode,
     
     /**
@@ -350,6 +358,8 @@ export {
   generateProfileLockPlan,
   validateLockPlan,
   profiles,
+  resolveProfileCapabilities,
+  PROFILE_CAPABILITY_POLICIES,
 } from './config/profiles/index.js';
 
 /**

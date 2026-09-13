@@ -649,6 +649,34 @@ const profile = createProfile('legacy-full');
   破坏 `typeof` 特性检测比缺诊断更糟（[ADR-0002](docs/adr/0002-missing-capability-diagnostics.md)）
 - 可生成 **Lock Plan** 锁定装配结果，保证跨环境一致
 
+### 宿主能力降级
+
+Profile 可以声明 `requiredCapabilities` 和 `optionalCapabilities`。required 能力在
+Realm 创建前检查，缺失或 `broken` 时直接抛出 `PROFILE_CAPABILITY_UNAVAILABLE`；
+optional 能力默认采用 `degrade` 策略，并通过 `nv8.capabilityResolution.degradations`
+返回状态、行为和原因。需要严格环境时传入 `capabilityPolicy: 'strict'`，让 optional
+能力也在启动阶段失败；`ignore` 仅适用于调用方明确不需要诊断的受控场景。
+
+```js
+const nv8 = await createNv8({
+  profile: {
+    id: 'edge-target',
+    plugins: [],
+    requiredCapabilities: ['vm.context'],
+    optionalCapabilities: ['array-buffer.transfer'],
+    degradations: [{
+      capability: 'array-buffer.transfer',
+      behavior: 'use the host-compat copy fallback',
+      reason: 'Node 20 does not expose native transfer',
+    }],
+  },
+  capabilityPolicy: 'degrade',
+});
+```
+
+降级不会伪造能力为可用；运行时只能使用 Profile 已声明的 fallback。缺少 required
+能力或 strict 模式下的 optional 能力都会在目标脚本执行前失败。
+
 指纹字段遵循 [ADR-0005](docs/adr/0005-machine-specific-values.md) 一条铁律：
 **浏览器身份照抄，机器特定值保持中性。**
 

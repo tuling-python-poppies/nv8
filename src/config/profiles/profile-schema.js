@@ -120,6 +120,29 @@ export function validateProfileManifest(manifest) {
   if (manifest.config !== undefined && typeof manifest.config !== 'object') {
     throw new Error('Profile manifest "config" must be an object');
   }
+
+  for (const field of ['requiredCapabilities', 'optionalCapabilities']) {
+    if (manifest[field] !== undefined) {
+      if (!Array.isArray(manifest[field])
+        || manifest[field].some(id => typeof id !== 'string' || id.length === 0)) {
+        throw new Error(`Profile manifest "${field}" must be an array of non-empty strings`);
+      }
+    }
+  }
+
+  if (manifest.degradations !== undefined) {
+    if (!Array.isArray(manifest.degradations)) {
+      throw new Error('Profile manifest "degradations" must be an array');
+    }
+    for (const degradation of manifest.degradations) {
+      if (!degradation || typeof degradation !== 'object'
+        || typeof degradation.capability !== 'string'
+        || typeof degradation.behavior !== 'string'
+        || typeof degradation.reason !== 'string') {
+        throw new Error('Each profile degradation needs capability, behavior, and reason strings');
+      }
+    }
+  }
 }
 
 /**

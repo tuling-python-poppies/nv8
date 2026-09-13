@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 934 项（`npm test`，96 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 940 项（`npm test`，97 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -223,7 +223,8 @@ Web Animations / Observers / SVG，以及上述网络与存储 API 的更深层�
 - [x] **Bundle 版本兼容性** - `schema-compatibility.js` 固化 major/minor 策略：同主版本旧 minor
   可在显式策略下兼容，新 minor 与主版本变化拒绝，不猜测未知字段；Loader 支持
   `allowLegacySchema` 与受控 `supportedSchemaVersions`
-- [ ] **Profile 能力降级策略** - 缺失宿主能力时的行为
+- [x] **Profile 能力降级策略** - `capability-policy.js` 在 Realm 创建前区分 required/optional，
+  支持 `degrade` / `strict` / `ignore`，缺失能力保留状态、行为和原因并暴露到实例诊断
 - [ ] **受信任脚本策略完整定义** - CSP、module 权限边界
 
 **状态**: 基础实现完成，需要加固安全和兼容性
@@ -1640,7 +1641,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：934 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：940 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1736,5 +1737,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（934 项 / 96 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（940 项 / 97 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)
