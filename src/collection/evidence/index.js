@@ -32,7 +32,17 @@ export {
   EvidenceEntrypointInvalidError,
   EvidenceTrustPolicyRejectedError,
   EvidenceFixtureInvalidError,
+  EvidenceSignatureRequiredError,
+  EvidenceSignatureInvalidError,
 } from './errors.js';
+
+export {
+  BUNDLE_SIGNATURE_ALGORITHM,
+  BUNDLE_SIGNATURE_VERSION,
+  signEvidenceManifest,
+  verifyEvidenceManifest,
+  manifestSigningBytes,
+} from './bundle-signature.js';
 
 export {
   loadEvidenceBundle,

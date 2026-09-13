@@ -3,7 +3,7 @@
 ## 当前状态
 - **完成阶段**: Phase 3 (内置插件和预设配置) ✅
 - **当前阶段**: Phase 5 (Evidence Bundle、Script Injector、Network Replay) 部分完成
-- **测试状态**: 918 项（`npm test`，93 个文件）。Node 18 / 20 / 22 / 24
+- **测试状态**: 928 项（`npm test`，94 个文件）。Node 18 / 20 / 22 / 24
   四档全绿
 - **项目性质**: 私有框架，无公开发布计划
 
@@ -218,7 +218,8 @@ Web Animations / Observers / SVG，以及上述网络与存储 API 的更深层�
 - [x] ~~**Evidence Loader 抽象接口**~~ - ✅ 已完成，见 `docs/evidence-contract.md`
 - [x] **完整 Profile Node 支持矩阵** - 791 项在 Node 18 / 20 / 22 / 24 四档全绿；
   `full-surface.json` 四档 fixture 均用生成器在对应 major 上实跑
-- [ ] **Bundle 签名和验证** - 防篡改、来源校验（可选）
+- [x] **Bundle 签名和验证** - `bundle-signature.js` 使用 Ed25519 签名 canonical manifest；Loader
+  支持 `optional` / `required` / `disabled` 策略，并且只信任调用方提供的 `keyId → public key`
 - [ ] **Bundle 版本兼容性** - 跨版本迁移和降级（可选）
 - [ ] **Profile 能力降级策略** - 缺失宿主能力时的行为
 - [ ] **受信任脚本策略完整定义** - CSP、module 权限边界
@@ -777,7 +778,7 @@ blocking 降级为 tracked——它记录一个预期的事实，保留登记只
 - [ ] SDK `apiVersion` 格式和兼容性检查
 - [ ] Core SemVer 策略（私有项目可简化）
 - [ ] Plugin lock 格式和签名（可选）
-- [ ] Evidence Bundle canonical JSON
+- [x] Evidence Bundle canonical JSON - manifest 签名覆盖移除 `signature` 后的确定性 canonical JSON
 - [ ] Frame Protocol 表示格式（已隐式决策）
 
 ### Phase 2 (Plugin SDK)
@@ -1637,7 +1638,7 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
   静态 import `surface/install/`，立刻红
   - `bootstrap/` 是 engine→surface 的**唯一例外且必须是例外**：它就是「把表面装进
     Realm」这件事本身，而它自己由 moduleLoader 在 Realm 内加载
-- [x] **验证**：918 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
+- [x] **验证**：928 项四档全绿；三份 baseline（bootstrap 顺序 344 步 / surface /
   observability）**全部一致**——重构没有改变任何运行时行为；`audit:state` 0 项待迁移；
   `check:surface-order` 一致；`build:bundle` 4010 个模块正常
 
@@ -1733,5 +1734,5 @@ required, but only 0 present.`。新增 `requireArguments()` 助手，文案按�
 - **架构决策记录**: [docs/adr/](./docs/adr/)（8 篇）
 - **三层对齐**: [docs/edge-parity.md](./docs/edge-parity.md)
 - **Baseline 框架**: [src/infra/baseline/baseline.js](./src/infra/baseline/baseline.js)
-- **测试**: `npm test`（918 项 / 93 个文件，Node 18/20/22/24 四档全绿）
+- **测试**: `npm test`（928 项 / 94 个文件，Node 18/20/22/24 四档全绿）
 - **测试数据**: [fixtures/baseline/](./fixtures/baseline/)

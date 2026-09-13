@@ -175,6 +175,28 @@ export class EvidenceTrustPolicyRejectedError extends EvidenceError {
 /**
  * Fixture 无效
  */
+export class EvidenceSignatureRequiredError extends EvidenceError {
+  constructor() {
+    super(
+      'EVIDENCE_SIGNATURE_REQUIRED',
+      'Evidence bundle signature is required',
+    );
+  }
+}
+
+/**
+ * Manifest 签名无效或不受信任
+ */
+export class EvidenceSignatureInvalidError extends EvidenceError {
+  constructor(reason) {
+    super(
+      'EVIDENCE_SIGNATURE_INVALID',
+      `Evidence bundle signature is invalid: ${reason}`,
+      { context: { reason } },
+    );
+  }
+}
+
 export class EvidenceFixtureInvalidError extends EvidenceError {
   constructor(path, reason) {
     super(

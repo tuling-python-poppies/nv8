@@ -94,6 +94,34 @@ const sandbox = await createSandbox({
 });
 ```
 
+## Bundle 签名验证
+
+Bundle 的 `manifest.json` 可以携带 Ed25519 签名。签名覆盖 manifest 去掉
+`signature` 字段后的 canonical JSON；公钥不写入 Bundle，而由调用方按 `keyId`
+提供，避免 Bundle 自己声明信任根。
+
+```js
+import {
+  loadEvidenceBundle,
+  signEvidenceManifest,
+} from './evidence/index.js';
+
+const signedManifest = signEvidenceManifest(manifest, privateKey, { keyId: 'release-1' });
+const bundle = await loadEvidenceBundle(bundlePath, {
+  signaturePolicy: 'required',
+  trustedKeys: { 'release-1': publicKey },
+});
+```
+
+`signaturePolicy` 有三个值：
+
+- `optional`（默认）：无签名的历史 Bundle 仍可加载；带签名的 Bundle 必须验证。
+- `required`：无签名 Bundle 拒绝加载。
+- `disabled`：跳过签名验证，只适用于受控开发输入。
+
+签名验证只解决 Bundle 的完整性和来源校验，不代表目标脚本可信；脚本权限仍由
+`trustedScriptPolicy` 单独控制。私钥不得放入 Bundle、源码或日志。
+
 ## 受信任脚本策略
 
 策略枚举属于 **Core**，不属于 Bundle schema——"哪些脚本允许在 Realm 里执行"

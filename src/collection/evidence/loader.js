@@ -31,7 +31,10 @@ import {
   EvidenceLimitExceededError,
   EvidenceEntrypointInvalidError,
   EvidenceFixtureInvalidError,
+  EvidenceSignatureRequiredError,
+  EvidenceSignatureInvalidError,
 } from './errors.js';
+import { verifyEvidenceManifest } from './bundle-signature.js';
 
 /**
  * 加载 Evidence Bundle
@@ -44,9 +47,20 @@ export async function loadEvidenceBundle(bundlePath, options = {}) {
   const {
     limits = DEFAULT_LIMITS,
     trustedScriptPolicy = TRUST_POLICIES.REGISTERED_ONLY,
+    signaturePolicy = 'optional',
+    trustedKeys,
   } = options;
+  if (!['optional', 'required', 'disabled'].includes(signaturePolicy)) {
+    throw new TypeError('signaturePolicy must be optional, required, or disabled');
+  }
   
-  const loader = new EvidenceBundleLoader(bundlePath, limits, trustedScriptPolicy);
+  const loader = new EvidenceBundleLoader(
+    bundlePath,
+    limits,
+    trustedScriptPolicy,
+    signaturePolicy,
+    trustedKeys,
+  );
   return await loader.load();
 }
 
@@ -54,10 +68,12 @@ export async function loadEvidenceBundle(bundlePath, options = {}) {
  * Evidence Bundle Loader 实现
  */
 class EvidenceBundleLoader {
-  constructor(bundlePath, limits, trustedScriptPolicy) {
+  constructor(bundlePath, limits, trustedScriptPolicy, signaturePolicy, trustedKeys) {
     this.bundlePath = bundlePath;
     this.limits = limits;
     this.trustedScriptPolicy = trustedScriptPolicy;
+    this.signaturePolicy = signaturePolicy;
+    this.trustedKeys = trustedKeys;
     this.manifest = null;
     this.files = new Map(); // path -> file metadata
     this.loadedAt = null;
@@ -172,6 +188,8 @@ class EvidenceBundleLoader {
       throw new EvidenceInvalidManifestError('invalid target.capturedAt (must be ISO 8601)');
     }
     
+    this.validateSignature();
+
     // 检查 files 数组
     if (!Array.isArray(m.files)) {
       throw new EvidenceInvalidManifestError('missing or invalid files array');
@@ -248,6 +266,25 @@ class EvidenceBundleLoader {
     }
   }
   
+  /**
+   * 验证 manifest 签名。签名是可选的以保持旧 Bundle 兼容；一旦 Bundle
+   * 携带签名，必须使用调用方显式提供的受信任 key 验证。
+   */
+  validateSignature() {
+    const hasSignature = this.manifest.signature !== undefined;
+    if (this.signaturePolicy === 'disabled') return;
+    if (!hasSignature) {
+      if (this.signaturePolicy === 'required') {
+        throw new EvidenceSignatureRequiredError();
+      }
+      return;
+    }
+    const result = verifyEvidenceManifest(this.manifest, this.trustedKeys);
+    if (!result.valid) {
+      throw new EvidenceSignatureInvalidError(result.reason);
+    }
+  }
+
   /**
    * 验证所有文件
    */

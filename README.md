@@ -852,7 +852,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，918 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，928 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 当前 Node / backend 的性能基准
 npm run benchmark:matrix # Node 18/20/22/24 × 两种 backend 性能矩阵
@@ -998,7 +998,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（918 项 / 93 个文件，自动发现） |
+| `npm test` | 全量测试（928 项 / 94 个文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、Realm 创建销毁 |
