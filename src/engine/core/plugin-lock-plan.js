@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { CORE_VERSION, assertCoreVersion } from './core-version.js';
 import {
   assertSupportedPluginApiVersion,
   CURRENT_PLUGIN_API_VERSION,
@@ -26,6 +27,7 @@ export function createPluginLockPlan({
   }));
   const plan = {
     schema: PLUGIN_LOCK_SCHEMA,
+    coreVersion: assertCoreVersion(CORE_VERSION),
     runtimeMode,
     profile: {
       id: profile.id || 'default',

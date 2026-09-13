@@ -670,6 +670,16 @@ const plugin = definePlugin({
 `PLUGIN_SDK_API_UNSUPPORTED` 拒绝尚未支持的 major；这样失败发生在安装和 Realm
 创建之前，而不是插件执行到一半才失败。
 
+### Core SemVer 策略
+
+Core 版本独立于 Plugin SDK、Evidence 和 Frame Protocol，当前版本为 `0.1.0`。
+版本规则为：major 表示不兼容的公开 API 或行为契约变化，minor 表示向后兼容的
+能力增加，patch 表示向后兼容的修复或对等性修正。Lock Plan 会记录 `coreVersion`
+并纳入摘要，避免用插件的 `version` 误判 Core 兼容性。
+
+内部 manifest 或宿主集成可以使用 `*`、精确版本、`^`、`~` 以及比较运算符；不满足
+要求时返回 `CORE_VERSION_UNSUPPORTED`，而不是在 Realm 已启动后才失败。
+
 ### 宿主能力降级
 
 Profile 可以声明 `requiredCapabilities` 和 `optionalCapabilities`。required 能力在
