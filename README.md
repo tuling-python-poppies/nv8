@@ -106,7 +106,7 @@ Node 18–22 还有一处更窄的差异：V8 内建段自身的注册顺序与 
 ### 跑一段脚本
 
 ```js
-import { EdgeSandbox } from './src/public/edge-sandbox.js';
+import { EdgeSandbox } from 'nv8';
 
 const sandbox = await EdgeSandbox.create({
   page: {
@@ -144,13 +144,18 @@ await sandbox.close();
 node --experimental-vm-modules your-script.mjs
 ```
 
+示例统一按**包名**导入：在仓库内可直接运行（Node 支持 `package.json` 的包自引用）；
+放到外部项目时先在 `package.json` 声明 `"nv8": "file:<nv8-root>"` 并 `npm install`。
+
 ### 采集一个分页接口
 
 ```js
-import { Collector } from './src/collection/collector/collector.js';
-import { createPaginationScheduler } from './src/collection/collector/pagination.js';
-import { createNdjsonResultSink } from './src/collection/collector/result-sink.js';
-import { createMemoryCheckpointStore } from './src/collection/collector/checkpoint.js';
+import {
+  Collector,
+  createPaginationScheduler,
+  createNdjsonResultSink,
+  createMemoryCheckpointStore,
+} from 'nv8/collector';
 
 const collector = new Collector({
   policy: { allowedOrigins: ['https://api.example.com'] },
@@ -227,7 +232,7 @@ const sandbox = await EdgeSandbox.create(options);
 面向「我只要 DOM 不要 WebGL」这类需求，按插件与 Profile 组合运行时。
 
 ```js
-import { createNv8 } from './src/index.js';
+import { createNv8 } from 'nv8';
 
 const nv8 = await createNv8({
   runtimeMode: 'plugin',
@@ -579,8 +584,8 @@ WebSocket 采集是 Collector 的**有界请求/响应传输**，不是页面里
 import {
   createCollector,
   createWebSocketTransport,
-} from './src/collection/collector/index.js';
-import { createRequestPlan } from './src/collection/request-protocol/index.js';
+} from 'nv8/collector';
+import { createRequestPlan } from 'nv8/protocol';
 
 const plan = createRequestPlan({
   method: 'GET',
@@ -646,7 +651,7 @@ const collector = createCollector({
 `nv8/fingerprint/edge-152` 子路径读取。
 
 ```js
-import { createProfile } from './src/config/profiles/index.js';
+import { createProfile } from 'nv8';
 
 const profile = createProfile('legacy-full');
 ```
