@@ -393,7 +393,8 @@ export async function createSandbox(config) {
   // 真正的 root realm id（形如 `${sandboxId}-realm-N`）。
   // 以前 `realms.get('root')` 永远取不到——id 从来不是字面量 'root'
   // （IKF39V(a)）。这里记录实际句柄，evaluate 用它解析。
-  let rootRealmId = null;
+  // root realm id 的可变持有者：replaceRootWindowClient 会更新它（IKF39V(a)）。
+  const rootRealm = { id: null };
 
   // 插件实例
   const pluginInstances = [];
@@ -468,6 +469,68 @@ export async function createSandbox(config) {
     objectURLRegistry,
   };
 
+  // 生命周期闸门读数器：destroy/reset 在 await 之间改写这两个值，
+  // 工厂必须实时读取（见 createWorkerRealmFactories 的注释）。
+  const lifecycleState = {
+    get closed() { return lifecycleClosed; },
+    get generation() { return lifecycleGeneration; },
+  };
+  const workerFactories = createWorkerRealmFactories({
+    sandboxId,
+    profile,
+    pluginInstances,
+    stateRegistry,
+    globals,
+    trace,
+    logger,
+    replay,
+    limits,
+    runtime,
+    broadcastConnector: defaultBroadcastConnector,
+    workerReplayState,
+    lifecycleState,
+    realms,
+    workerRealms,
+    sharedWorkerRecords,
+    sharedWorkerCreations,
+    workletRealmsByOwner,
+    workletRealms,
+    serviceWorkerHandles,
+    reserveWorker,
+    reserveWorkerConnection,
+    trackWorkerConnection,
+    releaseWorkerConnections,
+    getServiceWorkerClients,
+    notifyServiceWorkerClients,
+  });
+  const windowFactories = createWindowRealmFactories({
+    sandboxId,
+    profile,
+    pluginInstances,
+    stateRegistry,
+    globals,
+    trace,
+    logger,
+    replay,
+    limits,
+    runtime,
+    broadcastConnector: defaultBroadcastConnector,
+    lifecycleState,
+    realms,
+    windowClients,
+    serviceWorkerContainers,
+    evidenceResources,
+    evidenceSource,
+    evidence,
+    lifecycle,
+    rootRealm,
+    counter: { nextClientId: () => nextWindowClientId++ },
+    findServiceWorkerController,
+    getServiceWorkerClients,
+    interceptFetch: workerFactories.interceptServiceWorkerFetch,
+    workers: workerFactories,
+  });
+
   /** 构造插件钩子上下文（sandbox 级安装，realm 为 null）。 */
   const pluginContextFor = plugin => createSandboxPluginContext({
     plugin,
@@ -507,803 +570,6 @@ export async function createSandbox(config) {
   
   logger.info(`[Sandbox ${sandboxId}] All plugins installed`);
 
-  function disposeSharedWorkerRecords() {
-    for (const record of new Set(sharedWorkerRecords.values())) {
-      for (const connection of [...record.connections]) {
-        connection.close?.();
-      }
-      record.connections.clear();
-      destroyWorkerRealm(record.realm);
-    }
-    sharedWorkerRecords.clear();
-  }
-
-  function interceptServiceWorkerFetch(request) {
-    let selected = null;
-    for (const [scope, handle] of serviceWorkerHandles) {
-      if (!serviceWorkerScopeMatches(scope, request.url)) continue;
-      if (selected === null || scope.length > selected.scope.length) {
-        selected = { scope, handle };
-      }
-    }
-    return selected === null ? null : selected.handle.fetch(request);
-  }
-
-  // ------------------------------------------------------------------
-  // 以下 realm 创建工厂仍保留为 createSandbox 内的嵌套闭包（IKF3A7）。
-  //
-  // 它们与 sandbox 的**实时**生命周期状态强耦合：`realms` / `workerRealms`
-  // / `sharedWorkerRecords` / `serviceWorkerHandles` 这些容器被多方原地增删，
-  // `lifecycleGeneration` / `lifecycleClosed` 在每个 await 边界后都要重新读取，
-  // 且彼此交叉调用（workerFactory / sharedWorkerFactory / workletFactory /
-  // childRealmFactory 会互相注入到对方的 runtime）。
-  //
-  // 拆成 deps 对象工厂需要 20+ 个 getter/句柄，并复制这张状态图；在缺少
-  // 独立单测的情况下，形式上的行数减少换来的是更高的状态漂移风险。
-  // 已经按「纯函数 / 无实时状态」标准拆到模块顶层的部分：
-  //   createWorkerBudget、createServiceWorkerClientRegistry、
-  //   collectPluginSnapshots / restorePluginSnapshots、installPlugin、
-  //   completePageLifecycle、evaluateCoreWorkerSource、
-  //   scopeNetworkRecorder、createWorkerReplayState、错误构造器等。
-  // 新代码优先复用这些模块级工厂；不要因为「看起来像」就把闭包直接搬家。
-  // ------------------------------------------------------------------
-
-  async function createIframeChildRealm(options) {
-    if (lifecycleClosed) throw createRealmLifecycleError();
-    const generation = lifecycleGeneration;
-    if (realms.size >= (limits.maxRealms ?? 64)) {
-      const error = new Error('Realm capacity limit exceeded');
-      error.code = 'LIMIT_REALM_CAPACITY';
-      throw error;
-    }
-    const childUrl = new URL(options.pageUrl || profile.url || 'https://example.com/');
-    const childOrigin = options.origin ?? childUrl.origin;
-    const serviceWorkerPageUrl = options.serviceWorkerPageUrl ?? childUrl.href;
-    const serviceWorkerController = findServiceWorkerController(serviceWorkerPageUrl);
-    let pageHtml = options.pageHtml
-      ?? '<!doctype html><html><head></head><body></body></html>';
-    if (options.navigationSource === 'src') {
-      const navigationResponse = await interceptServiceWorkerFetch({
-        method: 'GET',
-        url: childUrl.href,
-        headers: { accept: 'text/html' },
-        body: null,
-      });
-      if (lifecycleClosed || generation !== lifecycleGeneration) {
-        throw createRealmLifecycleError();
-      }
-      if (navigationResponse?.body !== undefined) {
-        pageHtml = decodeNavigationBody(navigationResponse.body);
-      }
-    }
-    let childRealm;
-    childRealm = await createRealm({
-      sandboxId,
-      type: 'iframe',
-      plugins: pluginInstances,
-      stateRegistry,
-      globals,
-      trace,
-      logger,
-      pageUrl: childUrl.href,
-      origin: childOrigin,
-      documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
-      serviceWorkerPageUrl,
-      pageHtml,
-      replay: options.replay ?? replay,
-      navigatorProfile: options.navigatorProfile ?? profile.navigator ?? {},
-      timingProfile: options.timingProfile ?? profile.timing ?? null,
-      runtime: {
-        ...runtime,
-        ...(options.runtime || {}),
-        serviceWorkerPageUrl,
-        documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
-        childRealmFactory: createIframeChildRealm,
-        workerDepth: 0,
-        workerFactory: createDedicatedWorker,
-        sharedWorkerFactory: createSharedWorkerConnection,
-        serviceWorkerFactory: createServiceWorker,
-        serviceWorkerFetch: interceptServiceWorkerFetch,
-        workletFactory: createWorkletModule,
-        broadcastConnector: defaultBroadcastConnector,
-        serviceWorkerProfile: {
-          enabled: true,
-          controller: serviceWorkerController,
-          clients: options => getServiceWorkerClients(options),
-          onControllerChange: snapshot => {
-            const module = childRealm.moduleLoader.importUrlSyncCached(SERVICE_WORKER_RUNTIME_URL);
-            module?.namespace?.updateServiceWorkerController?.(snapshot);
-          },
-        },
-        windowContext: {
-          origin: childOrigin,
-          parentWindow: options.parentWindow ?? null,
-          topWindow: options.topWindow ?? options.parentWindow ?? null,
-          parentOrigin: options.parentOrigin ?? new URL(profile.url || childUrl.href).origin,
-          parentPostMessage: options.parentPostMessage ?? null,
-          sameOrigin: options.sameOrigin === true,
-        },
-      },
-    });
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      childRealm.destroyed = true;
-      await childRealm.destroy().catch(() => {});
-      throw createRealmLifecycleError();
-    }
-    realms.set(childRealm.id, childRealm);
-    const clientId = options.clientId ?? `window-client-${nextWindowClientId++}`;
-    windowClients.set(childRealm.id, {
-      id: clientId,
-      realmId: childRealm.id,
-      url: serviceWorkerPageUrl,
-      frameType: 'nested',
-      visibilityState: 'visible',
-      focused: false,
-      navigatePage: typeof options.navigatePage === 'function'
-        ? options.navigatePage
-        : null,
-    });
-    await completePageLifecycle(childRealm);
-    const childWindow = childRealm.evaluate('globalThis');
-    options.onContext?.(childWindow);
-    return {
-      window: childWindow,
-      origin: childOrigin,
-      deliverParentMessage(message, origin, targetOriginOrOptions, transfer) {
-        if (childRealm.destroyed) return;
-        const module = childRealm.moduleLoader.importUrlSyncCached(WINDOW_CONTEXT_URL);
-        module?.namespace?.receiveWindowContextMessage?.(
-          message,
-          origin,
-          targetOriginOrOptions,
-          transfer,
-        );
-      },
-      clientId,
-      canNavigate() {
-        return childRealm.moduleLoader
-          ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
-          ?.namespace?.dispatchBeforeUnload?.() !== false;
-      },
-      close() {
-        if (childRealm.destroyed) return;
-        childRealm.moduleLoader
-          .importUrlSyncCached(PAGE_LIFECYCLE_URL)
-          ?.namespace?.dispatchPageHideAndUnload?.();
-        childRealm.destroyed = true;
-        void childRealm.destroy();
-        realms.delete(childRealm.id);
-        windowClients.delete(childRealm.id);
-        stateRegistry.destroyContext('realm', childRealm.id);
-      },
-    };
-  }
-
-  async function replaceRootWindowClient(
-    oldRealm,
-    oldClient,
-    nextUrl,
-    originalOptions,
-    navigationOptions = {},
-  ) {
-    // 生命周期闸门：销毁/重置之后的导航（含页面定时器触发的延迟导航）
-    // 一律拒绝，不得复活 Realm（IKFD9F）。
-    if (lifecycleClosed || oldRealm.destroyed) return null;
-    const generation = lifecycleGeneration;
-    if (
-      navigationOptions.beforeUnloadChecked !== true
-      && oldRealm.moduleLoader
-        ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
-        ?.namespace?.dispatchBeforeUnload?.() === false
-    ) {
-      return null;
-    }
-    const targetUrl = new URL(nextUrl).href;
-    let pageHtml = '<!doctype html><html><head></head><body></body></html>';
-    const navigationResponse = await interceptServiceWorkerFetch({
-      method: 'GET',
-      url: targetUrl,
-      headers: { accept: 'text/html' },
-      body: null,
-    });
-    if (lifecycleClosed || generation !== lifecycleGeneration || oldRealm.destroyed) {
-      return null;
-    }
-    if (navigationResponse?.body !== undefined) {
-      pageHtml = decodeNavigationBody(navigationResponse.body);
-    }
-
-    oldRealm.moduleLoader
-      ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
-      ?.namespace?.dispatchPageHideAndUnload?.();
-    evidenceResources.get(oldRealm.id)?.dispose();
-    evidenceResources.delete(oldRealm.id);
-    oldRealm.destroyed = true;
-    await oldRealm.destroy();
-    realms.delete(oldRealm.id);
-    windowClients.delete(oldRealm.id);
-    serviceWorkerContainers.delete(oldRealm.id);
-    stateRegistry.destroyContext('realm', oldRealm.id);
-
-    let replacement;
-    replacement = await createRealm({
-      sandboxId,
-      type: 'root',
-      plugins: pluginInstances,
-      stateRegistry,
-      globals,
-      trace,
-      logger,
-      pageUrl: targetUrl,
-      pageHtml,
-      replay: originalOptions.replay ?? replay,
-      navigatorProfile: originalOptions.navigatorProfile ?? profile.navigator ?? {},
-      timingProfile: originalOptions.timingProfile ?? profile.timing ?? null,
-      limits,
-      runtime: {
-        broadcastConnector: defaultBroadcastConnector,
-        childRealmFactory: createIframeChildRealm,
-        workerDepth: 0,
-        windowContext: {
-          origin: new URL(targetUrl).origin,
-          sameOrigin: true,
-        },
-        workerFactory: createDedicatedWorker,
-        sharedWorkerFactory: createSharedWorkerConnection,
-        workletFactory: createWorkletModule,
-        serviceWorkerFactory: createServiceWorker,
-        serviceWorkerFetch: interceptServiceWorkerFetch,
-        beforeNavigate: () => replacement
-          ?.moduleLoader
-          ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
-          ?.namespace?.dispatchBeforeUnload?.() !== false,
-        onNavigate: ({ url }) => {
-          if (replacement?.destroyed) return;
-          void replaceRootWindowClient(
-            replacement,
-            oldClient,
-            url,
-            originalOptions,
-            { beforeUnloadChecked: true },
-          );
-        },
-        serviceWorkerProfile: {
-          enabled: true,
-          controller: findServiceWorkerController(targetUrl),
-          clients: options => getServiceWorkerClients(options),
-          onControllerChange: snapshot => {
-            const module = replacement?.moduleLoader?.importUrlSyncCached(SERVICE_WORKER_RUNTIME_URL);
-            module?.namespace?.updateServiceWorkerController?.(snapshot);
-          },
-        },
-        ...runtime,
-        ...(originalOptions.runtime || {}),
-        networkRequestRecorder: scopeNetworkRecorder(
-          originalOptions.runtime?.networkRequestRecorder
-            ?? runtime.networkRequestRecorder,
-          'window',
-          targetUrl,
-        ),
-      },
-    });
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      replacement.destroyed = true;
-      await replacement.destroy().catch(() => {});
-      throw createRealmLifecycleError();
-    }
-    if (evidenceSource !== null && evidence?.executeScripts === true) {
-      const resource = await injectEvidenceScripts(
-        replacement,
-        evidenceSource,
-        evidence,
-        targetUrl,
-        logger,
-      );
-      evidenceResources.set(replacement.id, resource);
-    }
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      evidenceResources.get(replacement.id)?.dispose();
-      evidenceResources.delete(replacement.id);
-      replacement.destroyed = true;
-      await replacement.destroy().catch(() => {});
-      throw createRealmLifecycleError();
-    }
-    realms.set(replacement.id, replacement);
-    rootRealmId = replacement.id;
-    oldClient.realmId = replacement.id;
-    oldClient.url = targetUrl;
-    oldClient.navigatePage = value => replaceRootWindowClient(
-      replacement,
-      oldClient,
-      value,
-      originalOptions,
-    );
-    windowClients.set(replacement.id, oldClient);
-    serviceWorkerContainers.set(replacement.id, replacement);
-    await completePageLifecycle(replacement);
-    lifecycle.emit('realm.navigation.completed', {
-      sandboxId,
-      previousRealmId: oldRealm.id,
-      realmId: replacement.id,
-      url: targetUrl,
-    });
-    return replacement;
-  }
-
-  async function createDedicatedWorker(options) {
-    const generation = lifecycleGeneration;
-    const source = resolveCoreWorkerSource(options.url, workerReplayState);
-    const reservation = reserveWorker(options.workerDepth, true);
-    let version = createHash('sha256').update(source).digest('hex');
-    const workerNavigatorProfile = {
-      ...(profile.navigator || {}),
-      languages: profile.navigator?.languages || ['en-US', 'en'],
-      language: profile.navigator?.language || 'en-US',
-    };
-    let workerRealm;
-    try {
-      workerRealm = await createRealm({
-        sandboxId,
-        type: 'worker',
-        plugins: pluginInstances,
-        stateRegistry,
-        globals,
-        trace,
-        logger,
-        pageUrl: options.url,
-        pageHtml: '',
-        replay,
-        navigatorProfile: workerNavigatorProfile,
-        timingProfile: profile.timing || null,
-        workerDepth: reservation.depth,
-        runtime: {
-          ...runtime,
-          workerDepth: reservation.depth,
-          workerFactory: createDedicatedWorker,
-          sharedWorkerFactory: createSharedWorkerConnection,
-          workletFactory: createWorkletModule,
-          broadcastConnector: defaultBroadcastConnector,
-          networkRequestRecorder: scopeNetworkRecorder(
-            runtime.networkRequestRecorder,
-            'worker',
-            options.url,
-          ),
-          workerGlobal: {
-            kind: 'dedicated',
-            name: `${options.name ?? ''}`,
-            url: options.url,
-            type: options.type,
-            replay,
-            navigatorProfile: workerNavigatorProfile,
-            renderingProfile: profile.rendering ?? null,
-            postMessage(message, ports) {
-              options.onMessage?.(message, ports);
-            },
-            close() {
-              reservation.releaseConnection();
-              destroyWorkerRealm(workerRealm);
-            },
-          },
-        },
-      });
-    } catch (error) {
-      reservation.releaseConnection();
-      reservation.releasePending();
-      throw error;
-    }
-    reservation.releasePending();
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      reservation.releaseConnection();
-      destroyWorkerRealm(workerRealm);
-      throw createWorkerLifecycleError();
-    }
-    realms.set(workerRealm.id, workerRealm);
-    workerRealms.add(workerRealm);
-    trackWorkerConnection(workerRealm, reservation.releaseConnection);
-    try {
-      version = await evaluateCoreWorkerSource(
-        workerRealm,
-        source,
-        options.type,
-        options.url,
-        workerReplayState,
-        limits.timeoutMs ?? 5000,
-      ) ?? version;
-    } catch (error) {
-      destroyWorkerRealm(workerRealm);
-      reservation.releaseConnection();
-      throw error;
-    }
-    const workerRuntime = workerRealm.moduleLoader
-      .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace;
-    return {
-      version,
-      deliverOwnerMessage(message, transferOptions, ports) {
-        if (workerRealm.destroyed) return;
-        workerRuntime?.receiveOwnerMessage?.(message, transferOptions, ports);
-      },
-      terminate() {
-        reservation.releaseConnection();
-        destroyWorkerRealm(workerRealm);
-      },
-    };
-  }
-
-  async function createServiceWorker(options) {
-    const generation = lifecycleGeneration;
-    const workerScope = options.scope ?? new URL('./', options.url).href;
-    const activeHandle = { current: null };
-    const source = resolveCoreWorkerSource(options.url, workerReplayState);
-    const reservation = reserveWorker(options.workerDepth, false);
-    let version = createHash('sha256').update(source).digest('hex');
-    const workerNavigatorProfile = {
-      ...(profile.navigator || {}),
-      languages: profile.navigator?.languages || ['en-US', 'en'],
-      language: profile.navigator?.language || 'en-US',
-    };
-    let workerRealm;
-    try {
-      workerRealm = await createRealm({
-        sandboxId,
-        type: 'worker',
-        plugins: pluginInstances,
-        stateRegistry,
-        globals,
-        trace,
-        logger,
-        pageUrl: options.url,
-        pageHtml: '',
-        replay,
-        navigatorProfile: workerNavigatorProfile,
-        timingProfile: profile.timing || null,
-        workerDepth: reservation.depth,
-        runtime: {
-          ...runtime,
-          workerDepth: reservation.depth,
-          workerFactory: createDedicatedWorker,
-          sharedWorkerFactory: createSharedWorkerConnection,
-          workletFactory: createWorkletModule,
-          serviceWorkerFactory: null,
-          broadcastConnector: defaultBroadcastConnector,
-          networkRequestRecorder: scopeNetworkRecorder(
-            runtime.networkRequestRecorder,
-            'service-worker',
-            options.url,
-          ),
-          workerGlobal: {
-            kind: 'service',
-            name: '',
-            url: options.url,
-            type: options.type,
-            replay,
-            navigatorProfile: workerNavigatorProfile,
-            renderingProfile: profile.rendering ?? null,
-            postMessage(message, ports) {
-              options.onMessage?.(message, ports);
-            },
-            close() {
-              reservation.releaseConnection();
-              destroyWorkerRealm(workerRealm);
-            },
-            serviceWorkerControl: {
-              skipWaiting() {
-                options.onSkipWaiting?.();
-              },
-              claim() {
-                options.onClaim?.();
-              },
-              hasClient() {
-                return getServiceWorkerClients({
-                  scope: workerScope,
-                  handle: activeHandle.current,
-                }).length > 0;
-              },
-              matchAll(options = {}) {
-                return getServiceWorkerClients({
-                  ...options,
-                  scope: options.includeUncontrolled === true ? null : workerScope,
-                  handle: activeHandle.current,
-                });
-              },
-            },
-          },
-        },
-      });
-    } catch (error) {
-      reservation.releaseConnection();
-      reservation.releasePending();
-      throw error;
-    }
-    reservation.releasePending();
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      reservation.releaseConnection();
-      destroyWorkerRealm(workerRealm);
-      throw createWorkerLifecycleError();
-    }
-    realms.set(workerRealm.id, workerRealm);
-    workerRealms.add(workerRealm);
-    trackWorkerConnection(workerRealm, reservation.releaseConnection);
-    const workerRuntime = workerRealm.moduleLoader
-      .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace;
-    try {
-      options.onState?.('installing');
-      const evaluatedVersion = await evaluateCoreWorkerSource(
-        workerRealm,
-        source,
-        options.type,
-        options.url,
-        workerReplayState,
-        limits.timeoutMs ?? 5000,
-      );
-      version = evaluatedVersion ?? version;
-      await workerRuntime?.dispatchServiceWorkerLifecycle?.('install');
-      options.onState?.('installed');
-      if (options.activate !== false) options.onState?.('activating');
-    } catch (error) {
-      destroyWorkerRealm(workerRealm);
-      reservation.releaseConnection();
-      throw error;
-    }
-    let activationPromise = null;
-    const handle = {
-      scriptURL: options.url,
-      scope: workerScope,
-      version,
-      // 生命周期只读视图：让 findServiceWorkerController / 客户端快照
-      // 能识别已终止的 handle（IKFD9G）。
-      get destroyed() {
-        return workerRealm.destroyed === true;
-      },
-      get realm() {
-        return workerRealm;
-      },
-      deliverOwnerMessage(message, transferOptions, ports) {
-        if (workerRealm.destroyed) return;
-        workerRuntime?.receiveOwnerMessage?.(message, transferOptions, ports);
-      },
-      fetch(request) {
-        if (workerRealm.destroyed) return null;
-        return workerRuntime?.dispatchServiceWorkerFetch?.(request) ?? null;
-      },
-      activate() {
-        if (activationPromise !== null) return activationPromise;
-        activationPromise = (async () => {
-          if (workerRealm.destroyed) return;
-          await workerRuntime?.dispatchServiceWorkerLifecycle?.('activate');
-          if (workerRealm.destroyed) return;
-          options.onState?.('activated');
-          serviceWorkerHandles.set(workerScope, handle);
-          notifyServiceWorkerClients(workerScope, handle);
-        })();
-        return activationPromise;
-      },
-      terminate(options = {}) {
-        for (const [scope, candidate] of serviceWorkerHandles) {
-          if (candidate === handle) serviceWorkerHandles.delete(scope);
-        }
-        if (options.replacing !== true) {
-          notifyServiceWorkerClients(workerScope, null);
-        }
-        reservation.releaseConnection();
-        destroyWorkerRealm(workerRealm);
-      },
-    };
-    activeHandle.current = handle;
-    if (options.activate !== false) {
-      serviceWorkerHandles.set(workerScope, handle);
-      notifyServiceWorkerClients(workerScope, handle);
-    }
-    return handle;
-  }
-
-  async function createSharedWorkerConnection(options) {
-    const generation = lifecycleGeneration;
-    const key = `${options.creatorOrigin}\0${options.url}\0${options.name}`;
-    let record = sharedWorkerRecords.get(key);
-    // 复用前先检查 record 生命周期：worker 侧 self.close() / 生命周期销毁
-    // 之后残留的 record 不合法，必须重建（IKFD9H）。
-    if (record !== undefined && record.realm?.destroyed === true) {
-      sharedWorkerRecords.delete(key);
-      record = undefined;
-    }
-    const source = record === undefined
-      ? resolveCoreWorkerSource(options.url, workerReplayState)
-      : null;
-    const releaseConnection = reserveWorkerConnection(options.workerDepth);
-    if (record === undefined) {
-      // 并发 new SharedWorker(同 key)：第一个调用者负责创建，其余等待同一个
-      // in-flight promise。否则两个调用者会各自建一个全局作用域（IKFD9H）。
-      let creation = sharedWorkerCreations.get(key);
-      if (creation === undefined) {
-        creation = createSharedWorkerRecord(key, options, source, generation);
-        sharedWorkerCreations.set(key, creation);
-        void creation.finally(() => {
-          if (sharedWorkerCreations.get(key) === creation) {
-            sharedWorkerCreations.delete(key);
-          }
-        }).catch(() => {});
-      }
-      try {
-        record = await creation;
-      } catch (error) {
-        releaseConnection();
-        throw error;
-      }
-    }
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      releaseConnection();
-      throw createWorkerLifecycleError();
-    }
-    let connection;
-    try {
-      connection = record.runtime?.connectSharedWorker?.(
-        (message, ports) => options.onMessage?.(message, ports),
-      ) ?? { deliverOwnerMessage() {}, close() {} };
-    } catch (error) {
-      releaseConnection();
-      throw error;
-    }
-    record.connections.add(connection);
-    trackWorkerConnection(record.realm, releaseConnection);
-    return {
-      deliverOwnerMessage(message, ports) {
-        if (!record.realm.destroyed) connection.deliverOwnerMessage(message, ports);
-      },
-      close() {
-        releaseConnection();
-        connection.close();
-        record.connections.delete(connection);
-        if (record.connections.size === 0) {
-          for (const [candidateKey, candidate] of sharedWorkerRecords) {
-            if (candidate === record) sharedWorkerRecords.delete(candidateKey);
-          }
-          destroyWorkerRealm(record.realm);
-        }
-      },
-    };
-  }
-
-  /**
-   * 创建 SharedWorker 全局作用域（record）。调用方通过
-   * `sharedWorkerCreations` 做同 key 互斥，本函数自身不查缓存。
-   */
-  async function createSharedWorkerRecord(key, options, source, generation) {
-    let workerRealm;
-    let reservation;
-    try {
-      reservation = reserveWorker(options.workerDepth, false);
-    } catch (error) {
-      throw error;
-    }
-    const workerNavigatorProfile = {
-      ...(profile.navigator || {}),
-      languages: profile.navigator?.languages || ['en-US', 'en'],
-      language: profile.navigator?.language || 'en-US',
-    };
-    try {
-      workerRealm = await createRealm({
-        sandboxId,
-        type: 'worker',
-        plugins: pluginInstances,
-        stateRegistry,
-        globals,
-        trace,
-        logger,
-        pageUrl: options.url,
-        pageHtml: '',
-        replay,
-        navigatorProfile: workerNavigatorProfile,
-        timingProfile: profile.timing || null,
-        workerDepth: reservation.depth,
-        runtime: {
-          ...runtime,
-          workerDepth: reservation.depth,
-          workerFactory: createDedicatedWorker,
-          sharedWorkerFactory: createSharedWorkerConnection,
-          workletFactory: createWorkletModule,
-          broadcastConnector: defaultBroadcastConnector,
-          networkRequestRecorder: scopeNetworkRecorder(
-            runtime.networkRequestRecorder,
-            'shared-worker',
-            options.url,
-          ),
-          workerGlobal: {
-            kind: 'shared',
-            name: `${options.name ?? ''}`,
-            url: options.url,
-            type: options.type,
-            replay,
-            navigatorProfile: workerNavigatorProfile,
-            renderingProfile: profile.rendering ?? null,
-            postMessage: null,
-            close() {
-              // worker 侧 self.close()：作废 record，后续同 key 的
-              // new SharedWorker 必须重建而不是复用死掉的 realm。
-              const current = sharedWorkerRecords.get(key);
-              if (current !== undefined && current.realm === workerRealm) {
-                sharedWorkerRecords.delete(key);
-              }
-              destroyWorkerRealm(workerRealm);
-            },
-          },
-        },
-      });
-    } catch (error) {
-      reservation.releasePending();
-      throw error;
-    }
-    reservation.releasePending();
-    if (lifecycleClosed || generation !== lifecycleGeneration) {
-      destroyWorkerRealm(workerRealm);
-      throw createWorkerLifecycleError();
-    }
-    realms.set(workerRealm.id, workerRealm);
-    workerRealms.add(workerRealm);
-    try {
-      await evaluateCoreWorkerSource(
-        workerRealm,
-        source,
-        options.type,
-        options.url,
-        workerReplayState,
-        limits.timeoutMs ?? 5000,
-      );
-    } catch (error) {
-      destroyWorkerRealm(workerRealm);
-      throw error;
-    }
-    const record = {
-      realm: workerRealm,
-      runtime: workerRealm.moduleLoader
-        .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace,
-      connections: new Set(),
-    };
-    sharedWorkerRecords.set(key, record);
-    return record;
-  }
-
-  async function createWorkletModule(options) {
-    let realmsForOwner = workletRealmsByOwner.get(options.owner);
-    if (realmsForOwner === undefined) {
-      realmsForOwner = new Map();
-      workletRealmsByOwner.set(options.owner, realmsForOwner);
-    }
-    const key = `${options.kind}\0${options.id}`;
-    let worklet = realmsForOwner.get(key);
-    if (worklet === undefined) {
-      const workletRealm = await createWorkletRealm({
-        label: `sandbox-${sandboxId}-${options.kind}-worklet-${options.id}`,
-        kind: options.kind,
-        origin: options.creatorOrigin,
-        traceEnabled: trace,
-        maxTraceEntries: 100_000,
-        objectURLRegistry: null,
-      });
-      worklet = { realm: workletRealm };
-      realmsForOwner.set(key, worklet);
-      workletRealms.add(workletRealm);
-    }
-    const source = resolveCoreWorkerSource(options.url, workerReplayState);
-    try {
-      await evaluateCoreWorkletModule(worklet.realm, source, options.url);
-    } catch (error) {
-      realmsForOwner.delete(key);
-      workletRealms.delete(worklet.realm);
-      destroyWorkletRealm(worklet.realm);
-      throw error;
-    }
-  }
-
-  function destroyWorkerRealm(workerRealm) {
-    if (!workerRealm || workerRealm.destroyed) return;
-    workerRealm.destroyed = true;
-    releaseWorkerConnections(workerRealm);
-    void workerRealm.destroy();
-    realms.delete(workerRealm.id);
-    workerRealms.delete(workerRealm);
-    stateRegistry.destroyContext('realm', workerRealm.id);
-  }
-  
   return {
     id: sandboxId,
     appId,
@@ -1334,7 +600,7 @@ export async function createSandbox(config) {
         || profile.pageHtml
         || '<!doctype html><html><head></head><body></body></html>';
       if (options.navigation === true) {
-        const navigationResponse = await interceptServiceWorkerFetch({
+        const navigationResponse = await workerFactories.interceptServiceWorkerFetch({
           method: 'GET',
           url: pageUrl,
           headers: { accept: 'text/html' },
@@ -1374,18 +640,18 @@ export async function createSandbox(config) {
         limits,
         runtime: {
           broadcastConnector: defaultBroadcastConnector,
-          childRealmFactory: createIframeChildRealm,
+          childRealmFactory: windowFactories.createIframeChildRealm,
           windowContext: realmType === 'root'
             ? {
                 origin: new URL(pageUrl).origin,
                 sameOrigin: true,
               }
             : undefined,
-          workerFactory: createDedicatedWorker,
-          sharedWorkerFactory: createSharedWorkerConnection,
-          workletFactory: createWorkletModule,
-          serviceWorkerFactory: createServiceWorker,
-          serviceWorkerFetch: interceptServiceWorkerFetch,
+          workerFactory: workerFactories.createDedicatedWorker,
+          sharedWorkerFactory: workerFactories.createSharedWorkerConnection,
+          workletFactory: workerFactories.createWorkletModule,
+          serviceWorkerFactory: workerFactories.createServiceWorker,
+          serviceWorkerFetch: workerFactories.interceptServiceWorkerFetch,
           ...(realmType === 'root' ? {
             beforeNavigate: () => realm
               ?.moduleLoader
@@ -1398,7 +664,7 @@ export async function createSandbox(config) {
                 pendingNavigation = { url, mode };
                 return;
               }
-              void replaceRootWindowClient(
+              void windowFactories.replaceRootWindowClient(
                 realm,
                 rootClient,
                 url,
@@ -1464,7 +730,7 @@ export async function createSandbox(config) {
         throw createRealmLifecycleError();
       }
       realms.set(realm.id, realm);
-      if (realmType === 'root') rootRealmId = realm.id;
+      if (realmType === 'root') rootRealm.id = realm.id;
       lifecycle.emit('realm.created', {
         sandboxId,
         realmId: realm.id,
@@ -1481,7 +747,7 @@ export async function createSandbox(config) {
         };
         if (realmType === 'root') {
           rootClient = client;
-          client.navigatePage = value => replaceRootWindowClient(
+          client.navigatePage = value => windowFactories.replaceRootWindowClient(
             realm,
             client,
             value,
@@ -1493,7 +759,7 @@ export async function createSandbox(config) {
         if (realmType === 'root' && pendingNavigation !== null) {
           const navigation = pendingNavigation;
           pendingNavigation = null;
-          return await replaceRootWindowClient(
+          return await windowFactories.replaceRootWindowClient(
             realm,
             client,
             navigation.url,
@@ -1521,9 +787,9 @@ export async function createSandbox(config) {
       
       evidenceResources.get(realmId)?.dispose();
       evidenceResources.delete(realmId);
-      if (rootRealmId === realmId) rootRealmId = null;
+      if (rootRealm.id === realmId) rootRealm.id = null;
       if (workerRealms.has(realm)) {
-        destroyWorkerRealm(realm);
+        workerFactories.destroyWorkerRealm(realm);
       } else {
         await realm.destroy();
       }
@@ -1649,7 +915,7 @@ export async function createSandbox(config) {
       }
       
       disposeServiceWorkerHandles();
-      disposeSharedWorkerRecords();
+      workerFactories.disposeSharedWorkerRecords();
       for (const workletRealm of workletRealms) {
         destroyWorkletRealm(workletRealm);
       }
@@ -1685,13 +951,13 @@ export async function createSandbox(config) {
         throw new Error('Cannot evaluate on disposed sandbox');
       }
       
-      const rootRealm = rootRealmId === null ? null : realms.get(rootRealmId);
-      if (!rootRealm) {
+      const rootRealmInstance = rootRealm.id === null ? null : realms.get(rootRealm.id);
+      if (!rootRealmInstance) {
         throw new Error('Root realm not found');
       }
       
       try {
-        const result = await rootRealm.evaluate(code, options);
+        const result = await rootRealmInstance.evaluate(code, options);
         return { value: result, error: null };
       } catch (error) {
         return { value: undefined, error };
@@ -1719,12 +985,12 @@ export async function createSandbox(config) {
       // SharedWorker 全局作用域也必须随 Realm 一起作废，否则新 Realm
       // 会拿到已销毁的 controller/record（IKFD9G / IKFD9H）。
       disposeServiceWorkerHandles();
-      disposeSharedWorkerRecords();
+      workerFactories.disposeSharedWorkerRecords();
       for (const workletRealm of workletRealms) {
         destroyWorkletRealm(workletRealm);
       }
       workletRealms.clear();
-      rootRealmId = null;
+      rootRealm.id = null;
 
       lifecycle.emit('sandbox.reset', { sandboxId });
       logger.info(`[Sandbox ${sandboxId}] Sandbox reset completed`);
@@ -2352,6 +1618,894 @@ function createSurfaceRegistry() {
     listGlobalSurfaces() {
       return Array.from(surfaces, ([name, owner]) => ({ name, owner }));
     },
+  };
+}
+
+/**
+ * Worker / ServiceWorker / SharedWorker / Worklet Realm 工厂（IKF3A7(a)）。
+ *
+ * 原先是 `createSandbox` 内的嵌套闭包；这里按 deps 对象收口实时状态：
+ * - `lifecycleState` 是**读数器**而不是值：destroy/reset 会推进 generation 并
+ *   置 closed，工厂必须在每个 await 边界后重新读取，不能持有值拷贝。
+ * - 容器（realms / workerRealms / sharedWorkerRecords / ...）按引用传入并在
+ *   原处增删，语义与原闭包一致。
+ * - 交叉引用（workerFactory / sharedWorkerFactory / workletFactory 互相注入）
+ *   在本工厂作用域内直接可见，不需要额外接线。
+ *
+ * @param {object} deps
+ * @returns {{disposeSharedWorkerRecords: Function, interceptServiceWorkerFetch: Function,
+ *   createDedicatedWorker: Function, createServiceWorker: Function,
+ *   createSharedWorkerConnection: Function, createWorkletModule: Function,
+ *   destroyWorkerRealm: Function}}
+ */
+export function createWorkerRealmFactories({
+  sandboxId,
+  profile,
+  pluginInstances,
+  stateRegistry,
+  globals,
+  trace,
+  logger,
+  replay,
+  limits,
+  runtime,
+  broadcastConnector,
+  workerReplayState,
+  lifecycleState,
+  realms,
+  workerRealms,
+  sharedWorkerRecords,
+  sharedWorkerCreations,
+  workletRealmsByOwner,
+  workletRealms,
+  serviceWorkerHandles,
+  reserveWorker,
+  reserveWorkerConnection,
+  trackWorkerConnection,
+  releaseWorkerConnections,
+  getServiceWorkerClients,
+  notifyServiceWorkerClients,
+}) {
+  function disposeSharedWorkerRecords() {
+    for (const record of new Set(sharedWorkerRecords.values())) {
+      for (const connection of [...record.connections]) {
+        connection.close?.();
+      }
+      record.connections.clear();
+      destroyWorkerRealm(record.realm);
+    }
+    sharedWorkerRecords.clear();
+  }
+
+  function interceptServiceWorkerFetch(request) {
+    let selected = null;
+    for (const [scope, handle] of serviceWorkerHandles) {
+      if (!serviceWorkerScopeMatches(scope, request.url)) continue;
+      if (selected === null || scope.length > selected.scope.length) {
+        selected = { scope, handle };
+      }
+    }
+    return selected === null ? null : selected.handle.fetch(request);
+  }
+
+  async function createDedicatedWorker(options) {
+    const generation = lifecycleState.generation;
+    const source = resolveCoreWorkerSource(options.url, workerReplayState);
+    const reservation = reserveWorker(options.workerDepth, true);
+    let version = createHash('sha256').update(source).digest('hex');
+    const workerNavigatorProfile = {
+      ...(profile.navigator || {}),
+      languages: profile.navigator?.languages || ['en-US', 'en'],
+      language: profile.navigator?.language || 'en-US',
+    };
+    let workerRealm;
+    try {
+      workerRealm = await createRealm({
+        sandboxId,
+        type: 'worker',
+        plugins: pluginInstances,
+        stateRegistry,
+        globals,
+        trace,
+        logger,
+        pageUrl: options.url,
+        pageHtml: '',
+        replay,
+        navigatorProfile: workerNavigatorProfile,
+        timingProfile: profile.timing || null,
+        workerDepth: reservation.depth,
+        runtime: {
+          ...runtime,
+          workerDepth: reservation.depth,
+          workerFactory: createDedicatedWorker,
+          sharedWorkerFactory: createSharedWorkerConnection,
+          workletFactory: createWorkletModule,
+          broadcastConnector,
+          networkRequestRecorder: scopeNetworkRecorder(
+            runtime.networkRequestRecorder,
+            'worker',
+            options.url,
+          ),
+          workerGlobal: {
+            kind: 'dedicated',
+            name: `${options.name ?? ''}`,
+            url: options.url,
+            type: options.type,
+            replay,
+            navigatorProfile: workerNavigatorProfile,
+            renderingProfile: profile.rendering ?? null,
+            postMessage(message, ports) {
+              options.onMessage?.(message, ports);
+            },
+            close() {
+              reservation.releaseConnection();
+              destroyWorkerRealm(workerRealm);
+            },
+          },
+        },
+      });
+    } catch (error) {
+      reservation.releaseConnection();
+      reservation.releasePending();
+      throw error;
+    }
+    reservation.releasePending();
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      reservation.releaseConnection();
+      destroyWorkerRealm(workerRealm);
+      throw createWorkerLifecycleError();
+    }
+    realms.set(workerRealm.id, workerRealm);
+    workerRealms.add(workerRealm);
+    trackWorkerConnection(workerRealm, reservation.releaseConnection);
+    try {
+      version = await evaluateCoreWorkerSource(
+        workerRealm,
+        source,
+        options.type,
+        options.url,
+        workerReplayState,
+        limits.timeoutMs ?? 5000,
+      ) ?? version;
+    } catch (error) {
+      destroyWorkerRealm(workerRealm);
+      reservation.releaseConnection();
+      throw error;
+    }
+    const workerRuntime = workerRealm.moduleLoader
+      .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace;
+    return {
+      version,
+      deliverOwnerMessage(message, transferOptions, ports) {
+        if (workerRealm.destroyed) return;
+        workerRuntime?.receiveOwnerMessage?.(message, transferOptions, ports);
+      },
+      terminate() {
+        reservation.releaseConnection();
+        destroyWorkerRealm(workerRealm);
+      },
+    };
+  }
+
+  async function createServiceWorker(options) {
+    const generation = lifecycleState.generation;
+    const workerScope = options.scope ?? new URL('./', options.url).href;
+    const activeHandle = { current: null };
+    const source = resolveCoreWorkerSource(options.url, workerReplayState);
+    const reservation = reserveWorker(options.workerDepth, false);
+    let version = createHash('sha256').update(source).digest('hex');
+    const workerNavigatorProfile = {
+      ...(profile.navigator || {}),
+      languages: profile.navigator?.languages || ['en-US', 'en'],
+      language: profile.navigator?.language || 'en-US',
+    };
+    let workerRealm;
+    try {
+      workerRealm = await createRealm({
+        sandboxId,
+        type: 'worker',
+        plugins: pluginInstances,
+        stateRegistry,
+        globals,
+        trace,
+        logger,
+        pageUrl: options.url,
+        pageHtml: '',
+        replay,
+        navigatorProfile: workerNavigatorProfile,
+        timingProfile: profile.timing || null,
+        workerDepth: reservation.depth,
+        runtime: {
+          ...runtime,
+          workerDepth: reservation.depth,
+          workerFactory: createDedicatedWorker,
+          sharedWorkerFactory: createSharedWorkerConnection,
+          workletFactory: createWorkletModule,
+          serviceWorkerFactory: null,
+          broadcastConnector,
+          networkRequestRecorder: scopeNetworkRecorder(
+            runtime.networkRequestRecorder,
+            'service-worker',
+            options.url,
+          ),
+          workerGlobal: {
+            kind: 'service',
+            name: '',
+            url: options.url,
+            type: options.type,
+            replay,
+            navigatorProfile: workerNavigatorProfile,
+            renderingProfile: profile.rendering ?? null,
+            postMessage(message, ports) {
+              options.onMessage?.(message, ports);
+            },
+            close() {
+              reservation.releaseConnection();
+              destroyWorkerRealm(workerRealm);
+            },
+            serviceWorkerControl: {
+              skipWaiting() {
+                options.onSkipWaiting?.();
+              },
+              claim() {
+                options.onClaim?.();
+              },
+              hasClient() {
+                return getServiceWorkerClients({
+                  scope: workerScope,
+                  handle: activeHandle.current,
+                }).length > 0;
+              },
+              matchAll(options = {}) {
+                return getServiceWorkerClients({
+                  ...options,
+                  scope: options.includeUncontrolled === true ? null : workerScope,
+                  handle: activeHandle.current,
+                });
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      reservation.releaseConnection();
+      reservation.releasePending();
+      throw error;
+    }
+    reservation.releasePending();
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      reservation.releaseConnection();
+      destroyWorkerRealm(workerRealm);
+      throw createWorkerLifecycleError();
+    }
+    realms.set(workerRealm.id, workerRealm);
+    workerRealms.add(workerRealm);
+    trackWorkerConnection(workerRealm, reservation.releaseConnection);
+    const workerRuntime = workerRealm.moduleLoader
+      .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace;
+    try {
+      options.onState?.('installing');
+      const evaluatedVersion = await evaluateCoreWorkerSource(
+        workerRealm,
+        source,
+        options.type,
+        options.url,
+        workerReplayState,
+        limits.timeoutMs ?? 5000,
+      );
+      version = evaluatedVersion ?? version;
+      await workerRuntime?.dispatchServiceWorkerLifecycle?.('install');
+      options.onState?.('installed');
+      if (options.activate !== false) options.onState?.('activating');
+    } catch (error) {
+      destroyWorkerRealm(workerRealm);
+      reservation.releaseConnection();
+      throw error;
+    }
+    let activationPromise = null;
+    const handle = {
+      scriptURL: options.url,
+      scope: workerScope,
+      version,
+      // 生命周期只读视图：让 findServiceWorkerController / 客户端快照
+      // 能识别已终止的 handle（IKFD9G）。
+      get destroyed() {
+        return workerRealm.destroyed === true;
+      },
+      get realm() {
+        return workerRealm;
+      },
+      deliverOwnerMessage(message, transferOptions, ports) {
+        if (workerRealm.destroyed) return;
+        workerRuntime?.receiveOwnerMessage?.(message, transferOptions, ports);
+      },
+      fetch(request) {
+        if (workerRealm.destroyed) return null;
+        return workerRuntime?.dispatchServiceWorkerFetch?.(request) ?? null;
+      },
+      activate() {
+        if (activationPromise !== null) return activationPromise;
+        activationPromise = (async () => {
+          if (workerRealm.destroyed) return;
+          await workerRuntime?.dispatchServiceWorkerLifecycle?.('activate');
+          if (workerRealm.destroyed) return;
+          options.onState?.('activated');
+          serviceWorkerHandles.set(workerScope, handle);
+          notifyServiceWorkerClients(workerScope, handle);
+        })();
+        return activationPromise;
+      },
+      terminate(options = {}) {
+        for (const [scope, candidate] of serviceWorkerHandles) {
+          if (candidate === handle) serviceWorkerHandles.delete(scope);
+        }
+        if (options.replacing !== true) {
+          notifyServiceWorkerClients(workerScope, null);
+        }
+        reservation.releaseConnection();
+        destroyWorkerRealm(workerRealm);
+      },
+    };
+    activeHandle.current = handle;
+    if (options.activate !== false) {
+      serviceWorkerHandles.set(workerScope, handle);
+      notifyServiceWorkerClients(workerScope, handle);
+    }
+    return handle;
+  }
+
+  async function createSharedWorkerConnection(options) {
+    const generation = lifecycleState.generation;
+    const key = `${options.creatorOrigin}\0${options.url}\0${options.name}`;
+    let record = sharedWorkerRecords.get(key);
+    // 复用前先检查 record 生命周期：worker 侧 self.close() / 生命周期销毁
+    // 之后残留的 record 不合法，必须重建（IKFD9H）。
+    if (record !== undefined && record.realm?.destroyed === true) {
+      sharedWorkerRecords.delete(key);
+      record = undefined;
+    }
+    const source = record === undefined
+      ? resolveCoreWorkerSource(options.url, workerReplayState)
+      : null;
+    const releaseConnection = reserveWorkerConnection(options.workerDepth);
+    if (record === undefined) {
+      // 并发 new SharedWorker(同 key)：第一个调用者负责创建，其余等待同一个
+      // in-flight promise。否则两个调用者会各自建一个全局作用域（IKFD9H）。
+      let creation = sharedWorkerCreations.get(key);
+      if (creation === undefined) {
+        creation = createSharedWorkerRecord(key, options, source, generation);
+        sharedWorkerCreations.set(key, creation);
+        void creation.finally(() => {
+          if (sharedWorkerCreations.get(key) === creation) {
+            sharedWorkerCreations.delete(key);
+          }
+        }).catch(() => {});
+      }
+      try {
+        record = await creation;
+      } catch (error) {
+        releaseConnection();
+        throw error;
+      }
+    }
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      releaseConnection();
+      throw createWorkerLifecycleError();
+    }
+    let connection;
+    try {
+      connection = record.runtime?.connectSharedWorker?.(
+        (message, ports) => options.onMessage?.(message, ports),
+      ) ?? { deliverOwnerMessage() {}, close() {} };
+    } catch (error) {
+      releaseConnection();
+      throw error;
+    }
+    record.connections.add(connection);
+    trackWorkerConnection(record.realm, releaseConnection);
+    return {
+      deliverOwnerMessage(message, ports) {
+        if (!record.realm.destroyed) connection.deliverOwnerMessage(message, ports);
+      },
+      close() {
+        releaseConnection();
+        connection.close();
+        record.connections.delete(connection);
+        if (record.connections.size === 0) {
+          for (const [candidateKey, candidate] of sharedWorkerRecords) {
+            if (candidate === record) sharedWorkerRecords.delete(candidateKey);
+          }
+          destroyWorkerRealm(record.realm);
+        }
+      },
+    };
+  }
+
+  /**
+   * 创建 SharedWorker 全局作用域（record）。调用方通过
+   * `sharedWorkerCreations` 做同 key 互斥，本函数自身不查缓存。
+   */
+  async function createSharedWorkerRecord(key, options, source, generation) {
+    let workerRealm;
+    let reservation;
+    try {
+      reservation = reserveWorker(options.workerDepth, false);
+    } catch (error) {
+      throw error;
+    }
+    const workerNavigatorProfile = {
+      ...(profile.navigator || {}),
+      languages: profile.navigator?.languages || ['en-US', 'en'],
+      language: profile.navigator?.language || 'en-US',
+    };
+    try {
+      workerRealm = await createRealm({
+        sandboxId,
+        type: 'worker',
+        plugins: pluginInstances,
+        stateRegistry,
+        globals,
+        trace,
+        logger,
+        pageUrl: options.url,
+        pageHtml: '',
+        replay,
+        navigatorProfile: workerNavigatorProfile,
+        timingProfile: profile.timing || null,
+        workerDepth: reservation.depth,
+        runtime: {
+          ...runtime,
+          workerDepth: reservation.depth,
+          workerFactory: createDedicatedWorker,
+          sharedWorkerFactory: createSharedWorkerConnection,
+          workletFactory: createWorkletModule,
+          broadcastConnector,
+          networkRequestRecorder: scopeNetworkRecorder(
+            runtime.networkRequestRecorder,
+            'shared-worker',
+            options.url,
+          ),
+          workerGlobal: {
+            kind: 'shared',
+            name: `${options.name ?? ''}`,
+            url: options.url,
+            type: options.type,
+            replay,
+            navigatorProfile: workerNavigatorProfile,
+            renderingProfile: profile.rendering ?? null,
+            postMessage: null,
+            close() {
+              // worker 侧 self.close()：作废 record，后续同 key 的
+              // new SharedWorker 必须重建而不是复用死掉的 realm。
+              const current = sharedWorkerRecords.get(key);
+              if (current !== undefined && current.realm === workerRealm) {
+                sharedWorkerRecords.delete(key);
+              }
+              destroyWorkerRealm(workerRealm);
+            },
+          },
+        },
+      });
+    } catch (error) {
+      reservation.releasePending();
+      throw error;
+    }
+    reservation.releasePending();
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      destroyWorkerRealm(workerRealm);
+      throw createWorkerLifecycleError();
+    }
+    realms.set(workerRealm.id, workerRealm);
+    workerRealms.add(workerRealm);
+    try {
+      await evaluateCoreWorkerSource(
+        workerRealm,
+        source,
+        options.type,
+        options.url,
+        workerReplayState,
+        limits.timeoutMs ?? 5000,
+      );
+    } catch (error) {
+      destroyWorkerRealm(workerRealm);
+      throw error;
+    }
+    const record = {
+      realm: workerRealm,
+      runtime: workerRealm.moduleLoader
+        .importUrlSyncCached(WORKER_GLOBAL_RUNTIME_URL)?.namespace,
+      connections: new Set(),
+    };
+    sharedWorkerRecords.set(key, record);
+    return record;
+  }
+
+  async function createWorkletModule(options) {
+    let realmsForOwner = workletRealmsByOwner.get(options.owner);
+    if (realmsForOwner === undefined) {
+      realmsForOwner = new Map();
+      workletRealmsByOwner.set(options.owner, realmsForOwner);
+    }
+    const key = `${options.kind}\0${options.id}`;
+    let worklet = realmsForOwner.get(key);
+    if (worklet === undefined) {
+      const workletRealm = await createWorkletRealm({
+        label: `sandbox-${sandboxId}-${options.kind}-worklet-${options.id}`,
+        kind: options.kind,
+        origin: options.creatorOrigin,
+        traceEnabled: trace,
+        maxTraceEntries: 100_000,
+        objectURLRegistry: null,
+      });
+      worklet = { realm: workletRealm };
+      realmsForOwner.set(key, worklet);
+      workletRealms.add(workletRealm);
+    }
+    const source = resolveCoreWorkerSource(options.url, workerReplayState);
+    try {
+      await evaluateCoreWorkletModule(worklet.realm, source, options.url);
+    } catch (error) {
+      realmsForOwner.delete(key);
+      workletRealms.delete(worklet.realm);
+      destroyWorkletRealm(worklet.realm);
+      throw error;
+    }
+  }
+
+  function destroyWorkerRealm(workerRealm) {
+    if (!workerRealm || workerRealm.destroyed) return;
+    workerRealm.destroyed = true;
+    releaseWorkerConnections(workerRealm);
+    void workerRealm.destroy();
+    realms.delete(workerRealm.id);
+    workerRealms.delete(workerRealm);
+    stateRegistry.destroyContext('realm', workerRealm.id);
+  }
+
+  return {
+    disposeSharedWorkerRecords,
+    interceptServiceWorkerFetch,
+    createDedicatedWorker,
+    createServiceWorker,
+    createSharedWorkerConnection,
+    createWorkletModule,
+    destroyWorkerRealm,
+  };
+}
+
+/**
+ * iframe / root 文档替换工厂（IKF3A7(a)）。
+ *
+ * 与 worker 工厂同样的 deps 约定；额外依赖：
+ * - `rootRealm`：root realm id 的可变持有者（replaceRootWindowClient 会更新它）。
+ * - `counter.nextClientId()`：window client id 游标。
+ * - `workers`：worker 工厂返回的创建/销毁句柄（iframe 与 root 的 runtime 需要
+ *   把它们注入子 Realm）。
+ * - `interceptFetch`：ServiceWorker 请求拦截（worker 工厂提供）。
+ *
+ * @param {object} deps
+ * @returns {{createIframeChildRealm: Function, replaceRootWindowClient: Function}}
+ */
+export function createWindowRealmFactories({
+  sandboxId,
+  profile,
+  pluginInstances,
+  stateRegistry,
+  globals,
+  trace,
+  logger,
+  replay,
+  limits,
+  runtime,
+  broadcastConnector,
+  lifecycleState,
+  realms,
+  windowClients,
+  serviceWorkerContainers,
+  evidenceResources,
+  evidenceSource,
+  evidence,
+  lifecycle,
+  rootRealm,
+  counter,
+  findServiceWorkerController,
+  getServiceWorkerClients,
+  interceptFetch,
+  workers,
+}) {
+  const {
+    createDedicatedWorker,
+    createServiceWorker,
+    createSharedWorkerConnection,
+    createWorkletModule,
+  } = workers;
+
+  async function createIframeChildRealm(options) {
+    if (lifecycleState.closed) throw createRealmLifecycleError();
+    const generation = lifecycleState.generation;
+    if (realms.size >= (limits.maxRealms ?? 64)) {
+      const error = new Error('Realm capacity limit exceeded');
+      error.code = 'LIMIT_REALM_CAPACITY';
+      throw error;
+    }
+    const childUrl = new URL(options.pageUrl || profile.url || 'https://example.com/');
+    const childOrigin = options.origin ?? childUrl.origin;
+    const serviceWorkerPageUrl = options.serviceWorkerPageUrl ?? childUrl.href;
+    const serviceWorkerController = findServiceWorkerController(serviceWorkerPageUrl);
+    let pageHtml = options.pageHtml
+      ?? '<!doctype html><html><head></head><body></body></html>';
+    if (options.navigationSource === 'src') {
+      const navigationResponse = await interceptFetch({
+        method: 'GET',
+        url: childUrl.href,
+        headers: { accept: 'text/html' },
+        body: null,
+      });
+      if (lifecycleState.closed || generation !== lifecycleState.generation) {
+        throw createRealmLifecycleError();
+      }
+      if (navigationResponse?.body !== undefined) {
+        pageHtml = decodeNavigationBody(navigationResponse.body);
+      }
+    }
+    let childRealm;
+    childRealm = await createRealm({
+      sandboxId,
+      type: 'iframe',
+      plugins: pluginInstances,
+      stateRegistry,
+      globals,
+      trace,
+      logger,
+      pageUrl: childUrl.href,
+      origin: childOrigin,
+      documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
+      serviceWorkerPageUrl,
+      pageHtml,
+      replay: options.replay ?? replay,
+      navigatorProfile: options.navigatorProfile ?? profile.navigator ?? {},
+      timingProfile: options.timingProfile ?? profile.timing ?? null,
+      runtime: {
+        ...runtime,
+        ...(options.runtime || {}),
+        serviceWorkerPageUrl,
+        documentBaseUrl: options.documentBaseUrl ?? childUrl.href,
+        childRealmFactory: createIframeChildRealm,
+        workerDepth: 0,
+        workerFactory: createDedicatedWorker,
+        sharedWorkerFactory: createSharedWorkerConnection,
+        serviceWorkerFactory: createServiceWorker,
+        serviceWorkerFetch: interceptFetch,
+        workletFactory: createWorkletModule,
+        broadcastConnector,
+        serviceWorkerProfile: {
+          enabled: true,
+          controller: serviceWorkerController,
+          clients: options => getServiceWorkerClients(options),
+          onControllerChange: snapshot => {
+            const module = childRealm.moduleLoader.importUrlSyncCached(SERVICE_WORKER_RUNTIME_URL);
+            module?.namespace?.updateServiceWorkerController?.(snapshot);
+          },
+        },
+        windowContext: {
+          origin: childOrigin,
+          parentWindow: options.parentWindow ?? null,
+          topWindow: options.topWindow ?? options.parentWindow ?? null,
+          parentOrigin: options.parentOrigin ?? new URL(profile.url || childUrl.href).origin,
+          parentPostMessage: options.parentPostMessage ?? null,
+          sameOrigin: options.sameOrigin === true,
+        },
+      },
+    });
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      childRealm.destroyed = true;
+      await childRealm.destroy().catch(() => {});
+      throw createRealmLifecycleError();
+    }
+    realms.set(childRealm.id, childRealm);
+    const clientId = options.clientId ?? `window-client-${counter.nextClientId()}`;
+    windowClients.set(childRealm.id, {
+      id: clientId,
+      realmId: childRealm.id,
+      url: serviceWorkerPageUrl,
+      frameType: 'nested',
+      visibilityState: 'visible',
+      focused: false,
+      navigatePage: typeof options.navigatePage === 'function'
+        ? options.navigatePage
+        : null,
+    });
+    await completePageLifecycle(childRealm);
+    const childWindow = childRealm.evaluate('globalThis');
+    options.onContext?.(childWindow);
+    return {
+      window: childWindow,
+      origin: childOrigin,
+      deliverParentMessage(message, origin, targetOriginOrOptions, transfer) {
+        if (childRealm.destroyed) return;
+        const module = childRealm.moduleLoader.importUrlSyncCached(WINDOW_CONTEXT_URL);
+        module?.namespace?.receiveWindowContextMessage?.(
+          message,
+          origin,
+          targetOriginOrOptions,
+          transfer,
+        );
+      },
+      clientId,
+      canNavigate() {
+        return childRealm.moduleLoader
+          ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
+          ?.namespace?.dispatchBeforeUnload?.() !== false;
+      },
+      close() {
+        if (childRealm.destroyed) return;
+        childRealm.moduleLoader
+          .importUrlSyncCached(PAGE_LIFECYCLE_URL)
+          ?.namespace?.dispatchPageHideAndUnload?.();
+        childRealm.destroyed = true;
+        void childRealm.destroy();
+        realms.delete(childRealm.id);
+        windowClients.delete(childRealm.id);
+        stateRegistry.destroyContext('realm', childRealm.id);
+      },
+    };
+  }
+
+  async function replaceRootWindowClient(
+    oldRealm,
+    oldClient,
+    nextUrl,
+    originalOptions,
+    navigationOptions = {},
+  ) {
+    // 生命周期闸门：销毁/重置之后的导航（含页面定时器触发的延迟导航）
+    // 一律拒绝，不得复活 Realm（IKFD9F）。
+    if (lifecycleState.closed || oldRealm.destroyed) return null;
+    const generation = lifecycleState.generation;
+    if (
+      navigationOptions.beforeUnloadChecked !== true
+      && oldRealm.moduleLoader
+        ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
+        ?.namespace?.dispatchBeforeUnload?.() === false
+    ) {
+      return null;
+    }
+    const targetUrl = new URL(nextUrl).href;
+    let pageHtml = '<!doctype html><html><head></head><body></body></html>';
+    const navigationResponse = await interceptFetch({
+      method: 'GET',
+      url: targetUrl,
+      headers: { accept: 'text/html' },
+      body: null,
+    });
+    if (lifecycleState.closed || generation !== lifecycleState.generation || oldRealm.destroyed) {
+      return null;
+    }
+    if (navigationResponse?.body !== undefined) {
+      pageHtml = decodeNavigationBody(navigationResponse.body);
+    }
+
+    oldRealm.moduleLoader
+      ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
+      ?.namespace?.dispatchPageHideAndUnload?.();
+    evidenceResources.get(oldRealm.id)?.dispose();
+    evidenceResources.delete(oldRealm.id);
+    oldRealm.destroyed = true;
+    await oldRealm.destroy();
+    realms.delete(oldRealm.id);
+    windowClients.delete(oldRealm.id);
+    serviceWorkerContainers.delete(oldRealm.id);
+    stateRegistry.destroyContext('realm', oldRealm.id);
+
+    let replacement;
+    replacement = await createRealm({
+      sandboxId,
+      type: 'root',
+      plugins: pluginInstances,
+      stateRegistry,
+      globals,
+      trace,
+      logger,
+      pageUrl: targetUrl,
+      pageHtml,
+      replay: originalOptions.replay ?? replay,
+      navigatorProfile: originalOptions.navigatorProfile ?? profile.navigator ?? {},
+      timingProfile: originalOptions.timingProfile ?? profile.timing ?? null,
+      limits,
+      runtime: {
+        broadcastConnector,
+        childRealmFactory: createIframeChildRealm,
+        workerDepth: 0,
+        windowContext: {
+          origin: new URL(targetUrl).origin,
+          sameOrigin: true,
+        },
+        workerFactory: createDedicatedWorker,
+        sharedWorkerFactory: createSharedWorkerConnection,
+        workletFactory: createWorkletModule,
+        serviceWorkerFactory: createServiceWorker,
+        serviceWorkerFetch: interceptFetch,
+        beforeNavigate: () => replacement
+          ?.moduleLoader
+          ?.importUrlSyncCached(PAGE_LIFECYCLE_URL)
+          ?.namespace?.dispatchBeforeUnload?.() !== false,
+        onNavigate: ({ url }) => {
+          if (replacement?.destroyed) return;
+          void replaceRootWindowClient(
+            replacement,
+            oldClient,
+            url,
+            originalOptions,
+            { beforeUnloadChecked: true },
+          );
+        },
+        serviceWorkerProfile: {
+          enabled: true,
+          controller: findServiceWorkerController(targetUrl),
+          clients: options => getServiceWorkerClients(options),
+          onControllerChange: snapshot => {
+            const module = replacement?.moduleLoader?.importUrlSyncCached(SERVICE_WORKER_RUNTIME_URL);
+            module?.namespace?.updateServiceWorkerController?.(snapshot);
+          },
+        },
+        ...runtime,
+        ...(originalOptions.runtime || {}),
+        networkRequestRecorder: scopeNetworkRecorder(
+          originalOptions.runtime?.networkRequestRecorder
+            ?? runtime.networkRequestRecorder,
+          'window',
+          targetUrl,
+        ),
+      },
+    });
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      replacement.destroyed = true;
+      await replacement.destroy().catch(() => {});
+      throw createRealmLifecycleError();
+    }
+    if (evidenceSource !== null && evidence?.executeScripts === true) {
+      const resource = await injectEvidenceScripts(
+        replacement,
+        evidenceSource,
+        evidence,
+        targetUrl,
+        logger,
+      );
+      evidenceResources.set(replacement.id, resource);
+    }
+    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+      evidenceResources.get(replacement.id)?.dispose();
+      evidenceResources.delete(replacement.id);
+      replacement.destroyed = true;
+      await replacement.destroy().catch(() => {});
+      throw createRealmLifecycleError();
+    }
+    realms.set(replacement.id, replacement);
+    rootRealm.id = replacement.id;
+    oldClient.realmId = replacement.id;
+    oldClient.url = targetUrl;
+    oldClient.navigatePage = value => replaceRootWindowClient(
+      replacement,
+      oldClient,
+      value,
+      originalOptions,
+    );
+    windowClients.set(replacement.id, oldClient);
+    serviceWorkerContainers.set(replacement.id, replacement);
+    await completePageLifecycle(replacement);
+    lifecycle.emit('realm.navigation.completed', {
+      sandboxId,
+      previousRealmId: oldRealm.id,
+      realmId: replacement.id,
+      url: targetUrl,
+    });
+    return replacement;
+  }
+
+
+  return {
+    createIframeChildRealm,
+    replaceRootWindowClient,
   };
 }
 
