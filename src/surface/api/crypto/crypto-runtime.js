@@ -30,6 +30,18 @@ for (const constructor of [Crypto, SubtleCrypto, CryptoKey]) {
   registerNativeFunction(constructor, constructor.name);
 }
 
+// 兜底 DRBG 的种子采样必须在**模块求值期**捕获原始函数：legacy 路径下页
+// 面脚本可能在 bootstrap 之后替换 Math.random / Date.now / performance.now，
+// 惰性读取这些属性等于让页面控制"随机"种子（审计发现：
+// 两个沙箱在覆盖时钟后输出完全一致）。生产路径都会注入宿主 CSPRNG
+// （见 create-realm.js / create-worker-realm.js / plugins/crypto），这里只是
+// 直连 surface API 时的兜底。
+const capturedMathRandom = Math.random;
+const capturedDateNow = Date.now;
+const capturedPerformanceNow = typeof globalThis.performance?.now === "function"
+  ? globalThis.performance.now.bind(globalThis.performance)
+  : null;
+
 export function createCryptoObjects(realm, entropy = null) {
   // Initialize crypto state for this Realm
   initializeCryptoState(realm, entropy);
@@ -133,13 +145,13 @@ function collectRealmEntropy() {
       offset += 1;
     }
   };
-  const wallClock = Date.now();
-  const monotonic = typeof globalThis.performance?.now === "function"
-    ? globalThis.performance.now()
+  const wallClock = capturedDateNow();
+  const monotonic = capturedPerformanceNow !== null
+    ? capturedPerformanceNow()
     : 0;
   while (offset < seed.length) {
-    write(Math.random() * 0x100000000);
-    write(wallClock + Math.random());
+    write(capturedMathRandom() * 0x100000000);
+    write(wallClock + capturedMathRandom());
     write(monotonic);
   }
   return seed;

@@ -72,13 +72,22 @@ test('a Secure cookie cannot be set from an insecure origin', async () => {
 });
 
 test('Cookie Store also rejects Secure cookies from an insecure document', async () => {
-  const result = await withLegacySandbox('http://cookie-store.test/', async sandbox => (
-    sandbox.run(`(async () => {
+  const result = await withLegacySandbox('http://cookie-store.test/', async sandbox => {
+    await sandbox.run(`(async () => {
       await cookieStore.set({ name: 'store-secure', value: '1', secure: true });
-      return await cookieStore.get('store-secure');
-    })()`)
-  ));
-  assert.equal(result, null);
+      return JSON.stringify({
+        documentCookie: document.cookie,
+        storeCookie: await cookieStore.get('store-secure'),
+      });
+    })()`);
+    await sandbox.setPage({ url: 'https://cookie-store.test/' });
+    return JSON.parse(await sandbox.run(`(async () => JSON.stringify({
+      documentCookie: document.cookie,
+      storeCookies: await cookieStore.getAll({ name: 'store-secure' }),
+    }))()`));
+  });
+  assert.doesNotMatch(result.documentCookie, /store-secure/);
+  assert.deepEqual(result.storeCookies, []);
 });
 
 test('cross-origin iframe storage stays isolated', { timeout: 60_000 }, async () => {

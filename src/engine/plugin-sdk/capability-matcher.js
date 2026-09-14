@@ -19,7 +19,8 @@ export function buildCapabilityIndex(plugins) {
   const index = new Map(); // capability-name -> Plugin[]
   
   for (const plugin of plugins) {
-    for (const capability of plugin.provides) {
+    const normalized = normalizePluginForMatching(plugin);
+    for (const capability of normalized.provides) {
       const key = capability.name;
       
       if (!index.has(key)) {
@@ -27,7 +28,7 @@ export function buildCapabilityIndex(plugins) {
       }
       
       index.get(key).push({
-        plugin,
+        plugin: normalized,
         capability,
       });
     }
