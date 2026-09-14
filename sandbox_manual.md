@@ -64,7 +64,7 @@ Nv8 使用 `vm.SourceTextModule`。所有 `npm` 测试和构建脚本已经带�
 
 ```powershell
 node --experimental-vm-modules --test tests/node-compat-test.js
-node --experimental-vm-modules tools/build-module-bundle.mjs
+node --experimental-vm-modules scripts/build-module-bundle.mjs
 ```
 
 不要用缺少该 flag 的直接 Node 命令诊断运行时兼容性。
@@ -107,31 +107,27 @@ npm install --ignore-scripts
 
 如果依赖已经安装，可直接跳过安装步骤。
 
-### 2.2 项目内导入
+### 2.2 导入方式
 
-在仓库内部使用相对路径：
+**仓库内部**使用相对路径：
 
 ```js
-import {
-  EdgeSandbox,
-  edge150Fingerprint,
-} from "./src/index.js";
+import { EdgeSandbox } from "./src/public/edge-sandbox.js";
+import { createSandbox } from "./src/public/create-sandbox.js";
+import { edge150Fingerprint } from "./src/infra/fingerprint/edge-150.js";
 ```
 
-包导出入口为：
+**作为项目依赖**（`package.json` 声明 `"nv8": "file:<nv8-root>"` 并 `npm install`）时，按 `package.json` 的 `exports` 导入：
 
 ```js
-import {
-  EdgeSandbox,
-  edge150Fingerprint,
-} from "nv8";
+import { createNv8, nv8Eval, domPreset } from "nv8";
+import { edge152Fingerprint } from "nv8/fingerprint/edge-152";
 ```
 
 顶层 `nv8` 的导出：
 
 | 导出 | 作用 |
 | --- | --- |
-| `EdgeSandbox` / `createSandbox` | 创建和控制隔离沙箱（子进程边界）|
 | `createNv8` / `nv8Eval` | 面向可裁剪装配的进程内入口 |
 | `minimalPreset` / `basicPreset` / `domPreset` / `networkPreset` / `fullPreset` | 插件组合 |
 | `*Plugin`（`domCorePlugin`、`fetchPlugin` …）| 单个内置插件 |
@@ -149,12 +145,26 @@ import {
 | `nv8/protocol` | 请求协议层（`src/collection/request-protocol/`）|
 | `nv8/collector` | 采集层（`src/collection/collector/`）|
 
+**`EdgeSandbox` / `createSandbox` 不在包导出映射里**：`exports` 没有暴露
+`src/public/*` 子路径，所以不能从裸包名 `nv8` 或其 `src/public/*` 子路径导入。
+项目依赖场景的可用写法是文件 URL 或经 `node_modules` 的相对路径：
+
+```js
+// 方式一：绝对文件 URL（<nv8-root> 用绝对路径，例如 D:/develop_software/Nv8）
+const { EdgeSandbox } = await import(
+  "file:///<nv8-root>/src/public/edge-sandbox.js"
+);
+
+// 方式二：从项目目录相对进入 `npm install` 建立的 node_modules/nv8 软链接
+import { EdgeSandbox } from "./node_modules/nv8/src/public/edge-sandbox.js";
+```
+
 **指纹快照要从子路径拿**：`edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` 不在顶层导出里。
 
 ### 2.3 第一次验证
 
 ```bash
-npm test                    # 全量，864 项（`node --test` 自动发现 tests/）
+npm test                    # 全量（`node --test` 自动发现 tests/）
 npm run test:matrix         # Node 18 / 20 / 22 / 24 四档
 ```
 
@@ -297,18 +307,21 @@ try {
 （需要往 Realm 里装表面时）`activate(context)`。
 
 **`install` 与 `activate` 的分工是硬约束**：`install-*` 函数操作的是宿主的
-`globalThis`，在 Realm 建立之前跑会污染宿主进程。所以三参数签名的 `install` 会被
-判为 legacy 并**跳过执行**，真正装表面必须在 `activate` 里经
-`context.moduleLoader.importUrlAsync()` 完成。`plugins/canvas` 曾经把安装写在
-`install` 里，结果整个插件是个空壳（加不加它 surface 一模一样），而它还声明了
-`canvas.base` 能力。
+`globalThis`，在 Realm 建立之前跑会污染宿主进程。现代插件用单参数
+`install(context)` 只登记元数据/表面预留，真正装表面必须在 `activate` 里经
+`context.moduleLoader.importUrlAsync()` 在 Realm 内完成。旧式三参数
+`install(sandbox, registry, config)` 仍会被兼容调用（宿主作用域，不会装进
+Realm）；显式标记 `legacy: true` 的插件则整段跳过，只保留元数据。
+`plugins/canvas` 曾经把安装写在 `install` 里，结果整个插件是个空壳
+（加不加它 surface 一模一样），而它还声明了 `canvas.base` 能力。
 
 ## 4. 最小可运行示例
 
-在项目外部创建一个临时 runner，例如 `run-local.mjs`：
+在项目外部创建一个临时 runner，例如 `run-local.mjs`（`<nv8-root>` 用绝对路径，
+例如 `D:/develop_software/Nv8`）：
 
 ```js
-import { EdgeSandbox } from "file:///<nv8-root>/src/index.js";
+import { EdgeSandbox } from "file:///<nv8-root>/src/public/edge-sandbox.js";
 
 const sandbox = await EdgeSandbox.create({
   page: {
@@ -724,10 +737,8 @@ networkCapture: {
 ### 9.1 使用默认 Edge 150 profile
 
 ```js
-import {
-  EdgeSandbox,
-  edge150Fingerprint,
-} from "./src/index.js";
+import { EdgeSandbox } from "./src/public/edge-sandbox.js";
+import { edge150Fingerprint } from "./src/infra/fingerprint/edge-150.js";
 
 const sandbox = await EdgeSandbox.create({
   fingerprint: edge150Fingerprint,
@@ -1183,7 +1194,7 @@ Trace 使用固定上限，不会无限增长。它是兼容层观察工具，�
 
 ```js
 import { readFile } from "node:fs/promises";
-import { EdgeSandbox } from "file:///<nv8-root>/src/index.js";
+import { EdgeSandbox } from "file:///<nv8-root>/src/public/edge-sandbox.js";
 
 const source = await readFile("<your-project>/bundle.js", "utf8");
 const sandbox = await EdgeSandbox.create({
@@ -1436,7 +1447,8 @@ fingerprint: {
 }
 ```
 
-UA 不能包含 `Edg/`。
+UA 可以带 `Edg/<major>`（Edge profile 本身就带），但一旦出现，其主版本必须与
+`Chrome/<major>` 一致；不带 `Edg/` 按 Chrome 处理。
 
 ### 18.3 `fetch()` 返回 `TypeError`
 
@@ -1526,11 +1538,10 @@ UA 不能包含 `Edg/`。
 
 详细限制见：
 
-- [docs/USAGE.md](docs/USAGE.md)
-- [docs/ENGINE_LIMITATIONS.md](docs/ENGINE_LIMITATIONS.md)
-- [docs/EDGE_ALIGNMENT_AUDIT.md](docs/EDGE_ALIGNMENT_AUDIT.md)
-- [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
-- [docs/PINNED_V8_BUILD.md](docs/PINNED_V8_BUILD.md)
+- [docs/edge-parity.md](docs/edge-parity.md) —— 三层对齐现状与方法
+- [docs/security-boundaries.md](docs/security-boundaries.md) —— 组件信任边界与安全模型
+- [docs/node-compatibility.md](docs/node-compatibility.md) —— Node 18–24 兼容矩阵与宿主缺口
+- [README.md](README.md) —— 环境要求与能力边界
 
 ## 发布前检查清单
 
@@ -1544,5 +1555,5 @@ UA 不能包含 `Edg/`。
 - [ ] 使用 `try/finally` 调用 `sandbox.close()`；
 - [ ] 生产运行没有设置 `EDGE_SANDBOX_DISABLE_TIMEOUT`；
 - [ ] `npm run test:matrix` 在四档 Node 全绿；
-- [x] `npm test` 与 `npm run audit:state` 已通过；
+- [ ] `npm test` 与 `npm run audit:state` 已通过；
 - [ ] 明确记录了本地兼容层与真实 Chromium/Edge 的差异。

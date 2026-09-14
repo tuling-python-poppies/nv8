@@ -34,28 +34,14 @@ const SCRIPT_NAMES = new Set(Object.keys(packageJson.scripts));
 const EXPORT_PATHS = new Set(Object.keys(packageJson.exports));
 
 /**
- * 规划文档不受「必须已存在」约束——描述目标结构就是它的职责。
- *
- * 只豁免这一份，而且理由写在这里：`docs/架构改造计划.md` 里的
- * `src/core/registry/*`、`nv8/profile-browser-edge-v150` 等是**目标**，
- * 不是现状。把它一并纳入会逼人把规划改成现状描述，那就没有规划文档了。
- */
-const PLANNING_DOCS = new Set(['docs/架构改造计划.md']);
-
-/**
- * 允许在文档里出现但不必存在的路径。
- *
- * 两类：本机产物（`.gitignore` 排除），以及**已删除对象的历史记录**——
- * `REMAINING_TASKS.md` 里记着「清理掉的孤儿测试」，那些路径本来就该不存在。
+ * 允许在文档里出现但不必存在的路径：本机产物（`.gitignore` 排除）。
  */
 const PATH_EXEMPTIONS = new Set([
   'src/engine/realm/module-bundle.json', // 本机产物，见 .gitignore
-  'src/plugins/webidl-foundation/test.js', // 已清理的孤儿测试（历史记录）
-  'tests/profile-system-test.js', // 同上
 ]);
 
 async function collectDocs() {
-  const docs = ['README.md', 'REMAINING_TASKS.md', 'sandbox_manual.md'];
+  const docs = ['README.md', 'sandbox_manual.md'];
   for (const entry of await readdir(new URL('docs/', REPO_ROOT), { withFileTypes: true })) {
     if (entry.isDirectory()) {
       for (const nested of await readdir(new URL(`docs/${entry.name}/`, REPO_ROOT))) {
@@ -108,9 +94,9 @@ test('every `npm run <script>` in the docs exists', () => {
 test('every `nv8/<subpath>` import in the docs is a real export', () => {
   const offenders = [];
   for (const doc of docs) {
-    if (PLANNING_DOCS.has(doc.path)) continue;
-    // 前面不能是 `@` 或连字符：`@nv8/plugin-dom-core` 是插件 id，不是导入路径。
-    for (const [, sub] of doc.source.matchAll(/(?<![@\w-])nv8\/([a-z0-9][a-z0-9/-]*)/g)) {
+    // 前面不能是 `@`、连字符或 `/`：`@nv8/plugin-dom-core` 是插件 id，
+    // `node_modules/nv8/src/...` 是文件系统路径，都不是包导入子路径。
+    for (const [, sub] of doc.source.matchAll(/(?<![@\w/-])nv8\/([a-z0-9][a-z0-9/-]*)/g)) {
       if (!EXPORT_PATHS.has(`./${sub}`)) offenders.push(`${doc.path}: nv8/${sub}`);
     }
   }
@@ -124,7 +110,6 @@ test('every `nv8/<subpath>` import in the docs is a real export', () => {
 test('every repo-relative file path in the docs exists', () => {
   const offenders = [];
   for (const doc of docs) {
-    if (PLANNING_DOCS.has(doc.path)) continue;
     const pattern = /`((?:src|tests|scripts|docs|fixtures)\/[\w./-]+\.(?:js|mjs|json|md|sh))`/g;
     for (const [, relative] of doc.source.matchAll(pattern)) {
       if (PATH_EXEMPTIONS.has(relative)) continue;

@@ -1,7 +1,7 @@
 /**
  * iframe 导航的合并语义
  *
- * REMAINING_TASKS 长期记着一条差距：「NV8 对每次属性变更立即导航；真实浏览器
+ * 这条差距曾被长期登记：「NV8 对每次属性变更立即导航；真实浏览器
  * 把导航排成任务，`removeAttribute('srcdoc')` + `setAttribute('src')` 合并为
  * 一次。NV8 会先派发一次中间 blank 的 `load`」。
  *

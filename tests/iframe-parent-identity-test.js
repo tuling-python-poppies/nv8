@@ -171,7 +171,7 @@ test('a cross-origin parent still gets the restricted facade', async () => {
  *
  * 刻意**不**断言别名写法（`const p = parent; setTimeout(...)`）具体退化到哪个值。
  * 那取决于微任务与宏任务的相对时序，把它写成契约就是把一次偶然调度当契约
- * ——REMAINING_TASKS 里 async 脚本那条踩过同一个坑。
+ * ——async 脚本的调度断言踩过同一个坑。
  */
 test('a message from one child is never attributed to its sibling', async () => {
   const sandbox = await sharedSandbox();

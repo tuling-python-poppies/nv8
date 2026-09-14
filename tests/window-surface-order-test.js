@@ -323,7 +323,7 @@ test('V8 builtin ordering deviations from Chromium are registered', async () => 
   //
   // 抹平它需要把重排起点从 `Option` 前移到 TypedArray 段，即把下半截 V8 内建
   // 也删除重装。整段重排做不到：`undefined` / `NaN` / `Infinity` 不可配置，
-  // 删不掉。已登记为独立项（REMAINING_TASKS.md）。
+  // 删不掉。已登记为独立项。
   //
   // **不做过时登记检查**：登记是跟宿主的，某一档上没出现不等于登记过时
   // （Node 24 上一项也不会出现）。这与其他登记表的规矩不同，理由写在这里

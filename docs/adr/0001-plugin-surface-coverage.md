@@ -39,13 +39,13 @@ CSSOM、SVG、XR、IndexedDB、File System、Speech 等。
 
 承认 plugin 模式的目标不是复刻完整浏览器，而是按需组装最小环境。
 
-依据是产品定位本身。`docs/架构改造计划.md` 第 2 节写明：
+依据是产品定位本身：
 
 > NV8 的目标不是实现一个完整浏览器，而是实现一个面向 JavaScript 逆向
 > 和协议复现的运行时框架。它应当根据目标脚本实际使用的能力，动态组装出
 > 最小的、可控的、确定性的浏览器兼容环境。
 
-同一份文档的非目标里也写了「不在 Core 中实现所有浏览器 API」。
+产品定位同时明确：不在 Core 中实现所有浏览器 API。
 
 按这个定位，205 个全局是**设计意图**而非缺陷。1234 个全局的 legacy 恰恰
 违背了「最小化」——它把所有能力无条件装进每个 Realm。
@@ -110,5 +110,4 @@ bootstrap，而不必逐个插件化。
 ## 影响的现有产物
 
 - `src/infra/baseline/known-differences.js`：`surface-coverage-gap` severity 改为 `tracked`
-- `REMAINING_TASKS.md` 第十章「架构完成定义」的切换条件需重写
 - 新增待办：缺失能力诊断（见 ADR-0002）

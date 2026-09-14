@@ -1044,10 +1044,6 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 - `nv8/<subpath>` 必须在 `exports` 里；
 - `src|tests|scripts|docs|fixtures/...` 的路径必须存在。
 
-`docs/架构改造计划.md` 显式豁免路径检查——它是**规划**文档，描述目标结构就是它的
-职责。豁免理由写在测试里，并且豁免项自身有过时检查：一个「允许不存在」的路径如果
-其实存在，说明豁免过时了。
-
 ### 工具脚本必须跨平台
 
 审计与采集脚本自己也会坏，而且坏法通常是**谎报通过**：
@@ -1365,15 +1361,12 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 - `plugin` 模式覆盖面小于 `legacy`，按需拉取（[ADR-0001](docs/adr/0001-plugin-surface-coverage.md)）。
 
-完整待办见 [REMAINING_TASKS.md](REMAINING_TASKS.md)。
-
 ---
 
 ## 文档
 
 | 文档 | 内容 |
 |---|---|
-| [docs/架构改造计划.md](docs/架构改造计划.md) | 架构与改造计划（**权威文档**） |
 | [docs/edge-parity.md](docs/edge-parity.md) | 三层对齐现状与方法 |
 | [docs/baseline.md](docs/baseline.md) | 基线快照机制 |
 | [docs/protocol-collector.md](docs/protocol-collector.md) | 协议层与采集层 |
@@ -1382,9 +1375,9 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 | [docs/security-boundaries.md](docs/security-boundaries.md) | 组件信任边界与安全模型 |
 | [docs/state-scope.md](docs/state-scope.md) | 状态作用域规则 |
 | [docs/node-compatibility.md](docs/node-compatibility.md) | Node 18–24 兼容矩阵 |
+| [docs/api-reference.md](docs/api-reference.md) | 包入口、Protocol / Collector API、错误与生命周期 |
 | [docs/rust-migration-map.json](docs/rust-migration-map.json) | Rust 原实现 → JS 实现对应关系 |
 | [docs/adr/](docs/adr/) | 架构决策记录（8 篇） |
-| [REMAINING_TASKS.md](REMAINING_TASKS.md) | 完整待办 |
 | [sandbox_manual.md](sandbox_manual.md) | Sandbox 使用手册 |
 
 ### ADR 索引

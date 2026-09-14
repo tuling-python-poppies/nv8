@@ -1637,7 +1637,7 @@ export const BEHAVIOR_PROBES = Object.freeze([
   //
   // **全部共用一个 iframe**：每个探针各建一个会连开十几个子 Realm，而实测
   // NV8 在动态创建第 8 个 iframe 时子进程会 SIGABRT（与预热池无关，关掉池
-  // 一样崩，见 REMAINING_TASKS 的独立条目）。共用一个也更贴近真实脚本行为。
+  // 一样崩，见独立登记条目）。共用一个也更贴近真实脚本行为。
   {
     id: 'realm/identity-bundle',
     category: 'crossRealm',
