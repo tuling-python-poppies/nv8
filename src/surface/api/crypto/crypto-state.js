@@ -7,6 +7,8 @@
 const cryptoObjects = new WeakSet();
 const subtleObjects = new WeakSet();
 const keyState = new WeakMap();
+const cryptoRealms = new WeakMap();
+const subtleRealms = new WeakMap();
 
 // Per-Realm crypto state storage
 const realmCryptoState = new WeakMap();
@@ -86,6 +88,16 @@ export function markCryptoObject(crypto) {
  */
 export function markSubtleObject(subtle) {
   subtleObjects.add(subtle);
+}
+
+export function associateCryptoRealm(value, realm, subtle = false) {
+  (subtle ? subtleRealms : cryptoRealms).set(value, realm);
+}
+
+export function getCryptoRealm(value, subtle = false) {
+  const realm = (subtle ? subtleRealms : cryptoRealms).get(value);
+  if (realm === undefined) throw new TypeError("Illegal invocation");
+  return realm;
 }
 
 /**

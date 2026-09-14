@@ -50,12 +50,12 @@ jobs:
       - name: Run tests
         run: npm test
 
-  # 后端 × Node 交叉矩阵：child-process 与 worker-thread 在协议层必须行为一致。
+  # 后端 × Node 交叉矩阵：child-process 与 worker-thread 的后端契约必须行为一致。
   #
   # 取 Node 24（主目标）与 20（最老的在役 LTS）两档：更老的 18 已在 Linux
   # 矩阵里跑全量，交叉矩阵只覆盖「后端差异是否随宿主版本放大」这个维度，
-  # 不再为 18 单独启一套环境。NV8_BACKEND 由 tests/backend-contract-test.js
-  # 读取，其余后端用例在套件内自行参数化；仍然跑全量以确保 env 不改变行为。
+  # NV8_BACKEND 由 backend-contract-test.js 读取；其他后端测试自身已覆盖双后端，
+  # 不在这里重复运行两次整套测试。
   backends:
     name: Backend ${{ matrix.backend }} / Node ${{ matrix.node }}
     runs-on: ubuntu-latest
@@ -69,8 +69,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-      - name: Run tests
-        run: npm test
+      - name: Run backend contract tests
+        run: node --experimental-vm-modules --test tests/backend-contract-test.js
         env:
           NV8_BACKEND: ${{ matrix.backend }}
 
@@ -87,6 +87,8 @@ jobs:
       - name: Check window surface order
         run: npm run check:surface-order
       - name: Check module bundle
+        run: npm run build:bundle
+      - name: Verify module bundle
         run: npm run check:bundle
       - name: Check generated artifact provenance
         run: npm run check:generated

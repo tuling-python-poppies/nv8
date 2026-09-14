@@ -120,8 +120,8 @@ if (checkOnly) {
   try {
     existing = JSON.parse(await readFile(OUTPUT, 'utf8'));
   } catch {
-    console.log('未生成模块包。运行 npm run build:bundle 可加速冷启动。');
-    process.exit(0);
+    console.error('模块包不存在。先运行 npm run build:bundle，再执行 check:bundle。');
+    process.exit(1);
   }
   const keys = Object.keys(existing);
   const matching = keys.filter((key) => graph.has(key)).length;

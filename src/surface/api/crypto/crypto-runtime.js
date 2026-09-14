@@ -6,7 +6,9 @@ import { aesDecrypt, aesEncrypt } from "./aes.js";
 import { sha1, sha384, sha512 } from "./hash.js";
 import {
   getCryptoState,
+  getCryptoRealm,
   initializeCryptoState,
+  associateCryptoRealm,
   markCryptoObject,
   markSubtleObject,
   requireCrypto,
@@ -37,9 +39,8 @@ export function createCryptoObjects(realm, entropy = null) {
   const crypto = Object.create(Crypto.prototype);
   markCryptoObject(crypto);
   
-  // Store realm association
-  crypto.__nv8Realm = realm;
-  subtle.__nv8Realm = realm;
+  associateCryptoRealm(crypto, realm);
+  associateCryptoRealm(subtle, realm, true);
   
   return { crypto, subtle };
 }
@@ -61,7 +62,7 @@ export function cryptoGetRandomValues(crypto, array) {
       "QuotaExceededError",
     );
   }
-  const state = getCryptoState(crypto.__nv8Realm);
+  const state = getCryptoState(getCryptoRealm(crypto));
   const bytes = new Uint8Array(array.buffer, array.byteOffset, array.byteLength);
   fillCryptoRandom(state, bytes);
   return array;
@@ -69,7 +70,7 @@ export function cryptoGetRandomValues(crypto, array) {
 
 export function cryptoRandomUUID(crypto) {
   requireCrypto(crypto);
-  const state = getCryptoState(crypto.__nv8Realm);
+  const state = getCryptoState(getCryptoRealm(crypto));
   if (state.entropy !== null && typeof state.entropy.randomUUID === "function") {
     return `${state.entropy.randomUUID()}`;
   }
@@ -377,7 +378,7 @@ export async function subtleGenerateKey(
   keyUsages,
 ) {
   requireSubtle(subtle);
-  const state = getCryptoState(subtle.__nv8Realm);
+  const state = getCryptoState(getCryptoRealm(subtle, true));
   const normalized = normalizeKeyAlgorithm(algorithm);
   const bitLength = Number(normalized.length ?? (normalized.name === "HMAC" ? 256 : 256));
   const bytes = new Uint8Array(bitLength / 8);

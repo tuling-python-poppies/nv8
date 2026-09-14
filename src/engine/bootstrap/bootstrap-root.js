@@ -905,6 +905,8 @@ export function bootstrapRoot(
   // profile 的 fingerprint.timezone：默认时区必须在 Realm 内 hook，
   // worker_threads 共享 ICU 时线程级 TZ 不可靠（IKFD9O）
   timezone = null,
+  // 宿主提供的密码学熵源。不能回退到页面可覆盖的 Math.random/Date。
+  cryptoEntropy = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -1331,7 +1333,7 @@ export function bootstrapRoot(
     installTextEncoding();
     installTextStreams();
     installCompressionStreams();
-    installCrypto();
+    installCrypto(globalThis, cryptoEntropy);
     installBase64();
     installAbort();
     installStructuredClone();

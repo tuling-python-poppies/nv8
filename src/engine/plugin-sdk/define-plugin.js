@@ -209,7 +209,7 @@ function normalizeRequirements(requires) {
     if (typeof req === 'object' && req.id) {
       return {
         id: req.id,
-        version: req.version || '*',
+        version: req.range || req.version || '*',
         optional: req.optional || false,
       };
     }

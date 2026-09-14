@@ -18,6 +18,9 @@ import {
   resolvePluginDependencies,
   validateDependencies,
 } from '../src/engine/plugin-sdk/capability-matcher.js';
+import { createApp } from '../src/engine/core/app.js';
+import { minimalPreset } from '../src/config/presets/index.js';
+import { minimalProfile } from '../src/config/profiles/built-in-profiles.js';
 
 test('plugin dependency resolution accepts profile PluginReference objects', () => {
   const alpha = definePlugin({
@@ -37,6 +40,16 @@ test('plugin dependency resolution accepts profile PluginReference objects', () 
     [alpha],
   );
   assert.deepEqual(resolvedWithVersionKey.plugins.map((plugin) => plugin.id), ['alpha']);
+});
+
+test('real scoped preset plugins resolve through createApp', async () => {
+  const app = createApp({ trace: false });
+  app.registerPlugins(minimalPreset);
+  app.registerProfile(minimalProfile);
+  const sandbox = await app.createSandbox({ profile: 'minimal' });
+  const realm = await sandbox.createRealm({ type: 'root' });
+  assert.equal(await realm.evaluate('1 + 1'), 2);
+  await app.destroy();
 });
 
 test('capability providers satisfy requires during resolution', () => {

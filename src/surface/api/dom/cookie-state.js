@@ -199,6 +199,7 @@ export function cookieStoreSet(nameOrOptions, value) {
     sameSite: input.sameSite === undefined ? "strict" : `${input.sameSite}`,
     partitioned: Boolean(input.partitioned),
   };
+  if (cookie.secure && !isSecureOrigin(url)) return;
   storeCookie(cookie);
 }
 

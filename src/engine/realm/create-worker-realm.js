@@ -1,4 +1,5 @@
 import vm from "node:vm";
+import { randomFillSync, randomUUID } from "node:crypto";
 import { auditRealmGlobals } from "./global-audit.js";
 import { RealmModuleLoader } from "./module-loader.js";
 
@@ -28,6 +29,7 @@ export async function createWorkerRealm({
   // 线程级 TZ 不影响已初始化的默认时区，因此由 Realm 内 hook 覆盖
   // （IKFD9O）。backend 侧通过 workerRealmBuildOptions 传入。
   timezone = null,
+  cryptoEntropy = createCryptoEntropy(),
 }) {
   const parsed = new URL(workerUrl);
   const sandboxGlobal = Object.create(null);
@@ -76,6 +78,7 @@ export async function createWorkerRealm({
     navigatorProfile,
     workerDepth,
     timezone,
+    cryptoEntropy,
   );
   return {
     context,
@@ -86,6 +89,16 @@ export async function createWorkerRealm({
     pageUrl: parsed.href,
     destroyed: false,
   };
+}
+
+function createCryptoEntropy() {
+  return Object.freeze({
+    randomFill(bytes) {
+      randomFillSync(bytes);
+      return bytes;
+    },
+    randomUUID,
+  });
 }
 
 function encodeStringList(values) {

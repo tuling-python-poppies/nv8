@@ -229,6 +229,7 @@ export function bootstrapWorker(
   navigatorMetadata = null,
   workerDepth = 0,
   timezone = null,
+  cryptoEntropy = null,
 ) {
   hideNodeGlobals();
   configureTimingProfile(timingProfile);
@@ -312,7 +313,7 @@ export function bootstrapWorker(
   installTextEncoding();
   installTextStreams();
   installCompressionStreams();
-  installCrypto();
+  installCrypto(globalThis, cryptoEntropy);
   installBase64();
   installAbort();
   installStructuredClone();

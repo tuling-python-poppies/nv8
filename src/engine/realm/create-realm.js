@@ -1,4 +1,5 @@
 import vm from "node:vm";
+import { randomFillSync, randomUUID } from "node:crypto";
 import { auditRealmGlobals } from "./global-audit.js";
 import { RealmModuleLoader } from "./module-loader.js";
 
@@ -88,6 +89,7 @@ export function activateRealmShell(shell, options) {
     serviceWorkerPageUrl = null,
     workerDepth = 0,
     timezone = null,
+    cryptoEntropy = createCryptoEntropy(),
     onContext = null,
   } = options;
   const { context, moduleLoader, bootstrap } = shell;
@@ -145,6 +147,7 @@ export function activateRealmShell(shell, options) {
     serviceWorkerPageUrl,
     workerDepth,
     timezone,
+    cryptoEntropy,
   );
   if (typeof onContext === "function") onContext(context);
   return {
@@ -156,6 +159,16 @@ export function activateRealmShell(shell, options) {
     pageUrl,
     destroyed: false,
   };
+}
+
+function createCryptoEntropy() {
+  return Object.freeze({
+    randomFill(bytes) {
+      randomFillSync(bytes);
+      return bytes;
+    },
+    randomUUID,
+  });
 }
 
 export async function createRealm(options) {

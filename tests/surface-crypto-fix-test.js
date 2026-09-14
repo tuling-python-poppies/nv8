@@ -10,6 +10,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createNv8, basicPreset } from '../src/index.js';
+import { createSandbox } from '../src/public/create-sandbox.js';
 import {
   createCryptoObjects,
   cryptoGetRandomValues,
@@ -67,6 +68,73 @@ test('two sandboxes in one process produce different crypto randomness', async (
   assert.match(second.uuid, UUID_V4, 'randomUUID 必须是 v4');
   assert.notEqual(first.uuid, second.uuid, '跨沙箱 randomUUID 不能相同');
   assert.notDeepEqual(first.first, first.second, '同一 Realm 连续两次不能相同');
+});
+
+test('legacy crypto entropy does not depend on page-overridable clocks', async () => {
+  const samples = [];
+  for (let index = 0; index < 2; index += 1) {
+    const nv8 = await createNv8({
+      plugins: basicPreset,
+      profile: { id: `crypto-clock-${index}`, url: 'https://crypto.test/' },
+      trace: false,
+      logger,
+    });
+    try {
+      const realm = await nv8.sandbox.createRealm({ type: 'root' });
+      samples.push(JSON.parse(await realm.evaluate(`(() => {
+        Math.random = () => 0.5;
+        Date.now = () => 123456;
+        if (globalThis.performance) performance.now = () => 7;
+        const bytes = new Uint8Array(32);
+        crypto.getRandomValues(bytes);
+        return JSON.stringify([...bytes]);
+      })()`)));
+      await nv8.sandbox.destroyRealm(realm.id);
+    } finally {
+      await nv8.destroy();
+    }
+  }
+  assert.notDeepEqual(samples[0], samples[1]);
+});
+
+test('public legacy sandbox keeps secure entropy when clocks are overridden', async () => {
+  const values = [];
+  for (let index = 0; index < 2; index += 1) {
+    const sandbox = await createSandbox('https://crypto-legacy.test/', {
+      limits: { timeoutMs: 30_000 },
+    });
+    try {
+      values.push(JSON.parse(await sandbox.run(`(() => {
+        Math.random = () => 0.5;
+        Date.now = () => 123456;
+        if (globalThis.performance) performance.now = () => 7;
+        const bytes = new Uint8Array(32);
+        crypto.getRandomValues(bytes);
+        return JSON.stringify([...bytes]);
+      })()`)));
+    } finally {
+      await sandbox.close();
+      createSandbox.drain();
+    }
+  }
+  assert.notDeepEqual(values[0], values[1]);
+});
+
+test('crypto does not expose a writable internal Realm expando', async () => {
+  const sandbox = await createSandbox('https://crypto-internal.test/', {
+    limits: { timeoutMs: 30_000 },
+  });
+  try {
+    const result = JSON.parse(await sandbox.run(`JSON.stringify({
+      has: Object.prototype.hasOwnProperty.call(crypto, '__nv8Realm'),
+      keys: Object.keys(crypto),
+    })`));
+    assert.equal(result.has, false);
+    assert.equal(result.keys.includes('__nv8Realm'), false);
+  } finally {
+    await sandbox.close();
+    createSandbox.drain();
+  }
 });
 
 test('the host-entropy-free fallback still differs across realms', () => {

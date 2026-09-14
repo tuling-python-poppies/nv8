@@ -1632,7 +1632,11 @@ function normalizeExecution(inputExecution) {
       "execution.backend must be child-process or worker-thread",
     );
   }
-  return Object.freeze({ backend });
+  const restart = inputExecution.restart ?? "fail-fast";
+  if (restart !== "fail-fast" && restart !== "restart") {
+    throw new RangeError("execution.restart must be fail-fast or restart");
+  }
+  return Object.freeze({ backend, restart });
 }
 
 export function normalizeRuntimeOptions(options = {}) {

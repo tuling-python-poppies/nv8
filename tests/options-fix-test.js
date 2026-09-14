@@ -32,6 +32,21 @@ test('a page string is accepted as a { url } shorthand', () => {
   assert.equal(page.contentType, 'text/html');
 });
 
+test('execution restart policy is preserved and validated', () => {
+  assert.equal(
+    normalizeRuntimeOptions({ execution: { restart: 'restart' } }).execution.restart,
+    'restart',
+  );
+  assert.equal(
+    normalizeRuntimeOptions({ execution: { restart: 'fail-fast' } }).execution.restart,
+    'fail-fast',
+  );
+  assert.throws(
+    () => normalizeRuntimeOptions({ execution: { restart: 'silent' } }),
+    /execution\.restart/,
+  );
+});
+
 test('a page object is normalized as before', () => {
   const input = Object.freeze({
     url: 'https://page.test/y',

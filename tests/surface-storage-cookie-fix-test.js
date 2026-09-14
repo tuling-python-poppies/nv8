@@ -71,6 +71,16 @@ test('a Secure cookie cannot be set from an insecure origin', async () => {
   assert.doesNotMatch(result.cookie, /s=1/, 'http 页面写 Secure cookie 必须被忽略');
 });
 
+test('Cookie Store also rejects Secure cookies from an insecure document', async () => {
+  const result = await withLegacySandbox('http://cookie-store.test/', async sandbox => (
+    sandbox.run(`(async () => {
+      await cookieStore.set({ name: 'store-secure', value: '1', secure: true });
+      return await cookieStore.get('store-secure');
+    })()`)
+  ));
+  assert.equal(result, null);
+});
+
 test('cross-origin iframe storage stays isolated', { timeout: 60_000 }, async () => {
   const childDocument = `<!doctype html><html><body><script>
     localStorage.setItem('child-only', 'child');

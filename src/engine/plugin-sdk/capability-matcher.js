@@ -6,6 +6,9 @@
 
 import { satisfiesVersionRange } from './define-plugin.js';
 
+const PLUGIN_ID_PATTERN = /^(?:@[a-z][a-z0-9-]*\/)?[a-z][a-z0-9-]*$/;
+const PLUGIN_REQUEST_PATTERN = /^((?:@[a-z][a-z0-9-]*\/)?[a-z][a-z0-9-]*)(?:@(.+))?$/;
+
 /**
  * 构建插件能力索引
  * 
@@ -44,10 +47,11 @@ export function buildCapabilityIndex(plugins) {
  * @returns {ResolvedPlugins} 解析结果
  */
 export function resolvePluginDependencies(requestedPluginIds, availablePlugins) {
+  const matchingPlugins = availablePlugins.map(normalizePluginForMatching);
   // 1. 构建插件索引
   const pluginIndex = new Map(); // id -> Plugin[]
   
-  for (const plugin of availablePlugins) {
+  for (const plugin of matchingPlugins) {
     if (!pluginIndex.has(plugin.id)) {
       pluginIndex.set(plugin.id, []);
     }
@@ -56,7 +60,7 @@ export function resolvePluginDependencies(requestedPluginIds, availablePlugins) 
 
   // 能力提供者索引：requires 可以声明能力名而不是插件 id，
   // 解析阶段必须与 validateDependencies 使用同一语义（IKFDA4）。
-  const capabilityIndex = buildCapabilityIndex(availablePlugins);
+  const capabilityIndex = buildCapabilityIndex(matchingPlugins);
   
   // 2. 解析请求的插件
   const requestedPlugins = [];
@@ -182,6 +186,52 @@ function findCapabilityProvider(capabilityName, versionRange, capabilityIndex) {
   return matching[0].plugin;
 }
 
+function normalizePluginForMatching(plugin) {
+  if (plugin === null || typeof plugin !== 'object') {
+    throw new TypeError('Plugin must be an object');
+  }
+  if (Array.isArray(plugin.requires) && Array.isArray(plugin.provides)) {
+    return plugin;
+  }
+  const rawRequires = plugin.requires ?? plugin.dependencies ?? [];
+  const rawProvides = plugin.provides ?? plugin.capabilities ?? [];
+  if (!Array.isArray(rawRequires) || !Array.isArray(rawProvides)) {
+    throw new TypeError(`Plugin "${plugin.id ?? '<unknown>'}" dependency metadata must be arrays`);
+  }
+  return {
+    ...plugin,
+    requires: rawRequires.map(parseRequirement),
+    provides: rawProvides.map((capability) => (
+      typeof capability === 'string'
+        ? { name: capability, version: '1.0.0' }
+        : {
+          ...capability,
+          name: capability.name,
+          version: capability.version ?? '1.0.0',
+        }
+    )),
+  };
+}
+
+function parseRequirement(requirement) {
+  if (requirement !== null && typeof requirement === 'object') {
+    const id = `${requirement.id ?? ''}`;
+    if (!isPluginId(id)) throw new Error(`Invalid requirement format: ${JSON.stringify(requirement)}`);
+    return {
+      id,
+      version: `${requirement.range ?? requirement.version ?? '*'}`,
+      optional: requirement.optional === true,
+    };
+  }
+  const match = `${requirement}`.match(PLUGIN_REQUEST_PATTERN);
+  if (!match) throw new Error(`Invalid requirement format: "${requirement}"`);
+  return { id: match[1], version: match[2] || '*', optional: false };
+}
+
+function isPluginId(value) {
+  return PLUGIN_ID_PATTERN.test(value);
+}
+
 /**
  * 解析插件请求
  *
@@ -193,13 +243,13 @@ function parsePluginRequest(requestStr) {
   if (requestStr !== null && typeof requestStr === 'object') {
     const id = `${requestStr.id ?? ''}`;
     const version = requestStr.range ?? requestStr.version ?? '*';
-    if (!/^[a-z][a-z0-9-]*$/.test(id)) {
+    if (!isPluginId(id)) {
       throw new Error(`Invalid plugin request format: ${JSON.stringify(requestStr)}`);
     }
     return { id, version: `${version}` };
   }
 
-  const match = `${requestStr}`.match(/^([a-z][a-z0-9-]*)(?:@(.+))?$/);
+  const match = `${requestStr}`.match(PLUGIN_REQUEST_PATTERN);
   
   if (!match) {
     throw new Error(`Invalid plugin request format: "${requestStr}"`);
