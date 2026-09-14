@@ -41,5 +41,5 @@
     "./protocol": "./src/collection/request-protocol/index.js",
     "./collector": "./src/collection/collector/index.js"
   },
-  "license": "UNLICENSED"
+  "license": "MulanPSL-2.0"
 }
