@@ -6,7 +6,7 @@ NV8 在 Node 进程里重建一个与真实 Microsoft Edge 无法区分的 JavaS
 用来运行目标站点的前端代码，从中恢复请求签名、令牌与协议行为；同时提供一套完整的
 采集调度层，把恢复出来的协议变成可持续运行的数据采集。
 
-**这是一个私有框架，没有公开发布计划。**
+**许可证：木兰宽松许可证，第 2 版（MulanPSL-2.0）。**
 
 ---
 
@@ -82,8 +82,9 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
 ### 环境要求
 
 - Node.js **>= 18.18.0**（在 18/20/22/24 上均有测试；推荐 24）
-- 必须带 `--experimental-vm-modules` 启动（所有 Node 版本都需要）
-- 零运行时依赖，`npm install` 不装任何包
+- `EdgeSandbox` 的隔离子进程会自动带 `--experimental-vm-modules`，宿主 runner 不必显式添加；
+  直接用 `createNv8`（进程内）或跑仓库测试/构建时才需要自己加
+- 零依赖，`npm install` 不装任何包
 
 **指纹敏感场景请用 Node 22+。** Node 18/20 的 V8（10.x / 11.x）在 dictionary
 模式的 global object 上把**可枚举键排在不可枚举键之前**，不按插入序——违反
@@ -324,7 +325,7 @@ Realm 数，`maxWorkerConnections` 限制页面到 Worker 的活动连接数，`
 | 原型完全一致 | **969 / 969** |
 | 缺失成员 | **0** |
 | 多余成员 | **0** |
-| 描述符比对 | **8892** 个成员，**0** 处不符 |
+| 描述符比对 | **8957** 个成员，**0** 处不符 |
 
 这一层抓到过的典型问题：`Event.prototype.isTrusted` 实际是
 `[LegacyUnforgeable]`，应该在**实例**上且 `configurable: false`，
@@ -332,17 +333,18 @@ Realm 数，`maxWorkerConnections` 限制页面到 Worker 的活动连接数，`
 
 ### 第三层：运行时行为
 
-前两层都对，行为仍可能不同。同步行为层用 **186 个探针 / 25 类**覆盖；另有独立的 **5 个 Worker 异步探针**（2 个 Dedicated Worker、3 个 ServiceWorker）：
+前两层都对，行为仍可能不同。同步行为层用 **211 个探针 / 28 类**覆盖；另有独立的 **5 个 Worker 异步探针**（2 个 Dedicated Worker、3 个 ServiceWorker）：
 
 `nativeToString`、`illegalInvocation`、`argumentCount`、`constructorGuard`、
-`arityMetadata`、`errorShape`、`collections`、`worker`、`workerAsync`、`cssom`、`canvas`、`fontMetrics`、
+`arityMetadata`、`errorShape`、`collections`、`worker`、`cssom`、`canvas`、`fontMetrics`、
 `domRange`、`storage`、`fetch`、`crypto`、`xhr`、`websocket`、`indexedDB`、
-`audio`、`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`。
+`audio`、`intl`、`performance`、`eventTiming`、`crossRealm`、`urlParsing`、`typeTag`、
+`svg`、`observers`、`animations`。
 
-同步基线现状：**182 项一致，4 项登记**——2 项动态 iframe 时序（开
-`limits.prewarmChildRealms` 后也一致），2 项宿主级差异（见下）。异步 Worker 基线另有 5 项，
-真实 Edge 双轮采集并由 `tests/worker-async-parity-test.js` 对等验证，覆盖 Dedicated Worker 消息与终止、
-ServiceWorker 注册元数据、控制器接管和页面消息往返。
+同步基线现状：**207 项一致，4 项登记**——2 项动态 iframe（跨 Realm）差异（开
+`limits.prewarmChildRealms` 后也一致），2 项 Intl 差异（ICU 数据 / V8 报错文案）。异步
+Worker 基线另有 5 项，真实 Edge 双轮采集并由 `tests/worker-async-parity-test.js` 对等验证，
+覆盖 Dedicated Worker 消息与终止、ServiceWorker 注册元数据、控制器接管和页面消息往返。
 
 三层不可替代的证据：`CSSStyleDeclaration` 在形状层**零差异**（双方原型都是
 10 个成员），行为层却查出 **6 处**不同。形状层永远看不到那个洞。
@@ -466,7 +468,7 @@ locale 下一律 `monospace`——标签级 override 与 locale 无关，覆盖�
   `call(...args) { return invoke(this, args); }`。这是一击致命的特征。
 - **WebIDL 参数个数检查缺失**：真实浏览器少传参数会抛带固定格式的 TypeError。
   现在把检查沉到两个安装入口，用 `callback.length` 当权威来源
-  （已验证 **3476** 个方法的 length 与真实 Edge 完全一致），
+  （已验证 **3508** 个方法的 length 与真实 Edge 完全一致），
   而不是在 ~757 个调用点手写。
 - **构造器错误消息缺后缀**：`Please use the 'new' operator` 少了
   `, this DOM object constructor cannot be called as a function.`（38 处）；
@@ -827,6 +829,7 @@ limits: { timeoutMs: 30_000 }
 | 48MB | **0/6** |
 | 64MB | **5/6** ← 悬崖边 |
 | 80MB | 6/6 |
+| 96MB | 6/6 |
 | 128MB | 6/6 |
 
 给太低时 V8 在引导过程中 OOM 并 `abort()`——收到 SIGABRT，**没有任何结构化
@@ -847,7 +850,7 @@ limits: { timeoutMs: 30_000 }
 | `npm run fingerprint:globals` | 1239 个全局名 |
 | `npm run fingerprint:members` | 8957 个原型成员与描述符 |
 | `npm run fingerprint:lengths` | 3508 个方法的 `length` |
-| `npm run fingerprint:behavior` | 同步行为探针（186 项） |
+| `npm run fingerprint:behavior` | 同步行为探针（211 项） |
 | `npm run fingerprint:async-behavior` | Worker / ServiceWorker 异步行为探针（5 项） |
 | `npm run fingerprint:css` | 746 个 CSS 属性名（保留真实枚举顺序） |
 | `npm run fingerprint:ua-defaults` | 96 个标签 × 736 个属性的 UA 默认值 |
@@ -903,17 +906,19 @@ limits: { timeoutMs: 30_000 }
 
 ### 已测出的 151 → 152 差异
 
-本机 Edge 已是 152，7 份 fixture 已全部重采，152 现在是对等性基准：
+本机（采集当时）Edge 已是 152，7 份 fixture 已全部重采，152 现在是对等性基准：
 
 | 维度 | 151 | 152 | 变化 |
 |---|---|---|---|
 | 全局名 | 1236 | 1239 | +3：`NodeRange` `OpaqueRange` `PermissionsPolicy` |
 | 原型 / 成员 | 966 / 8941 | 969 / 8957 | +6 成员，**−2**（`AbstractRange.startContainer/endContainer` 移到 `NodeRange`）|
 | 方法 `length` | 3496 | 3508 | 已有方法**零变化** |
-| 行为探针 | 144 | 178 | **+34：字体、DOM/Range/Selection、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB** |
+| 行为探针 | 144 | 178（当次） | **+34：字体、DOM/Range/Selection、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB** |
 | CSS 属性 | 746 | 746 | 无 |
 | UA 默认值 | 96 标签 | 96 标签 | 无 |
 | UA / brands | `Edg/151` | `Edg/152` | brands **顺序与 GREASE 串都变了**：<br>`Not=A?Brand/99` → `Not?A_Brand/24`，Chromium 排到第一 |
+
+（这张表记录**当次换基准**的对比；152 基准的探针后续继续扩充，当前同步探针为 211 项。）
 
 两条值得单独记：
 
@@ -948,7 +953,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，928 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，1173 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 当前 Node / backend 的性能基准
 npm run benchmark:matrix # Node 18/20/22/24 × 两种 backend 性能矩阵
@@ -1032,10 +1037,10 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 ### 文档失步要靠断言，不靠 review
 
-`sandbox_manual.md` 有 1537 行，其中一整节介绍 `ExecutionCore` /
-`createExecutionCore` / `edgeCompatPlugins` 与四个 `nv8/` 子路径——**全部不存在**。
-第 17 节还描述了一套九阶段审计，用到 5 个 npm 脚本，一个都没有，并配了一句
-「不要伪造或清空 evidence 来绕过门禁」。
+`sandbox_manual.md` 曾有一版在整节里介绍 `ExecutionCore` /
+`createExecutionCore` / `edgeCompatPlugins` 与四个 `nv8/` 子路径——**全部不存在**；
+第 17 节还描述了一套九阶段审计，用到 5 个 npm 脚本，一个都没有。这类失步已由
+`tests/docs-contract-test.js` 变成机械断言，不再依赖人工 review。
 
 这类问题读一遍就能发现，但没人会为了 review 去逐条核对 1500 行手册。所以
 `tests/docs-contract-test.js` 把三类**可机械核对**的引用变成断言：
@@ -1090,7 +1095,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（928 项 / 94 个文件，自动发现） |
+| `npm test` | 全量测试（1173 项 / 132 个 .js 文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、Realm 创建销毁 |
@@ -1106,7 +1111,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 ### 关于 `build:bundle`
 
-`RealmModuleLoader` 支持把 4010 个模块预打包成一个 JSON 以减少文件读取。
+`RealmModuleLoader` 支持把 4024 个模块预打包成一个 JSON 以减少文件读取。
 这个缓存**以绝对 `file://` URL 为键**，因此与生成它的机器路径绑定。
 
 仓库里曾提交过一份这样的包（3992 个键，全部以 `file:///D:/develop_software/Nv8/`
@@ -1121,7 +1126,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 ## 目录结构
 
-`src/` 顶层只有 8 项，**每一项就是一个职责**：
+`src/` 顶层是 8 个职责目录 + 入口 `index.js`，**每一项就是一个职责**：
 
 ```
 src/
@@ -1166,7 +1171,7 @@ src/
     ├── trace/         API 调用追踪
     └── utils/         logger
 
-tests/                 82 个测试文件
+tests/                 132 个 .js 测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -1191,10 +1196,11 @@ legacy 模式   bootstrap-root.js  ──→ install-* ──→ api/*
 plugin 模式   plugins/<域>.activate ──┘
 ```
 
-**`install` 与 `activate` 的分工是硬约束。** `install-*` 函数操作宿主的
-`globalThis`，在 Realm 建立之前跑会污染宿主进程。所以 `install(sandbox, registry,
-config)` 这种三参数签名会被判为 legacy 并**跳过执行**，真正装表面必须在
-`activate(context)` 里经 `context.moduleLoader.importUrlAsync()` 完成。
+**`install` 与 `activate` 的分工是硬约束。** 新插件用单参数 `install(context)` 只登记
+元数据 / 预留表面；真正装表面必须在 `activate(context)` 里经
+`context.moduleLoader.importUrlAsync()` 完成，不能直接改宿主 `globalThis`。
+旧式三参数 `install(sandbox, registry, config)` 仍会被兼容调用（宿主作用域，不会装进
+Realm）；显式标记 `legacy: true` 的插件整段跳过，只保留元数据。
 
 `plugins/canvas` 曾经把安装写在 `install` 里，于是整个插件是个空壳（加不加它
 surface 一模一样），而它还声明了 `canvas.base` 能力——ADR-0002 那套缺失能力诊断
@@ -1246,7 +1252,8 @@ css-ua-defaults.js），现在都有了脚本。
   的原型由专用顺序表校正，并由 `tests/prototype-order-parity-test.js` 锁定。
 - **Node 18/20 上全局枚举顺序做不到一致**（宿主限制，见「环境要求」）；
   Node 18–22 的 V8 内建段自身顺序也与 Chromium 不同。Node 24 逐位一致。
-- **4 个行为探针差异**，已登记：2 个动态 iframe 时序差异、2 个 Node/Chromium ICU 差异。
+- **4 个行为探针差异**，已登记：2 个动态 iframe（跨 Realm）差异、2 个 Intl 差异
+  （ICU 数据 / V8 报错文案）。
 - **`illegalConstructor` 文案已对齐**：真实 Edge 只在 `new X()` 时带接口名，裸调用
   只报 `Illegal constructor`；28 个 runtime 模块已统一传递 `new.target`。
 - **2 项刻意不探**（`UNPROBED_KNOWN_GAPS`，断言恰好为 2）：
@@ -1256,7 +1263,7 @@ css-ua-defaults.js），现在都有了脚本。
     几乎从不检查它的描述符。
   - 10 个布局相关计算值。
 - **行为探针已扩展到字体、DOM Range、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB 与 Worker 入口契约**：
-  当前同步行为基线为 186 个探针 / 25 类，182 项与真实 Edge 一致；另有 5 个 Worker / ServiceWorker 异步探针
+  当前同步行为基线为 211 个探针 / 28 类，207 项与真实 Edge 一致；另有 5 个 Worker / ServiceWorker 异步探针
   由独立 fixture 锁定。绝对字形像素宽度仍不进入契约，因为它依赖机器字体安装。
   Media、Web Animations、Observers、SVG 以及上述 API 的更深层语义另行登记。
 
@@ -1332,7 +1339,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）**741/741 全绿**。差异分两类处理：
+四档（18 / 20 / 22 / 24）**1173/1173 全绿**。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。
@@ -1347,7 +1354,8 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 其他版本相关限制：
 
-- `--experimental-vm-modules` 在**所有** Node 版本上都必需。
+- `--experimental-vm-modules` 在**所有** Node 版本上都必需——针对进程内使用
+  （`createNv8`、仓库测试与构建脚本）；`EdgeSandbox` 隔离子进程会自带该 flag。
 - Node 18 的 vm 模块链接是异步的，同步 `importUrl()` 不可用，
   必须走 `importUrlAsync()`（见 [docs/node-compatibility.md](docs/node-compatibility.md)）。
 - **Node 22 之前，Realm 里的 `'X' in globalThis` 会调用 X 的 getter。**
@@ -1355,7 +1363,6 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
   之前 `has` 查询是用 getter 实现的。用户态修不了；标志位是
   `HAS_VM_PROPERTY_QUERY_CALLBACK`。别用 Proxy 包 globalThis 抹平——
   代理对象自身的可检测面比这条差异危险得多。
-- Node 18/20 与 worker-thread 后端的性能基线尚未采集。
 
 ### 其他
 
@@ -1397,4 +1404,5 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ## 许可
 
-私有项目，未授权发布。
+本项目采用**木兰宽松许可证，第 2 版（MulanPSL-2.0）**，全文见
+[LICENSE](LICENSE)。

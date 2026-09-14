@@ -69,9 +69,14 @@ node --experimental-vm-modules scripts/build-module-bundle.mjs
 
 不要用缺少该 flag 的直接 Node 命令诊断运行时兼容性。
 
+宿主 runner 只使用 `EdgeSandbox` 时不需要该 flag：隔离后端（child-process / worker-thread）
+会由控制器自动带上。只有直接在**当前进程**里使用 Core（`createNv8`）或运行仓库测试、
+构建脚本时才必须显式添加。
+
 ### 1.2 依赖
 
-运行时不依赖浏览器、Chromium、Playwright、Selenium 或 iv8。项目只有开发期 parser 依赖，安装时关闭 npm scripts：
+运行时不依赖浏览器、Chromium、Playwright、Selenium 或 iv8。项目**零依赖**
+（`dependencies` 与 `devDependencies` 均为空），`npm install` 不装任何包：
 
 ```powershell
 npm install --ignore-scripts
