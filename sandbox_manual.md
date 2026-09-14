@@ -1530,12 +1530,12 @@ UA 可以带 `Edg/<major>`（Edge profile 本身就带），但一旦出现，�
 - 真实 GPU、字体、摄像头、麦克风、传感器和外设；
 - 系统级 ServiceWorker 网络拦截。
 
-详细限制见：
+详细限制见 NV8 仓库文档：
 
-- [docs/edge-parity.md](docs/edge-parity.md) —— 三层对齐现状与方法
-- [docs/security-boundaries.md](docs/security-boundaries.md) —— 组件信任边界与安全模型
-- [docs/node-compatibility.md](docs/node-compatibility.md) —— Node 18–24 兼容矩阵与宿主缺口
-- [README.md](README.md) —— 环境要求与能力边界
+- `docs/edge-parity.md` —— 三层对齐现状与方法
+- `docs/security-boundaries.md` —— 组件信任边界与安全模型
+- `docs/node-compatibility.md` —— Node 18–24 兼容矩阵与宿主缺口
+- `README.md` —— 环境要求与能力边界
 
 ## 发布前检查清单
 
