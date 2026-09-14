@@ -45,8 +45,6 @@ const REVIEWED_PROCESS_LEVEL_STATE = new Map([
     '扩展点注册表：由 install-* 在启动时注册类型处理器，属于能力声明而非运行时数据'],
   ['src/surface/api/crypto/hash.js:sha512Constants',
     'SHA-512 轮常量的惰性缓存：纯不可变数学常量，跨 Realm 共享无可观察差异'],
-  ['src/engine/webidl/native-function-realm-safe.js:realmContexts',
-    '按 Realm ID 索引的上下文注册表：它本身就是跨 Realm 管理器，隔离它会让其失去意义'],
   ['src/engine/webidl/native-function.js:currentContext',
     '安装期的当前上下文指针：由 setNativeFunctionContext() 在 Realm 激活时设置并在安装后失效'],
 ]);

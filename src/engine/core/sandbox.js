@@ -14,7 +14,7 @@ import { createHash } from 'node:crypto';
 import { createRealm } from './realm-factory.js';
 import { createWorkletRealm } from '../realm/create-worklet-realm.js';
 import { destroyRealm as destroyWorkletRealm } from '../realm/destroy-realm.js';
-import { createStateAccessor } from '../plugin-sdk/state-registry.js';
+import { createSandboxPluginContext } from './plugin-context.js';
 import { createNativeFunctionRegistry } from './native-function-registry.js';
 import { createEventListenerRegistry } from './event-listener-registry.js';
 import { createObjectURLRegistry } from './object-url-registry.js';
@@ -469,16 +469,16 @@ export async function createSandbox(config) {
   };
 
   /** 构造插件钩子上下文（sandbox 级安装，realm 为 null）。 */
-  const pluginContextFor = plugin => createPluginContext(
+  const pluginContextFor = plugin => createSandboxPluginContext({
     plugin,
     sandboxId,
-    null,
+    realm: null,
     stateRegistry,
     globals,
     surfaceRegistry,
     logger,
     trace,
-  );
+  });
   
   logger.info(`[Sandbox ${sandboxId}] Initializing with ${plugins.length} plugins`);
   
@@ -528,6 +528,25 @@ export async function createSandbox(config) {
     }
     return selected === null ? null : selected.handle.fetch(request);
   }
+
+  // ------------------------------------------------------------------
+  // 以下 realm 创建工厂仍保留为 createSandbox 内的嵌套闭包（IKF3A7）。
+  //
+  // 它们与 sandbox 的**实时**生命周期状态强耦合：`realms` / `workerRealms`
+  // / `sharedWorkerRecords` / `serviceWorkerHandles` 这些容器被多方原地增删，
+  // `lifecycleGeneration` / `lifecycleClosed` 在每个 await 边界后都要重新读取，
+  // 且彼此交叉调用（workerFactory / sharedWorkerFactory / workletFactory /
+  // childRealmFactory 会互相注入到对方的 runtime）。
+  //
+  // 拆成 deps 对象工厂需要 20+ 个 getter/句柄，并复制这张状态图；在缺少
+  // 独立单测的情况下，形式上的行数减少换来的是更高的状态漂移风险。
+  // 已经按「纯函数 / 无实时状态」标准拆到模块顶层的部分：
+  //   createWorkerBudget、createServiceWorkerClientRegistry、
+  //   collectPluginSnapshots / restorePluginSnapshots、installPlugin、
+  //   completePageLifecycle、evaluateCoreWorkerSource、
+  //   scopeNetworkRecorder、createWorkerReplayState、错误构造器等。
+  // 新代码优先复用这些模块级工厂；不要因为「看起来像」就把闭包直接搬家。
+  // ------------------------------------------------------------------
 
   async function createIframeChildRealm(options) {
     if (lifecycleClosed) throw createRealmLifecycleError();
@@ -1612,16 +1631,16 @@ export async function createSandbox(config) {
         if (plugin.uninstall && plugin._installed) {
           try {
             logger.info(`[Sandbox ${sandboxId}] Uninstalling plugin: ${plugin.id}`);
-            const context = createPluginContext(
+            const context = createSandboxPluginContext({
               plugin,
               sandboxId,
-              null,
+              realm: null,
               stateRegistry,
               globals,
               surfaceRegistry,
               logger,
-              trace
-            );
+              trace,
+            });
             await plugin.uninstall(context);
           } catch (error) {
             logger.error(`[Sandbox ${sandboxId}] Plugin uninstall failed:`, error);
@@ -1828,16 +1847,16 @@ async function installPlugin(
   
   try {
     // 创建插件上下文
-    const context = createPluginContext(
+    const context = createSandboxPluginContext({
       plugin,
       sandboxId,
-      null, // realm 上下文为 null（sandbox 级别安装）
+      realm: null, // realm 上下文为 null（sandbox 级别安装）
       stateRegistry,
       globals,
       surfaceRegistry,
       logger,
-      trace
-    );
+      trace,
+    });
     
     // 调用统一的 install(context) 钩子。
     // 未经 PluginRegistry 标准化的旧插件仍保留兼容分支；显式标记
@@ -2334,66 +2353,6 @@ function createSurfaceRegistry() {
       return Array.from(surfaces, ([name, owner]) => ({ name, owner }));
     },
   };
-}
-
-/**
- * 创建插件上下文
- * 
- * 这是传递给插件 install/uninstall 钩子的上下文对象
- */
-function createPluginContext(
-  plugin,
-  sandboxId,
-  realm,
-  stateRegistry,
-  globals,
-  surfaceRegistry,
-  logger,
-  trace,
-) {
-  const pluginInstanceId = `${plugin.id}@${plugin.version}#${sandboxId}`;
-  const realmId = realm?.id || null;
-  
-  const context = {
-    // 插件信息
-    plugin: {
-      id: plugin.id,
-      version: plugin.version,
-      provides: plugin.provides,
-      requires: plugin.requires,
-    },
-    
-    // Realm 引用（可能为 null）
-    realm: realm || null,
-    sandboxId,
-    surfaceRegistry,
-    
-    // 状态管理
-    state: createStateAccessor(stateRegistry, pluginInstanceId, realmId, sandboxId),
-    
-    // 全局配置和注册表
-    globals,
-    
-    // 导出对象（由插件填充）
-    exports: {},
-    
-    // 日志工具
-    trace(...args) {
-      if (trace) {
-        logger.info(`[Plugin ${plugin.id}]`, ...args);
-      }
-    },
-    
-    warn(...args) {
-      logger.warn(`[Plugin ${plugin.id}]`, ...args);
-    },
-    
-    error(...args) {
-      logger.error(`[Plugin ${plugin.id}]`, ...args);
-    },
-  };
-  
-  return context;
 }
 
 /**

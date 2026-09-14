@@ -1,10 +1,14 @@
 /**
- * Legacy compatibility layer for native function registration
- * 
- * This module maintains backward compatibility with existing code
- * while delegating to the new Realm-safe implementation.
- * 
- * DEPRECATED: New code should use native-function-realm-safe.js directly.
+ * Realm 侧原生函数注册 API。
+ *
+ * 这是安装器与 bootstrap 的**主入口**：作为 Realm 模块图内的模块，
+ * 每个 Realm 一份 `currentContext` / `nativeSources`，天然 Realm 隔离。
+ * webidl 插件经 moduleLoader 在 Realm 内调用
+ * `installNativeFunctionInfrastructure()`（IKF39V(c)）；legacy bootstrap
+ * 直接调用同一套函数。
+ *
+ * `native-function-realm-safe.js` 仅提供 context 工厂与按 realm 对象键控的
+ * 宿主侧句柄，供需要跨模块会话的外部调用方使用。
  */
 
 import {
@@ -12,10 +16,11 @@ import {
   getNativeFunctionContext,
 } from './native-function-realm-safe.js';
 
-// Thread-local context storage for legacy compatibility
+// 本 Realm 模块实例的当前上下文。Realm 模块图每 Realm 一份实例，
+// 因此这里不是跨 Realm 单例；建立时机见 establishNativeFunctionContext()。
 let currentContext = null;
 
-// Pending registrations that occurred before context was set
+// 上下文建立之前（模块求值期）发生的注册，建立时统一冲刷。
 const pendingRegistrations = [];
 
 /**
@@ -217,6 +222,28 @@ export function installNativeFunctionToString() {
   } else {
     queueRegistration(ctx => ctx.installToString(Function.prototype));
   }
+}
+
+/**
+ * Realm 侧基础设施安装入口（plugin 路径）。
+ *
+ * 建立本 Realm 的上下文（并冲刷模块求值期排队的注册）、接上跨 Realm 注册表、
+ * 接管 `Function.prototype.toString`。
+ *
+ * webidl 插件必须经 Realm 的 moduleLoader 在 **Realm 内**调用它：
+ * `native-function.js` 是 Realm 模块图内的模块，每个 Realm 一份
+ * `currentContext`；宿主侧调用只会配到宿主实例（IKF39V(c) 的双注册表缺陷）。
+ *
+ * @param {object|null} [registry] 跨 Realm 原生函数注册表（可为 null）
+ * @returns {object} 本 Realm 的原生函数上下文
+ */
+export function installNativeFunctionInfrastructure(registry = null) {
+  const context = establishNativeFunctionContext();
+  if (registry != null) {
+    context.configureRegistry(registry);
+  }
+  installNativeFunctionToString();
+  return context;
 }
 
 // Re-export the new API for migration

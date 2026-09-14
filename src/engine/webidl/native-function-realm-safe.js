@@ -1,19 +1,19 @@
 /**
  * Realm-safe native function registration
- * 
- * This module provides Realm-scoped native function tracking without
- * module-level mutable state. Each Realm receives its own registry
- * and Function.prototype.toString installation.
+ *
+ * Context factory and realm-object-keyed context storage. The production
+ * install path (plugin and legacy bootstraps) uses the realm-local
+ * `native-function.js` module instance, so each Realm owns its own
+ * `nativeSources` / `nativeImplementations` / `currentContext`; contexts
+ * obtained here are keyed by realm object (WeakMap) for external callers
+ * that need a host-side handle to a Realm's registration functions.
  */
 
 const nativeSources = new WeakMap();
 const nativeImplementations = new WeakMap();
-const realmContexts = new Map(); // Use Map instead of WeakMap for realm IDs
-
-// 上限与淘汰：正常路径由 webidl 插件 dispose 调 removeNativeFunctionContext
-// 清理；但 dispose 失败/漏调时这个 Map 会按 realm 数无限增长（IKF39V(c)）。
-// 达到上限时淘汰最旧条目，保证内存有界。
-const MAX_REALM_CONTEXTS = 256;
+// 按 Realm 对象键控（WeakMap）：Realm 被 GC 后上下文随之释放，不需要
+// 旧的「realmId 字符串 Map + 256 条上限淘汰」兜底（IKF39V(c)）。
+const realmContexts = new WeakMap();
 
 /**
  * Create a Realm-local native function context
@@ -164,51 +164,52 @@ export function createNativeFunctionContext() {
 
 /**
  * Get or create a native function context for a Realm
- * @param {string} realmId - The realm identifier
+ * @param {object} realm - The Realm object (vm context / realm wrapper)
  * @returns {Object} The context for this realm
  */
-export function getNativeFunctionContext(realmId) {
-  if (typeof realmId !== 'string') {
+export function getNativeFunctionContext(realm) {
+  const isObject = realm !== null
+    && (typeof realm === 'object' || typeof realm === 'function');
+  if (!isObject) {
     throw new TypeError(
-      `getNativeFunctionContext expects a realm ID string, got ${typeof realmId}`
+      `getNativeFunctionContext expects a realm object, got ${realm === null ? 'null' : typeof realm}`
     );
   }
   
-  let context = realmContexts.get(realmId);
+  let context = realmContexts.get(realm);
   if (!context) {
     context = createNativeFunctionContext();
-    realmContexts.set(realmId, context);
-    if (realmContexts.size > MAX_REALM_CONTEXTS) {
-      const oldest = realmContexts.keys().next().value;
-      realmContexts.delete(oldest);
-    }
+    realmContexts.set(realm, context);
   }
   return context;
 }
 
 /**
  * Remove a Realm's native function context
- * @param {string} realmId - The realm identifier
+ * @param {object} realm - The Realm object used to create the context
  */
-export function removeNativeFunctionContext(realmId) {
-  realmContexts.delete(realmId);
+export function removeNativeFunctionContext(realm) {
+  if (realm === null || realm === undefined) return;
+  const isObject = typeof realm === 'object' || typeof realm === 'function';
+  if (!isObject) return;
+  realmContexts.delete(realm);
 }
 
 // Legacy compatibility exports that throw helpful errors
 export function registerNativeFunction() {
   throw new Error(
-    'Direct registerNativeFunction() is deprecated. Use getNativeFunctionContext(realmId).registerNativeFunction() instead.'
+    'Direct registerNativeFunction() is deprecated. Use getNativeFunctionContext(realm).registerNativeFunction() instead.'
   );
 }
 
 export function configureNativeFunctionRegistry() {
   throw new Error(
-    'Direct configureNativeFunctionRegistry() is deprecated. Use getNativeFunctionContext(realmId).configureRegistry() instead.'
+    'Direct configureNativeFunctionRegistry() is deprecated. Use getNativeFunctionContext(realm).configureRegistry() instead.'
   );
 }
 
 export function installNativeFunctionToString() {
   throw new Error(
-    'Direct installNativeFunctionToString() is deprecated. Use getNativeFunctionContext(realmId).installToString(Function.prototype) instead.'
+    'Direct installNativeFunctionToString() is deprecated. Use getNativeFunctionContext(realm).installToString(Function.prototype) instead.'
   );
 }

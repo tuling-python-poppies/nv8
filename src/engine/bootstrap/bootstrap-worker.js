@@ -2,7 +2,10 @@ import { hideNodeGlobals } from "./hide-node-globals.js";
 import {
   installErrorStackGuard,
 } from "./install-error-stack-guard.js";
-import { installNativeFunctionToString } from "../webidl/native-function.js";
+import {
+  establishNativeFunctionContext,
+  installNativeFunctionToString,
+} from "../webidl/native-function.js";
 import {
   installModernBuiltins,
 } from "../../surface/install/install-modern-builtins.js";
@@ -235,6 +238,11 @@ export function bootstrapWorker(
   configureTimingProfile(timingProfile);
   configureBlobRegistry(objectURLRegistry);
   configureObjectURLRegistry(objectURLRegistry);
+  // 与 bootstrap-root 相同的约束：worker 是「legacy 模式的第二个 Realm」，
+  // 没有插件 activate 会来建立上下文；不先 establish，
+  // installNativeFunctionToString 与所有 registerNativeFunction 都会滞留队列，
+  // toString 伪装整体失效（IKF39V(c)）。
+  establishNativeFunctionContext();
   installNativeFunctionToString();
   installErrorStackGuard(browserMajorVersion >= 151);
   installModernBuiltins();

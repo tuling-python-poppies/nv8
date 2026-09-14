@@ -244,6 +244,33 @@ test('crypto plugin activates in the realm', async () => {
   await nv8.destroy();
 });
 
+// IKF39V(c) 回归：原生函数上下文必须在 Realm 模块图内建立。宿主侧
+// `getNativeFunctionContext(realmId)` 只能配到宿主实例，Realm 安装器的
+// `registerNativeFunction` 会永远滞留队列，toString 会暴露包装函数源码。
+test('plugin path disguises installer-registered functions as native', async () => {
+  const nv8 = await createNv8({
+    plugins: basicPreset,
+    trace: false,
+    logger: silentLogger,
+  });
+  const realm = await nv8.sandbox.createRealm({ type: 'root' });
+  const sources = JSON.parse(await realm.evaluate(`JSON.stringify({
+    crypto: Function.prototype.toString.call(crypto.getRandomValues),
+    timer: Function.prototype.toString.call(setTimeout),
+    intrinsic: Function.prototype.toString.call(Object.defineProperty),
+  })`));
+  assert.equal(
+    sources.crypto,
+    'function getRandomValues() { [native code] }',
+  );
+  assert.equal(sources.timer, 'function setTimeout() { [native code] }');
+  assert.equal(
+    sources.intrinsic,
+    'function defineProperty() { [native code] }',
+  );
+  await nv8.destroy();
+});
+
 test('performance plugin activates in the realm', async () => {
   const nv8 = await createNv8({
     plugins: [...basicPreset, performancePlugin],

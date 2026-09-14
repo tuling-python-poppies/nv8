@@ -11,6 +11,7 @@ import {
 } from "../../surface/api/url/url-state.js";
 import { installTextEncoding } from "../../surface/install/install-text-encoding.js";
 import {
+  establishNativeFunctionContext,
   installNativeFunctionToString,
   registerNativeFunction,
 } from "../webidl/native-function.js";
@@ -35,6 +36,9 @@ export function bootstrapWorklet(
 ) {
   hideNodeGlobals();
   configureObjectURLRegistry(objectURLRegistry);
+  // 同 bootstrap-worker：worklet Realm 没有插件 activate 建立上下文，
+  // 必须自行 establish（IKF39V(c)）。
+  establishNativeFunctionContext();
   installNativeFunctionToString();
   installErrorStackGuard();
   installModernBuiltins();

@@ -16,7 +16,7 @@
 
 import vm from 'node:vm';
 import { RealmModuleLoader } from '../realm/module-loader.js';
-import { createStateAccessor } from '../plugin-sdk/state-registry.js';
+import { createRealmPluginContext } from './plugin-context.js';
 import {
   createParserScriptExecutor,
   executePageScripts,
@@ -598,18 +598,18 @@ export async function createRealm(config) {
       for (const plugin of plugins) {
         if (plugin.reset) {
           try {
-            const pluginContext = createPluginContext(
+            const pluginContext = createRealmPluginContext({
               plugin,
-              context,
+              vmContext: context,
               sandboxId,
               realmId,
               stateRegistry,
               globals,
               logger,
               trace,
-              type,
+              realmType: type,
               moduleLoader,
-            );
+            });
             await plugin.reset(pluginContext);
           } catch (error) {
             logger.error(`[Realm ${realmId}] Plugin reset failed:`, error);
@@ -651,18 +651,18 @@ export async function createRealm(config) {
       for (const plugin of plugins) {
         if (plugin.dispose) {
           try {
-            const pluginContext = createPluginContext(
+            const pluginContext = createRealmPluginContext({
               plugin,
-              context,
+              vmContext: context,
               sandboxId,
               realmId,
               stateRegistry,
               globals,
               logger,
               trace,
-              type,
+              realmType: type,
               moduleLoader,
-            );
+            });
             await plugin.dispose(pluginContext);
           } catch (error) {
             logger.error(`[Realm ${realmId}] Plugin dispose failed:`, error);
@@ -861,100 +861,23 @@ async function activatePlugin(
     return; // 插件没有 activate 钩子
   }
   
-  const pluginContext = createPluginContext(
+  const pluginContext = createRealmPluginContext({
     plugin,
-    context,
+    vmContext: context,
     sandboxId,
     realmId,
     stateRegistry,
     globals,
     logger,
     trace,
-    type,
+    realmType: type,
     moduleLoader,
     pageUrl,
     pageHtml,
     runtime,
-  );
+  });
   
   await plugin.activate(pluginContext);
-}
-
-/**
- * 创建插件上下文
- * 
- * 这是传递给插件 activate/reset/dispose 钩子的上下文对象
- */
-function createPluginContext(
-  plugin,
-  vmContext,
-  sandboxId,
-  realmId,
-  stateRegistry,
-  globals,
-  logger,
-  trace,
-  realmType = 'root',
-  moduleLoader = null,
-  pageUrl = 'https://example.com/',
-  pageHtml = '',
-  runtime = {},
-) {
-  const pluginInstanceId = `${plugin.id}@${plugin.version}#${sandboxId}#${realmId}`;
-  
-  return {
-    // 插件信息
-    plugin: {
-      id: plugin.id,
-      version: plugin.version,
-      provides: plugin.manifest?.provides || plugin.provides || [],
-      requires: plugin.manifest?.requires || plugin.requires || [],
-    },
-    
-    // Realm 全局对象
-    global: vmContext,
-    realm: {
-      id: realmId,
-      type: realmType,
-      global: vmContext,
-    },
-    sandboxId,
-    moduleLoader,
-    pageUrl,
-    pageHtml,
-    runtime,
-    
-    // 状态管理（IKF39V(b)/(d)）：与 sandbox 侧 install 上下文共用同一套
-    // createStateAccessor / 同一 pluginInstanceId，install 写入的状态在
-    // activate 里能读到；realm 作用域经 getScoped('realm') 访问。
-    state: createStateAccessor(
-      stateRegistry,
-      `${plugin.id}@${plugin.version}#${sandboxId}`,
-      realmId,
-      sandboxId,
-    ),
-    
-    // 全局配置和注册表
-    globals,
-    
-    // 导出对象（从 install 阶段获取）
-    exports: plugin._exports || {},
-    
-    // 日志工具
-    trace(...args) {
-      if (trace) {
-        logger.info(`[Plugin ${plugin.id}@${realmId}]`, ...args);
-      }
-    },
-    
-    warn(...args) {
-      logger.warn(`[Plugin ${plugin.id}@${realmId}]`, ...args);
-    },
-    
-    error(...args) {
-      logger.error(`[Plugin ${plugin.id}@${realmId}]`, ...args);
-    },
-  };
 }
 
 /**
