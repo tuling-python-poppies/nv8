@@ -2,6 +2,8 @@
  * Gitee IKFDA5 回归：cookie path / Secure 与同源 iframe 存储。
  *
  * - cookie path 用 RFC6265 path-match：`Path=/alpha` 不能匹配 `/alphabet`
+ * - pushState / replaceState 不改变 cookie 作用域（文档 URL 固定在导航时，
+ *   实测 Edge 153；见 `documentHref()`）
  * - 非安全源（http）写 Secure cookie 必须被整体忽略
  * - 同源 iframe 的 localStorage 互通；跨源 iframe 仍隔离
  *
@@ -32,21 +34,21 @@ async function withLegacySandbox(url, options, callback) {
 }
 
 test('cookie path uses RFC6265 path-match rather than startsWith', async () => {
-  const result = await withLegacySandbox('https://cookie.test/alpha/page', async sandbox => (
-    JSON.parse(await sandbox.run(`JSON.stringify((() => {
+  const result = await withLegacySandbox('https://cookie.test/alpha/page', async sandbox => {
+    await sandbox.run(`(() => {
       document.cookie = 'a=1; Path=/alpha';
       document.cookie = 'b=2; Path=/alpha/';
       document.cookie = 'c=3; Path=/';
-      const atSet = document.cookie;
-      history.pushState({}, '', '/alphabet');
-      const atAlphabet = document.cookie;
-      history.pushState({}, '', '/alpha/sub');
-      const atSub = document.cookie;
-      history.pushState({}, '', '/alpha');
-      const atAlpha = document.cookie;
-      return { atSet, atAlphabet, atSub, atAlpha };
-    })())`))
-  ));
+    })()`);
+    const atSet = await sandbox.run('document.cookie');
+    await sandbox.setPage({ url: 'https://cookie.test/alphabet' });
+    const atAlphabet = await sandbox.run('document.cookie');
+    await sandbox.setPage({ url: 'https://cookie.test/alpha/sub' });
+    const atSub = await sandbox.run('document.cookie');
+    await sandbox.setPage({ url: 'https://cookie.test/alpha' });
+    const atAlpha = await sandbox.run('document.cookie');
+    return { atSet, atAlphabet, atSub, atAlpha };
+  });
 
   assert.match(result.atSet, /a=1/, '设置处应可见');
   assert.doesNotMatch(result.atAlphabet, /a=1/, '/alphabet 不能匹配 Path=/alpha');
@@ -56,6 +58,30 @@ test('cookie path uses RFC6265 path-match rather than startsWith', async () => {
   assert.match(result.atSub, /b=2/, '/alpha/sub 匹配 Path=/alpha/');
   assert.doesNotMatch(result.atAlpha, /b=2/, '/alpha 自身不匹配 Path=/alpha/');
   assert.match(result.atAlpha, /a=1/, '/alpha 精确匹配 Path=/alpha');
+});
+
+test('pushState does not change the document cookie scope', async () => {
+  const result = await withLegacySandbox('https://cookie.test/base/page', async sandbox => {
+    await sandbox.run(`(() => {
+      document.cookie = 'base=1; Path=/base';
+      document.cookie = 'alpha=1; Path=/alpha';
+    })()`);
+    const before = await sandbox.run('document.cookie');
+    await sandbox.run(`history.pushState({}, '', '/alpha')`);
+    const pushedHref = await sandbox.run('location.href');
+    const afterPush = await sandbox.run('document.cookie');
+    await sandbox.run(`history.replaceState({}, '', '/base')`);
+    const afterReplace = await sandbox.run('document.cookie');
+    return { before, afterPush, afterReplace, pushedHref };
+  });
+
+  assert.match(result.before, /base=1/, '/base/page 匹配 Path=/base');
+  assert.doesNotMatch(result.before, /alpha=1/, 'Path=/alpha 在 /base/page 不可见');
+  assert.equal(result.pushedHref, 'https://cookie.test/alpha', 'pushState 更新会话历史 URL');
+  assert.match(result.afterPush, /base=1/, 'pushState 后文档 URL 不变，Path=/base 仍可见');
+  assert.doesNotMatch(result.afterPush, /alpha=1/, 'pushState 不改变 cookie 作用域');
+  assert.doesNotMatch(result.afterReplace, /alpha=1/, 'replaceState 同样不改变作用域');
+  assert.match(result.afterReplace, /base=1/, 'replaceState 后原文档路径 cookie 仍可见');
 });
 
 test('a Secure cookie cannot be set from an insecure origin', async () => {

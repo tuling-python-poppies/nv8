@@ -1,5 +1,5 @@
 import {
-  currentHref,
+  documentHref,
   currentOrigin,
 } from "../../../infra/navigation/navigation-state.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
@@ -87,13 +87,16 @@ export function encodeCookies() {
 /**
  * cookie 匹配用的文档 URL。
  *
+ * 用 `documentHref()` 而不是 `currentHref()`：`pushState` / `replaceState`
+ * 只改会话历史，不替换文档，cookie 作用域保持导航时的 URL（实测 Edge 153）。
+ *
  * `about:blank` / `about:srcdoc` 这类非 http(s) 文档没有可用的 host/path，
- * 但它们的安全 origin 继承自容器。直接 `new URL(currentHref())` 会得到空
+ * 但它们的安全 origin 继承自容器。直接 `new URL(...)` 会得到空
  * hostname，导致同源 iframe 读不到父页面的 cookie。这里回退到 origin 根。
  */
 function cookieUrl() {
   try {
-    const url = new URL(currentHref());
+    const url = new URL(documentHref());
     if (url.protocol === "http:" || url.protocol === "https:") return url;
   } catch {
     // 落到 origin 回退

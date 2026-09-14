@@ -17,6 +17,10 @@ const navigationSlot = createRealmSlot(() => ({
   beforeNavigateHook: null,
   navigateHook: null,
   originOverride: null,
+  // 文档 URL：只在**文档被替换**时更新（真实导航 / Realm 重建）。
+  // pushState / replaceState / 同文档历史遍历只改会话历史条目，不改文档，
+  // 因此 `document.cookie` 的作用域保持导航时的 URL（实测 Edge 153 行为）。
+  documentUrl: null,
 }), "navigation-state");
 
 function nav() {
@@ -48,6 +52,7 @@ export function configureNavigation(initialUrl, options = {}) {
   })];
   state.currentIndex = 0;
   state.scrollRestoration = "auto";
+  state.documentUrl = url;
   state.originOverride = typeof options.origin === "string"
     ? options.origin
     : null;
@@ -70,6 +75,17 @@ export function currentUrlRecord() {
 
 export function currentHref() {
   return serializeUrl(currentUrlRecord());
+}
+
+/**
+ * 文档 URL（RFC 6265 cookie 作用域、`document.URL` 快照语义）。
+ *
+ * 与 `currentHref()` 的差异只在同文档历史操作：`pushState` / `replaceState`
+ * 改变 `currentHref()`，但文档没有替换，`documentHref()` 保持导航时的 URL。
+ */
+export function documentHref() {
+  const state = nav();
+  return serializeUrl(state.documentUrl ?? currentUrlRecord());
 }
 
 export function currentOrigin() {
@@ -225,7 +241,10 @@ function navigateToRecord(url, mode, state, title) {
       title,
     };
     scope.originOverride = originOverride;
-    if (needsDocumentReplacement) scope.navigateHook?.({ url: targetHref, mode });
+    if (needsDocumentReplacement) {
+      scope.documentUrl = url;
+      scope.navigateHook?.({ url: targetHref, mode });
+    }
     return true;
   }
   scope.entries.splice(scope.currentIndex + 1);
@@ -233,7 +252,10 @@ function navigateToRecord(url, mode, state, title) {
   scope.originOverride = originOverride;
   scope.currentIndex = scope.entries.length - 1;
   trimHistoryEntries(scope);
-  if (needsDocumentReplacement) scope.navigateHook?.({ url: targetHref, mode });
+  if (needsDocumentReplacement) {
+    scope.documentUrl = url;
+    scope.navigateHook?.({ url: targetHref, mode });
+  }
   return true;
 }
 
