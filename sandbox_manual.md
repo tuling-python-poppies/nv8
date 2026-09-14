@@ -117,17 +117,25 @@ import { createSandbox } from "./src/public/create-sandbox.js";
 import { edge150Fingerprint } from "./src/infra/fingerprint/edge-150.js";
 ```
 
-**作为项目依赖**（`package.json` 声明 `"nv8": "file:<nv8-root>"` 并 `npm install`）时，按 `package.json` 的 `exports` 导入：
+**作为项目依赖**（`package.json` 声明 `"nv8": "file:<nv8-root>"` 并 `npm install`）时，直接按包名导入：
 
 ```js
-import { createNv8, nv8Eval, domPreset } from "nv8";
-import { edge152Fingerprint } from "nv8/fingerprint/edge-152";
+import {
+  EdgeSandbox,
+  createSandbox,
+  createNv8,
+  nv8Eval,
+  domPreset,
+  edge152Fingerprint,
+} from "nv8";
 ```
 
 顶层 `nv8` 的导出：
 
 | 导出 | 作用 |
 | --- | --- |
+| `EdgeSandbox` / `createSandbox` | 创建和控制隔离沙箱（子进程边界）|
+| `edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` | 冻结浏览器指纹（与 `nv8/fingerprint/*` 子路径同源）|
 | `createNv8` / `nv8Eval` | 面向可裁剪装配的进程内入口 |
 | `minimalPreset` / `basicPreset` / `domPreset` / `networkPreset` / `fullPreset` | 插件组合 |
 | `*Plugin`（`domCorePlugin`、`fetchPlugin` …）| 单个内置插件 |
@@ -145,21 +153,8 @@ import { edge152Fingerprint } from "nv8/fingerprint/edge-152";
 | `nv8/protocol` | 请求协议层（`src/collection/request-protocol/`）|
 | `nv8/collector` | 采集层（`src/collection/collector/`）|
 
-**`EdgeSandbox` / `createSandbox` 不在包导出映射里**：`exports` 没有暴露
-`src/public/*` 子路径，所以不能从裸包名 `nv8` 或其 `src/public/*` 子路径导入。
-项目依赖场景的可用写法是文件 URL 或经 `node_modules` 的相对路径：
-
-```js
-// 方式一：绝对文件 URL（<nv8-root> 用绝对路径，例如 D:/develop_software/Nv8）
-const { EdgeSandbox } = await import(
-  "file:///<nv8-root>/src/public/edge-sandbox.js"
-);
-
-// 方式二：从项目目录相对进入 `npm install` 建立的 node_modules/nv8 软链接
-import { EdgeSandbox } from "./node_modules/nv8/src/public/edge-sandbox.js";
-```
-
-**指纹快照要从子路径拿**：`edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` 不在顶层导出里。
+`EdgeSandbox` / `createSandbox` 与三个指纹都在顶层导出里；`nv8/fingerprint/*`
+子路径保留给只需要指纹的调用方，两者同源。仓库内部（未装依赖）仍可用相对路径导入。
 
 ### 2.3 第一次验证
 
@@ -317,11 +312,10 @@ Realm）；显式标记 `legacy: true` 的插件则整段跳过，只保留元�
 
 ## 4. 最小可运行示例
 
-在项目外部创建一个临时 runner，例如 `run-local.mjs`（`<nv8-root>` 用绝对路径，
-例如 `D:/develop_software/Nv8`）：
+在项目里创建一个 runner（项目需先按 §2.2 安装 `nv8`），例如 `run-local.mjs`：
 
 ```js
-import { EdgeSandbox } from "file:///<nv8-root>/src/public/edge-sandbox.js";
+import { EdgeSandbox } from "nv8";
 
 const sandbox = await EdgeSandbox.create({
   page: {
@@ -1194,7 +1188,7 @@ Trace 使用固定上限，不会无限增长。它是兼容层观察工具，�
 
 ```js
 import { readFile } from "node:fs/promises";
-import { EdgeSandbox } from "file:///<nv8-root>/src/public/edge-sandbox.js";
+import { EdgeSandbox } from "nv8";
 
 const source = await readFile("<your-project>/bundle.js", "utf8");
 const sandbox = await EdgeSandbox.create({

@@ -421,6 +421,22 @@ export * as protocol from './collection/request-protocol/index.js';
 export * as collector from './collection/collector/index.js';
 
 /**
+ * 公共沙箱入口：消费方可以直接 `import { EdgeSandbox, createSandbox } from 'nv8'`。
+ *
+ * 此前只有 `src/public/*` 文件与子路径，`exports` 未暴露、根模块也未 re-export，
+ * 消费方只能按文件 URL 绕行（并且 `nv8/src/public/...` 会被 exports 拒绝）。
+ */
+export { EdgeSandbox } from './public/edge-sandbox.js';
+export { createSandbox } from './public/create-sandbox.js';
+
+/**
+ * 冻结浏览器指纹（Edge 150/151/152），与 `nv8/fingerprint/*` 子路径同源。
+ */
+export { edge150Fingerprint } from './infra/fingerprint/edge-150.js';
+export { edge151Fingerprint } from './infra/fingerprint/edge-151.js';
+export { edge152Fingerprint } from './infra/fingerprint/edge-152.js';
+
+/**
  * TypeScript 类型定义
  * 
  * @typedef {Object} Nv8Options
