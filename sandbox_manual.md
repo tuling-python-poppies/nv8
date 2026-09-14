@@ -135,7 +135,7 @@ import {
 | 导出 | 作用 |
 | --- | --- |
 | `EdgeSandbox` / `createSandbox` | 创建和控制隔离沙箱（子进程边界）|
-| `edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` | 冻结浏览器指纹（与 `nv8/fingerprint/*` 子路径同源）|
+| `edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` | 冻结浏览器指纹（与 `nv8/fingerprint/edge-150` 等子路径同源）|
 | `createNv8` / `nv8Eval` | 面向可裁剪装配的进程内入口 |
 | `minimalPreset` / `basicPreset` / `domPreset` / `networkPreset` / `fullPreset` | 插件组合 |
 | `*Plugin`（`domCorePlugin`、`fetchPlugin` …）| 单个内置插件 |
@@ -153,8 +153,8 @@ import {
 | `nv8/protocol` | 请求协议层（`src/collection/request-protocol/`）|
 | `nv8/collector` | 采集层（`src/collection/collector/`）|
 
-`EdgeSandbox` / `createSandbox` 与三个指纹都在顶层导出里；`nv8/fingerprint/*`
-子路径保留给只需要指纹的调用方，两者同源。仓库内部（未装依赖）仍可用相对路径导入。
+`EdgeSandbox` / `createSandbox` 与三个指纹都在顶层导出里；`nv8/fingerprint/edge-150`
+等子路径保留给只需要指纹的调用方，两者同源。仓库内部（未装依赖）仍可用相对路径导入。
 
 ### 2.3 第一次验证
 
