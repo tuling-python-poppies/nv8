@@ -109,17 +109,23 @@ function brandList(major, full) {
  * 各 major 版本对应的真实 build 号。
  *
  * Edge 与 Chromium 的 build 号**不同步**——Edge 有自己的发布线。
- * 未登记的版本回退到 `${major}.0.0.0`，那只是占位，应当补采集。
+ *
+ * 150 的 edge build 来自本机 `MicrosoftEdgeUpdate.log.bak` 记录的 Edge 150
+ * 最终补丁（150.0.4078.105）；Chromium 150 的 build 号本机没有任何证据
+ * （无 GoogleUpdate 日志、仓库采集产物与 git 历史均无），显式登记为 null，
+ * 由 `buildVersions` 回退到占位值，**不编造**。
  */
 function buildVersions(major) {
   const known = {
+    "150": { edge: "150.0.4078.105", chromium: null },
     // 采集自真实 Edge 151/152 的本机基准。
     "151": { edge: "151.0.4129.101", chromium: "151.0.7922.170" },
     "152": { edge: "152.0.4191.53", chromium: "152.0.7977.65" },
   };
-  return known[major] ?? {
-    edge: `${major}.0.0.0`,
-    chromium: `${major}.0.0.0`,
+  const entry = known[major];
+  return {
+    edge: entry?.edge ?? `${major}.0.0.0`,
+    chromium: entry?.chromium ?? `${major}.0.0.0`,
   };
 }
 

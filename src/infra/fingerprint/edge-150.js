@@ -32,10 +32,11 @@ const navigatorProfile = Object.freeze({
     bitness: "64",
     model: "",
     platformVersion: "19.0.0",
-    // TODO(采集): 仓库内没有任何 Edge 150 真实 build 号证据（fixtures /
-    // docs / 采集脚本产物均无），因此这里**不填** uaFullVersion，运行时回退到
-    // 占位值 `${major}.0.0.0`（见 navigator-ua-data-state.js buildVersions）。
-    // 拿到真实 Edge 150 的 `uaFullVersion` 后在此登记，并保持与运行时表一致。
+    // 来源：本机 `MicrosoftEdgeUpdate.log.bak`（EdgeUpdate 升级日志，UTF-16）
+    // 记录的 Edge 150 最终补丁 150.0.4078.105。运行时表
+    // `navigator-ua-data-state.js` 登记同一值，两边由
+    // `tests/ua-full-version-consistency-test.js` 锁定一致性。
+    uaFullVersion: "150.0.4078.105",
     wow64: false,
     formFactors: Object.freeze(["Desktop"]),
     mobile: false,

@@ -3,12 +3,13 @@
  *
  * 运行时的 `getHighEntropyValues(['uaFullVersion'])` 走
  * `navigator-ua-data-state.js` 的 build 版本表；profile 导出走
- * `edge-151.js` / `edge-152.js` 的 `userAgentData.uaFullVersion`。
- * 两处曾经矛盾：edge-151 声明 151.0.7849.46，运行时给 151.0.4129.101。
+ * `edge-150.js` / `edge-151.js` / `edge-152.js` 的
+ * `userAgentData.uaFullVersion`。两处曾经矛盾：edge-151 声明
+ * 151.0.7849.46，运行时给 151.0.4129.101。
  *
- * 这里用**真实沙箱**跑 `getHighEntropyValues`，要求 151 / 152 两个 profile
- * 与运行时输出逐字一致。Edge 150 在仓库内没有真实 build 号证据，保持
- * `${major}.0.0.0` 占位，并由返回 undefined 的 profile 显式记录待采集。
+ * 这里用**真实沙箱**跑 `getHighEntropyValues`，要求三个 profile 与运行时
+ * 输出逐字一致。Edge 150 的 build 由本机 EdgeUpdate 日志补齐；Chromium 150
+ * 的 build 号本机没有证据，运行时表显式登记为 null 并回退占位值。
  */
 
 import test from 'node:test';
@@ -40,6 +41,7 @@ async function readUaFullVersion(fingerprint) {
 }
 
 for (const [name, fingerprint] of [
+  ['edge-150', edge150Fingerprint],
   ['edge-151', edge151Fingerprint],
   ['edge-152', edge152Fingerprint],
 ]) {
@@ -55,14 +57,33 @@ for (const [name, fingerprint] of [
   });
 }
 
-test('edge-150 has no collected build and keeps the documented placeholder', async () => {
-  // 仓库内（fixtures / docs / 采集脚本产物）没有 Edge 150 的真实 build 号，
-  // 因此 profile 不登记 uaFullVersion，运行时回退到占位值，待采集后统一。
-  assert.equal(
-    edge150Fingerprint.navigator.userAgentData.uaFullVersion,
-    undefined,
-    'do not invent an Edge 150 build number',
+test('edge-150 registers the real Edge build but keeps Chromium pending', async () => {
+  // Edge 150 的 build 来自本机 EdgeUpdate 日志；Chromium 150 的 build 不在
+  // 任何本机证据里，运行时表登记 null，fullVersionList 里回退到占位值。
+  // 这个断言把「缺口」显式记录在案：拿到真实 Chromium 150 build 后应更新。
+  const { configureNavigatorProfile } = await import(
+    '../src/surface/api/navigator/navigator-state.js'
   );
-  const reported = await readUaFullVersion(edge150Fingerprint);
-  assert.equal(reported, '150.0.0.0');
+  const { highEntropyUaData } = await import(
+    '../src/surface/api/navigator/navigator-ua-data-state.js'
+  );
+  configureNavigatorProfile(
+    edge150Fingerprint.navigator.userAgent,
+    'Win32',
+    '5:zh-CN2:zh',
+    'zh-CN',
+    8,
+    8,
+    null,
+    edge150Fingerprint.navigator,
+  );
+  const list = highEntropyUaData(['fullVersionList']).fullVersionList;
+  const edge = list.find((entry) => entry.brand === 'Microsoft Edge');
+  const chromium = list.find((entry) => entry.brand === 'Chromium');
+  assert.equal(edge.version, '150.0.4078.105');
+  assert.equal(
+    chromium.version,
+    '150.0.0.0',
+    'Chromium 150 build is not collected; the placeholder must stay documented',
+  );
 });
