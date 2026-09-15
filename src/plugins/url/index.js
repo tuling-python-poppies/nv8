@@ -20,10 +20,18 @@ export const urlPlugin = {
   },
   
   async activate(context) {
-    context.global.URL = URL;
-    context.global.URLSearchParams = URLSearchParams;
-    context.exports.URL = URL;
-    context.exports.URLSearchParams = URLSearchParams;
+    const installer = await context.moduleLoader.importUrlAsync(new URL(
+      '../../surface/install/install-url.js',
+      import.meta.url,
+    ));
+    const searchParamsInstaller = await context.moduleLoader.importUrlAsync(new URL(
+      '../../surface/install/install-url-search-params.js',
+      import.meta.url,
+    ));
+    searchParamsInstaller.namespace.installURLSearchParams();
+    installer.namespace.installURL();
+    context.exports.URL = context.global.URL;
+    context.exports.URLSearchParams = context.global.URLSearchParams;
   },
   
   reset(sandbox, registry) {

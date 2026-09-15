@@ -64,9 +64,13 @@ test('target Realm cannot reach host process through compatibility constructors'
   try {
     const result = await nv8.eval(`(() => {
       const probes = {};
-      for (const name of ['URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder']) {
-        try {
-          probes[name] = globalThis[name].constructor('return typeof process')();
+    for (const name of [
+      'URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder',
+      'setTimeout', 'setInterval', 'console',
+    ]) {
+      try {
+          const value = name === 'console' ? console.log : globalThis[name];
+          probes[name] = value.constructor('return typeof process')();
         } catch (error) {
           probes[name] = 'blocked:' + error.name;
         }
@@ -74,7 +78,10 @@ test('target Realm cannot reach host process through compatibility constructors'
       return JSON.stringify(probes);
     })()`);
     const probes = JSON.parse(result);
-    for (const name of ['URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder']) {
+    for (const name of [
+      'URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder',
+      'setTimeout', 'setInterval', 'console',
+    ]) {
       assert.notEqual(probes[name], 'object', `${name} must not expose host Function`);
     }
   } finally {

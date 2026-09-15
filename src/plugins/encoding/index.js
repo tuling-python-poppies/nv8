@@ -20,11 +20,13 @@ export const encodingPlugin = {
   },
   
   async activate(context) {
-    const { global } = context;
-    global.TextEncoder = TextEncoder;
-    global.TextDecoder = TextDecoder;
-    context.exports.TextEncoder = TextEncoder;
-    context.exports.TextDecoder = TextDecoder;
+    const installer = await context.moduleLoader.importUrlAsync(new URL(
+      '../../surface/install/install-text-encoding.js',
+      import.meta.url,
+    ));
+    installer.namespace.installTextEncoding();
+    context.exports.TextEncoder = context.global.TextEncoder;
+    context.exports.TextDecoder = context.global.TextDecoder;
   },
   
   reset(sandbox, registry) {

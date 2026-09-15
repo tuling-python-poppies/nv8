@@ -19,26 +19,12 @@ export const consolePlugin = {
   },
   
   async activate(context) {
-    const realmConsole = {};
-    const methods = [
-      'debug', 'error', 'info', 'log', 'warn', 'dir', 'table',
-      'trace', 'group', 'groupCollapsed', 'groupEnd', 'clear',
-      'count', 'countReset', 'assert', 'time', 'timeLog', 'timeEnd',
-      'timeStamp',
-    ];
-    for (const method of methods) {
-      const hostMethod = typeof console[method] === 'function'
-        ? console[method].bind(console)
-        : console.log.bind(console);
-      Object.defineProperty(realmConsole, method, {
-        value: (...args) => hostMethod(...args),
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
-    }
-    context.global.console = realmConsole;
-    context.exports.console = realmConsole;
+    const installer = await context.moduleLoader.importUrlAsync(new URL(
+      '../../surface/install/install-console.js',
+      import.meta.url,
+    ));
+    installer.namespace.installConsole();
+    context.exports.console = context.global.console;
   },
   
   reset(sandbox, registry) {
