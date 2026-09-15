@@ -4038,10 +4038,10 @@
       },
       "plugin": {
         "schema": "nv8/surface/full@1",
-        "globalCount": 153,
+        "globalCount": 152,
         "symbolGlobalCount": 1,
         "memberTotal": 1700,
-        "digest": "bff0e0fecea86a24da3c9a87068a67aac9e5d93bdaa2936772bf194764c73705",
+        "digest": "3076044e8194ce6d29d51d787eeaf3f7cf69b0d6339569b4cd3228eab9cd35d9",
         "groups": {
           "AbortController": "function:3:1:66f6b013dd7639e6",
           "AbortSignal": "function:5:1:44aa8309798017e3",
@@ -4177,7 +4177,6 @@
           "escape": "function:0:0:a41e3d5336720a1f",
           "eval": "function:0:0:dff938482f73279d",
           "fetch": "function:0:0:a41e3d5336720a1f",
-          "global": "object:0:0:f6f757303cb68e2b",
           "globalThis": "object:0:0:f6f757303cb68e2b",
           "isFinite": "function:0:0:a41e3d5336720a1f",
           "isNaN": "function:0:0:a41e3d5336720a1f",

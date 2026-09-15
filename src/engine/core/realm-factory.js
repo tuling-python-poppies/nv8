@@ -835,7 +835,8 @@ function initializeBaseGlobals(context, realmId, logger) {
 
   // 使 context 看起来像浏览器全局对象
   context.self = context;
-  context.global = context; // Node.js 兼容
+  // 不注入 `global`：真实浏览器没有它，bootstrap 路径的 hideNodeGlobals()
+  // 也显式删除它，全局泄漏审计把它的存在视为 Node 泄漏。
 
   return {
     /**

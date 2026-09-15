@@ -18,6 +18,7 @@ import {
   minimalPreset,
   basicPreset,
   domPreset,
+  networkPreset,
   fullPreset,
 } from '../src/index.js';
 import { storagePlugin } from '../src/plugins/storage/index.js';
@@ -51,6 +52,21 @@ test('minimal preset boots and exposes only its own surface', async () => {
   
   
   await nv8.destroy();
+});
+
+// networkPreset 曾缺少 @nv8/plugin-streams，导致 fetchPlugin 的依赖解析
+// 必然失败（DEPENDENCY_MISSING）。该预设此前没有任何测试覆盖。
+test('network preset resolves dependencies and boots', async () => {
+  const nv8 = await createNv8({
+    plugins: networkPreset,
+    logger: silentLogger,
+  });
+  try {
+    const result = await nv8.eval(`typeof fetch + '|' + typeof XMLHttpRequest`);
+    assert.equal(result, 'function|function');
+  } finally {
+    await nv8.destroy();
+  }
 });
 
 test('basic preset boots', async () => {

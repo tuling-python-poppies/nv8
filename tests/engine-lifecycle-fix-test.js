@@ -89,6 +89,20 @@ test('target Realm cannot reach host process through compatibility constructors'
   }
 });
 
+test('legacy Realm does not expose Node-only globals', async () => {
+  const nv8 = await createNv8({ plugins: [], logger });
+  try {
+    const result = await nv8.eval(`JSON.stringify([
+      'process', 'require', 'module', 'exports', 'Buffer',
+      'global', 'GLOBAL', 'root', '__dirname', '__filename',
+      'setImmediate', 'clearImmediate', 'gc', 'AsyncLocalStorage',
+    ].filter(name => name in globalThis))`);
+    assert.deepEqual(JSON.parse(result), []);
+  } finally {
+    await nv8.destroy();
+  }
+});
+
 // ---------------------------------------------------------------------------
 // IKFD9F：destroy 后定时器导航复活 Realm
 // ---------------------------------------------------------------------------

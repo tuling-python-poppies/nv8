@@ -82,6 +82,7 @@ export const domPreset = [
  */
 export const networkPreset = [
   ...basicPreset,
+  streamsPlugin,
   fetchPlugin,
   xhrPlugin,
   websocketPlugin,
