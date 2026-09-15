@@ -156,6 +156,18 @@ const WINDOW_CONTEXT_URL = new URL(
   '../../surface/install/install-window-context.js',
   import.meta.url,
 );
+const URL_SEARCH_PARAMS_INSTALLER_URL = new URL(
+  '../../surface/install/install-url-search-params.js',
+  import.meta.url,
+);
+const URL_INSTALLER_URL = new URL(
+  '../../surface/install/install-url.js',
+  import.meta.url,
+);
+const TEXT_ENCODING_INSTALLER_URL = new URL(
+  '../../surface/install/install-text-encoding.js',
+  import.meta.url,
+);
 const SERVICE_WORKER_RUNTIME_URL = new URL(
   '../../surface/api/worker/service-worker-runtime.js',
   import.meta.url,
@@ -229,6 +241,19 @@ export async function createRealm(config) {
   
   // 2. 初始化基础全局对象
   const baseGlobals = initializeBaseGlobals(context, realmId, logger);
+  // URL/TextEncoder 不是 ECMAScript 内建，但必须先由 Realm 自己的 surface
+  // 安装器提供，插件激活阶段会依赖它们。不能把 Node 宿主构造器直接放进
+  // context：其 `.constructor` 会回到宿主 Function，重新打开沙箱逃逸路径。
+  const urlSearchParamsInstaller = await moduleLoader.importUrlAsync(
+    URL_SEARCH_PARAMS_INSTALLER_URL,
+  );
+  urlSearchParamsInstaller.namespace.installURLSearchParams();
+  const urlInstaller = await moduleLoader.importUrlAsync(URL_INSTALLER_URL);
+  urlInstaller.namespace.installURL();
+  const textEncodingInstaller = await moduleLoader.importUrlAsync(
+    TEXT_ENCODING_INSTALLER_URL,
+  );
+  textEncodingInstaller.namespace.installTextEncoding();
   if (runtime.windowContext) {
     const windowContextModule = await moduleLoader.importUrlAsync(WINDOW_CONTEXT_URL);
     if (!windowContextModule?.namespace?.installWindowContext) {
@@ -799,14 +824,6 @@ function initializeBaseGlobals(context, realmId, logger) {
     { setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask },
     activeTimers,
   );
-
-  // 兼容性表面：URL / TextEncoder 系列不是 ECMAScript 内建，vm context 默认
-  // 没有，而若干 Realm 内模块在 Plugin 未覆盖时仍会用到。它们本身不携带
-  // 宿主全局可见性（无 process / require），保留现状。
-  context.URL = URL;
-  context.URLSearchParams = URLSearchParams;
-  context.TextEncoder = TextEncoder;
-  context.TextDecoder = TextDecoder;
 
   // 全局变量
   context.undefined = undefined;

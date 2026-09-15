@@ -4038,10 +4038,10 @@
       },
       "plugin": {
         "schema": "nv8/surface/full@1",
-        "globalCount": 152,
+        "globalCount": 153,
         "symbolGlobalCount": 1,
-        "memberTotal": 1688,
-        "digest": "78a3f86beb0eccb1800f196c4bf8641abf7aa574ba7a900c8ab34aa2271bc11e",
+        "memberTotal": 1703,
+        "digest": "ac73ce10a5c377d82189f008882d1d3c346aa5e867a4c2da7e7b090f6853a490",
         "groups": {
           "AbortController": "function:3:1:66f6b013dd7639e6",
           "AbortSignal": "function:5:1:44aa8309798017e3",
@@ -4143,14 +4143,14 @@
           "SyntaxError": "function:3:0:d20173392a1e0ad6",
           "Temporal": "object:0:0:355b57cd742942de",
           "Text": "function:4:1:dccfc05f8ec01926",
-          "TextDecoder": "function:5:2:4319771c0f48d80b",
-          "TextEncoder": "function:4:2:9c5130eb3da39d58",
+          "TextDecoder": "function:5:2:19fd24f571b388b3",
+          "TextEncoder": "function:4:2:143e5d0f442df176",
           "TransformStream": "function:3:1:96d7af6b98218069",
           "TransformStreamDefaultController": "function:5:1:19d9d73f03439510",
           "TypeError": "function:3:0:d20173392a1e0ad6",
           "URIError": "function:3:0:d20173392a1e0ad6",
-          "URL": "function:15:2:0d09b879805114ca",
-          "URLSearchParams": "function:14:3:875ddf02bc214072",
+          "URL": "function:15:2:509e326b7d25913d",
+          "URLSearchParams": "function:14:3:40c8df03af866c36",
           "Uint16Array": "function:2:0:1ed685e3017d9656",
           "Uint32Array": "function:2:0:1ed685e3017d9656",
           "Uint8Array": "function:6:0:660793809e9669c5",
@@ -4194,6 +4194,7 @@
           "top": "object:0:0:c3146ece016c8128",
           "undefined": "undefined:0:0:ba32a98fb5068762",
           "unescape": "function:0:0:a41e3d5336720a1f",
+          "webkitURL": "function:15:1:9ceeb4803f61ccaf",
           "window": "object:0:0:f6f757303cb68e2b"
         }
       }

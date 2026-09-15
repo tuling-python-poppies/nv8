@@ -244,7 +244,7 @@ export function createDynamicImporter(options) {
    */
   const evaluateInFlight = new WeakMap();
 
-  function evaluateModule(module) {
+  function evaluateModule(module, timeoutMs = 0) {
     assertActive();
     if (module.status === 'evaluated') return Promise.resolve(module);
     let inFlight = evaluateInFlight.get(module);
@@ -253,7 +253,11 @@ export function createDynamicImporter(options) {
       await linkGraph(module);
       assertActive();
       if (module.status !== 'evaluated') {
-        await module.evaluate();
+        if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+          await module.evaluate({ timeout: timeoutMs });
+        } else {
+          await module.evaluate();
+        }
         assertActive();
       }
       return module;
@@ -329,10 +333,10 @@ export function createDynamicImporter(options) {
     });
   }
 
-  async function evaluateEntryModule(source, url) {
+  async function evaluateEntryModule(source, url, options = {}) {
     return track(async () => {
       const module = instantiate(url, source);
-      await evaluateModule(module);
+      await evaluateModule(module, options.timeoutMs ?? 0);
       return module;
     });
   }

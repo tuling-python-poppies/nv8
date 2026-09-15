@@ -60,4 +60,33 @@ for (const backend of ["child-process", "worker-thread"]) {
       await sandbox.close();
     }
   });
+
+  test(`Worklet static imports are loaded from the same-origin replay graph on ${backend}`, async () => {
+    const sandbox = await EdgeSandbox.create({
+      execution: { backend },
+      page: { url: "https://example.test/" },
+      replay: [
+        {
+          method: "GET",
+          url: "https://example.test/worklet-dep.js",
+          repeat: "unlimited",
+          body: "export const paintName = 'imported-probe';",
+        },
+        {
+          method: "GET",
+          url: "https://example.test/worklet-entry.js",
+          repeat: "unlimited",
+          body: "import { paintName } from './worklet-dep.js'; registerPaint(paintName, class {});",
+        },
+      ],
+    });
+    try {
+      const result = await sandbox.evaluate(
+        `CSS.paintWorklet.addModule('/worklet-entry.js').then(() => 'ready')`,
+      );
+      assert.equal(result.value, "ready");
+    } finally {
+      await sandbox.close();
+    }
+  });
 }

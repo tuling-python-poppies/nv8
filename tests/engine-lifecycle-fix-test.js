@@ -59,6 +59,29 @@ test('target Realm cannot reach host process through Function constructor', asyn
   }
 });
 
+test('target Realm cannot reach host process through compatibility constructors', async () => {
+  const nv8 = await createNv8({ plugins: [], logger });
+  try {
+    const result = await nv8.eval(`(() => {
+      const probes = {};
+      for (const name of ['URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder']) {
+        try {
+          probes[name] = globalThis[name].constructor('return typeof process')();
+        } catch (error) {
+          probes[name] = 'blocked:' + error.name;
+        }
+      }
+      return JSON.stringify(probes);
+    })()`);
+    const probes = JSON.parse(result);
+    for (const name of ['URL', 'URLSearchParams', 'TextEncoder', 'TextDecoder']) {
+      assert.notEqual(probes[name], 'object', `${name} must not expose host Function`);
+    }
+  } finally {
+    await nv8.destroy();
+  }
+});
+
 // ---------------------------------------------------------------------------
 // IKFD9F：destroy 后定时器导航复活 Realm
 // ---------------------------------------------------------------------------
@@ -404,6 +427,32 @@ test('a dead-loop inline script is terminated and reported structurally', async 
         && /timed out/i.test(`${error.message}`),
     );
     assert.ok(Date.now() - started < 3000, 'timeout should not hang the suite');
+    assert.equal(nv8.sandbox.getAllRealms().length, 0);
+  } finally {
+    await nv8.destroy();
+  }
+});
+
+test('a dead-loop inline module script is terminated and reported structurally', async () => {
+  const nv8 = await createNv8({
+    plugins: fullPreset,
+    profile: {
+      ...baseProfile,
+      pageHtml: '<!doctype html><html><head>'
+        + '<script type="module">while (true) {}</script>'
+        + '</head><body></body></html>',
+    },
+    limits: { timeoutMs: 250 },
+    logger,
+  });
+  try {
+    const started = Date.now();
+    await assert.rejects(
+      () => nv8.sandbox.createRealm({ type: 'root' }),
+      error => error.code === 'ERR_SCRIPT_EXECUTION_TIMEOUT'
+        && /timed out/i.test(`${error.message}`),
+    );
+    assert.ok(Date.now() - started < 3000, 'module timeout should not hang the suite');
     assert.equal(nv8.sandbox.getAllRealms().length, 0);
   } finally {
     await nv8.destroy();

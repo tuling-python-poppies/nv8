@@ -218,12 +218,9 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
       });
       if (!permission.allowed) throw scriptPolicyError(entry.url, permission.reason);
       const source = entry.source ?? resolveReplay(entry.url);
-      await withModuleTimeout(
-        pageModuleImporter.evaluateEntryModule(source, entry.url),
-        entry.url,
-        timeoutMs,
-        () => pageModuleImporter.dispose(),
-      );
+      await pageModuleImporter.evaluateEntryModule(source, entry.url, {
+          timeoutMs,
+        });
       dispatchScriptEvent(context, entry.script, 'load');
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;
@@ -303,56 +300,6 @@ function resolveReplaySource(url, replay) {
   ));
   if (!record) throw new Error(`No offline replay entry for page script: ${url}`);
   return `${record.body ?? ''}`;
-}
-
-/**
- * 给模块求值加超时（IKF39K）。
- *
- * vm 的 `SourceTextModule.evaluate()` 不支持 timeout 选项，因此只能竞速。
- * 超时后调用方传入的 `cancel`（通常是 importer.dispose）取消在途求值，
- * 并把结构化超时错误交给上层。
- *
- * @param {Promise<unknown>} promise
- * @param {string} url
- * @param {number} timeoutMs
- * @param {() => void} [cancel]
- * @returns {Promise<unknown>}
- */
-function withModuleTimeout(promise, url, timeoutMs, cancel = null) {
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return promise;
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      try {
-        cancel?.();
-      } catch {
-        // 取消失败不影响错误上报
-      }
-      const error = new Error(
-        `Script execution timed out after ${timeoutMs}ms: ${url}`,
-      );
-      error.code = 'ERR_SCRIPT_EXECUTION_TIMEOUT';
-      error.url = url;
-      error.timeoutMs = timeoutMs;
-      reject(error);
-    }, timeoutMs);
-    promise.then(
-      value => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(value);
-      },
-      error => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
 }
 
 function runLater(callback) {

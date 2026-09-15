@@ -1080,7 +1080,13 @@ export class RuntimePool {
       options.creatorOrigin,
     );
     try {
-      await evaluateWorkletModule(state.realm, source, options.url);
+      await evaluateWorkletModule(
+        state.realm,
+        source,
+        options.url,
+        this.options.replay,
+        this.options.limits.timeoutMs ?? 5000,
+      );
       state.modules.add(options.url);
       this.assertGenerationActive(generation);
     } catch (error) {
@@ -1932,20 +1938,52 @@ function moduleCacheSnapshot(realm) {
   }));
 }
 
-async function evaluateWorkletModule(realm, source, url) {
-  const module = new vm.SourceTextModule(source, {
-    context: realm.context,
-    identifier: url,
-    initializeImportMeta(meta) {
-      meta.url = url;
-    },
-    importModuleDynamically(specifier) {
-      // Worklet 规范本身不支持动态 import，这里的拒绝是正确行为
-      rejectDynamicImport(specifier, "worklet modules");
-    },
+async function evaluateWorkletModule(
+  realm,
+  source,
+  url,
+  replay,
+  timeoutMs,
+) {
+  const modules = new Map();
+  const origin = new URL(url).origin;
+  const createModule = (moduleSource, moduleUrl) => {
+    const module = new vm.SourceTextModule(moduleSource, {
+      context: realm.context,
+      identifier: moduleUrl,
+      initializeImportMeta(meta) {
+        meta.url = moduleUrl;
+      },
+      importModuleDynamically(specifier) {
+        rejectDynamicImport(specifier, "worklet modules");
+      },
+    });
+    modules.set(moduleUrl, module);
+    return module;
+  };
+  const root = createModule(source, url);
+  await root.link((specifier, referencingModule) => {
+    const referrer = referencingModule?.identifier ?? url;
+    const resolved = new URL(`${specifier}`, referrer);
+    if (resolved.origin !== origin) {
+      throw new TypeError(
+        `Worklet module import must use the creator's origin: ${resolved.href}`,
+      );
+    }
+    const resolvedUrl = resolved.href;
+    const cached = modules.get(resolvedUrl);
+    if (cached !== undefined) return cached;
+    const body = resolveWorkerSource(
+      resolvedUrl,
+      replay,
+      null,
+      origin,
+    );
+    return createModule(body, resolvedUrl);
   });
-  await module.link(specifier => {
-    rejectDynamicImport(specifier, "worklet modules");
-  });
-  await module.evaluate();
+  if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+    await root.evaluate({ timeout: timeoutMs });
+  } else {
+    await root.evaluate();
+  }
 }

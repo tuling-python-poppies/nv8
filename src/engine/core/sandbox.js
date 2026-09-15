@@ -1464,21 +1464,61 @@ function workerReplayRecordAvailable(record) {
     : record.used < 1;
 }
 
-async function evaluateCoreWorkletModule(realm, source, url) {
-  const module = new vm.SourceTextModule(source, {
-    context: realm.context,
-    identifier: url,
-    initializeImportMeta(meta) {
-      meta.url = url;
-    },
-    importModuleDynamically() {
-      throw new TypeError('Dynamic Worklet imports are unavailable.');
-    },
+async function evaluateCoreWorkletModule(
+  realm,
+  source,
+  url,
+  replayState,
+  timeoutMs = 5000,
+) {
+  const modules = new Map();
+  const origin = new URL(url).origin;
+  const createModule = (moduleSource, moduleUrl) => {
+    const module = new vm.SourceTextModule(moduleSource, {
+      context: realm.context,
+      identifier: moduleUrl,
+      initializeImportMeta(meta) {
+        meta.url = moduleUrl;
+      },
+      importModuleDynamically() {
+        throw new TypeError('Dynamic Worklet imports are unavailable.');
+      },
+    });
+    modules.set(moduleUrl, module);
+    return module;
+  };
+
+  const root = createModule(source, url);
+  await root.link(async (specifier, referencingModule) => {
+    const referrer = referencingModule?.identifier ?? url;
+    let resolved;
+    try {
+      resolved = new URL(`${specifier}`, referrer);
+    } catch {
+      throw new TypeError(`Worklet module import is invalid: ${specifier}`);
+    }
+    if (resolved.origin !== origin) {
+      throw new TypeError(
+        `Worklet module import must use the creator's origin: ${resolved.href}`,
+      );
+    }
+    const resolvedUrl = resolved.href;
+    const cached = modules.get(resolvedUrl);
+    if (cached !== undefined) return cached;
+    return createModule(
+      resolveCoreWorkerSource(resolvedUrl, replayState),
+      resolvedUrl,
+    );
   });
-  await module.link(() => {
-    throw new TypeError('Worklet module imports are unavailable.');
-  });
-  await module.evaluate();
+  await evaluateModuleWithTimeout(root, timeoutMs);
+}
+
+async function evaluateModuleWithTimeout(module, timeoutMs) {
+  if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+    await module.evaluate({ timeout: timeoutMs });
+  } else {
+    await module.evaluate();
+  }
 }
 
 async function evaluateCoreWorkerSource(
@@ -1532,8 +1572,9 @@ async function evaluateCoreWorkerSource(
     });
     modules.set(url, module);
     await module.link(load);
-    // vm 的模块求值没有 timeout 选项，只能竞速（IKF39K）。
-    await raceScriptTimeout(module.evaluate(), url, timeoutMs);
+    // SourceTextModule.evaluate 支持与经典脚本一致的硬超时，避免死循环
+    // 阻塞 Worker Realm（IKF39K）。
+    await evaluateModuleWithTimeout(module, timeoutMs);
     return createModuleGraphVersion(sourceEntries);
   }
   const script = new vm.Script(source, { filename: url });
@@ -1541,46 +1582,6 @@ async function evaluateCoreWorkerSource(
   // 内被终止（IKF39K）。
   script.runInContext(realm.global, { timeout: timeoutMs, displayErrors: true });
   return createModuleGraphVersion(new Map([[url, source]]));
-}
-
-/**
- * 给不支持 timeout 选项的异步脚本求值加超时。
- *
- * @param {Promise<unknown>} promise
- * @param {string} url
- * @param {number} timeoutMs
- * @returns {Promise<unknown>}
- */
-function raceScriptTimeout(promise, url, timeoutMs) {
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return promise;
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      const error = new Error(
-        `Worker script execution timed out after ${timeoutMs}ms: ${url}`,
-      );
-      error.code = 'ERR_SCRIPT_EXECUTION_TIMEOUT';
-      error.url = url;
-      error.timeoutMs = timeoutMs;
-      reject(error);
-    }, timeoutMs);
-    promise.then(
-      value => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(value);
-      },
-      error => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
 }
 
 /** 计算 worker 模块图的版本摘要：URL 与源码逐项进 SHA-256。 */
@@ -2143,7 +2144,13 @@ export function createWorkerRealmFactories({
     }
     const source = resolveCoreWorkerSource(options.url, workerReplayState);
     try {
-      await evaluateCoreWorkletModule(worklet.realm, source, options.url);
+      await evaluateCoreWorkletModule(
+        worklet.realm,
+        source,
+        options.url,
+        workerReplayState,
+        limits.timeoutMs ?? 5000,
+      );
     } catch (error) {
       realmsForOwner.delete(key);
       workletRealms.delete(worklet.realm);
