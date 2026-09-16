@@ -109,6 +109,7 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
   const asyncScripts = [];
   const pageModuleImporter = createDynamicImporter({
     context,
+    timeoutMs,
     cache: new Map(),
     defaultReferrer: pageUrl,
     allowUrl: url => scriptPolicyAllows(normalizedPolicy, {
@@ -219,8 +220,8 @@ export async function executePageScripts({ context, document, pageUrl, replay, l
       if (!permission.allowed) throw scriptPolicyError(entry.url, permission.reason);
       const source = entry.source ?? resolveReplay(entry.url);
       await pageModuleImporter.evaluateEntryModule(source, entry.url, {
-          timeoutMs,
-        });
+        timeoutMs,
+      });
       dispatchScriptEvent(context, entry.script, 'load');
       executedScripts.add(entry.script);
       entry.script.__nv8ParserExecuted = true;

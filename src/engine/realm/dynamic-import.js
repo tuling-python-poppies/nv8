@@ -10,6 +10,7 @@
 
 import vm from 'node:vm';
 import { Buffer } from 'node:buffer';
+import { evaluateWithDeadline } from './module-link-strategy.js';
 
 /** 未命中 replay 的错误码，与 fetch/XHR 的 replay-miss 同族 */
 export const MODULE_REPLAY_MISS_CODE = 'ERR_NV8_MODULE_REPLAY_MISS';
@@ -142,6 +143,7 @@ export function createDynamicImporter(options) {
     cache = new Map(),
   } = options;
   let disposed = false;
+  let disposalError = null;
   const pending = new Set();
 
   if (typeof resolveSource !== 'function') {
@@ -167,7 +169,7 @@ export function createDynamicImporter(options) {
   }
 
   function assertActive() {
-    if (disposed) throw lifecycleError();
+    if (disposed) throw disposalError ?? lifecycleError();
   }
 
   function track(operation) {
@@ -244,21 +246,22 @@ export function createDynamicImporter(options) {
    */
   const evaluateInFlight = new WeakMap();
 
-  function evaluateModule(module, timeoutMs = 0) {
+  function evaluateModule(module, timeoutMs = options.timeoutMs ?? 0) {
     assertActive();
-    if (module.status === 'evaluated') return Promise.resolve(module);
+    // in-flight 检查必须先于 status 检查：Node 在模块顶层 await 尚未完成时
+    // 就会把 status 置为 evaluated——第二个并发 import 直接返回会拿到
+    // 尚未初始化的 namespace（IKFD9L 后续实测）。
     let inFlight = evaluateInFlight.get(module);
     if (inFlight !== undefined) return inFlight;
     inFlight = (async () => {
       await linkGraph(module);
       assertActive();
-      if (module.status !== 'evaluated') {
-        if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
-          await module.evaluate({ timeout: timeoutMs });
-        } else {
-          await module.evaluate();
-        }
+      try {
+        await evaluateWithDeadline(module, timeoutMs, module.identifier);
         assertActive();
+      } catch (error) {
+        if (error?.code === 'ERR_SCRIPT_EXECUTION_TIMEOUT') dispose(error);
+        throw error;
       }
       return module;
     })();
@@ -336,15 +339,16 @@ export function createDynamicImporter(options) {
   async function evaluateEntryModule(source, url, options = {}) {
     return track(async () => {
       const module = instantiate(url, source);
-      await evaluateModule(module, options.timeoutMs ?? 0);
+      await evaluateModule(module, options.timeoutMs);
       return module;
     });
   }
 
-  function dispose() {
+  function dispose(reason = null) {
     if (disposed) return;
     disposed = true;
-    const error = lifecycleError();
+    const error = reason ?? lifecycleError();
+    disposalError = error;
     for (const entry of pending) entry.cancel(error);
     pending.clear();
     cache.clear();

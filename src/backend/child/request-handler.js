@@ -1,4 +1,4 @@
-import { Opcode } from "../protocol/constants.js";
+import { Opcode, DEFAULT_PROTOCOL_LIMITS } from "../protocol/constants.js";
 import { errorRecord } from "../protocol/typed-values.js";
 import { resolveProtocolLimits } from "../protocol/limits.js";
 import { sanitizeErrorRecord } from "../../engine/bootstrap/sanitize-stack.js";
@@ -15,6 +15,9 @@ export class RequestHandler {
     switch (opcode) {
       case Opcode.INIT:
         return this.initialize(payload);
+      case Opcode.UPDATE_LIMITS:
+        this.applyProtocolLimits(payload);
+        return undefined;
       case Opcode.EVALUATE:
         return this.withRuntime((runtime) => runtime.evaluate(payload.source));
       case Opcode.BATCH_EVALUATE:
@@ -61,6 +64,11 @@ export class RequestHandler {
     return undefined;
   }
 
+  applyProtocolLimits(options) {
+    if (this.runtime !== null) throw protocolRequestError("Limits must be negotiated before INIT");
+    this.protocolLimits = { ...DEFAULT_PROTOCOL_LIMITS, ...resolveProtocolLimits(options) };
+  }
+
   withRuntime(callback) {
     if (this.runtime === null) {
       throw protocolRequestError("Child runtime has not been initialized");
@@ -101,6 +109,9 @@ export class RequestHandler {
   close() {
     this.runtime?.close();
     this.runtime = null;
+    // 池化线程重新租用时，下一次小握手不能受上一个租户的小字符串限制影响。
+    this.protocolLimits = { ...DEFAULT_PROTOCOL_LIMITS };
+    this.options = null;
     return undefined;
   }
 

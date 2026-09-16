@@ -8,6 +8,7 @@ import { satisfiesVersionRange } from './define-plugin.js';
 
 const PLUGIN_ID_PATTERN = /^(?:@[a-z][a-z0-9-]*\/)?[a-z][a-z0-9-]*$/;
 const PLUGIN_REQUEST_PATTERN = /^((?:@[a-z][a-z0-9-]*\/)?[a-z][a-z0-9-]*)(?:@(.+))?$/;
+const REQUIREMENT_PATTERN = /^((?:@[a-z][a-z0-9-]*\/)?[a-z][a-z0-9.-]*)(?:@(.+))?$/;
 
 /**
  * 构建插件能力索引
@@ -191,7 +192,13 @@ function normalizePluginForMatching(plugin) {
   if (plugin === null || typeof plugin !== 'object') {
     throw new TypeError('Plugin must be an object');
   }
-  if (Array.isArray(plugin.requires) && Array.isArray(plugin.provides)) {
+  // 已标准化插件必须保留实例身份；但仅检查 Array.isArray 不足以区分简写。
+  if (Array.isArray(plugin.requires) && Array.isArray(plugin.provides)
+      && plugin.requires.every(req => req !== null && typeof req === 'object'
+        && typeof req.id === 'string' && typeof req.version === 'string'
+        && req.range === undefined && typeof req.optional === 'boolean')
+      && plugin.provides.every(cap => cap !== null && typeof cap === 'object'
+        && typeof cap.name === 'string' && typeof cap.version === 'string')) {
     return plugin;
   }
   const rawRequires = plugin.requires ?? plugin.dependencies ?? [];
@@ -217,14 +224,16 @@ function normalizePluginForMatching(plugin) {
 function parseRequirement(requirement) {
   if (requirement !== null && typeof requirement === 'object') {
     const id = `${requirement.id ?? ''}`;
-    if (!isPluginId(id)) throw new Error(`Invalid requirement format: ${JSON.stringify(requirement)}`);
+    if (!REQUIREMENT_PATTERN.test(id) || id.includes('@', 1)) {
+      throw new Error(`Invalid requirement format: ${JSON.stringify(requirement)}`);
+    }
     return {
       id,
       version: `${requirement.range ?? requirement.version ?? '*'}`,
       optional: requirement.optional === true,
     };
   }
-  const match = `${requirement}`.match(PLUGIN_REQUEST_PATTERN);
+  const match = `${requirement}`.match(REQUIREMENT_PATTERN);
   if (!match) throw new Error(`Invalid requirement format: "${requirement}"`);
   return { id: match[1], version: match[2] || '*', optional: false };
 }
@@ -361,6 +370,7 @@ export function hasCapability(plugin, capabilityName, versionRange = '*') {
  * 验证所有插件依赖是否满足
  */
 export function validateDependencies(plugins) {
+  plugins = plugins.map(normalizePluginForMatching);
   const errors = [];
   const capabilityIndex = buildCapabilityIndex(plugins);
   

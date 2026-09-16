@@ -317,8 +317,16 @@ export function satisfiesVersionRange(version, range) {
   const rangeParts = parsed.version.split('.').map(Number);
   
   if (parsed.type === 'caret') {
-    // ^1.2.3 means >=1.2.3 <2.0.0
+    // 对 0.x 版本，caret 只允许改变未指定为稳定 API 的位置：
+    // ^0.2.3 means >=0.2.3 <0.3.0；^0.0.3 means >=0.0.3 <0.0.4。
     if (versionParts[0] !== rangeParts[0]) {
+      return false;
+    }
+    if (rangeParts[0] === 0 && versionParts[1] !== rangeParts[1]) {
+      return false;
+    }
+    if (rangeParts[0] === 0 && rangeParts[1] === 0
+        && versionParts[2] !== rangeParts[2]) {
       return false;
     }
     return compareVersions(version, parsed.version) >= 0;

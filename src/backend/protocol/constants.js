@@ -17,6 +17,8 @@ export const Opcode = Object.freeze({
   RESET_REALM: 12,
   BATCH_EVALUATE: 13,
   READ_RESOURCES: 14,
+  // INIT 前的小握手，父侧收到确认才发送 INIT（含可能超过 8MiB 的 replay）。
+  UPDATE_LIMITS: 15,
   RESPONSE_FLAG: 0x8000,
   ERROR: 0xffff,
 });

@@ -1,4 +1,4 @@
-import { Opcode } from "../protocol/constants.js";
+import { Opcode, DEFAULT_PROTOCOL_LIMITS } from "../protocol/constants.js";
 import { FrameReader } from "../protocol/frame-reader.js";
 import { encodeFramedValue } from "../protocol/frame-writer.js";
 import { decodeValue } from "../protocol/value-decoder.js";
@@ -28,11 +28,11 @@ export class ConnectionBase {
 
   rawRequest(opcode, payload, timeoutMs) {
     const requestId = this.allocateRequestId();
-    const frame = encodeFramedValue(opcode, requestId, payload, this.protocolLimits());
+    const frame = encodeFramedValue(opcode, requestId, payload,
+      opcode === Opcode.UPDATE_LIMITS ? DEFAULT_PROTOCOL_LIMITS : this.protocolLimits());
     const queueLimit = this.limits.maxFrameQueueBytes;
-    // INIT 是每个 transport 的第一帧：它必须在用户配置的队列上限之前发出，
-    // 否则极小的 maxFrameQueueBytes 会让沙箱根本无法启动。除此之外的每一帧
-    // （包括与 INIT 并发的帧）都按累计字节计量。
+    // 串行启动阶段的 UPDATE_LIMITS / INIT 可越过很小的队列预算；
+    // 与启动帧并发的请求仍计入累计字节，不能借启动状态逃避背压。
     const bootstrapFrame = !this.ready && this.pending.size === 0;
     if (
       !bootstrapFrame

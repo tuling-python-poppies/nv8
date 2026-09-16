@@ -36,11 +36,21 @@ Payload 使用 `ValueTag` typed value 编码，而不是 JSON：
 `FrameReader` 先验证 magic、version 和 payload 长度，再把 `{ opcode, requestId,
 payload }` 交给上层解码。上层必须使用同一组协议限制调用 `decodeValue()`。
 
-协议限制（payload/深度/字符串/字节数等）来自双方同源的 `limits` 配置：`INIT`
-帧本身总是按 `DEFAULT_PROTOCOL_LIMITS` 解析，处理完成后后端调用
-`FrameReader.setLimits()` 应用配置值，之后的帧两侧使用同一组上限。编码失败时
-后端必须回结构化 `ERROR`，并保留真实错误码（`LIMIT_STRING_BYTES`、`LIMIT_BYTES`、
-`LIMIT_PAYLOAD_BYTES` 等），不得改写成与根因无关的限制名。
+协议限制来自双方同源的 `limits` 配置。当前客户端按以下顺序启动：
+
+1. 按默认协议上限编码一个小的 `UPDATE_LIMITS`（opcode `15`）请求，只含协议限制白名单。
+2. 后端在尚未创建 Runtime 时应用限制并更新 `FrameReader`，回传确认。
+3. 客户端**等待确认后**发送 `INIT`；较大的 replay/HTML 已按协商限制解析，
+   不再出现“16MiB 配置包在读到配置前被默认 8MiB 拒绝”的问题。
+
+`UPDATE_LIMITS` 只允许在 Runtime 未初始化时使用。直接发送小 `INIT` 的旧客户端仍可工作；
+新客户端连接不认识此 opcode 的旧后端会显式失败，双方应使用匹配的软件版本。
+池化线程在 `CLOSE` 后恢复默认协议限制，允许下一租户重新协商。
+公开 API 的 `limits` 接受并校验 `maxPayloadBytes`、`maxValueDepth`、`maxArrayLength`、
+`maxFieldCount`、`maxStringBytes`、`maxBytesLength`；`maxPayloadBytes` **不包含**16 字节帧头。
+
+编码失败时后端必须回结构化 `ERROR`，并保留真实错误码（`LIMIT_STRING_BYTES`、
+`LIMIT_BYTES`、`LIMIT_PAYLOAD_BYTES` 等），不得改写成与根因无关的限制名。
 
 ## 生命周期和失败规则
 

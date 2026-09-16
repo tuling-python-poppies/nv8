@@ -54,7 +54,7 @@ async function processFrame(frame) {
   try {
     const payload = decodeValue(frame.payload, handler.protocolValueLimits());
     value = await handler.handle(frame.opcode, payload);
-    if (frame.opcode === Opcode.INIT) {
+    if ([Opcode.UPDATE_LIMITS, Opcode.INIT, Opcode.RESET_REALM, Opcode.CLOSE].includes(frame.opcode)) {
       reader.setLimits(handler.protocolValueLimits());
     }
   } catch (error) {

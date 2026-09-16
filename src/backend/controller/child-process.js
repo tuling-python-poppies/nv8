@@ -142,6 +142,11 @@ export class ChildProcessConnection extends ConnectionBase {
     });
     try {
       await this.rawRequest(
+        Opcode.UPDATE_LIMITS,
+        this.protocolLimits(),
+        Math.max(this.limits.timeoutMs, MINIMUM_REALM_BOOTSTRAP_TIMEOUT_MS),
+      );
+      await this.rawRequest(
         Opcode.INIT,
         initPayload,
         Math.max(this.limits.timeoutMs, MINIMUM_REALM_BOOTSTRAP_TIMEOUT_MS),

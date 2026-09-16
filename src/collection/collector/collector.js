@@ -243,9 +243,9 @@ export class Collector {
    * - 每一跳都重新过 `assertRedirect`（followRedirects 开关、目标 origin 的
    *   allowlist、跨 origin 默认拒绝），重定向不能成为绕过准入的后门
    * - 超过 `maxRedirects` 抛 REDIRECT_LIMIT
-   * - 跨 origin 时丢弃原 plan 的显式 header/cookie，避免把 origin 绑定凭据
-   *   带去新 origin；新 origin 的凭据与 jar cookie 由 #prepare 重新解析
-   * - 303 以及 301/302 的 POST 按 Fetch 语义改成 GET 并丢弃 body
+   * - 跨源时丢弃显式 header/cookie，此后不再从初始 plan 恢复。
+   *   目标源的凭据与 jar cookie 由 #prepare 重新解析。
+   * - 303 以及 301/302 的 POST 改成 GET，清除 body 及其专用 header。
    *
    * @param {object} prepared 已完成凭据/cookie 注入的首跳计划
    * @param {object} plan 已规范化的原始 RequestPlan（用于重建后续跳）
@@ -256,37 +256,28 @@ export class Collector {
     let current = prepared;
     let redirected = false;
     let redirects = 0;
+    // 只保存仍有效的显式值；已注入的凭据不能成为下一源的显式值。
+    let headers = plan.headers.flatMap(entry =>
+      entry.values.map(value => ({ name: entry.name, value })));
+    let cookies = plan.cookies.map(entry => ({ ...entry }));
+    let body = plan.body;
+    let bodyDiscarded = false;
 
     for (;;) {
       const response = await this.#transport.send(current, { signal });
-      // 每一跳的 Set-Cookie 都要入 jar，重定向链上的会话变更不能丢
       this.#cookieJar.acceptFromResponse(current.url, response);
-
       const location = getResponseHeader(response, 'location');
-      if (
-        !REDIRECT_STATUS.has(response.status)
-        || location === undefined
-        || location === null
-      ) {
+      if (!REDIRECT_STATUS.has(response.status) || location == null
+          || !this.#policy.followRedirects) {
         return { response, request: current, redirected };
       }
-      if (!this.#policy.followRedirects) {
-        // 策略未开启跟随：3xx 是最终响应，原样返回
-        return { response, request: current, redirected };
-      }
-
-      redirects += 1;
-      if (redirects > this.#policy.maxRedirects) {
+      if (++redirects > this.#policy.maxRedirects) {
         throw new CollectorRequestError(
           CollectorErrorCode.REDIRECT_LIMIT,
           `redirect limit of ${this.#policy.maxRedirects} exceeded`,
-          {
-            retryable: false,
-            context: { url: redactRequestUrl(current.url), redirects },
-          }
+          { retryable: false, context: { url: redactRequestUrl(current.url), redirects } },
         );
       }
-
       let nextUrl;
       try {
         nextUrl = new URL(location, current.url).href;
@@ -294,28 +285,23 @@ export class Collector {
         throw new CollectorRequestError(
           CollectorErrorCode.REDIRECT_NOT_ALLOWED,
           'redirect location is not a valid URL',
-          { retryable: false, context: { fromUrl: redactRequestUrl(current.url) } }
+          { retryable: false, context: { fromUrl: redactRequestUrl(current.url) } },
         );
       }
-
-      // 逐跳校验：跟随时也必须过策略，且默认拒绝跨 origin
-      this.#policy.assertRedirect(current.url, nextUrl, current.method);
-
-      const sameOrigin = new URL(nextUrl).origin === current.origin;
       const nextMethod = redirectMethod(response.status, current.method);
-      const keepBody = nextMethod === current.method;
-
+      this.#policy.assertRedirect(current.url, nextUrl, nextMethod);
+      if (new URL(nextUrl).origin !== current.origin) {
+        headers = [];
+        cookies = [];
+      }
+      if (nextMethod !== current.method) {
+        body = null;
+        bodyDiscarded = true;
+        headers = headers.filter(entry => !REQUEST_BODY_HEADERS.has(entry.name));
+      }
       current = this.#prepare(createRequestPlan({
-        method: nextMethod,
-        url: nextUrl,
-        headers: sameOrigin
-          ? plan.headers.flatMap((entry) =>
-            entry.values.map((value) => ({ name: entry.name, value })))
-          : [],
-        cookies: sameOrigin ? plan.cookies.map((entry) => ({ ...entry })) : [],
-        body: keepBody ? plan.body : null,
-        metadata: plan.metadata,
-      }));
+        method: nextMethod, url: nextUrl, headers, cookies, body, metadata: plan.metadata,
+      }), bodyDiscarded);
       redirected = true;
     }
   }
@@ -324,7 +310,7 @@ export class Collector {
    * 注入凭据和会话 cookie，产出实际要发送的请求。
    * 凭据注入发生在策略检查之后，因此不会把凭据发往未授权 origin。
    */
-  #prepare(plan) {
+  #prepare(plan, discardBodyHeaders = false) {
     const credentials = this.#credentials.resolve(plan.url);
     const jarCookies = this.#cookieJar.cookiesFor(plan.url);
 
@@ -344,6 +330,7 @@ export class Collector {
     if (credentials) {
       const presentHeaders = new Set(headers.map((entry) => entry.name));
       for (const [name, value] of credentials.headers) {
+        if (discardBodyHeaders && REQUEST_BODY_HEADERS.has(name)) continue;
         if (presentHeaders.has(name)) continue;
         headers.push({ name, value });
       }
@@ -425,6 +412,10 @@ export function createCollector(config) {
 
 /** 需要跟随的重定向状态码。 */
 const REDIRECT_STATUS = new Set([301, 302, 303, 307, 308]);
+const REQUEST_BODY_HEADERS = new Set([
+  'content-encoding', 'content-language', 'content-location', 'content-type',
+  'content-length', 'transfer-encoding',
+]);
 
 /**
  * 重定向后的方法语义（与 Fetch 对齐）：

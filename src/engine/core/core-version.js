@@ -38,7 +38,10 @@ export function satisfiesCoreVersionRange(version, range) {
   const requested = parseCoreVersion(operator[2]);
   switch (operator[1] ?? '=') {
     case '=': return sameVersion(actual, requested);
-    case '^': return actual.major === requested.major && compare(actual, requested) >= 0;
+    case '^': return actual.major === requested.major
+      && (requested.major !== 0 || actual.minor === requested.minor)
+      && (requested.major !== 0 || requested.minor !== 0 || actual.patch === requested.patch)
+      && compare(actual, requested) >= 0;
     case '~': return actual.major === requested.major
       && actual.minor === requested.minor
       && compare(actual, requested) >= 0;

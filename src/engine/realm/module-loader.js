@@ -207,14 +207,13 @@ export class RealmModuleLoader {
    * @returns {Promise<object>}
    */
   #evaluateModule(module) {
-    if (module.status === "evaluated") return Promise.resolve(module);
+    // in-flight 检查必须先于 status 检查：顶层 await 未完成的模块 status
+    // 已是 evaluated，直接返回会让并发调用者拿到半初始化的 namespace。
     let inFlight = this.evaluateInFlight.get(module);
     if (inFlight !== undefined) return inFlight;
     inFlight = (async () => {
       await this.#linkModule(module, new Set());
-      if (module.status !== "evaluated") {
-        await evaluateAsync(module);
-      }
+      await evaluateAsync(module);
       return module;
     })();
     inFlight.finally(() => {

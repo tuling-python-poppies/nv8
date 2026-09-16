@@ -231,11 +231,11 @@ export function evaluateSync(module, label = 'trusted internal module') {
  * @returns {Promise<void>}
  */
 export async function evaluateAsync(module) {
-  if (module.status === 'evaluated') return;
   let inFlight = evaluateInFlight.get(module);
   if (inFlight === undefined) {
     inFlight = (async () => {
-      if (module.status === 'evaluated') return;
+      // V8 的 evaluated 状态不代表顶层 await 已完成；重复 evaluate 会
+      // 返回当前模块图的求值 Promise，必须等待它而不是读状态提前返回。
       await module.evaluate();
       if (module.status === 'errored') throw module.error;
     })();
@@ -245,6 +245,46 @@ export async function evaluateAsync(module) {
     evaluateInFlight.set(module, inFlight);
   }
   await inFlight;
+}
+
+/**
+ * 带墙钟期限的模块求值（页面/Worker 入口用）。
+ *
+ * `SourceTextModule.evaluate({ timeout })` 只限制**同步执行**：模块顶层
+ * `await` 一个永不完成的 Promise 时 evaluate() 仍会挂起。这里在同步预算
+ * 之外再叠加一条墙钟期限，两层缺一不可。
+ *
+ * 墙钟到期只结束调用方等待，不会终止已经排入队列的异步 JS。
+ * 上层必须撤销本次加载并回收所属 Realm，不能依靠 status 推断已完成。
+ *
+ * @param {object} module
+ * @param {number} timeoutMs 期限；非正数表示不限
+ * @param {string} label 诊断用 URL
+ */
+export async function evaluateWithDeadline(module, timeoutMs, label) {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    await module.evaluate();
+    return;
+  }
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(`Script execution timed out after ${timeoutMs}ms: ${label}`);
+      error.code = 'ERR_SCRIPT_EXECUTION_TIMEOUT';
+      error.url = label;
+      error.timeoutMs = timeoutMs;
+      reject(error);
+    }, timeoutMs);
+  });
+  try {
+    const evaluation = module.evaluate({ timeout: timeoutMs });
+    // 竞速落败后底层 promise 仍会继续：预先挂一个 catch 吞掉迟到的拒绝，
+    // 避免它变成 unhandledRejection。
+    evaluation.catch(() => {});
+    await Promise.race([evaluation, timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**

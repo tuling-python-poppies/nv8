@@ -223,7 +223,7 @@ export async function createRealm(config) {
   // 1. 创建 vm.Context
   const page = new URL(pageUrl);
   const realmOrigin = origin ?? page.origin;
-  const context = vm.createContext({}, {
+  const context = vm.createContext(Object.create(null), {
     name: realmId,
     origin: realmOrigin,
     codeGeneration: {
@@ -232,6 +232,47 @@ export async function createRealm(config) {
     },
   });
   const moduleLoader = new RealmModuleLoader(context);
+  let baseGlobals = null;
+  let pageScriptObserver = null;
+  let pageScriptDispose = null;
+  const activatedPlugins = [];
+  let disposal = null;
+
+  // 创建失败与正常销毁共用回滚；插件在清理期间仍需使用 Realm 模块。
+  function disposeResources() {
+    if (disposal !== null) return disposal;
+    baseGlobals?.disposeTimers();
+    disposal = (async () => {
+      try {
+        pageScriptObserver?.disconnect?.();
+        pageScriptObserver = null;
+        pageScriptDispose?.();
+        pageScriptDispose = null;
+      } finally {
+        try {
+          for (const plugin of [...activatedPlugins].reverse()) {
+            if (!plugin.dispose) continue;
+            try {
+              await plugin.dispose(createRealmPluginContext({
+                plugin, vmContext: context, sandboxId, realmId, stateRegistry,
+                globals, logger, trace, realmType: type, moduleLoader,
+                pageUrl, pageHtml, runtime,
+              }));
+            } catch (error) {
+              logger.error(`[Realm ${realmId}] Plugin dispose failed:`, error);
+            }
+          }
+        } finally {
+          moduleLoader.dispose();
+          stateRegistry.destroyContext('realm', realmId);
+        }
+      }
+    })();
+    return disposal;
+  }
+
+  // 构建是事务：覆盖预加载、插件激活和页面解析所有失败点。
+  try {
 
   // 预加载同步回调依赖的模块。
   // Node 18–22 无法同步链接，但 ServiceWorker controllerchange、
@@ -240,7 +281,7 @@ export async function createRealm(config) {
   await moduleLoader.preload(SYNC_CALLBACK_MODULE_URLS);
   
   // 2. 初始化基础全局对象
-  const baseGlobals = initializeBaseGlobals(context, realmId, logger);
+  baseGlobals = initializeBaseGlobals(context, realmId, logger);
   // URL/TextEncoder 不是 ECMAScript 内建，但必须先由 Realm 自己的 surface
   // 安装器提供，插件激活阶段会依赖它们。不能把 Node 宿主构造器直接放进
   // context：其 `.constructor` 会回到宿主 Function，重新打开沙箱逃逸路径。
@@ -340,6 +381,8 @@ export async function createRealm(config) {
     }
     
     try {
+      // 激活中途失败的插件也可能已经分配资源，需要参与回滚。
+      activatedPlugins.push(plugin);
       await activatePlugin(
         plugin,
         context,
@@ -420,8 +463,6 @@ export async function createRealm(config) {
     lifecycleModule.namespace.ensureDocumentEventTargetForPage?.();
   }
   let pageScriptAsyncComplete = Promise.resolve();
-  let pageScriptObserver = null;
-  let pageScriptDispose = null;
   const parserExecutedScripts = new WeakSet();
   if (hasDocumentPlugin && pageHtml !== '') {
     const parserModule = await moduleLoader.importUrlAsync(PAGE_PARSER_URL);
@@ -536,8 +577,6 @@ export async function createRealm(config) {
   // 生命周期闸门：destroy() 是可重入的（sandbox 的销毁路径可能从多个入口
   // 触发），但真正的清理只做一次。`realm.destroyed` 供 sandbox/导航回调
   // 判断 Realm 是否还活着（IKFD9F）。
-  let disposed = false;
-
   const realm = {
     id: realmId,
     type,
@@ -651,51 +690,8 @@ export async function createRealm(config) {
      * 清理所有资源和状态
      */
     async destroy() {
-      // 二次 destroy 直接返回，保证清理逻辑只执行一次
-      if (disposed) return;
-      disposed = true;
       realm.destroyed = true;
-
-      // 先清掉 realm 作用域的宿主定时器：页面脚本用 setTimeout 排的
-      // location.href 导航在销毁后必须不再触发（IKFD9F）。
-      baseGlobals.disposeTimers();
-
-      pageScriptObserver?.disconnect?.();
-      pageScriptObserver = null;
-      pageScriptDispose?.();
-      pageScriptDispose = null;
-      // 关闭模块加载器的在途求值（IKFD9L 的取消路径）
-      try {
-        moduleLoader?.dispose?.();
-      } catch (error) {
-        logger.warn(`[Realm ${realmId}] Module loader dispose failed: ${error.message}`);
-      }
-      logger.info(`[Realm ${realmId}] Destroying realm`);
-      
-      // 调用所有插件的 dispose 钩子
-      for (const plugin of plugins) {
-        if (plugin.dispose) {
-          try {
-            const pluginContext = createRealmPluginContext({
-              plugin,
-              vmContext: context,
-              sandboxId,
-              realmId,
-              stateRegistry,
-              globals,
-              logger,
-              trace,
-              realmType: type,
-              moduleLoader,
-            });
-            await plugin.dispose(pluginContext);
-          } catch (error) {
-            logger.error(`[Realm ${realmId}] Plugin dispose failed:`, error);
-          }
-        }
-      }
-      
-      logger.info(`[Realm ${realmId}] Realm destroyed`);
+      await disposeResources();
     },
     
     // Compatibility alias for callers that use dispose semantics.
@@ -717,6 +713,14 @@ export async function createRealm(config) {
   };
 
   return realm;
+  } catch (error) {
+    try {
+      await disposeResources();
+    } catch (cleanupError) {
+      logger.error(`[Realm ${realmId}] Creation rollback failed:`, cleanupError);
+    }
+    throw error;
+  }
 }
 
 function encodeNavigatorLanguages(languages) {
@@ -740,14 +744,15 @@ function encodeNavigatorLanguages(languages) {
  * 转发函数由 realm 求值创建，`setTimeout.constructor` 是 realm 的 Function，
  * 不会经由 `.constructor` 链泄漏宿主 Function。
  *
- * 所有计时器句柄都登记在 `activeTimers`，`destroy()` 时统一清除，避免
+ * 宿主计时器句柄只存在私有映射中，页面仅得到数字 ID；销毁时统一清除，避免
  * 销毁后的页面定时器继续执行甚至触发导航重建 Realm（IKFD9F）。
  */
 function initializeBaseGlobals(context, realmId, logger) {
-  const activeTimers = new Set();
+  const timers = { handles: new Map(), closed: false };
 
   const installHostBridge = vm.runInContext(
     `(host, timers) => {
+      let nextTimerId = 1;
       const define = (name, value) => {
         Object.defineProperty(globalThis, name, {
           value,
@@ -765,34 +770,45 @@ function initializeBaseGlobals(context, realmId, logger) {
       };
       define('setTimeout', function setTimeout(handler, timeout, ...args) {
         assertHandler('setTimeout', handler);
-        let handle = null;
-        handle = host.setTimeout(() => {
-          timers.delete(handle);
+        if (timers.closed) return 0;
+        const id = nextTimerId++;
+        const delay = Number(timeout) || 0;
+        const handle = host.setTimeout(() => {
+          if (timers.closed || !timers.handles.has(id)) return;
+          timers.handles.delete(id);
           handler(...args);
-        }, timeout);
-        timers.add(handle);
-        return handle;
+        }, delay);
+        timers.handles.set(id, handle);
+        return id;
       });
       define('setInterval', function setInterval(handler, timeout, ...args) {
         assertHandler('setInterval', handler);
+        if (timers.closed) return 0;
+        const id = nextTimerId++;
+        const delay = Number(timeout) || 0;
         const handle = host.setInterval(() => {
-          if (!timers.has(handle)) return;
+          if (timers.closed || !timers.handles.has(id)) return;
           handler(...args);
-        }, timeout);
-        timers.add(handle);
-        return handle;
+        }, delay);
+        timers.handles.set(id, handle);
+        return id;
       });
-      define('clearTimeout', function clearTimeout(handle) {
-        timers.delete(handle);
+      define('clearTimeout', function clearTimeout(value) {
+        const id = Number(value);
+        const handle = timers.handles.get(id);
+        timers.handles.delete(id);
         host.clearTimeout(handle);
       });
-      define('clearInterval', function clearInterval(handle) {
-        timers.delete(handle);
+      define('clearInterval', function clearInterval(value) {
+        const id = Number(value);
+        const handle = timers.handles.get(id);
+        timers.handles.delete(id);
         host.clearInterval(handle);
       });
       define('queueMicrotask', function queueMicrotask(callback) {
         assertHandler('queueMicrotask', callback);
-        host.queueMicrotask(callback);
+        if (timers.closed) return;
+        host.queueMicrotask(() => { if (!timers.closed) callback(); });
       });
 
       // 内建表面镜像：vm 的 globalThis 内建不是宿主可从 context 对象上读到的
@@ -822,7 +838,7 @@ function initializeBaseGlobals(context, realmId, logger) {
 
   installHostBridge(
     { setTimeout, clearTimeout, setInterval, clearInterval, queueMicrotask },
-    activeTimers,
+    timers,
   );
 
   // 全局变量
@@ -846,11 +862,12 @@ function initializeBaseGlobals(context, realmId, logger) {
      * 已过期 interval 回调会被丢弃，即使宿主事件循环里还有残余调度。
      */
     disposeTimers() {
-      for (const handle of activeTimers) {
+      timers.closed = true;
+      for (const handle of timers.handles.values()) {
         clearTimeout(handle);
         clearInterval(handle);
       }
-      activeTimers.clear();
+      timers.handles.clear();
     },
   };
 }

@@ -55,9 +55,8 @@ async function processFrame(frame) {
   try {
     const payload = decodeValue(frame.payload, handler.protocolValueLimits());
     value = await handler.handle(frame.opcode, payload);
-    if (frame.opcode === Opcode.INIT) {
-      // INIT 本身按默认限制解析；处理完成后把用户配置同步给 reader，
-      // 后续大于默认 8MiB 的合法帧才进得来（IKFD9N）。
+    if ([Opcode.UPDATE_LIMITS, Opcode.INIT, Opcode.RESET_REALM].includes(frame.opcode)) {
+      // 父侧等待握手响应后才发送 INIT，无须在 onFrame 提前修改状态。
       reader.setLimits(handler.protocolValueLimits());
     }
   } catch (error) {

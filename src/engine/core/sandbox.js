@@ -14,6 +14,7 @@ import { createHash } from 'node:crypto';
 import { createRealm } from './realm-factory.js';
 import { createWorkletRealm } from '../realm/create-worklet-realm.js';
 import { destroyRealm as destroyWorkletRealm } from '../realm/destroy-realm.js';
+import { evaluateWithDeadline } from '../realm/module-link-strategy.js';
 import { createSandboxPluginContext } from './plugin-context.js';
 import { createNativeFunctionRegistry } from './native-function-registry.js';
 import { createEventListenerRegistry } from './event-listener-registry.js';
@@ -1510,15 +1511,12 @@ async function evaluateCoreWorkletModule(
       resolvedUrl,
     );
   });
-  await evaluateModuleWithTimeout(root, timeoutMs);
+  await evaluateModuleWithTimeout(root, timeoutMs, url);
 }
 
-async function evaluateModuleWithTimeout(module, timeoutMs) {
-  if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
-    await module.evaluate({ timeout: timeoutMs });
-  } else {
-    await module.evaluate();
-  }
+async function evaluateModuleWithTimeout(module, timeoutMs, url) {
+  // evaluate({timeout}) 只限同步执行；顶层 await 挂起由墙钟期限兜底。
+  await evaluateWithDeadline(module, timeoutMs, url);
 }
 
 async function evaluateCoreWorkerSource(
@@ -1572,9 +1570,9 @@ async function evaluateCoreWorkerSource(
     });
     modules.set(url, module);
     await module.link(load);
-    // SourceTextModule.evaluate 支持与经典脚本一致的硬超时，避免死循环
-    // 阻塞 Worker Realm（IKF39K）。
-    await evaluateModuleWithTimeout(module, timeoutMs);
+    // 同步预算 + 墙钟期限双层：死循环与永不完成的顶层 await 都必须在
+    // limits.timeoutMs 内终止（IKF39K）。
+    await evaluateModuleWithTimeout(module, timeoutMs, url);
     return createModuleGraphVersion(sourceEntries);
   }
   const script = new vm.Script(source, { filename: url });

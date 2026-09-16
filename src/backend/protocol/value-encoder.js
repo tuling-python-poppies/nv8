@@ -27,7 +27,7 @@ class ValueWriter {
   }
 
   checkLimit() {
-    if (this.offset > this.limits.maxPayloadBytes) {
+    if (this.offset > this.limits.maxPayloadBytes + this.prefixBytes) {
       throw new ProtocolError(
         "Encoded payload exceeds the configured limit",
         "LIMIT_PAYLOAD_BYTES",

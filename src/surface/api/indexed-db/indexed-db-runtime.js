@@ -195,7 +195,7 @@ function openDatabase(inputName, inputVersion) {
         version,
         stores: new Map(),
         connections: new Set(),
-        pendingDelete: null,
+        pendingDeletes: [],
       };
       runtime.databases.set(name, metadata);
     }
@@ -308,7 +308,7 @@ function deleteDatabase(inputName) {
       succeedRequest(request, undefined);
       return;
     }
-    metadata.pendingDelete = { request };
+    metadata.pendingDeletes.push(request);
     fire(request, "blocked");
   });
   return request;
@@ -320,12 +320,12 @@ function deleteDatabase(inputName) {
  * `blocked` 已派发、请求保持 pending；最后一个连接关闭时在这里删除并成功。
  */
 function maybeCompletePendingDelete(metadata) {
-  const pending = metadata.pendingDelete;
-  if (pending === null || pending === undefined) return;
+  const pending = metadata.pendingDeletes;
+  if (!Array.isArray(pending) || pending.length === 0) return;
   if (metadata.connections.size > 0) return;
-  metadata.pendingDelete = null;
+  metadata.pendingDeletes = [];
   indexedDBState().databases.delete(metadata.name);
-  succeedRequest(pending.request, undefined);
+  for (const request of pending) succeedRequest(request, undefined);
 }
 
 function createDatabase(metadata) {

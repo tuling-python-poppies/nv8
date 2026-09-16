@@ -26,6 +26,10 @@ const DEFAULT_LIMITS = Object.freeze({
   maxPayloadBytes: 8 * 1024 * 1024,
   maxFrameQueueBytes: 32 * 1024 * 1024,
   maxValueDepth: 32,
+  maxArrayLength: 100_000,
+  maxFieldCount: 10_000,
+  maxStringBytes: 4 * 1024 * 1024,
+  maxBytesLength: 4 * 1024 * 1024,
   maxRealms: 12,
   // Worker 额度独立于 iframe / Worklet 额度；默认高水位保持既有
   // `maxRealms` 行为，显式设置后才启用更细的治理。
@@ -1485,6 +1489,34 @@ function normalizeLimits(inputLimits) {
       "limits.maxValueDepth",
       1,
       256,
+    ),
+    maxArrayLength: finiteInteger(
+      inputLimits.maxArrayLength,
+      DEFAULT_LIMITS.maxArrayLength,
+      "limits.maxArrayLength",
+      1,
+      10_000_000,
+    ),
+    maxFieldCount: finiteInteger(
+      inputLimits.maxFieldCount,
+      DEFAULT_LIMITS.maxFieldCount,
+      "limits.maxFieldCount",
+      1,
+      1_000_000,
+    ),
+    maxStringBytes: finiteInteger(
+      inputLimits.maxStringBytes,
+      DEFAULT_LIMITS.maxStringBytes,
+      "limits.maxStringBytes",
+      1,
+      128 * 1024 * 1024,
+    ),
+    maxBytesLength: finiteInteger(
+      inputLimits.maxBytesLength,
+      DEFAULT_LIMITS.maxBytesLength,
+      "limits.maxBytesLength",
+      1,
+      128 * 1024 * 1024,
     ),
     maxRealms: finiteInteger(
       inputLimits.maxRealms,

@@ -1237,6 +1237,8 @@ export class RuntimePool {
     // 静态 import 与动态走同一条重放路径：同一份 Bundle 里的模块不应因
     // 引入方式不同而待遇不同。链接和求值都由 importer 跟踪，Realm 销毁时
     // 可以取消调用方等待，旧模块图不会在新 Realm 中复活。
+    // 隔离后端保留控制器的请求级 deadline：到期终止整个执行单元，
+    // 避免只拒绝 Promise 后让迟到的异步代码继续写入仍可复用的 Realm。
     await importDynamic.evaluateEntryModule(source, moduleUrl);
     this.assertGenerationActive(this.generation);
     return evaluationResult("undefined", undefined);
