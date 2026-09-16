@@ -380,6 +380,7 @@ export async function createSandbox(config) {
   
   // Realm 管理
   const realms = new Map(); // realm-id -> Realm
+  let pendingRealmCreations = 0;
   const workerRealms = new Set();
   const workerBudget = createWorkerBudget(limits, workerRealms);
   const {
@@ -589,12 +590,22 @@ export async function createSandbox(config) {
         throw createRealmLifecycleError();
       }
       const generation = lifecycleGeneration;
-      if (realms.size >= (limits.maxRealms ?? 64)) {
+      if (realms.size + pendingRealmCreations >= (limits.maxRealms ?? 64)) {
         const error = new Error('Realm capacity limit exceeded');
         error.code = 'LIMIT_REALM_CAPACITY';
         error.limit = limits.maxRealms ?? 64;
         throw error;
       }
+      // 在任何 await 之前预占；登记到 realms 时转为已用额度，失败/取消
+      // 则由 finally 释放。reset 不清零计数，旧一代创建仍占真实资源。
+      pendingRealmCreations += 1;
+      let reserved = true;
+      const releaseReservation = () => {
+        if (!reserved) return;
+        reserved = false;
+        pendingRealmCreations -= 1;
+      };
+      try {
       const realmType = options.type || 'root';
       const pageUrl = options.pageUrl || profile.url || 'https://example.com/';
       let pageHtml = options.pageHtml
@@ -731,6 +742,7 @@ export async function createSandbox(config) {
         throw createRealmLifecycleError();
       }
       realms.set(realm.id, realm);
+      releaseReservation();
       if (realmType === 'root') rootRealm.id = realm.id;
       lifecycle.emit('realm.created', {
         sandboxId,
@@ -773,6 +785,9 @@ export async function createSandbox(config) {
       logger.info(`[Sandbox ${sandboxId}] Realm created: ${realm.id}`);
       
       return realm;
+      } finally {
+        releaseReservation();
+      }
     },
     
     /**
@@ -1058,6 +1073,7 @@ export async function createSandbox(config) {
         realms: Array.from(realms.keys()),
         lifecycle: lifecycle.snapshot(),
         workerRealms: workerRealms.size,
+        pendingRealmCreations,
         pendingWorkerCreations: workerBudget.pendingCreations,
         workerConnections: workerBudget.connections,
         state: typeof stateRegistry.stats === 'function'

@@ -80,7 +80,7 @@ const nv8 = await createNv8({
 - `capabilityResolution`：Profile required/optional 能力的实际解析结果；
 - `runtimeMode`：实际装配模式；
 - `createRealm(options)`：创建 Realm，返回其 global 对象；
-- `eval(code, options)`：创建临时 Realm 求值，完成后自动销毁；
+- `eval(code, options)`：创建临时 Realm 求值，等待普通值或 Promise/thenable 完成后自动销毁；
 - `destroy()`：销毁 Sandbox，幂等；
 - `inspect()`：返回不含脚本私密状态的调试摘要。
 
@@ -99,6 +99,16 @@ try {
 Realm `type` 当前包括 `root`、`iframe`、`worker` 和 `worklet`。Realm、模块缓存、
 浏览器 API 状态和生命周期代数都按 Realm 隔离；销毁或 reset 后不得复用旧 Realm
 模块实例。
+
+临时 `eval()` 同时使用 `limits.timeoutMs` 限制同步执行和返回值的异步等待（默认
+5000ms，计时从 Realm 创建完成、开始求值时起）。超时以
+`ERR_SCRIPT_EXECUTION_TIMEOUT` 拒绝，并清理临时 Realm 的定时器和资源。
+业务代码的同步异常与 Promise 拒绝原样传播；`nv8Eval()` 使用同一规则。
+
+Core 的 `sandbox.createRealm()` 在创建开始时预占 `limits.maxRealms` 容量，
+按已登记 Realm 与在途创建总数检查。超限返回 `LIMIT_REALM_CAPACITY`，失败或
+被 reset/destroy 取消的创建会释放预占；`sandbox.diagnose().pendingRealmCreations`
+报告尚未完成的创建数。reset 不会提前抹掉仍占资源的旧一代预占计数。
 
 ### `nv8Eval(code, options)`
 

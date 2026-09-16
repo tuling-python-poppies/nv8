@@ -185,10 +185,27 @@ export async function createNv8(options = {}) {
      */
     async eval(code, options = {}) {
       const realm = await sandbox.createRealm(options);
+      let timer;
       try {
-        return realm.evaluate(code);
+        // vm 的 timeout 约束同步执行；宿主 deadline 约束 Promise 等待。
+        // 必须在 try 内 await，否则 finally 会先销毁仍需定时器的 Realm。
+        const deadline = new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            const error = new Error(`Script execution timed out after ${normalizedLimits.timeoutMs}ms`);
+            error.code = 'ERR_SCRIPT_EXECUTION_TIMEOUT';
+            error.timeoutMs = normalizedLimits.timeoutMs;
+            reject(error);
+          }, normalizedLimits.timeoutMs);
+        });
+        return await Promise.race([realm.evaluate(code), deadline]);
       } finally {
-        await sandbox.destroyRealm(realm.id);
+        clearTimeout(timer);
+        // reset/destroy 可能已移除了登记，不能用 not-found 掩盖执行结果。
+        if (sandbox.getRealm(realm.id) === realm) {
+          await sandbox.destroyRealm(realm.id);
+        } else {
+          await realm.destroy();
+        }
       }
     },
     

@@ -207,11 +207,12 @@ export function createDynamicImporter(options) {
   /**
    * 链接模块图。linker 只创建实例，不递归链接。
    *
-   * per-module in-flight promise：并发 `import()` 同一个模块时，第二个
-   * 调用者必须等待第一次链接完成，而不是看到 status==='linking' 就直接
-   * 去 evaluate（那会抛 ERR_VM_MODULE_STATUS，IKFD9L）。
+   * 不同根模块也可能共享仍处于 linking 的传递依赖，因此同一 importer 的
+   * link() 按队列串行执行。只串行链接，不串行求值：模块顶层 await 中的
+   * 动态 import 必须能继续加载其他图，否则会死锁。
    */
   const linkInFlight = new WeakMap();
+  let linkQueue = Promise.resolve();
 
   function linkGraph(module) {
     assertActive();
@@ -220,20 +221,41 @@ export function createDynamicImporter(options) {
     }
     let inFlight = linkInFlight.get(module);
     if (inFlight !== undefined) return inFlight;
-    inFlight = (async () => {
-      if (module.status === 'unlinked') {
-        await module.link(async (specifier, referencingModule) => {
-          const referrer = normalizeReferrer(referencingModule, module.identifier);
-          const target = resolveModuleSpecifier(specifier, referrer);
-          assertUrlAllowed(target.url, specifier, referrer);
-          const childSource = target.kind === 'data'
-            ? decodeDataModule(target.url)
-            : requireSource(target.url, specifier, referrer);
-          return instantiate(target.url, childSource);
-        });
-      }
+    inFlight = linkQueue.then(async () => {
       assertActive();
-    })();
+      if (module.status === 'errored') throw module.error;
+      const touched = new Map([[module, module.status]]);
+      try {
+        if (module.status === 'unlinked') {
+          await module.link((specifier, referencingModule) => {
+            const referrer = normalizeReferrer(referencingModule, module.identifier);
+            const target = resolveModuleSpecifier(specifier, referrer);
+            assertUrlAllowed(target.url, specifier, referrer);
+            const childSource = target.kind === 'data'
+              ? decodeDataModule(target.url)
+              : requireSource(target.url, specifier, referrer);
+            const child = instantiate(target.url, childSource);
+            if (!touched.has(child)) touched.set(child, child.status);
+            if (child.status === 'errored') throw child.error;
+            return child;
+          });
+        }
+        assertActive();
+      } catch (error) {
+        // 缺少源码等链接失败不能把半成品留在缓存，污染后续入口和重试。
+        // 已链接/已求值的共享依赖保留，避免重复执行其副作用。
+        for (const [candidate, initialStatus] of touched) {
+          if (initialStatus === 'unlinked'
+              && ['unlinked', 'linking', 'errored'].includes(candidate.status)
+              && cache.get(candidate.identifier) === candidate) {
+            cache.delete(candidate.identifier);
+          }
+        }
+        throw error;
+      }
+    });
+    // 当前调用仍收到错误，但错误不能使整个后续队列永久拒绝。
+    linkQueue = inFlight.catch(() => {});
     inFlight.finally(() => {
       if (linkInFlight.get(module) === inFlight) linkInFlight.delete(module);
     }).catch(() => {});
