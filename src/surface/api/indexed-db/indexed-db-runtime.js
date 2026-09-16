@@ -64,6 +64,9 @@ export function createIDBFactory() {
 
 export function indexedDBProperty(value, name) {
   const record = requireRecord(value);
+  if (name === "name" && (record.kind === "objectStore" || record.kind === "index")) {
+    return record.metadata.name;
+  }
   if (record.handlers?.has(name)) return record.handlers.get(name);
   if (record.kind === "request") {
     if (["result", "error"].includes(name) && record.readyState === "pending") {
@@ -182,7 +185,7 @@ function openDatabase(inputName, inputVersion) {
   const request = createRequest(null, null, true);
   Promise.resolve().then(() => {
     const runtime = indexedDBState();
-  let metadata = runtime.databases.get(name);
+    let metadata = runtime.databases.get(name);
     const oldVersion = metadata?.version ?? 0;
     const version = requestedVersion ?? (metadata?.version ?? 1);
     if (metadata !== undefined && version < metadata.version) {
@@ -209,6 +212,7 @@ function openDatabase(inputName, inputVersion) {
       // 版本号与全部 schema 变更都要回滚到升级前（真实 Edge 语义）。
       const snapshot = snapshotDatabaseSchema(metadata);
       metadata.version = version;
+      requireRecord(database).version = version;
       const transaction = createTransaction(
         database,
         [...metadata.stores.keys()],
@@ -231,6 +235,7 @@ function openDatabase(inputName, inputVersion) {
         // 版本与 schema，open request 以 AbortError 结束，连接作废。
         rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime);
         const databaseRecord = requireRecord(database);
+        databaseRecord.version = metadata.version;
         databaseRecord.closed = true;
         metadata.connections.delete(database);
         failRequest(
@@ -249,17 +254,19 @@ function openDatabase(inputName, inputVersion) {
 /**
  * 升级事务开始前的 schema 快照。
  *
- * 只复制容器（stores / records / indexes 的 Map 引用在删除时会被替换，
- * 但 Map 本身的内容变更需要浅拷贝才可回滚），store 元数据对象保留引用，
- * 回滚时把字段写回去。
+ * 容器及可原地修改的名字都需快照。保留元数据对象身份，回滚时原地恢复，
+ * 使升级中已取出的 store/index 句柄也能看到旧名字。
  */
 function snapshotDatabaseSchema(metadata) {
   const stores = new Map();
   for (const [storeName, store] of metadata.stores) {
     stores.set(storeName, {
       store,
+      name: store.name,
       records: new Map(store.records),
-      indexes: new Map(store.indexes),
+      indexes: new Map([...store.indexes].map(([name, index]) => (
+        [name, { index, name: index.name }]
+      ))),
       nextKey: store.nextKey,
     });
   }
@@ -269,8 +276,13 @@ function snapshotDatabaseSchema(metadata) {
 function rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime) {
   metadata.stores = new Map();
   for (const [storeName, saved] of snapshot.stores) {
+    saved.store.name = saved.name;
     saved.store.records = saved.records;
-    saved.store.indexes = saved.indexes;
+    saved.store.indexes = new Map();
+    for (const [indexName, savedIndex] of saved.indexes) {
+      savedIndex.index.name = savedIndex.name;
+      saved.store.indexes.set(indexName, savedIndex.index);
+    }
     saved.store.nextKey = saved.nextKey;
     metadata.stores.set(storeName, saved.store);
   }
@@ -952,30 +964,32 @@ function clone(value) {
 }
 
 function renameStore(record, nextName) {
-  if (nextName === record.name) return;
+  const previousName = record.metadata.name;
+  if (nextName === previousName) return;
   const transaction = requireRecord(record.transaction);
   requireVersionchangeTransaction(transaction);
   const database = requireRecord(transaction.database);
   if (database.metadata.stores.has(nextName)) {
     throw domError("Object store already exists", "ConstraintError");
   }
-  database.metadata.stores.delete(record.name);
+  database.metadata.stores.delete(previousName);
   record.metadata.name = nextName;
   database.metadata.stores.set(nextName, record.metadata);
-  const position = transaction.storeNames.indexOf(record.name);
+  const position = transaction.storeNames.indexOf(previousName);
   if (position !== -1) transaction.storeNames[position] = nextName;
   record.name = nextName;
 }
 
 function renameIndex(record, nextName) {
-  if (nextName === record.name) return;
+  const previousName = record.metadata.name;
+  if (nextName === previousName) return;
   const store = requireRecord(record.objectStore);
   const transaction = requireRecord(store.transaction);
   requireVersionchangeTransaction(transaction);
   if (store.metadata.indexes.has(nextName)) {
     throw domError("Index already exists", "ConstraintError");
   }
-  store.metadata.indexes.delete(record.name);
+  store.metadata.indexes.delete(previousName);
   record.metadata.name = nextName;
   store.metadata.indexes.set(nextName, record.metadata);
   record.name = nextName;

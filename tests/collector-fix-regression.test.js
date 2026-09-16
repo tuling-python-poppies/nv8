@@ -92,7 +92,7 @@ test('result sink releases keys for retry after a failed auto-flush', async () =
   assert.equal(sink.stats().batches, 1);
 });
 
-test('a pending key is deduplicated before persist resolves and committed after', async () => {
+test('a concurrent duplicate write is deduplicated after its predecessor persists', async () => {
   let release;
   const gate = new Promise((resolve) => { release = resolve; });
   let persistCalls = 0;
@@ -108,11 +108,14 @@ test('a pending key is deduplicated before persist resolves and committed after'
   const first = sink.write([{ id: 'a' }, { id: 'b' }]);
   await Promise.resolve();
   await Promise.resolve();
-  assert.equal(await sink.write([{ id: 'a' }]), 0, 'in-flight key must be deduplicated');
-  assert.equal(sink.stats().duplicates, 1);
-
+  // write/flush/close 现在按调用顺序串行。不要在释放前一笔 IO 之前等待
+  // 后一笔 write；仍验证并发提交的同 key 不产生第二次 persist。
+  const duplicate = sink.write([{ id: 'a' }]);
+  assert.equal(sink.stats().written, 0);
   release();
   await first;
+  assert.equal(await duplicate, 0, 'concurrent key must be deduplicated');
+  assert.equal(sink.stats().duplicates, 1);
   assert.equal(await sink.write([{ id: 'a' }]), 0, 'committed key must stay deduplicated');
   await sink.close();
   assert.equal(persistCalls, 1);

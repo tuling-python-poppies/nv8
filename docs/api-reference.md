@@ -105,10 +105,12 @@ Realm `type` 当前包括 `root`、`iframe`、`worker` 和 `worklet`。Realm、�
 `ERR_SCRIPT_EXECUTION_TIMEOUT` 拒绝，并清理临时 Realm 的定时器和资源。
 业务代码的同步异常与 Promise 拒绝原样传播；`nv8Eval()` 使用同一规则。
 
-Core 的 `sandbox.createRealm()` 在创建开始时预占 `limits.maxRealms` 容量，
-按已登记 Realm 与在途创建总数检查。超限返回 `LIMIT_REALM_CAPACITY`，失败或
+Core 的公开 `sandbox.createRealm()`、DOM iframe、Worker/SharedWorker/ServiceWorker
+和 Worklet 工厂共用 `limits.maxRealms` 容量，在创建开始时预占。按已登记 Realm、
+Worklet 与在途创建总数检查；Worker 专用配额仍额外生效。超限返回 `LIMIT_REALM_CAPACITY`，失败或
 被 reset/destroy 取消的创建会释放预占；`sandbox.diagnose().pendingRealmCreations`
 报告尚未完成的创建数。reset 不会提前抹掉仍占资源的旧一代预占计数。
+导航替换在旧 Realm 回收后申请新额度；iframe 创建失败或移除后释放占用。
 
 ### `nv8Eval(code, options)`
 

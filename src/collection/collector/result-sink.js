@@ -85,7 +85,31 @@ export function createBatchingResultSink(config = {}) {
   let buffer = [];
   let bufferKeys = [];
   let closed = false;
+  let closing = null;
+  let queue = Promise.resolve();
+  const pending = new Set();
   const stats = { received: 0, written: 0, duplicates: 0, batches: 0 };
+
+  function enqueue(operation) {
+    const result = queue.then(operation);
+    pending.add(result);
+    // 单次失败不能阻断显式重试。flush/close 另行保留在途操作的失败结果。
+    queue = result.then(
+      () => { pending.delete(result); },
+      () => { pending.delete(result); },
+    );
+    return result;
+  }
+
+  function enqueueFlush() {
+    // 只等待调用时已经接受的操作，不包含本次 barrier 自身。
+    const preceding = Promise.allSettled([...pending]);
+    return enqueue(async () => {
+      const failure = (await preceding).find(result => result.status === 'rejected');
+      if (failure) throw failure.reason;
+      await flushBuffer();
+    });
+  }
 
   async function flushBuffer() {
     if (buffer.length === 0) return;
@@ -122,43 +146,49 @@ export function createBatchingResultSink(config = {}) {
      * @returns {Promise<number>}
      */
     async write(items) {
-      if (closed) {
+      if (closed || closing !== null) {
         throw new CollectorError(
           CollectorErrorCode.DISPOSED,
-          'result sink is closed',
+          'result sink is closing or closed',
           { retryable: false }
         );
       }
 
-      let accepted = 0;
-      for (const item of items) {
-        stats.received += 1;
-        let key = null;
-        if (seen !== null) {
-          key = `${keyOf(item)}`;
-          if (seen.has(key) || pendingKeys.has(key)) {
-            stats.duplicates += 1;
-            continue;
+      // 检查在入队时完成：已接受的整次 write 必须在关闭 barrier 前跑完。
+      return enqueue(async () => {
+        let accepted = 0;
+        for (const item of items) {
+          stats.received += 1;
+          let key = null;
+          if (seen !== null) {
+            key = `${keyOf(item)}`;
+            if (seen.has(key) || pendingKeys.has(key)) {
+              stats.duplicates += 1;
+              continue;
+            }
+            pendingKeys.add(key);
           }
-          pendingKeys.add(key);
+          buffer.push(item);
+          if (key !== null) bufferKeys.push(key);
+          accepted += 1;
+          if (buffer.length >= batchSize) await flushBuffer();
         }
-        buffer.push(item);
-        if (key !== null) bufferKeys.push(key);
-        accepted += 1;
-        if (buffer.length >= batchSize) await flushBuffer();
-      }
-      return accepted;
+        return accepted;
+      });
     },
 
-    async flush() {
-      await flushBuffer();
+    flush() {
+      return enqueueFlush();
     },
 
-    async close() {
-      if (closed) return;
-      // 冲干放在置位之前：置位之后再抛错的话缓冲区就永久丢了
-      await flushBuffer();
-      closed = true;
+    close() {
+      if (closing !== null) return closing;
+      if (closed) return Promise.resolve();
+      // 立即拒绝新 write，同一次关闭共享 Promise；失败后允许重放失败批次。
+      closing = enqueueFlush().then(() => { closed = true; }).finally(() => {
+        closing = null;
+      });
+      return closing;
     },
 
     get closed() { return closed; },

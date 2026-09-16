@@ -477,6 +477,25 @@ export async function createSandbox(config) {
     get closed() { return lifecycleClosed; },
     get generation() { return lifecycleGeneration; },
   };
+
+  // 所有创建入口共享一个预算；不能只保护公开 createRealm 而漏掉 DOM 工厂。
+  function reserveRealmCapacity() {
+    if (lifecycleClosed) throw createRealmLifecycleError();
+    if (realms.size + workletRealms.size + pendingRealmCreations >= (limits.maxRealms ?? 64)) {
+      const error = new Error('Realm capacity limit exceeded');
+      error.code = 'LIMIT_REALM_CAPACITY';
+      error.limit = limits.maxRealms ?? 64;
+      throw error;
+    }
+    pendingRealmCreations += 1;
+    let reserved = true;
+    return () => {
+      if (!reserved) return;
+      reserved = false;
+      pendingRealmCreations -= 1;
+    };
+  }
+
   const workerFactories = createWorkerRealmFactories({
     sandboxId,
     profile,
@@ -499,6 +518,7 @@ export async function createSandbox(config) {
     workletRealms,
     serviceWorkerHandles,
     reserveWorker,
+    reserveRealmCapacity,
     reserveWorkerConnection,
     trackWorkerConnection,
     releaseWorkerConnections,
@@ -531,6 +551,7 @@ export async function createSandbox(config) {
     getServiceWorkerClients,
     interceptFetch: workerFactories.interceptServiceWorkerFetch,
     workers: workerFactories,
+    reserveRealmCapacity,
   });
 
   /** 构造插件钩子上下文（sandbox 级安装，realm 为 null）。 */
@@ -590,21 +611,7 @@ export async function createSandbox(config) {
         throw createRealmLifecycleError();
       }
       const generation = lifecycleGeneration;
-      if (realms.size + pendingRealmCreations >= (limits.maxRealms ?? 64)) {
-        const error = new Error('Realm capacity limit exceeded');
-        error.code = 'LIMIT_REALM_CAPACITY';
-        error.limit = limits.maxRealms ?? 64;
-        throw error;
-      }
-      // 在任何 await 之前预占；登记到 realms 时转为已用额度，失败/取消
-      // 则由 finally 释放。reset 不清零计数，旧一代创建仍占真实资源。
-      pendingRealmCreations += 1;
-      let reserved = true;
-      const releaseReservation = () => {
-        if (!reserved) return;
-        reserved = false;
-        pendingRealmCreations -= 1;
-      };
+      const releaseReservation = reserveRealmCapacity();
       try {
       const realmType = options.type || 'root';
       const pageUrl = options.pageUrl || profile.url || 'https://example.com/';
@@ -1675,6 +1682,7 @@ export function createWorkerRealmFactories({
   workletRealms,
   serviceWorkerHandles,
   reserveWorker,
+  reserveRealmCapacity,
   reserveWorkerConnection,
   trackWorkerConnection,
   releaseWorkerConnections,
@@ -1714,7 +1722,9 @@ export function createWorkerRealmFactories({
       language: profile.navigator?.language || 'en-US',
     };
     let workerRealm;
+    let releaseRealm = () => {};
     try {
+      releaseRealm = reserveRealmCapacity();
       workerRealm = await createRealm({
         sandboxId,
         type: 'worker',
@@ -1763,6 +1773,8 @@ export function createWorkerRealmFactories({
       reservation.releaseConnection();
       reservation.releasePending();
       throw error;
+    } finally {
+      releaseRealm();
     }
     reservation.releasePending();
     if (lifecycleState.closed || generation !== lifecycleState.generation) {
@@ -1815,7 +1827,9 @@ export function createWorkerRealmFactories({
       language: profile.navigator?.language || 'en-US',
     };
     let workerRealm;
+    let releaseRealm = () => {};
     try {
+      releaseRealm = reserveRealmCapacity();
       workerRealm = await createRealm({
         sandboxId,
         type: 'worker',
@@ -1886,6 +1900,8 @@ export function createWorkerRealmFactories({
       reservation.releaseConnection();
       reservation.releasePending();
       throw error;
+    } finally {
+      releaseRealm();
     }
     reservation.releasePending();
     if (lifecycleState.closed || generation !== lifecycleState.generation) {
@@ -2053,7 +2069,9 @@ export function createWorkerRealmFactories({
       languages: profile.navigator?.languages || ['en-US', 'en'],
       language: profile.navigator?.language || 'en-US',
     };
+    let releaseRealm = () => {};
     try {
+      releaseRealm = reserveRealmCapacity();
       workerRealm = await createRealm({
         sandboxId,
         type: 'worker',
@@ -2104,6 +2122,8 @@ export function createWorkerRealmFactories({
     } catch (error) {
       reservation.releasePending();
       throw error;
+    } finally {
+      releaseRealm();
     }
     reservation.releasePending();
     if (lifecycleState.closed || generation !== lifecycleState.generation) {
@@ -2144,20 +2164,30 @@ export function createWorkerRealmFactories({
     const key = `${options.kind}\0${options.id}`;
     let worklet = realmsForOwner.get(key);
     if (worklet === undefined) {
-      const workletRealm = await createWorkletRealm({
-        label: `sandbox-${sandboxId}-${options.kind}-worklet-${options.id}`,
-        kind: options.kind,
-        origin: options.creatorOrigin,
-        traceEnabled: trace,
-        maxTraceEntries: 100_000,
-        objectURLRegistry: null,
-      });
-      worklet = { realm: workletRealm };
-      realmsForOwner.set(key, worklet);
-      workletRealms.add(workletRealm);
+      const generation = lifecycleState.generation;
+      const releaseRealm = reserveRealmCapacity();
+      try {
+        const workletRealm = await createWorkletRealm({
+          label: `sandbox-${sandboxId}-${options.kind}-worklet-${options.id}`,
+          kind: options.kind,
+          origin: options.creatorOrigin,
+          traceEnabled: trace,
+          maxTraceEntries: 100_000,
+          objectURLRegistry: null,
+        });
+        if (lifecycleState.closed || generation !== lifecycleState.generation) {
+          destroyWorkletRealm(workletRealm);
+          throw createRealmLifecycleError();
+        }
+        worklet = { realm: workletRealm };
+        realmsForOwner.set(key, worklet);
+        workletRealms.add(workletRealm);
+      } finally {
+        releaseRealm();
+      }
     }
-    const source = resolveCoreWorkerSource(options.url, workerReplayState);
     try {
+      const source = resolveCoreWorkerSource(options.url, workerReplayState);
       await evaluateCoreWorkletModule(
         worklet.realm,
         source,
@@ -2233,6 +2263,7 @@ export function createWindowRealmFactories({
   getServiceWorkerClients,
   interceptFetch,
   workers,
+  reserveRealmCapacity,
 }) {
   const {
     createDedicatedWorker,
@@ -2244,11 +2275,9 @@ export function createWindowRealmFactories({
   async function createIframeChildRealm(options) {
     if (lifecycleState.closed) throw createRealmLifecycleError();
     const generation = lifecycleState.generation;
-    if (realms.size >= (limits.maxRealms ?? 64)) {
-      const error = new Error('Realm capacity limit exceeded');
-      error.code = 'LIMIT_REALM_CAPACITY';
-      throw error;
-    }
+    const releaseRealm = reserveRealmCapacity();
+    let childRealm;
+    try {
     const childUrl = new URL(options.pageUrl || profile.url || 'https://example.com/');
     const childOrigin = options.origin ?? childUrl.origin;
     const serviceWorkerPageUrl = options.serviceWorkerPageUrl ?? childUrl.href;
@@ -2269,7 +2298,6 @@ export function createWindowRealmFactories({
         pageHtml = decodeNavigationBody(navigationResponse.body);
       }
     }
-    let childRealm;
     childRealm = await createRealm({
       sandboxId,
       type: 'iframe',
@@ -2286,6 +2314,7 @@ export function createWindowRealmFactories({
       replay: options.replay ?? replay,
       navigatorProfile: options.navigatorProfile ?? profile.navigator ?? {},
       timingProfile: options.timingProfile ?? profile.timing ?? null,
+      limits,
       runtime: {
         ...runtime,
         ...(options.runtime || {}),
@@ -2324,6 +2353,7 @@ export function createWindowRealmFactories({
       throw createRealmLifecycleError();
     }
     realms.set(childRealm.id, childRealm);
+    releaseRealm();
     const clientId = options.clientId ?? `window-client-${counter.nextClientId()}`;
     windowClients.set(childRealm.id, {
       id: clientId,
@@ -2337,6 +2367,9 @@ export function createWindowRealmFactories({
         : null,
     });
     await completePageLifecycle(childRealm);
+    if (lifecycleState.closed || generation !== lifecycleState.generation || childRealm.destroyed) {
+      throw createRealmLifecycleError();
+    }
     const childWindow = childRealm.evaluate('globalThis');
     options.onContext?.(childWindow);
     return {
@@ -2367,9 +2400,22 @@ export function createWindowRealmFactories({
         void childRealm.destroy();
         realms.delete(childRealm.id);
         windowClients.delete(childRealm.id);
+        serviceWorkerContainers.delete(childRealm.id);
         stateRegistry.destroyContext('realm', childRealm.id);
       },
     };
+    } catch (error) {
+      if (childRealm) {
+        childRealm.destroyed = true;
+        await childRealm.destroy().catch(() => {});
+        realms.delete(childRealm.id);
+        windowClients.delete(childRealm.id);
+        serviceWorkerContainers.delete(childRealm.id);
+      }
+      throw error;
+    } finally {
+      releaseRealm();
+    }
   }
 
   async function replaceRootWindowClient(
@@ -2417,8 +2463,11 @@ export function createWindowRealmFactories({
     windowClients.delete(oldRealm.id);
     serviceWorkerContainers.delete(oldRealm.id);
     stateRegistry.destroyContext('realm', oldRealm.id);
+    if (rootRealm.id === oldRealm.id) rootRealm.id = null;
 
+    const releaseRealm = reserveRealmCapacity();
     let replacement;
+    try {
     replacement = await createRealm({
       sandboxId,
       type: 'root',
@@ -2502,6 +2551,7 @@ export function createWindowRealmFactories({
       throw createRealmLifecycleError();
     }
     realms.set(replacement.id, replacement);
+    releaseRealm();
     rootRealm.id = replacement.id;
     oldClient.realmId = replacement.id;
     oldClient.url = targetUrl;
@@ -2521,6 +2571,21 @@ export function createWindowRealmFactories({
       url: targetUrl,
     });
     return replacement;
+    } catch (error) {
+      if (replacement) {
+        evidenceResources.get(replacement.id)?.dispose();
+        evidenceResources.delete(replacement.id);
+        replacement.destroyed = true;
+        await replacement.destroy().catch(() => {});
+        realms.delete(replacement.id);
+        windowClients.delete(replacement.id);
+        serviceWorkerContainers.delete(replacement.id);
+      }
+      if (rootRealm.id === oldRealm.id || rootRealm.id === replacement?.id) rootRealm.id = null;
+      throw error;
+    } finally {
+      releaseRealm();
+    }
   }
 
 

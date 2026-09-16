@@ -251,6 +251,14 @@ Collector 的请求执行与结果落地是两个独立契约。`createMemoryRes
 4. `keyOf` 和 `knownKeys` 必须由调用方明确提供。续采时可用 `readNdjsonKeys()` 读取
    已落地 key；不提供 key 时不猜主键，也不去重。
 
+内置批量 sink 按调用顺序串行执行 `write` / `flush` / `close`。`flush()` 等待
+调用时已接受的在途操作再冲干缓冲区；`close()` 一经调用立即拒绝新 `write`，
+等待已接受的整次写入及尾批完成后才将 `closed` 置为 `true`。并发 `close()` 共享
+同一次关闭结果。在途写入失败会使随后已发起的 flush/close 一并拒绝，不能误报成功。
+关闭失败后可显式重试失败批次，再重新关闭。已被调用方处理的历史写入失败不会永久
+阻断后续操作；失败批次的重放与存储端幂等仍由调用方负责。`persist` 回调不得反向
+等待同一个 sink 的排队操作，以免形成自等待。
+
 NDJSON 按行追加，末尾残缺行可以跳过并计数；这不会把前面已经完整落地的记录变成
 不可读的整体。`stats()` 中的 `written`、`duplicates`、`buffered` 和 `batches` 用于
 故障诊断，但不包含凭据或完整状态值。
