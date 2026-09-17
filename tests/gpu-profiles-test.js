@@ -16,8 +16,6 @@ import assert from 'node:assert/strict';
 
 import {
   GPU_IDENTITIES,
-  DEFAULT_GPU_IDENTITY,
-  gpuIdentityById,
   validateGpuIdentity,
 } from '../src/infra/fingerprint/gpu-profiles.js';
 
@@ -63,35 +61,15 @@ test('no built-in identity is a fallback (software) adapter', () => {
   }
 });
 
-// ------------------------------------------------- 查找
-
-test('gpuIdentityById returns the requested identity', () => {
-  const identity = gpuIdentityById('amd-radeon-rx-7600');
-  assert.equal(identity.webgpu.device, 'AMD Radeon RX 7600');
-  assert.equal(identity.webglVendor, 'Google Inc. (AMD)');
-});
-
-test('gpuIdentityById rejects unknown ids with the known list', () => {
-  assert.throws(
-    () => gpuIdentityById('nvidia-geforce-rtx-9999'),
-    (error) => {
-      assert.ok(error instanceof RangeError);
-      // 报错要能自助排查，光说"unknown"没用
-      assert.match(error.message, /nvidia-geforce-rtx-5060/);
-      return true;
-    }
-  );
-});
-
 // ------------------------------------------------- 与 profile 对齐
 
 test('the default identity matches the edge-150 rendering profile', async () => {
   const { edge150Fingerprint } = await import('../src/infra/fingerprint/edge-150.js');
   const rendering = edge150Fingerprint.rendering;
 
-  assert.equal(DEFAULT_GPU_IDENTITY.webglVendor, rendering.webglVendor);
-  assert.equal(DEFAULT_GPU_IDENTITY.webglRenderer, rendering.webglRenderer);
-  assert.equal(DEFAULT_GPU_IDENTITY.webgpu.device, rendering.webgpu.device);
+  assert.equal(GPU_IDENTITIES[0].webglVendor, rendering.webglVendor);
+  assert.equal(GPU_IDENTITIES[0].webglRenderer, rendering.webglRenderer);
+  assert.equal(GPU_IDENTITIES[0].webgpu.device, rendering.webgpu.device);
 });
 
 test('shipped fingerprint profiles are internally consistent', async () => {
@@ -113,7 +91,7 @@ test('shipped fingerprint profiles are internally consistent', async () => {
 
 test('validateGpuIdentity catches a WebGL/WebGPU vendor mismatch', () => {
   const problems = validateGpuIdentity({
-    ...DEFAULT_GPU_IDENTITY,
+    ...GPU_IDENTITIES[0],
     webglVendor: 'Google Inc. (Intel)', // WebGPU 仍说 nvidia
   });
   assert.ok(problems.length > 0);
@@ -122,7 +100,7 @@ test('validateGpuIdentity catches a WebGL/WebGPU vendor mismatch', () => {
 
 test('validateGpuIdentity catches a renderer that omits the device', () => {
   const problems = validateGpuIdentity({
-    ...DEFAULT_GPU_IDENTITY,
+    ...GPU_IDENTITIES[0],
     webglRenderer: 'ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11)',
   });
   assert.ok(problems.some((entry) => /does not mention webgpu\.device/.test(entry)));
@@ -130,16 +108,16 @@ test('validateGpuIdentity catches a renderer that omits the device', () => {
 
 test('validateGpuIdentity catches an impossible subgroup size', () => {
   const problems = validateGpuIdentity({
-    ...DEFAULT_GPU_IDENTITY,
-    webgpu: { ...DEFAULT_GPU_IDENTITY.webgpu, subgroupMinSize: 16, subgroupMaxSize: 16 },
+    ...GPU_IDENTITIES[0],
+    webgpu: { ...GPU_IDENTITIES[0].webgpu, subgroupMinSize: 16, subgroupMaxSize: 16 },
   });
   assert.ok(problems.some((entry) => /not a real nvidia configuration/.test(entry)));
 });
 
 test('validateGpuIdentity catches a driver string from the wrong vendor', () => {
   const problems = validateGpuIdentity({
-    ...DEFAULT_GPU_IDENTITY,
-    webgpu: { ...DEFAULT_GPU_IDENTITY.webgpu, description: 'Intel driver 31.0.101.5333' },
+    ...GPU_IDENTITIES[0],
+    webgpu: { ...GPU_IDENTITIES[0].webgpu, description: 'Intel driver 31.0.101.5333' },
   });
   assert.ok(problems.some((entry) => /does not mention NVIDIA/.test(entry)));
 });

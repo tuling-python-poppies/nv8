@@ -102,25 +102,6 @@ export const GPU_IDENTITIES = Object.freeze([
   }),
 ]);
 
-/** 默认 GPU。与 `src/fingerprint/edge-150.js` 的 renderingProfile 对应。 */
-export const DEFAULT_GPU_IDENTITY = GPU_IDENTITIES[0];
-
-/**
- * 按 id 取一个 GPU 身份。
- *
- * @param {string} id
- * @returns {object}
- */
-export function gpuIdentityById(id) {
-  const found = GPU_IDENTITIES.find((entry) => entry.id === id);
-  if (found === undefined) {
-    throw new RangeError(
-      `unknown GPU identity "${id}"; known: ${GPU_IDENTITIES.map((e) => e.id).join(', ')}`
-    );
-  }
-  return found;
-}
-
 /**
  * 校验一套 rendering 字段内部自洽。
  *

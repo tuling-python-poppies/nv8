@@ -325,12 +325,6 @@ export function createStateRegistry(options = {}) {
       }
     },
 
-    /** 列出某个作用域桶内的键（调试/兼容 SDK StateAccessor）。 */
-    keys(scope, contextId = null) {
-      const store = storeFor(scope, contextId);
-      return store ? Array.from(store.keys()) : [];
-    },
-
     /** 返回作用域桶的浅快照（调试/兼容 SDK StateAccessor）。 */
     snapshot(scope, contextId = null) {
       const store = storeFor(scope, contextId);

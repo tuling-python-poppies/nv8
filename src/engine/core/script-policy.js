@@ -3,14 +3,6 @@
  * classes and replay origins, not a claim that vm.Context is a security box.
  */
 
-export const DEFAULT_SCRIPT_POLICY = Object.freeze({
-  allowInline: true,
-  allowExternal: true,
-  allowModules: true,
-  allowDataUrls: true,
-  allowedOrigins: null,
-});
-
 export function normalizeScriptPolicy(input = {}) {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {
     throw new TypeError('scriptPolicy must be an object');

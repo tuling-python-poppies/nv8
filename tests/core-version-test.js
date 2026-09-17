@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   assertCoreVersion,
-  assertCoreVersionSatisfies,
   CORE_VERSION,
   parseCoreVersion,
   satisfiesCoreVersionRange,
@@ -26,15 +25,6 @@ test('Core compatibility ranges follow the documented SemVer policy', () => {
   assert.equal(satisfiesCoreVersionRange('1.5.0', '~1.4.0'), false);
   assert.equal(satisfiesCoreVersionRange('1.4.2', '>=1.4.0'), true);
   assert.equal(satisfiesCoreVersionRange('1.4.2', 'not-a-range'), false);
-});
-
-test('an incompatible Core range returns a structured failure', () => {
-  assert.throws(
-    () => assertCoreVersionSatisfies('^2.0.0'),
-    error => error.code === 'CORE_VERSION_UNSUPPORTED'
-      && error.version === CORE_VERSION
-      && error.range === '^2.0.0',
-  );
 });
 
 test('Lock Plan records the Core SemVer independently of plugin versions', async () => {

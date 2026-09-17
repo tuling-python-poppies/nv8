@@ -14,13 +14,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
-import { waitUntil } from './helpers/async-wait.js';
 
 import {
   CAPABILITY_STATUS,
   MINIMUM_NODE_VERSION,
   NODE_SUPPORT_MATRIX,
-  assertHostCapabilities,
   detectHostCapabilities,
   hostCapabilityStatus,
   hostSupports,
@@ -37,16 +35,7 @@ import {
 
 import { RealmModuleLoader } from '../src/engine/realm/module-loader.js';
 
-import {
-  HAS_NATIVE_ARRAY_BUFFER_TRANSFER,
-  abortSignalTimeout,
-  describeHostCompat,
-  disposeSymbol,
-  asyncDisposeSymbol,
-  isArrayBufferDetached,
-  structuredCloneCompat,
-  transferArrayBuffer,
-} from '../src/engine/compat/index.js';
+import { describeHostCompat } from '../src/engine/compat/host-compat.js';
 
 const SAMPLE_MODULE_URL = new URL('../src/engine/webidl/descriptor.js', import.meta.url);
 
@@ -142,26 +131,6 @@ test('unknown capabilities report unavailable rather than throwing', () => {
   const host = detectHostCapabilities();
   const status = hostCapabilityStatus(host, 'does.not.exist');
   assert.equal(status.status, CAPABILITY_STATUS.UNAVAILABLE);
-});
-
-test('assertHostCapabilities produces actionable diagnostics', () => {
-  const host = detectHostCapabilities();
-  assert.throws(
-    () => assertHostCapabilities(host, ['vm.context', 'totally.missing'], 'demo-profile'),
-    (error) => {
-      assert.equal(error.code, 'HOST_REQUIREMENT_UNAVAILABLE');
-      assert.match(error.message, /demo-profile/);
-      assert.match(error.message, /totally\.missing/);
-      assert.equal(error.context.problems.length, 1, 'available ones must not be reported');
-      assert.equal(error.suggestions.length, 1);
-      return true;
-    }
-  );
-});
-
-test('assertHostCapabilities passes when everything is available', () => {
-  const host = detectHostCapabilities();
-  assert.doesNotThrow(() => assertHostCapabilities(host, ['vm.context', 'worker.thread']));
 });
 
 // ------------------------------------------------------ 版本支持矩阵
@@ -391,64 +360,4 @@ test('describeHostCompat reports native availability', () => {
   ]) {
     assert.equal(typeof compat[key], 'boolean', `${key} must be boolean`);
   }
-});
-
-test('transferArrayBuffer moves data and reports detachment honestly', () => {
-  const buffer = new ArrayBuffer(8);
-  new Uint8Array(buffer).set([1, 2, 3, 4, 5, 6, 7, 8]);
-
-  const result = transferArrayBuffer(buffer);
-
-  // 两种路径的共同保证：数据完整迁移
-  assert.equal(result.buffer.byteLength, 8);
-  assert.deepEqual([...new Uint8Array(result.buffer)], [1, 2, 3, 4, 5, 6, 7, 8]);
-
-  if (HAS_NATIVE_ARRAY_BUFFER_TRANSFER) {
-    assert.equal(result.detached, true);
-    assert.equal(isArrayBufferDetached(buffer), true);
-  } else {
-    // 回退无法真正分离（V8 层能力），必须如实上报
-    assert.equal(result.detached, false, 'fallback must not claim detachment');
-    assert.equal(buffer.byteLength, 8, 'source stays usable under the fallback');
-  }
-});
-
-test('transferArrayBuffer honors an explicit new length', () => {
-  const buffer = new ArrayBuffer(8);
-  new Uint8Array(buffer).fill(7);
-  const result = transferArrayBuffer(buffer, 4);
-  assert.equal(result.buffer.byteLength, 4);
-  assert.equal(new Uint8Array(result.buffer)[3], 7);
-});
-
-test('transferArrayBuffer rejects non-ArrayBuffer input', () => {
-  assert.throws(() => transferArrayBuffer(new Uint8Array(4)), /expects an ArrayBuffer/);
-});
-
-test('structuredCloneCompat performs a deep clone', () => {
-  const original = { nested: { list: [1, 2, 3] } };
-  const clone = structuredCloneCompat(original);
-  assert.deepEqual(clone, original);
-  assert.notEqual(clone.nested, original.nested, 'must not share references');
-});
-
-test('dispose symbols are stable within the process', () => {
-  assert.equal(asyncDisposeSymbol(), asyncDisposeSymbol());
-  assert.equal(disposeSymbol(), disposeSymbol());
-  assert.equal(typeof asyncDisposeSymbol(), 'symbol');
-});
-
-test('abortSignalTimeout aborts with a TimeoutError', async () => {
-  const signal = abortSignalTimeout(5);
-  assert.equal(signal.aborted, false);
-
-  // 回退实现给 timer 调了 unref()，不能靠「等信号」的裸 await：只要此刻没有
-  // 别的 refed 句柄，事件循环会提前排空。helpers 的轮询 sleep 不 unref，
-  // 它同时充当保活句柄，且等待的是正向条件而不是固定时长。
-  await waitUntil(() => signal.aborted, {
-    label: 'abortSignalTimeout abort event',
-  });
-
-  assert.equal(signal.aborted, true);
-  assert.equal(signal.reason?.name, 'TimeoutError');
 });

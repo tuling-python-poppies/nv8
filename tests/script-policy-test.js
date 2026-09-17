@@ -1,14 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  DEFAULT_SCRIPT_POLICY,
   normalizeScriptPolicy,
   scriptPolicyAllows,
 } from '../src/engine/core/script-policy.js';
 
 test('default script policy allows ordinary replay scripts', () => {
   const policy = normalizeScriptPolicy();
-  assert.deepEqual(policy, DEFAULT_SCRIPT_POLICY);
+  assert.deepEqual(policy, {
+    allowInline: true,
+    allowExternal: true,
+    allowModules: true,
+    allowDataUrls: true,
+    allowedOrigins: null,
+  });
   assert.deepEqual(scriptPolicyAllows(policy, {
     url: 'https://target.test/app.js',
     inline: false,

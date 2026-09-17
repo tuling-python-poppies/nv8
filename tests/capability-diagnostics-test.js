@@ -19,7 +19,6 @@ import {
   createCapabilityExplainer,
   installStrictCapabilityDiagnostics,
   parseReservedSurfaces,
-  removeStrictCapabilityDiagnostics,
   suggestPluginsFor,
 } from '../src/engine/core/capability-diagnostics.js';
 import { HAS_VM_PROPERTY_QUERY_CALLBACK } from '../src/engine/compat/host-compat.js';
@@ -232,27 +231,6 @@ test('strict diagnostics stay configurable so plugins can install later', () => 
 
   evaluate('Object.defineProperty(globalThis, "document", { value: { real: true }, configurable: true })');
   assert.equal(evaluate('document.real'), true);
-});
-
-test('strict diagnostics can be removed for trace-free scenarios', () => {
-  const context = vm.createContext({});
-  const evaluate = (source) => vm.runInContext(source, context);
-  const installed = installStrictCapabilityDiagnostics({ evaluate, surfaceMap: sampleMap });
-
-  removeStrictCapabilityDiagnostics(evaluate, installed);
-
-  assert.equal(evaluate("'document' in globalThis"), false);
-  assert.equal(evaluate('typeof document'), 'undefined');
-});
-
-test('removal leaves real implementations alone', () => {
-  const context = vm.createContext({});
-  const evaluate = (source) => vm.runInContext(source, context);
-  evaluate('globalThis.fetch = "real";');
-  installStrictCapabilityDiagnostics({ evaluate, surfaceMap: sampleMap });
-
-  removeStrictCapabilityDiagnostics(evaluate, ['document', 'fetch']);
-  assert.equal(evaluate('fetch'), 'real', 'removal must not delete real values');
 });
 
 test('strict mode requires an evaluate function', () => {

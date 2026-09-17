@@ -75,37 +75,4 @@ export function standardFontFamilyFor(locale) {
   return FALLBACK_STANDARD_FONT;
 }
 
-/**
- * 校验 profile 的 locale 与字体族是否配对。
- *
- * 只在**表里有该 locale 的条目**时校验：表外的 locale（比如 fr-FR）走通用默认，
- * 但调用方仍可以显式声明别的值——那可能是刻意模拟某台特定机器，不该被拦。
- *
- * 返回问题描述而不是抛错，让调用方决定是拦还是记——与
- * `validateDifferenceRegistry()` 同一个风格。
- *
- * @param {string} locale
- * @param {string} fontFamily
- * @returns {string[]} 空数组表示合规
- */
-export function validateLocaleFontPair(locale, fontFamily) {
-  const declared = `${fontFamily ?? ""}`;
-  if (declared === "") {
-    return [`locale ${locale} has no standardFontFamily declared`];
-  }
-  const expected = standardFontFamilyFor(locale);
-  const normalized = `${locale ?? ""}`;
-  const known = Object.keys(STANDARD_FONT_BY_LOCALE).some(
-    (key) => normalized === key || normalized.startsWith(`${key}-`),
-  );
-  if (!known) return [];
-  if (declared !== expected) {
-    return [
-      `locale ${normalized} implies standardFontFamily ${expected} `
-      + `but the profile declares ${declared}`,
-    ];
-  }
-  return [];
-}
-
 export { STANDARD_FONT_BY_LOCALE, FALLBACK_STANDARD_FONT };

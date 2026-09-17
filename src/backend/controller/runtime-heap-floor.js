@@ -70,16 +70,3 @@ export function resolveRuntimeHeapMegabytes(maxHeapBytes) {
   const requested = Math.floor(maxHeapBytes / (1024 * 1024));
   return Math.max(MINIMUM_RUNTIME_HEAP_MB, requested) + RUNTIME_GC_HEADROOM_MB;
 }
-
-/**
- * 上限是否被钳制过。
- *
- * 用于诊断：调用方以为自己限了 64MB，实际是 128MB。不说清楚会让
- * 「为什么内存超了预期」变成一个查不出来的问题。
- *
- * @param {number} maxHeapBytes
- * @returns {boolean}
- */
-export function isRuntimeHeapClamped(maxHeapBytes) {
-  return Math.floor(maxHeapBytes / (1024 * 1024)) < MINIMUM_RUNTIME_HEAP_MB;
-}

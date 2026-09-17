@@ -229,10 +229,7 @@ function openDatabase(inputName, inputVersion) {
         newVersion: version,
       });
       fire(request, "upgradeneeded", event);
-      requireRecord(database).upgradeTransaction = null;
-      if (!transactionRecord.active) {
-        // abort() 已把事务置为 inactive（并派发了 abort 事件）：不提交
-        // 版本与 schema，open request 以 AbortError 结束，连接作废。
+      const rollbackUpgrade = () => {
         rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime);
         const databaseRecord = requireRecord(database);
         databaseRecord.version = metadata.version;
@@ -242,22 +239,18 @@ function openDatabase(inputName, inputVersion) {
           request,
           transactionRecord.error ?? domError("Transaction aborted", "AbortError"),
         );
+      };
+      requireRecord(database).upgradeTransaction = null;
+      if (!transactionRecord.active) {
+        // abort() 已把事务置为 inactive（并派发了 abort 事件）：不提交
+        // 版本与 schema，open request 以 AbortError 结束，连接作废。
+        rollbackUpgrade();
         return;
       }
       // upgradeneeded 处理器里排队的请求（如 createObjectStore 后立即 put）
       // 是合法用法：升级事务必须等它们全部落定后再提交（真实 Edge 语义），
       // 而不是在事件处理器返回时立刻 complete（F14）。
-      await transactionCompletion(transactionRecord, request, () => {
-        rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime);
-        const databaseRecord = requireRecord(database);
-        databaseRecord.version = metadata.version;
-        databaseRecord.closed = true;
-        metadata.connections.delete(database);
-        failRequest(
-          request,
-          transactionRecord.error ?? domError("Transaction aborted", "AbortError"),
-        );
-      });
+      await transactionCompletion(transactionRecord, request, rollbackUpgrade);
     }
     succeedRequest(request, database);
   });

@@ -266,45 +266,6 @@ export function hostCapabilityStatus(hostCapabilities, featureId) {
 }
 
 /**
- * 断言一组能力全部可用，否则抛出带 reason 的结构化错误。
- *
- * @param {object} hostCapabilities
- * @param {string[]} requiredFeatures
- * @param {string} [context] 诊断上下文（Profile / 插件 ID）
- */
-export function assertHostCapabilities(hostCapabilities, requiredFeatures, context = 'runtime') {
-  const problems = [];
-  for (const featureId of requiredFeatures) {
-    const { status, reason } = hostCapabilityStatus(hostCapabilities, featureId);
-    if (status !== CAPABILITY_STATUS.AVAILABLE) {
-      problems.push({ featureId, status, reason });
-    }
-  }
-
-  if (problems.length === 0) return;
-
-  const summary = problems
-    .map((entry) => `${entry.featureId} (${entry.status}${entry.reason ? `: ${entry.reason}` : ''})`)
-    .join('; ');
-
-  const error = new Error(
-    `${context} requires unavailable host capabilities: ${summary}`
-  );
-  error.code = 'HOST_REQUIREMENT_UNAVAILABLE';
-  error.context = {
-    context,
-    nodeVersion: hostCapabilities?.nodeVersion ?? process.versions.node,
-    problems,
-  };
-  error.suggestions = problems.map((entry) => (
-    entry.status === CAPABILITY_STATUS.BROKEN
-      ? `Fix the runtime flag or upgrade Node so "${entry.featureId}" works`
-      : `Upgrade Node or choose a profile that does not require "${entry.featureId}"`
-  ));
-  throw error;
-}
-
-/**
  * 启动前置检查。
  *
  * 在 Node 版本低于最低要求时立刻失败，而不是等到运行期某个能力缺失。

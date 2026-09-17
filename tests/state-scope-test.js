@@ -13,7 +13,6 @@ import {
   STATE_SCOPE,
   createKeyedStateSlot,
   createRealmSlot,
-  createSandboxSlot,
   createStateSlot,
 } from '../src/engine/core/state-scope.js';
 
@@ -51,12 +50,6 @@ test('slots reject primitive hosts instead of silently sharing state', () => {
   for (const value of [null, undefined, 1, 'realm']) {
     assert.throws(() => slot.get(value), /scope host object/);
   }
-});
-
-test('sandbox slot is explicit in diagnostics', () => {
-  const slot = createSandboxSlot(() => new Map(), 'shared-workers');
-  assert.equal(slot.scope, STATE_SCOPE.SANDBOX);
-  assert.equal(slot.label, 'shared-workers');
 });
 
 test('keyed slot isolates string keys within each host', () => {

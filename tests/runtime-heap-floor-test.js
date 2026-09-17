@@ -27,7 +27,6 @@ import assert from 'node:assert/strict';
 import {
   MINIMUM_RUNTIME_HEAP_MB,
   RUNTIME_GC_HEADROOM_MB,
-  isRuntimeHeapClamped,
   resolveRuntimeHeapMegabytes,
 } from '../src/backend/controller/runtime-heap-floor.js';
 import { ChildProcessConnection } from '../src/backend/controller/child-process.js';
@@ -47,7 +46,6 @@ test('a too-small budget is clamped up to the floor plus GC headroom', () => {
       resolveRuntimeHeapMegabytes(megabytes * MB),
       MINIMUM_RUNTIME_HEAP_MB + RUNTIME_GC_HEADROOM_MB,
     );
-    assert.equal(isRuntimeHeapClamped(megabytes * MB), true);
   }
 });
 
@@ -58,7 +56,6 @@ test('a sufficient budget keeps its value plus GC headroom', () => {
     resolveRuntimeHeapMegabytes(512 * MB),
     512 + RUNTIME_GC_HEADROOM_MB,
   );
-  assert.equal(isRuntimeHeapClamped(512 * MB), false);
 });
 
 test('the spawn arguments carry the clamped value plus GC headroom', () => {

@@ -315,23 +315,6 @@ export function installStrictCapabilityDiagnostics(options = {}) {
 }
 
 /**
- * 移除严格模式诊断，恢复无痕状态。
- *
- * @param {(source: string) => unknown} evaluate
- * @param {readonly string[]} globalNames
- */
-export function removeStrictCapabilityDiagnostics(evaluate, globalNames) {
-  if (typeof evaluate !== 'function' || !Array.isArray(globalNames)) return;
-  if (globalNames.length === 0) return;
-  evaluate(`(() => {
-    for (const name of ${JSON.stringify([...globalNames])}) {
-      const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
-      if (descriptor && typeof descriptor.get === 'function') delete globalThis[name];
-    }
-  })()`);
-}
-
-/**
  * 给定全局名，查询应加载哪个插件。
  *
  * @param {Map<string, object>} surfaceMap

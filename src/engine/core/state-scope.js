@@ -116,17 +116,6 @@ export function createRealmSlot(create, label = 'realm-state') {
 }
 
 /**
- * Sandbox 作用域槽的便捷构造。
- *
- * @template T
- * @param {() => T} create
- * @param {string} [label]
- */
-export function createSandboxSlot(create, label = 'sandbox-state') {
-  return createStateSlot({ create, label, scope: STATE_SCOPE.SANDBOX });
-}
-
-/**
  * 按字符串键（如 origin）在宿主内二级键控的状态槽。
  *
  * 用于 origin 作用域：宿主是 Sandbox，二级键是 origin 字符串。

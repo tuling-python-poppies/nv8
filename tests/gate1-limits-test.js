@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EdgeSandbox } from '../src/public/edge-sandbox.js';
 import { DiagnosticsCollector } from '../src/engine/core/diagnostics/collector.js';
-import { createDiagnosticError, ErrorCode } from '../src/engine/core/diagnostics/errors.js';
+import { DiagnosticError } from '../src/engine/core/diagnostics/errors.js';
 
 const logger = { info() {}, warn() {}, error() {}, trace() {} };
 
@@ -27,8 +27,8 @@ test('diagnostics collector is bounded and preserves structured errors', () => {
   const collector = new DiagnosticsCollector({ maxEntries: 2 });
   collector.warn({ pluginId: 'one', message: 'old' });
   collector.error({ pluginId: 'two', message: 'new' });
-  collector.record(createDiagnosticError(
-    ErrorCode.LIMIT_REALM_CAPACITY,
+  collector.record(new DiagnosticError(
+    'LIMIT_REALM_CAPACITY',
     'capacity reached',
     { limit: 1, context: { sandboxId: 'sandbox-1' } },
   ), { phase: 'create-realm' });
@@ -36,6 +36,6 @@ test('diagnostics collector is bounded and preserves structured errors', () => {
     'new',
     'capacity reached',
   ]);
-  assert.equal(collector.getErrors()[1].code, ErrorCode.LIMIT_REALM_CAPACITY);
+  assert.equal(collector.getErrors()[1].code, 'LIMIT_REALM_CAPACITY');
   assert.equal(collector.getErrors()[1].context.phase, 'create-realm');
 });

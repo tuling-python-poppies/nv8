@@ -48,20 +48,6 @@ export function satisfiesCoreVersionRange(version, range) {
   }
 }
 
-export function assertCoreVersionSatisfies(range, version = CORE_VERSION) {
-  assertCoreVersion(version);
-  if (!satisfiesCoreVersionRange(version, range)) {
-    const error = new Error(
-      `Core version "${version}" does not satisfy required range "${range}"`,
-    );
-    error.code = 'CORE_VERSION_UNSUPPORTED';
-    error.version = version;
-    error.range = range;
-    throw error;
-  }
-  return version;
-}
-
 function compare(left, right) {
   return left.major - right.major
     || left.minor - right.minor

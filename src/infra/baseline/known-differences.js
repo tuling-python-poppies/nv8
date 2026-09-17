@@ -109,8 +109,8 @@ export const NODE_VERSION_DEPENDENT_MEMBERS = Object.freeze([
     reason: 'ArrayBuffer 转移语义需要 Node 21+（实测 18/20 无、22/24 有）',
     owner: 'core-runtime',
     severity: SEVERITY.ENVIRONMENTAL,
-    expectation: 'Node 18/20 上缺失。host-compat 提供宿主侧的 transferArrayBuffer 回退，'
-      + '但不往 Realm 里塞假方法',
+    expectation: 'Node 18/20 上缺失。不提供用户态回退：Realm 里不塞假方法，'
+      + '宿主侧需要时按 HAS_NATIVE_ARRAY_BUFFER_TRANSFER 分支',
   }),
   Object.freeze({
     prototype: 'Set',

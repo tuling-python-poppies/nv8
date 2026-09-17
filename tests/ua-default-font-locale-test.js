@@ -41,7 +41,6 @@ import assert from 'node:assert/strict';
 import {
   STANDARD_FONT_BY_LOCALE,
   standardFontFamilyFor,
-  validateLocaleFontPair,
 } from '../src/infra/fingerprint/ua-default-fonts.js';
 
 const PAGE_HTML = '<!doctype html><html><head></head><body></body></html>';
@@ -102,16 +101,6 @@ test('the locale to font table uses longest-prefix matching', () => {
   assert.equal(standardFontFamilyFor('de-DE'), '"Times New Roman"');
   assert.equal(standardFontFamilyFor('ru-RU'), '"Times New Roman"');
   assert.equal(standardFontFamilyFor(''), '"Times New Roman"');
-});
-
-test('the pair validator catches a mismatched declaration', () => {
-  assert.deepEqual(validateLocaleFontPair('zh-CN', '"Noto Sans SC"'), []);
-  assert.equal(validateLocaleFontPair('zh-CN', '"Times New Roman"').length, 1);
-  assert.equal(validateLocaleFontPair('ja-JP', '"Times New Roman"').length, 1);
-  // 缺值也要报——这是修复前的状态
-  assert.equal(validateLocaleFontPair('zh-CN', '').length, 1);
-  // 表外的 locale 允许调用方自己声明（可能在模拟某台特定机器），不拦
-  assert.deepEqual(validateLocaleFontPair('fr-FR', '"Some Font"'), []);
 });
 
 test('every table entry is a computed-value form string', () => {

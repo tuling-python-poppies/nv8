@@ -10,7 +10,7 @@ import {
   detectHostCapabilities,
   resolveNodeSupport,
 } from '../src/engine/core/host-capabilities.js';
-import { describeHostCompat } from '../src/engine/compat/index.js';
+import { describeHostCompat } from '../src/engine/compat/host-compat.js';
 
 const host = detectHostCapabilities();
 const support = resolveNodeSupport(host.nodeVersion);

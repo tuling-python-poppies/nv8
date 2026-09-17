@@ -14,7 +14,6 @@ import assert from 'node:assert/strict';
 import { definePlugin } from '../src/engine/plugin-sdk/define-plugin.js';
 import {
   canRunInRealm,
-  detectCircularDependencies,
   resolvePluginDependencies,
   validateDependencies,
 } from '../src/engine/plugin-sdk/capability-matcher.js';
@@ -87,41 +86,6 @@ test('missing capability provider still fails the resolution', () => {
   assert.throws(
     () => resolvePluginDependencies([{ id: 'consumer', range: '*' }], [consumer]),
     /requires "missing-cap/,
-  );
-});
-
-test('circular dependency detection does not flag acyclic branches', () => {
-  const a = definePlugin({
-    id: 'a',
-    version: '1.0.0',
-    requires: [{ id: 'b', version: '*' }],
-    install() {},
-  });
-  const b = definePlugin({
-    id: 'b',
-    version: '1.0.0',
-    requires: [{ id: 'a', version: '*' }],
-    install() {},
-  });
-  const c = definePlugin({
-    id: 'c',
-    version: '1.0.0',
-    requires: [{ id: 'b', version: '*' }],
-    install() {},
-  });
-
-  const result = detectCircularDependencies([a, b, c]);
-  assert.equal(result.hasCycle, true);
-  for (const cycle of result.cycles) {
-    assert.ok(
-      cycle.includes('a') && cycle.includes('b'),
-      `cycle must be the real a<->b loop, got ${JSON.stringify(cycle)}`,
-    );
-  }
-  assert.equal(
-    result.cycles.some((cycle) => cycle.includes('c') && !cycle.includes('a')),
-    false,
-    'acyclic branch c must not be reported as its own cycle',
   );
 });
 

@@ -447,69 +447,6 @@ export function validateDependencies(plugins) {
 }
 
 /**
- * 检测循环依赖
- * @param {Plugin[]} plugins - 插件列表
- * @returns {{hasCycle: boolean, cycles: string[][]}} 循环依赖检测结果
- */
-export function detectCircularDependencies(plugins) {
-  const graph = new Map(); // plugin.id -> [依赖的 plugin.id]
-  const pluginMap = new Map();
-  
-  // 构建依赖图
-  for (const plugin of plugins) {
-    pluginMap.set(plugin.id, plugin);
-    const deps = [];
-    
-    for (const req of plugin.requires) {
-      if (req.optional) continue; // 可选依赖不参与循环检测
-      deps.push(req.id);
-    }
-    
-    graph.set(plugin.id, deps);
-  }
-  
-  const cycles = [];
-  const visited = new Set();
-  const recStack = new Set();
-  const path = [];
-  
-  function dfs(nodeId) {
-    visited.add(nodeId);
-    recStack.add(nodeId);
-    path.push(nodeId);
-    
-    const deps = graph.get(nodeId) || [];
-    
-    for (const depId of deps) {
-      if (!visited.has(depId)) {
-        dfs(depId);
-      } else if (recStack.has(depId)) {
-        // 找到循环。不能在这里提前 return：遗留的 path/recStack 会让
-        // 后续顶层节点的 DFS 把无环节点误报成环（IKFDA4）。
-        const cycleStart = path.indexOf(depId);
-        if (cycleStart !== -1) {
-          cycles.push(path.slice(cycleStart).concat(depId));
-        }
-      }
-    }
-    
-    path.pop();
-    recStack.delete(nodeId);
-  }
-  
-  for (const nodeId of graph.keys()) {
-    if (!visited.has(nodeId)) {
-      dfs(nodeId);
-    }
-  }
-  
-  return {
-    hasCycle: cycles.length > 0,
-    cycles,
-  };
-}
-
-/**
  * 打印依赖树（用于调试）
  */
 export function printDependencyTree(plugins, indent = 0) {

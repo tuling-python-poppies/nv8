@@ -130,31 +130,21 @@ await loader.importUrlAsync(url); // 所有版本可用
 `moduleRequests` / `linkRequests` / `instantiate`，模拟 Node 18–22，
 验证降级路径真的可用——而不是仅存在于文档里。测试结束后恢复原型。
 
-## 宿主 API 回退
+## 宿主能力常量
 
-`src/engine/compat/` 为内部实现补齐新版 API。原则：
+`src/engine/compat/host-compat.js` 只暴露宿主能力常量（用于诊断与按版本分支），
+不提供 API 回退：没有调用方的回退属于负资产，需要时在调用点按能力分支。
 
-- 优先原生实现，回退只在缺失时生效
-- 保持可观察语义一致；做不到的显式抛错，不静默降级
-- 只覆盖 NV8 实际用到的调用形态，不做完整 polyfill
+| 常量 | 原生要求 |
+|------|----------|
+| `HAS_NATIVE_ARRAY_BUFFER_TRANSFER` | Node 21+ |
+| `HAS_NATIVE_STRUCTURED_CLONE` | Node 17+ |
+| `HAS_NATIVE_ASYNC_DISPOSE` | Node 20+ |
+| `HAS_NATIVE_ABORT_TIMEOUT` | Node 17.3+ |
+| `HAS_VM_PROPERTY_QUERY_CALLBACK` | Node 22+ |
 
-| 函数 | 原生要求 | 回退行为 |
-|------|----------|----------|
-| `transferArrayBuffer()` | Node 21+ | 复制数据并如实上报 `detached: false` |
-| `isArrayBufferDetached()` | Node 21+ | 用 `byteLength === 0` 近似 |
-| `structuredCloneCompat()` | Node 17+ | JSON 往返；遇 Map/Set/Date/二进制/循环引用抛错 |
-| `asyncDisposeSymbol()` | Node 20+ | `Symbol.for('nodejs.asyncDispose')` |
-| `abortSignalTimeout()` | Node 17.3+ | `AbortController` + `setTimeout`（unref） |
-
-`transferArrayBuffer` 的回退值得说明：ArrayBuffer 分离是 V8 层能力，
-用户态无法模拟。所以回退复制数据并明确返回 `detached: false`，由调用方
-决定能否接受，而不是假装分离成功。
-
-`structuredCloneCompat` 的 JSON 回退无法表示 Map、Set、Date、RegExp、
-TypedArray 和循环引用。遇到这些输入抛 `ERR_NV8_STRUCTURED_CLONE_UNAVAILABLE`，
-而不是静默产出错误结果。
-
-注意：这些回退作用于**宿主**代码。沙箱内提供给目标脚本的 API 由插件负责。
+`describeHostCompat()` 汇总这些标志用于诊断输出。注意：这些常量作用于
+**宿主**代码。沙箱内提供给目标脚本的 API 由插件负责。
 
 ## CI 矩阵
 
@@ -221,7 +211,7 @@ bootstrap 失败。
 | `Array.prototype.toSorted` 等 | 留空 | 补 JS 版本会让 `toString` 与报错文案都对不上 |
 | `RegExp.prototype.unicodeSets` | 留空 | 背后是引擎的正则编译能力，返回假值只会让特性探测得到错误结论 |
 | `Set` 的集合运算 | 留空 | 同上 |
-| `ArrayBuffer.prototype.transfer` | 留空（Realm 内） | V8 层能力；宿主侧另有 `transferArrayBuffer()` 回退 |
+| `ArrayBuffer.prototype.transfer` | 留空（Realm 内） | V8 层能力；宿主侧按 `HAS_NATIVE_ARRAY_BUFFER_TRANSFER` 分支 |
 
 补的那部分必须做到与原生**逐字节一致**：`fixtures/baseline/full-surface.json`
 的 node18 / node20 / node22 三档对这五个全局的记录与 node24 完全相同。
