@@ -2,10 +2,12 @@
 /**
  * NV8 性能基准。
  *
- * 三个维度：
+ * 五个维度：
  *
  * - **冷启动**：从 `createSandbox()` 到页面脚本可求值
  * - **热复用**：同一沙箱内重复 `run()` 的吞吐
+ * - **签名工作流**：`evaluateWithPayload` 带 256KiB 命名载荷的单次求值
+ * - **崩溃恢复**：restart 策略下超时崩溃到下一次求值可用
  * - **Realm 生命周期**：创建 + 销毁一轮的耗时与常驻内存
  *
  * 输出是给人看的报告；回归护栏在 `tests/performance-budget-test.js`，那里的
@@ -103,6 +105,31 @@ const warmDom = await measure('热复用（DOM 查询）', ITERATIONS * 25, asyn
 await warmSandbox.close();
 createSandbox.drain();
 
+// ---------------------------------------------------------------- 签名工作流
+
+// 256KiB 载荷接近真实 wasm 量级；脚本只读 byteLength，把测量锁定在
+// 「父侧编码 → IPC/线程边界 → 子侧解码 → 注入 Realm」这段通路上。
+const SIGN_PAYLOAD = Object.freeze({
+  wasm: Uint8Array.from(
+    { length: 256 * 1024 },
+    (_, index) => (index * 31 + 7) & 0xff,
+  ),
+});
+
+const signSandbox = await createSandbox('https://bench.test/', {
+  execution: { backend: BACKEND },
+  page: { html: PAGE_HTML },
+  limits: { timeoutMs: 30_000 },
+});
+const signPayload = await measure('签名工作流（evaluateWithPayload）', ITERATIONS * 25, async () => {
+  await signSandbox.raw.evaluateWithPayload(
+    'globalThis.__nv8Payload.wasm.byteLength',
+    SIGN_PAYLOAD,
+  );
+});
+await signSandbox.close();
+createSandbox.drain();
+
 // ---------------------------------------------------------------- Realm reset
 
 const resetSandbox = await createSandbox('https://bench.test/', {
@@ -114,6 +141,30 @@ const reset = await measure('Realm reset（setPage）', ITERATIONS, async () => 
   await resetSandbox.setPage({ url: 'https://bench.test/reset', html: PAGE_HTML });
 });
 await resetSandbox.close();
+createSandbox.drain();
+
+// ---------------------------------------------------------------- 崩溃恢复
+
+// restart 策略：把子进程/线程打成超时崩溃，测「下一次求值可用」的墙钟成本
+// （含新进程 spawn、Realm 重建与 INIT 握手）。
+const recoverySandbox = await createSandbox('https://bench.test/', {
+  execution: { backend: BACKEND, restart: 'restart' },
+  page: { html: PAGE_HTML },
+  limits: { timeoutMs: 300 },
+});
+await recoverySandbox.run('1 + 1');
+const crashRecovery = await measure('崩溃恢复（崩溃→可再求值）', ITERATIONS, async () => {
+  let crashed = false;
+  try {
+    await recoverySandbox.run('while (true) {}');
+  } catch (error) {
+    if (error?.code !== 'ERR_EDGE_SANDBOX_TIMEOUT') throw error;
+    crashed = true;
+  }
+  if (!crashed) throw new Error('crash workload did not time out');
+  await recoverySandbox.run('1 + 1');
+});
+await recoverySandbox.close();
 createSandbox.drain();
 
 // ---------------------------------------------------------------- Realm 生命周期
@@ -134,7 +185,7 @@ const report = {
   node: process.versions.node,
   backend: BACKEND,
   iterations: ITERATIONS,
-  measurements: [coldStart, warmRun, warmDom, reset, realmCycle],
+  measurements: [coldStart, warmRun, warmDom, signPayload, reset, crashRecovery, realmCycle],
   memory: {
     rssBeforeMiB: round(rssBefore / 1024 / 1024),
     rssAfterMiB: round(rssAfter / 1024 / 1024),

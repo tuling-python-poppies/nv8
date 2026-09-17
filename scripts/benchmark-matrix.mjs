@@ -81,16 +81,18 @@ const report = {
 if (asJson) {
   console.log(JSON.stringify(report, null, 2));
 } else {
-  console.log("Node version   backend         cold median/p90   warm run median/p90   reset median/p90   realm median/p90   RSS Δ MiB");
+  console.log("Node version   backend         cold median/p90   warm run median/p90   sign payload median/p90   crash recovery median/p90   reset median/p90   realm median/p90   RSS Δ MiB");
   for (const row of rows) {
     const measurements = new Map(row.measurements.map((entry) => [entry.label, entry]));
     const cold = measurements.get("冷启动（create → 首次 run）");
     const warm = measurements.get("热复用（单次 run）");
+    const sign = measurements.get("签名工作流（evaluateWithPayload）");
+    const recovery = measurements.get("崩溃恢复（崩溃→可再求值）");
     const reset = measurements.get("Realm reset（setPage）");
     const realm = measurements.get("Realm 创建+销毁一轮");
     console.log(
       `${row.node.padEnd(14)}${row.backend.padEnd(17)}`
-      + `${formatPair(cold)}         ${formatPair(warm)}             ${formatPair(reset)}        ${formatPair(realm)}       `
+      + `${formatPair(cold)}   ${formatPair(warm)}   ${formatPair(sign)}   ${formatPair(recovery)}   ${formatPair(reset)}   ${formatPair(realm)}   `
       + `${row.memory.deltaMiB.toFixed(2)}`,
     );
   }
@@ -105,18 +107,50 @@ function requestedVersions() {
   if (explicit !== undefined && explicit.trim() !== "") {
     return [...new Set(explicit.split(",").map((value) => value.trim()).filter(Boolean))];
   }
-  const directory = path.join(process.env.HOME ?? "", ".nvm", "versions", "node");
-  if (!existsSync(directory)) return [process.versions.node];
-  return readdirSync(directory)
-    .filter((name) => /^v\d+\.\d+\.\d+$/.test(name))
-    .map((name) => name.slice(1))
-    .sort(compareVersions);
+  // nvm-windows（NVM_HOME 下直接是 v<version>/node.exe）优先，其次 POSIX nvm。
+  // 只收集满足 package.json engines（>=18.18.0）的版本。
+  for (const directory of nvmDirectories()) {
+    const names = readdirSync(directory)
+      .filter((name) => (
+        /^v\d+\.\d+\.\d+$/.test(name)
+        && compareVersions(name.slice(1), "18.18.0") >= 0
+      ))
+      .map((name) => name.slice(1));
+    if (names.length > 0) return names.sort(compareVersions);
+  }
+  return [process.versions.node];
+}
+
+function nvmDirectories() {
+  const directories = [];
+  const nvmHome = process.env.NVM_HOME;
+  if (nvmHome !== undefined && nvmHome.trim() !== "" && existsSync(nvmHome)) {
+    directories.push(nvmHome);
+  }
+  const posix = path.join(process.env.HOME ?? "", ".nvm", "versions", "node");
+  if (existsSync(posix)) directories.push(posix);
+  return directories;
 }
 
 function nodeBinary(version) {
   if (version === process.versions.node) return process.execPath;
   const executable = process.platform === "win32" ? "node.exe" : "node";
-  return path.join(process.env.HOME ?? "", ".nvm", "versions", "node", `v${version}`, "bin", executable);
+  for (const directory of nvmDirectories()) {
+    const windowsLayout = path.join(directory, `v${version}`, executable);
+    if (existsSync(windowsLayout)) return windowsLayout;
+    const posixLayout = path.join(directory, `v${version}`, "bin", executable);
+    if (existsSync(posixLayout)) return posixLayout;
+  }
+  const fallback = path.join(
+    process.env.HOME ?? "",
+    ".nvm",
+    "versions",
+    "node",
+    `v${version}`,
+    "bin",
+    executable,
+  );
+  return fallback;
 }
 
 function compareVersions(left, right) {

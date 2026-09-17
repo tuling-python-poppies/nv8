@@ -1104,7 +1104,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 | `npm test` | 全量测试（1242 项 / 148 个 .js 文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
-| `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、Realm 创建销毁 |
+| `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、签名载荷、崩溃恢复、Realm 创建销毁 |
 | `npm run benchmark:matrix` | Node 18/20/22/24 × child-process/worker-thread 性能矩阵 |
 | `npm run baseline` | 重新生成引导顺序 + 表面 + 可观测性基线 |
 | `npm run audit:state` | 模块级可变状态审计（当前 0 项待处理） |
@@ -1114,6 +1114,8 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 | `npm run check:surface-order` | 校验 Window 全局顺序表与采集 fixture 一致 |
 | `npm run build:css-defaults` | 从 fixture 重新生成 UA 默认样式表 |
 | `npm run fingerprint:*` | 见[指纹采集脚本](#指纹采集脚本) |
+
+基准数据、子进程 profile 与 bundle 对照结论见 [`docs/backend-benchmark.md`](docs/backend-benchmark.md)。
 
 ### 关于 `build:bundle`
 
