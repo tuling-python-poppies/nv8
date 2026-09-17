@@ -6,12 +6,7 @@ import {
   multiplyMatrices,
 } from "../geometry/dom-matrix-state.js";
 import { initializeCSSStyleValue, requireCSSStyleValue } from "./css-style-value-state.js";
-import {
-  convertCSSUnitValue,
-  normalizeNumericValue,
-  requireCSSNumericValue,
-  requireCSSUnitValue,
-} from "./css-typed-om-state.js";
+import { convertCSSUnitValue, normalizeNumericValue, requireCSSUnitValue } from "./css-typed-om-state.js";
 import { CSSUnitValue } from "./css-typed-om-constructors.js";
 import { CSSTransformComponent } from "./css-transform-constructors.js";
 
@@ -147,7 +142,7 @@ export function requireCSSPositionValue(value) {
   return record;
 }
 
-export function componentMatrix(value) {
+function componentMatrix(value) {
   const record = requireCSSTransformComponent(value);
   if (record.type === "matrix") return [...record.matrixValues];
   if (record.type === "perspective") {
@@ -187,7 +182,7 @@ export function componentMatrix(value) {
   return matrix;
 }
 
-export function transformValueMatrix(value) {
+function transformValueMatrix(value) {
   return readCSSTransformValue(value).reduce(
     (matrix, component) => multiplyMatrices(matrix, componentMatrix(component)),
     identityMatrix(),

@@ -31,13 +31,13 @@ export function requireCSSKeyframeRule(value) {
   return record;
 }
 
-export function serializeCSSKeyframeRule(rule) {
+function serializeCSSKeyframeRule(rule) {
   const record = requireCSSKeyframeRule(rule);
   const declarations = record.style.cssText;
   return `${record.keyText} {${declarations === "" ? "" : ` ${declarations}`} }`;
 }
 
-export function replaceCSSKeyframeRuleText(rule, text) {
+function replaceCSSKeyframeRuleText(rule, text) {
   const source = `${text}`.trim();
   const open = source.indexOf("{");
   const close = source.lastIndexOf("}");

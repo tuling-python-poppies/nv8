@@ -15,7 +15,7 @@ export function HTMLSpanElement() {
 }
 registerNativeFunction(HTMLSpanElement, "HTMLSpanElement");
 
-export function createHTMLSpanElement(tagName, ownerDocument) {
+function createHTMLSpanElement(tagName, ownerDocument) {
   const element = Object.create(HTMLSpanElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

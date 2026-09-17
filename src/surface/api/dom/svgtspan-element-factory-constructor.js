@@ -9,7 +9,7 @@ export function SVGTSpanElement() {
 }
 registerNativeFunction(SVGTSpanElement, "SVGTSpanElement");
 
-export function createSVGTSpanElement(localName, ownerDocument) {
+function createSVGTSpanElement(localName, ownerDocument) {
   const element = Object.create(SVGTSpanElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const eventComposed = {
+const eventComposed = {
   eventComposed() {
   const value = requireEvent(this).composed;
   traceGetter("window.Event.prototype.composed", "Event", value);

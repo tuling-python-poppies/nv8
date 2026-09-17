@@ -1,8 +1,4 @@
-import {
-  defineConstructorBacklink,
-  defineGlobalConstructor,
-  defineToStringTag,
-} from "../../../engine/webidl/descriptor.js";
+import { defineGlobalConstructor } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import {
   HTMLElement,
@@ -15,7 +11,7 @@ export function HTMLAnchorElement() {
 }
 registerNativeFunction(HTMLAnchorElement, "HTMLAnchorElement");
 
-export function createHTMLAnchorElement(tagName, ownerDocument) {
+function createHTMLAnchorElement(tagName, ownerDocument) {
   const element = Object.create(HTMLAnchorElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;
@@ -30,12 +26,4 @@ export function installHTMLAnchorElementConstructor() {
   delete HTMLAnchorElement.prototype.constructor;
   defineGlobalConstructor("HTMLAnchorElement", HTMLAnchorElement);
   registerHTMLElementFactory("a", createHTMLAnchorElement);
-}
-
-export function finishHTMLAnchorElementConstructor() {
-  defineConstructorBacklink(
-    HTMLAnchorElement.prototype,
-    HTMLAnchorElement,
-  );
-  defineToStringTag(HTMLAnchorElement.prototype, "HTMLAnchorElement");
 }

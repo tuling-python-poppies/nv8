@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { insertDataAlgorithm } from "./character-data-algorithms.js";
 import { CharacterData } from "./character-data-constructor.js";
 
-export const insertData = {
+const insertData = {
   insertData(offset, data) {
     insertDataAlgorithm(this, offset, data);
     traceCall("window.CharacterData.prototype.insertData", "CharacterData", [offset, data], undefined);

@@ -9,7 +9,7 @@ export function SVGFEDropShadowElement() {
 }
 registerNativeFunction(SVGFEDropShadowElement, "SVGFEDropShadowElement");
 
-export function createSVGFEDropShadowElement(localName, ownerDocument) {
+function createSVGFEDropShadowElement(localName, ownerDocument) {
   const element = Object.create(SVGFEDropShadowElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

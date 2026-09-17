@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { selectNodeAlgorithm } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const selectNode = {
+const selectNode = {
   selectNode(node) {
     selectNodeAlgorithm(this, node);
     traceCall("window.Range.prototype.selectNode", "Range", [node], undefined);

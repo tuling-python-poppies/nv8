@@ -9,7 +9,7 @@ export function SVGFEDiffuseLightingElement() {
 }
 registerNativeFunction(SVGFEDiffuseLightingElement, "SVGFEDiffuseLightingElement");
 
-export function createSVGFEDiffuseLightingElement(localName, ownerDocument) {
+function createSVGFEDiffuseLightingElement(localName, ownerDocument) {
   const element = Object.create(SVGFEDiffuseLightingElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -1,29 +1,4 @@
-import {
-  childIndex,
-  CDATA_SECTION_NODE,
-  COMMENT_NODE,
-  descendants,
-  DOCUMENT_FRAGMENT_NODE,
-  DOCUMENT_NODE,
-  DOCUMENT_TYPE_NODE,
-  DOCUMENT_POSITION_CONTAINED_BY,
-  DOCUMENT_POSITION_CONTAINS,
-  DOCUMENT_POSITION_DISCONNECTED,
-  DOCUMENT_POSITION_FOLLOWING,
-  DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC,
-  DOCUMENT_POSITION_PRECEDING,
-  ELEMENT_NODE,
-  initializeNode,
-  insertNode,
-  isInclusiveAncestor,
-  isNode,
-  removeNode,
-  replaceNode,
-  requireNode,
-  rootOf,
-  TEXT_NODE,
-  textContentOf,
-} from "./node-state.js";
+import { CDATA_SECTION_NODE, COMMENT_NODE, descendants, DOCUMENT_FRAGMENT_NODE, DOCUMENT_NODE, DOCUMENT_TYPE_NODE, DOCUMENT_POSITION_CONTAINED_BY, DOCUMENT_POSITION_CONTAINS, DOCUMENT_POSITION_DISCONNECTED, DOCUMENT_POSITION_FOLLOWING, DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC, DOCUMENT_POSITION_PRECEDING, ELEMENT_NODE, initializeNode, insertNode, isInclusiveAncestor, isNode, removeNode, replaceNode, requireNode, rootOf, TEXT_NODE } from "./node-state.js";
 import { createCDATASection } from "./cdata-section-constructor.js";
 import {
   createProcessingInstruction,
@@ -303,8 +278,4 @@ export function isDefaultNamespaceAlgorithm(node, namespace) {
   return lookupNamespaceURIAlgorithm(node, null) === (
     namespace === null ? null : `${namespace}`
   );
-}
-
-export function nodeTextAlgorithm(node) {
-  return textContentOf(node);
 }

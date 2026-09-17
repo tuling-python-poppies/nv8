@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { compareBoundaryPointsAlgorithm } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const compareBoundaryPoints = {
+const compareBoundaryPoints = {
   compareBoundaryPoints(how, sourceRange) {
     const result = compareBoundaryPointsAlgorithm(this, how, sourceRange);
     traceCall(

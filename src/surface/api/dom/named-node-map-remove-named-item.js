@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { NamedNodeMap } from "./named-node-map-constructor.js";
 import { removeNamedItemAlgorithm } from "./named-node-map-state.js";
 
-export const removeNamedItem = {
+const removeNamedItem = {
   removeNamedItem(name) {
     const result = removeNamedItemAlgorithm(this, name);
     traceCall("window.NamedNodeMap.prototype.removeNamedItem", "NamedNodeMap", [name], result);

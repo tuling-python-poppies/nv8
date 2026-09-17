@@ -5,7 +5,7 @@ import { createCDATASection } from "./cdata-section-constructor.js";
 import { Document } from "./document-constructor.js";
 import { requireDocument } from "./document-record.js";
 
-export const createCDATASectionCallback = {
+const createCDATASectionCallback = {
   createCDATASection(data) {
     const state = requireDocument(this);
     if (state.contentType === "text/html") {

@@ -5,7 +5,7 @@ import { Document } from "./document-constructor.js";
 import { requireDocument } from "./document-record.js";
 import { createTreeWalker } from "./tree-walker-state.js";
 
-export const createTreeWalkerCallback = {
+const createTreeWalkerCallback = {
   createTreeWalker(root, whatToShow = 0xFFFFFFFF, filter = null) {
     requireDocument(this);
     const result = createTreeWalker(root, whatToShow, filter);

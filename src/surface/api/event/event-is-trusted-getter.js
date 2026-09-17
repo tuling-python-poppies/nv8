@@ -21,7 +21,7 @@ import { requireEvent } from "./event-state.js";
  *
  * 放在原型上是可检测的差异：反检测脚本会检查 unforgeable 属性的位置。
  */
-export const eventIsTrusted = {
+const eventIsTrusted = {
   eventIsTrusted() {
     const value = requireEvent(this).isTrusted;
     traceGetter("window.Event.prototype.isTrusted", "Event", value);

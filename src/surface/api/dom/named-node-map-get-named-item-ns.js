@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { NamedNodeMap } from "./named-node-map-constructor.js";
 import { namedItemNS } from "./named-node-map-state.js";
 
-export const getNamedItemNS = {
+const getNamedItemNS = {
   getNamedItemNS(namespace, localName) {
     const result = namedItemNS(this, namespace, localName);
     traceCall(

@@ -123,15 +123,6 @@ export function globalServiceOperation(value, name, args) {
   throw new TypeError("Illegal invocation");
 }
 
-export function createFence(nestedConfigs = []) {
-  return create(Fence, {
-    kind: "fence",
-    nestedConfigs: [...nestedConfigs],
-    reports: [],
-    automaticBeacon: {},
-  });
-}
-
 function crashReportOperation(record, name, args) {
   if (name === "initialize") {
     requireArguments("initialize", "CrashReportContext", args, 1);

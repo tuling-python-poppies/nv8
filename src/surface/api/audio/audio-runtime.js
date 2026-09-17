@@ -138,7 +138,7 @@ export function OfflineAudioCompletionEvent(type, init) {
   });
 }
 
-export const audioConstructors = Object.freeze([
+const audioConstructors = Object.freeze([
   BaseAudioContext,
   AudioContext,
   OfflineAudioContext,

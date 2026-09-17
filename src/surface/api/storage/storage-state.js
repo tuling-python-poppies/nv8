@@ -60,10 +60,6 @@ function sharedRecord(kind, initialEncoded) {
   return value;
 }
 
-export function releaseStorage(host) {
-  return storageSlot.clear(resolveHost(host));
-}
-
 export function requireStorage(value) {
   const state = storageState.get(value);
   if (state === undefined) {

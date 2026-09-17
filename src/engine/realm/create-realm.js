@@ -3,14 +3,6 @@ import { randomFillSync, randomUUID } from "node:crypto";
 import { auditRealmGlobals } from "./global-audit.js";
 import { RealmModuleLoader } from "./module-loader.js";
 
-export function createRealmShell(label = "edge-root-window", origin = "") {
-  const { context, moduleLoader } = createRealmShellContext(label, origin);
-  const bootstrap = moduleLoader.importInternal(
-    "edge-internal:bootstrap-root",
-  );
-  return { context, moduleLoader, bootstrap };
-}
-
 /**
  * 异步版 shell 创建。
  *

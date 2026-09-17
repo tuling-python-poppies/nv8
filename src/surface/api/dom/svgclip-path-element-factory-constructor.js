@@ -9,7 +9,7 @@ export function SVGClipPathElement() {
 }
 registerNativeFunction(SVGClipPathElement, "SVGClipPathElement");
 
-export function createSVGClipPathElement(localName, ownerDocument) {
+function createSVGClipPathElement(localName, ownerDocument) {
   const element = Object.create(SVGClipPathElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

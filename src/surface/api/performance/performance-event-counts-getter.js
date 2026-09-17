@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Performance } from "./performance-constructor.js";
 import { requirePerformance } from "./performance-state.js";
 
-export const performanceEventCounts = {
+const performanceEventCounts = {
   performanceEventCounts() {
   const value = requirePerformance(this).eventCounts;
   traceGetter("window.Performance.prototype.eventCounts", "Performance", value);

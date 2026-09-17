@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { URL } from "./url-constructor.js";
 import { canParseURL } from "./url-state.js";
 
-export const canParse = {
+const canParse = {
   canParse(url) {
     if (arguments.length === 0) {
       throw new TypeError("URL.canParse requires 1 argument");

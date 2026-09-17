@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Performance } from "./performance-constructor.js";
 import { requirePerformance } from "./performance-state.js";
 
-export const performanceTimeOrigin = {
+const performanceTimeOrigin = {
   performanceTimeOrigin() {
   const value = requirePerformance(this).timeOrigin;
   traceGetter("window.Performance.prototype.timeOrigin", "Performance", value);

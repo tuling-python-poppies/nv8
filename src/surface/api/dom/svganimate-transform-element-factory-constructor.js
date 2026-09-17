@@ -9,7 +9,7 @@ export function SVGAnimateTransformElement() {
 }
 registerNativeFunction(SVGAnimateTransformElement, "SVGAnimateTransformElement");
 
-export function createSVGAnimateTransformElement(localName, ownerDocument) {
+function createSVGAnimateTransformElement(localName, ownerDocument) {
   const element = Object.create(SVGAnimateTransformElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

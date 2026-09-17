@@ -9,7 +9,7 @@ export function SVGLinearGradientElement() {
 }
 registerNativeFunction(SVGLinearGradientElement, "SVGLinearGradientElement");
 
-export function createSVGLinearGradientElement(localName, ownerDocument) {
+function createSVGLinearGradientElement(localName, ownerDocument) {
   const element = Object.create(SVGLinearGradientElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -82,7 +82,7 @@ const COLOR_PROPERTIES = new Set([
  * @param {string} value
  * @returns {string} 无法识别时原样返回
  */
-export function serializeColor(value) {
+function serializeColor(value) {
   const text = `${value}`.trim();
   const lower = text.toLowerCase();
 

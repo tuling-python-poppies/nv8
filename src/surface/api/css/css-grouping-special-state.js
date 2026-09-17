@@ -102,7 +102,7 @@ export function requireCSSGroupingSpecialRule(value) {
   return record;
 }
 
-export function serializeSpecialGroupingRule(rule) {
+function serializeSpecialGroupingRule(rule) {
   const record = requireCSSGroupingSpecialRule(rule);
   if (record.kind === "layer-statement") return rule.cssText;
   const children = requireCSSGroupingRule(rule).rules.map(child => child.cssText);
@@ -118,7 +118,7 @@ export function serializeSpecialGroupingRule(rule) {
   return `${prelude} {${body === "" ? "" : ` ${body}`} }`;
 }
 
-export function replaceSpecialGroupingRuleText(rule, text) {
+function replaceSpecialGroupingRuleText(rule, text) {
   const source = `${text}`.trim();
   const open = source.indexOf("{");
   const close = source.lastIndexOf("}");

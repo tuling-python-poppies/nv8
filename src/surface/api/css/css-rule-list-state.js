@@ -9,7 +9,7 @@ export function createCSSRuleList(values = []) {
   return list;
 }
 
-export function requireCSSRuleList(value) {
+function requireCSSRuleList(value) {
   const record = state.get(value);
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;

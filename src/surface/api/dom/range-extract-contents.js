@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { extractContentsAlgorithm } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const extractContents = {
+const extractContents = {
   extractContents() {
     const result = extractContentsAlgorithm(this);
     traceCall("window.Range.prototype.extractContents", "Range", [], result);

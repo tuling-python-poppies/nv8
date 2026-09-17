@@ -24,7 +24,3 @@ export function requirePerformanceEntry(value) {
   }
   return state;
 }
-
-export function isPerformanceEntry(value) {
-  return performanceEntryState.has(value);
-}

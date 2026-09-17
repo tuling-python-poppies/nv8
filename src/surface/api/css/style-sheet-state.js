@@ -1,13 +1,6 @@
 import { createMediaList } from "./media-list-state.js";
-import { StyleSheet } from "./style-sheet-constructor.js";
 
 const state = new WeakMap();
-
-export function createStyleSheet(options = {}) {
-  const sheet = Object.create(StyleSheet.prototype);
-  initializeStyleSheet(sheet, options);
-  return sheet;
-}
 
 export function initializeStyleSheet(sheet, options = {}) {
   state.set(sheet, {

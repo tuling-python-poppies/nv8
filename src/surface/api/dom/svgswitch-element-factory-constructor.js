@@ -9,7 +9,7 @@ export function SVGSwitchElement() {
 }
 registerNativeFunction(SVGSwitchElement, "SVGSwitchElement");
 
-export function createSVGSwitchElement(localName, ownerDocument) {
+function createSVGSwitchElement(localName, ownerDocument) {
   const element = Object.create(SVGSwitchElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

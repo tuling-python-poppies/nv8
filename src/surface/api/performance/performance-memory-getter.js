@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Performance } from "./performance-constructor.js";
 import { requirePerformance } from "./performance-state.js";
 
-export const performanceMemory = {
+const performanceMemory = {
   performanceMemory() {
   const value = requirePerformance(this).memory;
   traceGetter("window.Performance.prototype.memory", "Performance", value);

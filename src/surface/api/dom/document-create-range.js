@@ -5,7 +5,7 @@ import { Document } from "./document-constructor.js";
 import { requireDocument } from "./document-record.js";
 import { createRange } from "./range-constructor.js";
 
-export const createRangeCallback = {
+const createRangeCallback = {
   createRange() {
     requireDocument(this);
     const result = createRange(this);

@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { replaceDataAlgorithm } from "./character-data-algorithms.js";
 import { CharacterData } from "./character-data-constructor.js";
 
-export const replaceData = {
+const replaceData = {
   replaceData(offset, count, data) {
     replaceDataAlgorithm(this, offset, count, data);
     traceCall(

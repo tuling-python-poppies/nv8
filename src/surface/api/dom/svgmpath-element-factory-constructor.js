@@ -9,7 +9,7 @@ export function SVGMPathElement() {
 }
 registerNativeFunction(SVGMPathElement, "SVGMPathElement");
 
-export function createSVGMPathElement(localName, ownerDocument) {
+function createSVGMPathElement(localName, ownerDocument) {
   const element = Object.create(SVGMPathElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

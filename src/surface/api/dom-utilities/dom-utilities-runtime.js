@@ -7,7 +7,7 @@ import {
 } from "../dom/document-record.js";
 import { parseFragment } from "../dom/html-parser.js";
 import { serializeNode } from "../dom/html-serializer.js";
-import { AbstractRange } from "../dom/abstract-range-constructor.js";
+
 import { initializeRange, requireRange } from "../dom/range-state.js";
 import { lookupNamespaceURI } from "../dom/xpath-ns-resolver-callback.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
@@ -64,7 +64,7 @@ const byteSize = { size(chunk) { return Number(chunk?.byteLength ?? 0); } }.size
 registerNativeFunction(countSize, "size");
 registerNativeFunction(byteSize, "size");
 
-export const domUtilityConstructors = Object.freeze([
+const domUtilityConstructors = Object.freeze([
   DOMParser, XMLSerializer, XPathEvaluator, XPathExpression, XPathResult,
   StaticRange, CaretPosition, DOMStringList, CountQueuingStrategy,
   ByteLengthQueuingStrategy, DOMStringMap,

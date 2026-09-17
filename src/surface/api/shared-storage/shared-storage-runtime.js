@@ -72,7 +72,7 @@ for (const Constructor of sharedStorageConstructors) {
   registerNativeFunction(Constructor, Constructor.name);
 }
 
-export function createSharedStorage() {
+function createSharedStorage() {
   const worklet = createWorklet();
   return create(SharedStorage, {
     kind: "storage",

@@ -8,7 +8,3 @@ export function installWorkletCapabilities({
   configureWorklets(workletFactory, baseUrl);
   installWorklet();
 }
-
-export function resetWorkletCapabilities() {
-  configureWorklets(null, 'https://sandbox.test/');
-}

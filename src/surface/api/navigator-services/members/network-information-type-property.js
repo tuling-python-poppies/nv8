@@ -28,7 +28,7 @@ export function install() {
 /**
  * 移动端 profile 用的安装函数。当前没有调用方。
  */
-export function installNetworkInformationTypeForMobile() {
+function installNetworkInformationTypeForMobile() {
   installDispatchedAccessor(
     NetworkInformation,
     "type",

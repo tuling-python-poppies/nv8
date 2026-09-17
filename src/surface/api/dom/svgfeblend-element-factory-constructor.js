@@ -9,7 +9,7 @@ export function SVGFEBlendElement() {
 }
 registerNativeFunction(SVGFEBlendElement, "SVGFEBlendElement");
 
-export function createSVGFEBlendElement(localName, ownerDocument) {
+function createSVGFEBlendElement(localName, ownerDocument) {
   const element = Object.create(SVGFEBlendElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

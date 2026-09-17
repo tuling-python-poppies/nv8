@@ -42,7 +42,7 @@ export function MimeType() { illegalConstructor("MimeType", new.target); }
 export function BarProp() { illegalConstructor("BarProp", new.target); }
 export function External() { illegalConstructor("External", new.target); }
 
-export const navigatorServiceConstructors = Object.freeze([
+const navigatorServiceConstructors = Object.freeze([
   NetworkInformation,
   BatteryManager,
   Keyboard,
@@ -193,14 +193,6 @@ export function createLegacyCollections(
       mimeTypeValues,
     ),
   };
-}
-
-export function createPluginArray(profile = []) {
-  return createLegacyCollections(profile, []).plugins;
-}
-
-export function createMimeTypeArray(profile = []) {
-  return createLegacyCollections([], profile).mimeTypes;
 }
 
 export function createBarProp() {

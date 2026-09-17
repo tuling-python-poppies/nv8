@@ -117,7 +117,7 @@ export function TransitionEvent(type) {
   });
 }
 
-export const generalEventConstructors = Object.freeze([
+const generalEventConstructors = Object.freeze([
   ProgressEvent, ErrorEvent, CloseEvent, PromiseRejectionEvent, PopStateEvent,
   HashChangeEvent, StorageEvent, PageTransitionEvent, SubmitEvent, ToggleEvent,
   FormDataEvent, TrackEvent, MediaQueryListEvent, AnimationEvent,

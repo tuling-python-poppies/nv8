@@ -5,7 +5,7 @@ import { TextEncoder } from "./text-encoder-constructor.js";
 import { requireTextEncoder } from "./text-encoder-state.js";
 import { encodeUtf8 } from "./utf-codec.js";
 
-export const encodeInto = {
+const encodeInto = {
   encodeInto(source, destination) {
     requireTextEncoder(this);
     if (arguments.length < 2) {

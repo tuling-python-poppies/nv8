@@ -190,14 +190,6 @@ export function markDocumentParserNode(document, node) {
   }
 }
 
-export function markParserScriptExecuted(document, script) {
-  requireDocument(document).parserExecutedScripts.add(script);
-}
-
-export function wasParserScriptExecuted(document, script) {
-  return requireDocument(document).parserExecutedScripts.has(script);
-}
-
 export function setDocumentParserInsertionPoint(document, script) {
   const state = requireDocument(document);
   if (script === null) {
@@ -274,10 +266,6 @@ export function documentCollection(document, key, source) {
 
 export function setDocumentInteractionElement(document, name, element) {
   requireDocument(document)[name] = element;
-}
-
-export function documentInteractionElement(document, name) {
-  return requireDocument(document)[name] ?? null;
 }
 
 export function documentHandler(document, name) {

@@ -2,7 +2,7 @@ import { traceGetter } from "../../../infra/trace/trace-accessor.js";
 import { registerNativeGetter } from "../../../engine/webidl/native-function.js";
 import { currentScreen } from "./screen-state.js";
 
-export const globalScreen = Object.getOwnPropertyDescriptor({
+const globalScreen = Object.getOwnPropertyDescriptor({
   get screen() {
     const value = currentScreen();
     traceGetter("window.screen", "Window", value);

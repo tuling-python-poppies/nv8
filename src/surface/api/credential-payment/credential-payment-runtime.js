@@ -101,7 +101,7 @@ export function PaymentMethodChangeEvent(type) {
   });
 }
 
-export const credentialPaymentConstructors = Object.freeze([
+const credentialPaymentConstructors = Object.freeze([
   Credential, CredentialsContainer, FederatedCredential, PasswordCredential,
   AuthenticatorAssertionResponse, AuthenticatorAttestationResponse,
   AuthenticatorResponse, PublicKeyCredential, DigitalCredential,

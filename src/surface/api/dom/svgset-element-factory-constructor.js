@@ -9,7 +9,7 @@ export function SVGSetElement() {
 }
 registerNativeFunction(SVGSetElement, "SVGSetElement");
 
-export function createSVGSetElement(localName, ownerDocument) {
+function createSVGSetElement(localName, ownerDocument) {
   const element = Object.create(SVGSetElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

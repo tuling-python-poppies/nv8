@@ -68,15 +68,6 @@ export function createStateRegistry(options = {}) {
     return count;
   }
 
-  /** 按 scope/contextId 取桶（只读，不创建）。 */
-  function storeFor(scope, contextId) {
-    if (scope === 'app') return appState;
-    if (scope === 'sandbox') return sandboxStates.get(contextId);
-    if (scope === 'realm') return realmStates.get(contextId);
-    if (scope === 'plugin') return pluginStates.get(contextId);
-    throw new Error(`Invalid scope: ${scope}`);
-  }
-
   /** 带原子配额检查地写入一个 context 桶；失败时不留下空桶。 */
   function setInContext(map, contextId, scope, key, value) {
     const existed = map.has(contextId);
@@ -327,9 +318,13 @@ export function createStateRegistry(options = {}) {
 
     /** 返回作用域桶的浅快照（调试/兼容 SDK StateAccessor）。 */
     snapshot(scope, contextId = null) {
-      const store = storeFor(scope, contextId);
-      if (!store) return {};
-      return Object.fromEntries(store);
+      const store = scope === 'app' ? appState
+        : scope === 'sandbox' ? sandboxStates.get(contextId)
+        : scope === 'realm' ? realmStates.get(contextId)
+        : scope === 'plugin' ? pluginStates.get(contextId)
+        : null;
+      if (store === null) throw new Error(`Invalid scope: ${scope}`);
+      return store === undefined ? {} : Object.fromEntries(store);
     },
     
     /**

@@ -9,7 +9,7 @@ export function SVGFEDisplacementMapElement() {
 }
 registerNativeFunction(SVGFEDisplacementMapElement, "SVGFEDisplacementMapElement");
 
-export function createSVGFEDisplacementMapElement(localName, ownerDocument) {
+function createSVGFEDisplacementMapElement(localName, ownerDocument) {
   const element = Object.create(SVGFEDisplacementMapElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

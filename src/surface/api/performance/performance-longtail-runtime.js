@@ -53,7 +53,7 @@ export function EventCounts() { illegalConstructor("EventCounts", new.target); }
 export function InteractionContentfulPaint() { illegalConstructor("InteractionContentfulPaint", new.target); }
 export function PerformanceSoftNavigation() { illegalConstructor("PerformanceSoftNavigation", new.target); }
 
-export const performanceLongtailConstructors = Object.freeze([
+const performanceLongtailConstructors = Object.freeze([
   InteractionContentfulPaint,
   PerformanceSoftNavigation,
   VisibilityStateEntry,

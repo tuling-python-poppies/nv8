@@ -9,7 +9,7 @@ export function SVGFEConvolveMatrixElement() {
 }
 registerNativeFunction(SVGFEConvolveMatrixElement, "SVGFEConvolveMatrixElement");
 
-export function createSVGFEConvolveMatrixElement(localName, ownerDocument) {
+function createSVGFEConvolveMatrixElement(localName, ownerDocument) {
   const element = Object.create(SVGFEConvolveMatrixElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -1,8 +1,4 @@
-import {
-  defineConstructorBacklink,
-  defineGlobalConstructor,
-  defineToStringTag,
-} from "../../../engine/webidl/descriptor.js";
+import { defineGlobalConstructor } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import {
   HTMLElement,
@@ -30,12 +26,4 @@ export function installHTMLImageElementConstructor() {
   delete HTMLImageElement.prototype.constructor;
   defineGlobalConstructor("HTMLImageElement", HTMLImageElement);
   registerHTMLElementFactory("img", createHTMLImageElement);
-}
-
-export function finishHTMLImageElementConstructor() {
-  defineConstructorBacklink(
-    HTMLImageElement.prototype,
-    HTMLImageElement,
-  );
-  defineToStringTag(HTMLImageElement.prototype, "HTMLImageElement");
 }

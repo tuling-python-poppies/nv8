@@ -44,7 +44,7 @@ export function createURL(input, base = undefined) {
   return value;
 }
 
-export function requireURL(value) {
+function requireURL(value) {
   const state = urlState.get(value);
   if (state === undefined) {
     throw new TypeError("Illegal invocation");

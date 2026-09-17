@@ -5,7 +5,7 @@ import { Document } from "./document-constructor.js";
 import { createDocumentFragment } from "./document-fragment-constructor.js";
 import { requireDocument } from "./document-record.js";
 
-export const createDocumentFragmentCallback = {
+const createDocumentFragmentCallback = {
   createDocumentFragment() {
     requireDocument(this);
     const result = createDocumentFragment(this);

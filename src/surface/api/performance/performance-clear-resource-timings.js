@@ -5,7 +5,7 @@ import { Performance } from "./performance-constructor.js";
 import { requirePerformanceEntry } from "./performance-entry-state.js";
 import { requirePerformance } from "./performance-state.js";
 
-export const clearResourceTimings = {
+const clearResourceTimings = {
   clearResourceTimings() {
   const state = requirePerformance(this);
   state.entries = state.entries.filter(

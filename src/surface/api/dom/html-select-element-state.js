@@ -50,7 +50,7 @@ export function requireSelect(select) {
   return state;
 }
 
-export function normalizeSelectSelection(select) {
+function normalizeSelectSelection(select) {
   const state = requireSelect(select);
   const options = selectOptions(select);
   if (select.multiple) {

@@ -7,7 +7,7 @@ import {
 } from "./dom-exception-constructor.js";
 import { requireDOMException } from "./dom-exception-state.js";
 
-export const domExceptionCode = {
+const domExceptionCode = {
   domExceptionCode() {
   const value = domExceptionLegacyCode(requireDOMException(this).name);
   traceGetter("window.DOMException.prototype.code", "DOMException", value);

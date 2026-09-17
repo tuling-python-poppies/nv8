@@ -9,7 +9,7 @@ export function SVGImageElement() {
 }
 registerNativeFunction(SVGImageElement, "SVGImageElement");
 
-export function createSVGImageElement(localName, ownerDocument) {
+function createSVGImageElement(localName, ownerDocument) {
   const element = Object.create(SVGImageElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -1,7 +1,4 @@
-import {
-  registerNativeFunction,
-  registerNativeGetter,
-} from "../../../engine/webidl/native-function.js";
+import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { aesDecrypt, aesEncrypt } from "./aes.js";
 import { sha1, sha384, sha512 } from "./hash.js";
 import {
@@ -399,11 +396,6 @@ export async function subtleGenerateKey(
   const bytes = new Uint8Array(bitLength / 8);
   fillCryptoRandom(state, bytes);
   return createKey(bytes, normalized, Boolean(extractable), normalizeUsages(keyUsages));
-}
-
-export async function subtleUnsupported(subtle) {
-  requireSubtle(subtle);
-  unsupported();
 }
 
 function createKey(bytes, algorithm, extractable, usages) {

@@ -150,7 +150,7 @@ export function MediaStreamEvent(type) {
   state.set(this, { kind: "streamEvent", stream: init.stream ?? null });
 }
 
-export const mediaAgencyConstructors = Object.freeze([
+const mediaAgencyConstructors = Object.freeze([
   MediaDeviceInfo,
   InputDeviceInfo,
   MediaDevices,

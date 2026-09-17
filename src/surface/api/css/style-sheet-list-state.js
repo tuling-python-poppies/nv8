@@ -12,7 +12,7 @@ export function createStyleSheetList(source = []) {
   return list;
 }
 
-export function requireStyleSheetList(value) {
+function requireStyleSheetList(value) {
   const record = state.get(value);
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;

@@ -66,7 +66,7 @@ export function installWorkerFontFaceSet({ exposeGlobal = false } = {}) {
   definePrototypeGetter(globalThis.WorkerGlobalScope.prototype, "fonts", getter);
 }
 
-export function installFontFaceSetPrototype(edge151Surface = false) {
+function installFontFaceSetPrototype(edge151Surface = false) {
   fontFaceSetState().edge151SurfaceEnabled ||= edge151Surface;
   if (fontFaceSetState().prototypeInstalled) return;
   fontFaceSetState().prototypeInstalled = true;

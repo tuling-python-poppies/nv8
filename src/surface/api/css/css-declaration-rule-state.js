@@ -1,11 +1,4 @@
-import {
-  CSSFontFaceRule,
-  CSSMarginRule,
-  CSSNamespaceRule,
-  CSSNestedDeclarations,
-  CSSPositionTryRule,
-  CSSViewTransitionRule,
-} from "./css-declaration-rule-constructors.js";
+import { CSSFontFaceRule, CSSMarginRule, CSSNamespaceRule, CSSPositionTryRule, CSSViewTransitionRule } from "./css-declaration-rule-constructors.js";
 import { createCSSStyleDeclaration } from "./css-style-declaration-state.js";
 import { initializeCSSRule, requireCSSRule } from "./css-rule-state.js";
 import { replaceDeclarationText } from "./css-declaration-style-map.js";
@@ -37,18 +30,6 @@ export function createCSSMarginRule(name, body, parentStyleSheet, parentRule) {
     parentStyleSheet,
     parentRule,
     { name: `${name}`.replace(/^@/u, "") },
-  );
-}
-
-export function createCSSNestedDeclarations(body, parentStyleSheet, parentRule) {
-  return createDeclarationRule(
-    CSSNestedDeclarations,
-    0,
-    "",
-    "",
-    body,
-    parentStyleSheet,
-    parentRule,
   );
 }
 

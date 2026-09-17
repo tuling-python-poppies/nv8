@@ -15,7 +15,7 @@ export function HTMLPreElement() {
 }
 registerNativeFunction(HTMLPreElement, "HTMLPreElement");
 
-export function createHTMLPreElement(tagName, ownerDocument) {
+function createHTMLPreElement(tagName, ownerDocument) {
   const element = Object.create(HTMLPreElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

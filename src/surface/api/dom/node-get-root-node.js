@@ -7,7 +7,7 @@ import {
 import { getRootNodeAlgorithm } from "./node-algorithms.js";
 import { Node } from "./node-constructor.js";
 
-export const getRootNode = {
+const getRootNode = {
   getRootNode() {
     const foreignMethod = findCrossRealmPrototypeMethod(
       this,

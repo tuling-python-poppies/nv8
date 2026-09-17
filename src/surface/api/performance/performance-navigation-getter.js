@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Performance } from "./performance-constructor.js";
 import { requirePerformance } from "./performance-state.js";
 
-export const performanceNavigation = {
+const performanceNavigation = {
   performanceNavigation() {
   const value = requirePerformance(this).navigation;
   traceGetter("window.Performance.prototype.navigation", "Performance", value);

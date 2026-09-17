@@ -14,8 +14,3 @@ export function installWorkerCapabilities({
   installWorker();
   installSharedWorker();
 }
-
-export function resetWorkerCapabilities() {
-  configureWorkers(null, 'https://sandbox.test/');
-  configureSharedWorkers(null, 'https://sandbox.test/');
-}

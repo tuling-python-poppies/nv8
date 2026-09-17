@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const eventCancelable = {
+const eventCancelable = {
   eventCancelable() {
   const value = requireEvent(this).cancelable;
   traceGetter("window.Event.prototype.cancelable", "Event", value);

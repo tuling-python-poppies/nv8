@@ -30,7 +30,7 @@ export function configurePerformanceSurface({
   performanceRealmState().navigationEntryEnabled = Boolean(edge151Surface && includeNavigationEntry);
 }
 
-export function createPerformance() {
+function createPerformance() {
   if (performanceRealmState().singleton !== null) {
     return performanceRealmState().singleton;
   }

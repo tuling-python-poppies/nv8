@@ -32,12 +32,6 @@ export function requireCSSRule(value) {
   return record;
 }
 
-export function setCSSRuleParents(rule, parentStyleSheet, parentRule = null) {
-  const record = requireCSSRule(rule);
-  record.parentStyleSheet = parentStyleSheet;
-  record.parentRule = parentRule;
-}
-
 export function cssRuleText(rule) {
   const record = requireCSSRule(rule);
   return record.serialize === undefined ? record.cssText : record.serialize();

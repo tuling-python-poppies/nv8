@@ -3,7 +3,7 @@ import { ownerURL } from "./html-reflection.js";
 import { traceGetter } from "../../../infra/trace/trace-accessor.js";
 import { registerNativeFunction, registerNativeGetter } from "../../../engine/webidl/native-function.js";
 
-export function anchorURL(anchor) {
+function anchorURL(anchor) {
   const raw = getAttributeValue(anchor, "href");
   if (raw === null) {
     return null;
@@ -15,7 +15,7 @@ export function anchorURL(anchor) {
   }
 }
 
-export function setAnchorURLComponent(anchor, component, value) {
+function setAnchorURLComponent(anchor, component, value) {
   const url = anchorURL(anchor) ?? new URL(ownerURL(anchor));
   url[component] = `${value}`;
   setAttributeValue(anchor, "href", url.href);

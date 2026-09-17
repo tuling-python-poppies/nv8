@@ -9,7 +9,7 @@ export function SVGLineElement() {
 }
 registerNativeFunction(SVGLineElement, "SVGLineElement");
 
-export function createSVGLineElement(localName, ownerDocument) {
+function createSVGLineElement(localName, ownerDocument) {
   const element = Object.create(SVGLineElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

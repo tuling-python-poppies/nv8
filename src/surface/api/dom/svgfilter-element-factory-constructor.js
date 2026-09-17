@@ -9,7 +9,7 @@ export function SVGFilterElement() {
 }
 registerNativeFunction(SVGFilterElement, "SVGFilterElement");
 
-export function createSVGFilterElement(localName, ownerDocument) {
+function createSVGFilterElement(localName, ownerDocument) {
   const element = Object.create(SVGFilterElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

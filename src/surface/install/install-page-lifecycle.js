@@ -1,12 +1,7 @@
 import { Event } from '../api/event/event-constructor.js';
 import { ensureEventTarget } from '../api/event/event-target-dispatch-event.js';
 import { currentDocument } from '../api/dom/document-state.js';
-import {
-  currentScriptOf,
-  setCurrentScript,
-  setDocumentReadyState,
-  setDocumentParserScriptExecutor,
-} from '../api/dom/document-record.js';
+import { setCurrentScript, setDocumentReadyState, setDocumentParserScriptExecutor } from '../api/dom/document-record.js';
 
 export function ensureDocumentEventTargetForPage() {
   ensureEventTarget(globalThis);
@@ -75,11 +70,6 @@ export function clearCurrentScript() {
   } catch {
     globalThis.__nv8CurrentScript = undefined;
   }
-}
-
-export function currentScriptElement() {
-  const document = currentDocument();
-  return document === null ? null : currentScriptOf(document);
 }
 
 export function dispatchDOMContentLoaded() {

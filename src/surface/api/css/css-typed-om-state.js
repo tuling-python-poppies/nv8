@@ -1,17 +1,5 @@
 import { initializeCSSStyleValue, requireCSSStyleValue } from "./css-style-value-state.js";
-import {
-  CSSKeywordValue,
-  CSSMathClamp,
-  CSSMathInvert,
-  CSSMathMax,
-  CSSMathMin,
-  CSSMathNegate,
-  CSSMathProduct,
-  CSSMathSum,
-  CSSNumericArray,
-  CSSUnitValue,
-  CSSVariableReferenceValue,
-} from "./css-typed-om-constructors.js";
+import { CSSMathClamp, CSSMathInvert, CSSMathMax, CSSMathMin, CSSMathNegate, CSSMathProduct, CSSMathSum, CSSNumericArray, CSSUnitValue } from "./css-typed-om-constructors.js";
 
 const numericState = new WeakMap();
 const keywordState = new WeakMap();
@@ -87,7 +75,7 @@ const dimensions = new Map([
   ["fr", ["flex", 1]],
 ]);
 
-export function initializeCSSNumericValue(value, record, serialize) {
+function initializeCSSNumericValue(value, record, serialize) {
   numericState.set(value, record);
   initializeCSSStyleValue(value, serialize);
   return value;
@@ -148,7 +136,7 @@ export function requireCSSVariableReferenceValue(value) {
   return record;
 }
 
-export function serializeCSSVariableReferenceValue(value) {
+function serializeCSSVariableReferenceValue(value) {
   const record = requireCSSVariableReferenceValue(value);
   return `var(${record.variable}${record.fallback === null ? "" : `, ${requireCSSStyleValue(record.fallback)}`})`;
 }
@@ -190,7 +178,7 @@ export function readUnparsedValues(value) {
   return values.map((_member, index) => value[index]);
 }
 
-export function createCSSNumericArray(values) {
+function createCSSNumericArray(values) {
   const array = Object.create(CSSNumericArray.prototype);
   numericArrayState.set(array, values);
   for (let index = 0; index < values.length; index += 1) {
@@ -299,13 +287,13 @@ export function createCSSMath(operator, values) {
   throw new TypeError("Unknown math operator");
 }
 
-export function serializeUnitValue(value) {
+function serializeUnitValue(value) {
   const record = requireCSSUnitValue(value);
   const suffix = record.unit === "number" ? "" : record.unit === "percent" ? "%" : record.unit;
   return `${formatNumber(record.value)}${suffix}`;
 }
 
-export function serializeCSSMathValue(value) {
+function serializeCSSMathValue(value) {
   const record = requireCSSMathValue(value);
   if (record.operator === "sum") {
     return `calc(${requireCSSNumericArray(record.values).map(requireCSSStyleValue).join(" + ")})`;

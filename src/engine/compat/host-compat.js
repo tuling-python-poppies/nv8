@@ -13,13 +13,13 @@ export const HAS_NATIVE_ARRAY_BUFFER_TRANSFER =
   typeof ArrayBuffer.prototype.transfer === 'function';
 
 /** structuredClone 需要 Node 17+ */
-export const HAS_NATIVE_STRUCTURED_CLONE = typeof structuredClone === 'function';
+const HAS_NATIVE_STRUCTURED_CLONE = typeof structuredClone === 'function';
 
 /** Symbol.asyncDispose 需要 Node 20+ */
-export const HAS_NATIVE_ASYNC_DISPOSE = typeof Symbol.asyncDispose === 'symbol';
+const HAS_NATIVE_ASYNC_DISPOSE = typeof Symbol.asyncDispose === 'symbol';
 
 /** AbortSignal.timeout 需要 Node 17.3+ */
-export const HAS_NATIVE_ABORT_TIMEOUT = typeof AbortSignal?.timeout === 'function';
+const HAS_NATIVE_ABORT_TIMEOUT = typeof AbortSignal?.timeout === 'function';
 
 /**
  * vm 的 contextified global 是否用 `PropertyQueryCallback` 回答 `in`。

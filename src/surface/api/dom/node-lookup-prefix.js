@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { lookupPrefixAlgorithm } from "./node-algorithms.js";
 import { Node } from "./node-constructor.js";
 
-export const lookupPrefix = {
+const lookupPrefix = {
   lookupPrefix(namespace) {
     const result = lookupPrefixAlgorithm(this, namespace);
     traceCall("window.Node.prototype.lookupPrefix", "Node", [namespace], result);

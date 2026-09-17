@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { NamedNodeMap } from "./named-node-map-constructor.js";
 import { setNamedItemAlgorithm } from "./named-node-map-state.js";
 
-export const setNamedItemNS = {
+const setNamedItemNS = {
   setNamedItemNS(attr) {
     const result = setNamedItemAlgorithm(this, attr, true);
     traceCall("window.NamedNodeMap.prototype.setNamedItemNS", "NamedNodeMap", [attr], result);

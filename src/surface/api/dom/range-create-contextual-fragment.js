@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { createContextualFragmentAlgorithm } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const createContextualFragment = {
+const createContextualFragment = {
   createContextualFragment(fragment) {
     const result = createContextualFragmentAlgorithm(this, fragment);
     traceCall(

@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { substringDataAlgorithm } from "./character-data-algorithms.js";
 import { CharacterData } from "./character-data-constructor.js";
 
-export const substringData = {
+const substringData = {
   substringData(offset, count) {
     const result = substringDataAlgorithm(this, offset, count);
     traceCall(

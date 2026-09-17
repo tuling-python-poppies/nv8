@@ -22,20 +22,6 @@ const NON_CONSTRUCTIBLE_EVENTS = new Set([
 /** 不设防的构造器，仅供内部使用（页面脚本拿不到）。 */
 const INTERNAL_CONSTRUCTORS = new Map();
 
-/**
- * 内部创建一个对页面脚本不可构造的事件实例。
- *
- * @param {string} name 接口名，如 `BeforeUnloadEvent`
- * @param {string} type 事件类型
- * @param {object} [init]
- * @returns {object|null} 该接口不存在时返回 null
- */
-export function constructInternalEvent(name, type, init = {}) {
-  const Constructor = INTERNAL_CONSTRUCTORS.get(name);
-  if (Constructor === undefined) return null;
-  return new Constructor(type, init);
-}
-
 const state = new WeakMap();
 const eventDefinitions = Object.freeze({
   TextUpdateEvent: {
@@ -242,34 +228,6 @@ export const SpeechRecognitionErrorEvent = create(
 export const SpeechRecognitionEvent = create("SpeechRecognitionEvent");
 export const webkitSpeechRecognitionError = SpeechRecognitionErrorEvent;
 export const webkitSpeechRecognitionEvent = SpeechRecognitionEvent;
-
-export const longtailEventConstructors = Object.freeze([
-  TextUpdateEvent,
-  TextFormatUpdateEvent,
-  SecurityPolicyViolationEvent,
-  PictureInPictureEvent,
-  InterestEvent,
-  IDBVersionChangeEvent,
-  FontFaceSetLoadEvent,
-  ContentVisibilityAutoStateChangeEvent,
-  CommandEvent,
-  CharacterBoundsUpdateEvent,
-  BeforeUnloadEvent,
-  BeforeInstallPromptEvent,
-  AudioProcessingEvent,
-  AnimationPlaybackEvent,
-  ClipboardChangeEvent,
-  MIDIConnectionEvent,
-  MIDIMessageEvent,
-  PresentationConnectionAvailableEvent,
-  PresentationConnectionCloseEvent,
-  DocumentPictureInPictureEvent,
-  PageRevealEvent,
-  PageSwapEvent,
-  SnapEvent,
-  SpeechRecognitionErrorEvent,
-  SpeechRecognitionEvent,
-]);
 
 export function longtailEventProperty(value, name) {
   const record = requireRecord(value);

@@ -9,7 +9,7 @@ export function SVGFEGaussianBlurElement() {
 }
 registerNativeFunction(SVGFEGaussianBlurElement, "SVGFEGaussianBlurElement");
 
-export function createSVGFEGaussianBlurElement(localName, ownerDocument) {
+function createSVGFEGaussianBlurElement(localName, ownerDocument) {
   const element = Object.create(SVGFEGaussianBlurElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

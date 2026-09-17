@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { requireNode } from "./node-state.js";
 import { Text } from "./text-constructor.js";
 
-export const wholeText = Object.getOwnPropertyDescriptor({
+const wholeText = Object.getOwnPropertyDescriptor({
   get wholeText() {
     const state = requireNode(this);
     let value = state.nodeValue ?? "";

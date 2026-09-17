@@ -26,7 +26,7 @@ const descriptor = Object.getOwnPropertyDescriptor({
 }, "version");
 
 export const version = descriptor.get;
-export const setVersion = descriptor.set;
+const setVersion = descriptor.set;
 registerNativeGetter(version, "version");
 registerNativeFunction(setVersion, "set version");
 

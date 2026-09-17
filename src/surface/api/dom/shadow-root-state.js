@@ -75,7 +75,7 @@ export function exposedShadowRoot(host) {
   return root !== null && requireShadowRoot(root).mode === "open" ? root : null;
 }
 
-export function slotsInShadowRoot(root) {
+function slotsInShadowRoot(root) {
   requireShadowRoot(root);
   return descendantsIncludingChildren(root).filter(
     node => requireNode(node).nodeType === ELEMENT_NODE

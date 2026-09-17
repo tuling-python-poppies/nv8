@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { surroundContentsAlgorithm } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const surroundContents = {
+const surroundContents = {
   surroundContents(newParent) {
     surroundContentsAlgorithm(this, newParent);
     traceCall(

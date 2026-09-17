@@ -2,11 +2,7 @@ import { Event } from "../event/event-constructor.js";
 import { initializeEvent } from "../event/event-state.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
 import { initializeDOMException } from "../event/dom-exception-state.js";
-import {
-  createMediaStream,
-  isMediaStream,
-  requireMediaStream,
-} from "../media/media-stream-state.js";
+import { isMediaStream, requireMediaStream } from "../media/media-stream-state.js";
 import {
   createMediaStreamTrack,
   isMediaStreamTrack,
@@ -120,7 +116,7 @@ export function RTCRtpScriptTransform(worker) {
   });
 }
 
-export const webrtcConstructors = Object.freeze([
+const webrtcConstructors = Object.freeze([
   RTCTrackEvent,
   RTCStatsReport,
   RTCSessionDescription,

@@ -35,14 +35,6 @@ export function appendConsoleRecord(level, values) {
   });
 }
 
-export function readConsoleRecords() {
-  return consoleState.records.map((record) => ({
-    level: record.level,
-    values: record.values.slice(),
-    groupDepth: record.groupDepth,
-  }));
-}
-
 export function clearConsoleRecords() {
   consoleState.records.length = 0;
 }

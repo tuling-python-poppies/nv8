@@ -8,7 +8,7 @@ export function initializeCSSConditionRule(rule, getConditionText) {
   return rule;
 }
 
-export function requireCSSConditionRule(value) {
+function requireCSSConditionRule(value) {
   requireCSSRule(value);
   requireCSSGroupingRule(value);
   const record = state.get(value);

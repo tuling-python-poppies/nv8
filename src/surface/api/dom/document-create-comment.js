@@ -5,7 +5,7 @@ import { createComment } from "./comment-constructor.js";
 import { Document } from "./document-constructor.js";
 import { requireDocument } from "./document-record.js";
 
-export const createCommentCallback = {
+const createCommentCallback = {
   createComment(data) {
     requireDocument(this);
     const result = createComment(`${data}`, this);

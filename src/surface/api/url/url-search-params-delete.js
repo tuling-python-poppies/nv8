@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { URLSearchParams } from "./url-search-params-constructor.js";
 import { mutateURLSearchParams } from "./url-search-params-state.js";
 
-export const deleteParam = {
+const deleteParam = {
   delete(name) {
     if (arguments.length === 0) {
       throw new TypeError("Failed to execute 'delete' on 'URLSearchParams': 1 argument required");

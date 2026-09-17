@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { PerformanceMark } from "./performance-mark-constructor.js";
 import { requirePerformanceMark } from "./performance-mark-state.js";
 
-export const performanceMarkDetail = {
+const performanceMarkDetail = {
   performanceMarkDetail() {
   const value = requirePerformanceMark(this).detail;
   traceGetter(

@@ -14,7 +14,7 @@ export function requireTextTrackCueList(list) {
   return state;
 }
 
-export function refreshTextTrackCueList(list) {
+function refreshTextTrackCueList(list) {
   const state = requireTextTrackCueList(list);
   for (let index = state.items.length; index < state.indexedLength; index += 1) {
     delete list[index];

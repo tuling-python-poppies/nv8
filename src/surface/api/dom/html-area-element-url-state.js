@@ -3,7 +3,7 @@ import { ownerURL } from "./html-reflection.js";
 import { traceGetter } from "../../../infra/trace/trace-accessor.js";
 import { registerNativeFunction, registerNativeGetter } from "../../../engine/webidl/native-function.js";
 
-export function areaURL(area) {
+function areaURL(area) {
   requireElement(area);
   const raw = getAttributeValue(area, "href");
   if (raw === null) return null;

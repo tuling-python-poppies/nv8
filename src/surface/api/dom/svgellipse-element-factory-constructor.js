@@ -9,7 +9,7 @@ export function SVGEllipseElement() {
 }
 registerNativeFunction(SVGEllipseElement, "SVGEllipseElement");
 
-export function createSVGEllipseElement(localName, ownerDocument) {
+function createSVGEllipseElement(localName, ownerDocument) {
   const element = Object.create(SVGEllipseElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

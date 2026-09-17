@@ -91,7 +91,7 @@ export function USBOutTransferResult(status) {
 }
 export function BluetoothUUID() { illegalConstructor("BluetoothUUID", new.target); }
 
-export const externalDeviceConstructors = Object.freeze([
+const externalDeviceConstructors = Object.freeze([
   Bluetooth, BluetoothCharacteristicProperties, BluetoothDevice,
   BluetoothRemoteGATTCharacteristic, BluetoothRemoteGATTDescriptor,
   BluetoothRemoteGATTServer, BluetoothRemoteGATTService, HID,

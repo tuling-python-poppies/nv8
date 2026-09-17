@@ -40,9 +40,9 @@ export function designModeValue(document) { return requireDocument(document).des
 export function setDesignMode(document, value) {
   requireDocument(document).designMode = `${value}`.toLowerCase() === "on" ? "on" : "off";
 }
-export function colorValue(name) { return document => requireDocument(document)[name] ?? ""; }
+function colorValue(name) { return document => requireDocument(document)[name] ?? ""; }
 export function setColor(name) { return (document, value) => { requireDocument(document)[name] = `${value}`; }; }
-export function documentElementsCollection(key, predicate) {
+function documentElementsCollection(key, predicate) {
   return document => documentCollection(document, key, () => documentElements(document).filter(predicate));
 }
 export const imagesValue = documentElementsCollection("images", element => element.localName === "img");
@@ -91,13 +91,6 @@ export function lastElementChildValue(document) {
 }
 export function childElementCountValue(document) { return documentChildren(document).length; }
 export function activeElementValue(document) { return requireDocument(document).activeElement ?? documentBody(document); }
-export function emptyArrayValue(name) {
-  return document => {
-    const state = requireDocument(document);
-    if (state[name] === undefined) state[name] = [];
-    return state[name];
-  };
-}
 export function styleSheetsValue(document) {
   const state = requireDocument(document);
   if (state.styleSheets === undefined) {

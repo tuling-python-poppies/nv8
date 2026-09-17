@@ -86,31 +86,6 @@ export function reportingOperation(value, name) {
   throw new TypeError(`Unsupported reporting operation: ${name}`);
 }
 
-export function createCSPViolationReportBody(values = {}) {
-  return createBody(CSPViolationReportBody, {
-    documentURL: `${values.documentURL ?? ""}`,
-    referrer: `${values.referrer ?? ""}`,
-    blockedURL: `${values.blockedURL ?? ""}`,
-    effectiveDirective: `${values.effectiveDirective ?? ""}`,
-    originalPolicy: `${values.originalPolicy ?? ""}`,
-    sourceFile: `${values.sourceFile ?? ""}`,
-    sample: `${values.sample ?? ""}`,
-    disposition: `${values.disposition ?? "enforce"}`,
-    statusCode: Number(values.statusCode ?? 0),
-    lineNumber: Number(values.lineNumber ?? 0),
-    columnNumber: Number(values.columnNumber ?? 0),
-  });
-}
-
-export function createIntegrityViolationReportBody(values = {}) {
-  return createBody(IntegrityViolationReportBody, {
-    documentURL: `${values.documentURL ?? ""}`,
-    blockedURL: `${values.blockedURL ?? ""}`,
-    destination: `${values.destination ?? ""}`,
-    reportOnly: Boolean(values.reportOnly),
-  });
-}
-
 function createBody(Constructor, values) {
   const value = Object.create(Constructor.prototype);
   state.set(value, { kind: "body", values: Object.freeze(values) });

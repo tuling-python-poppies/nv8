@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { Performance } from "./performance-constructor.js";
 import { requirePerformance } from "./performance-state.js";
 
-export const setResourceTimingBufferSize = {
+const setResourceTimingBufferSize = {
   setResourceTimingBufferSize(maxSize) {
   const state = requirePerformance(this);
   const number = Number(maxSize);

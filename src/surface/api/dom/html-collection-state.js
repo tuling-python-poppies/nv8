@@ -56,7 +56,7 @@ export function createHTMLCollection(source) {
   return collection;
 }
 
-export function requireHTMLCollection(value) {
+function requireHTMLCollection(value) {
   const state = collectionState.get(value);
   if (state === undefined) {
     throw new TypeError("Illegal invocation");

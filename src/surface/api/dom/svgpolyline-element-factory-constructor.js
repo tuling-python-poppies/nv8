@@ -9,7 +9,7 @@ export function SVGPolylineElement() {
 }
 registerNativeFunction(SVGPolylineElement, "SVGPolylineElement");
 
-export function createSVGPolylineElement(localName, ownerDocument) {
+function createSVGPolylineElement(localName, ownerDocument) {
   const element = Object.create(SVGPolylineElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

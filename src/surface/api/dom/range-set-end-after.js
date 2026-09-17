@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { setBoundaryAfter } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const setEndAfter = {
+const setEndAfter = {
   setEndAfter(node) {
     setBoundaryAfter(this, node, false);
     traceCall("window.Range.prototype.setEndAfter", "Range", [node], undefined);

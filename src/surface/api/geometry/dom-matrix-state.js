@@ -22,7 +22,7 @@ export function requireDOMMatrix(matrix) {
   return state;
 }
 
-export function isDOMMatrixValue(value) {
+function isDOMMatrixValue(value) {
   return matrixState.has(value);
 }
 
@@ -161,7 +161,7 @@ export function axisRotationMatrix(x = 0, y = 0, z = 0, degrees = 0) {
   ];
 }
 
-export function parseCSSMatrix(source) {
+function parseCSSMatrix(source) {
   const normalized = source.trim();
   if (normalized === "" || normalized === "none") return identityMatrix();
   const match = /^(matrix|matrix3d)\((.*)\)$/u.exec(normalized);

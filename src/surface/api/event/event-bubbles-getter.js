@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const eventBubbles = {
+const eventBubbles = {
   eventBubbles() {
   const value = requireEvent(this).bubbles;
   traceGetter("window.Event.prototype.bubbles", "Event", value);

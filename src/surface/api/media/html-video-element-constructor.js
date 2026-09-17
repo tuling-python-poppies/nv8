@@ -11,7 +11,7 @@ export function HTMLVideoElement() {
 }
 registerNativeFunction(HTMLVideoElement, "HTMLVideoElement");
 
-export function createHTMLVideoElement(tagName, ownerDocument, source = "") {
+function createHTMLVideoElement(tagName, ownerDocument, source = "") {
   const element = Object.create(HTMLVideoElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   initializeMediaElement(element, source);

@@ -2,7 +2,7 @@ import { traceGetter } from "../../../infra/trace/trace-accessor.js";
 import { registerNativeGetter } from "../../../engine/webidl/native-function.js";
 import { currentPerformance } from "./performance-state.js";
 
-export const globalPerformance = {
+const globalPerformance = {
   globalPerformance() {
   const value = currentPerformance();
   traceGetter("window.performance", "Window", value);

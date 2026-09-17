@@ -9,7 +9,7 @@ export function SVGFEMorphologyElement() {
 }
 registerNativeFunction(SVGFEMorphologyElement, "SVGFEMorphologyElement");
 
-export function createSVGFEMorphologyElement(localName, ownerDocument) {
+function createSVGFEMorphologyElement(localName, ownerDocument) {
   const element = Object.create(SVGFEMorphologyElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

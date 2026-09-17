@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { isDefaultNamespaceAlgorithm } from "./node-algorithms.js";
 import { Node } from "./node-constructor.js";
 
-export const isDefaultNamespace = {
+const isDefaultNamespace = {
   isDefaultNamespace(namespace) {
     const result = isDefaultNamespaceAlgorithm(this, namespace);
     traceCall("window.Node.prototype.isDefaultNamespace", "Node", [namespace], result);

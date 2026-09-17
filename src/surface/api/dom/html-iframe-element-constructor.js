@@ -13,7 +13,7 @@ export function HTMLIFrameElement() {
 }
 registerNativeFunction(HTMLIFrameElement, "HTMLIFrameElement");
 
-export function createHTMLIFrameElement(tagName, ownerDocument) {
+function createHTMLIFrameElement(tagName, ownerDocument) {
   const element = Object.create(HTMLIFrameElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

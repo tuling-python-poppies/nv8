@@ -1,4 +1,4 @@
-import { HTMLVideoElement } from "./html-video-element-constructor.js";
+
 
 const videoState = new WeakMap();
 
@@ -27,10 +27,4 @@ export function requireVideoElement(video) {
     throw new TypeError("Illegal invocation");
   }
   return state;
-}
-
-export function createHTMLVideoElementState() {
-  const video = Object.create(HTMLVideoElement.prototype);
-  initializeVideoElement(video);
-  return video;
 }

@@ -15,7 +15,7 @@ export function HTMLParagraphElement() {
 }
 registerNativeFunction(HTMLParagraphElement, "HTMLParagraphElement");
 
-export function createHTMLParagraphElement(tagName, ownerDocument) {
+function createHTMLParagraphElement(tagName, ownerDocument) {
   const element = Object.create(HTMLParagraphElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

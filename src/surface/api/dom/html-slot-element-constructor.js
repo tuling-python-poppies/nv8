@@ -15,7 +15,7 @@ export function HTMLSlotElement() {
 }
 registerNativeFunction(HTMLSlotElement, "HTMLSlotElement");
 
-export function createHTMLSlotElement(tagName, ownerDocument) {
+function createHTMLSlotElement(tagName, ownerDocument) {
   const element = Object.create(HTMLSlotElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

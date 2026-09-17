@@ -9,7 +9,7 @@ export function SVGFEComponentTransferElement() {
 }
 registerNativeFunction(SVGFEComponentTransferElement, "SVGFEComponentTransferElement");
 
-export function createSVGFEComponentTransferElement(localName, ownerDocument) {
+function createSVGFEComponentTransferElement(localName, ownerDocument) {
   const element = Object.create(SVGFEComponentTransferElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

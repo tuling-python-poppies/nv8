@@ -36,22 +36,12 @@ export function resetLaunchQueue() {
   queueSingleton = null;
 }
 
-export function createLaunchParams(targetURL = "", files = []) {
+function createLaunchParams(targetURL = "", files = []) {
   return create(LaunchParams, {
     kind: "params",
     targetURL: `${targetURL}`,
     files: [...files],
   });
-}
-
-export function deliverLaunchParams(targetURL, files = []) {
-  const queue = launchQueueGlobal();
-  const record = requireRecord(queue);
-  if (record.consumer === null) return false;
-  Reflect.apply(record.consumer, undefined, [
-    createLaunchParams(targetURL, files),
-  ]);
-  return true;
 }
 
 export function launchHandlingProperty(value, name) {

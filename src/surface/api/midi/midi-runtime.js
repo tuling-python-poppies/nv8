@@ -48,28 +48,6 @@ export function createMIDIAccess() {
   return value;
 }
 
-export function createMIDIPort(type, init = {}) {
-  const Constructor = type === "output" ? MIDIOutput : MIDIInput;
-  const value = Object.create(Constructor.prototype);
-  initializeEventTarget(value);
-  const handlers = new Map([["onstatechange", null]]);
-  if (type === "input") handlers.set("onmidimessage", null);
-  state.set(value, {
-    kind: "port",
-    object: value,
-    connection: "closed",
-    id: `${init.id ?? ""}`,
-    manufacturer: `${init.manufacturer ?? ""}`,
-    name: `${init.name ?? ""}`,
-    state: "connected",
-    type,
-    version: `${init.version ?? ""}`,
-    handlers,
-    sent: [],
-  });
-  return value;
-}
-
 export function midiProperty(value, name) {
   const record = requireRecord(value);
   if (record.handlers?.has(name)) return record.handlers.get(name);

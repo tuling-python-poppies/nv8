@@ -9,7 +9,7 @@ export function SVGMaskElement() {
 }
 registerNativeFunction(SVGMaskElement, "SVGMaskElement");
 
-export function createSVGMaskElement(localName, ownerDocument) {
+function createSVGMaskElement(localName, ownerDocument) {
   const element = Object.create(SVGMaskElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

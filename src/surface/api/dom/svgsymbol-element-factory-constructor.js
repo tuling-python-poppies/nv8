@@ -9,7 +9,7 @@ export function SVGSymbolElement() {
 }
 registerNativeFunction(SVGSymbolElement, "SVGSymbolElement");
 
-export function createSVGSymbolElement(localName, ownerDocument) {
+function createSVGSymbolElement(localName, ownerDocument) {
   const element = Object.create(SVGSymbolElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

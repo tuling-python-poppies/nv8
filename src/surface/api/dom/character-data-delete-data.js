@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { deleteDataAlgorithm } from "./character-data-algorithms.js";
 import { CharacterData } from "./character-data-constructor.js";
 
-export const deleteData = {
+const deleteData = {
   deleteData(offset, count) {
     deleteDataAlgorithm(this, offset, count);
     traceCall("window.CharacterData.prototype.deleteData", "CharacterData", [offset, count], undefined);

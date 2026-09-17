@@ -13,7 +13,7 @@ export function SVGCircleElement() {
 }
 registerNativeFunction(SVGCircleElement, "SVGCircleElement");
 
-export function createSVGCircleElement(qualifiedName, ownerDocument) {
+function createSVGCircleElement(qualifiedName, ownerDocument) {
   const element = Object.create(SVGCircleElement.prototype);
   initializeElement(element, qualifiedName, ownerDocument, SVG_NAMESPACE);
   return element;

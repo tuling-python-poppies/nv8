@@ -8,7 +8,7 @@ import {
   createProcessingInstruction,
 } from "./processing-instruction-constructor.js";
 
-export const createProcessingInstructionCallback = {
+const createProcessingInstructionCallback = {
   createProcessingInstruction(target, data) {
     requireDocument(this);
     const normalizedTarget = `${target}`;

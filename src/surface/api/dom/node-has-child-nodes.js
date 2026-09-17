@@ -7,7 +7,7 @@ import {
 import { hasChildNodesAlgorithm } from "./node-algorithms.js";
 import { Node } from "./node-constructor.js";
 
-export const hasChildNodes = {
+const hasChildNodes = {
   hasChildNodes() {
     const foreignMethod = findCrossRealmPrototypeMethod(
       this,

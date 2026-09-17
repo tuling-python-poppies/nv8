@@ -1,7 +1,7 @@
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { createBlob, decodeUtf8, encodeUtf8, requireBlob } from "../file/blob-state.js";
 import { FormData, formDataAppend, requireFormData } from "./form-data-runtime.js";
-import { Headers, cloneHeaders, headersGet, headersHas, headersSet } from "./headers-runtime.js";
+import { Headers, headersGet, headersHas, headersSet } from "./headers-runtime.js";
 
 const requestState = new WeakMap();
 const responseState = new WeakMap();
@@ -89,11 +89,6 @@ export function responseProperty(response, name) {
   if (name === "ok") return state.status >= 200 && state.status <= 299;
   if (name === "bodyUsed") return state.bodyUsed;
   return state[name];
-}
-
-export function disturbBody(value) {
-  const state = requestState.get(value) ?? responseState.get(value);
-  if (state !== undefined) state.bodyUsed = true;
 }
 
 export function requestArrayBuffer(request) {

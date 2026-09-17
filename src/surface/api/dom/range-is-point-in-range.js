@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { isPointInRangeAlgorithm } from "./range-algorithms.js";
 import { Range } from "./range-constructor.js";
 
-export const isPointInRange = {
+const isPointInRange = {
   isPointInRange(node, offset) {
     const result = isPointInRangeAlgorithm(this, node, offset);
     traceCall("window.Range.prototype.isPointInRange", "Range", [node, offset], result);

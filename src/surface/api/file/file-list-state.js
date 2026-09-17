@@ -17,7 +17,7 @@ export function requireFileList(list) {
   return state;
 }
 
-export function replaceFileList(list, files) {
+function replaceFileList(list, files) {
   const state = requireFileList(list);
   for (let index = 0; index < state.indexedLength; index += 1) {
     delete list[index];

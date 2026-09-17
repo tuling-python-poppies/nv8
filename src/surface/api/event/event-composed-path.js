@@ -4,7 +4,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const composedPath = {
+const composedPath = {
   composedPath() {
   const result = requireEvent(this).path.slice();
   traceCall(

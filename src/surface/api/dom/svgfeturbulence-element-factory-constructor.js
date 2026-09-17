@@ -9,7 +9,7 @@ export function SVGFETurbulenceElement() {
 }
 registerNativeFunction(SVGFETurbulenceElement, "SVGFETurbulenceElement");
 
-export function createSVGFETurbulenceElement(localName, ownerDocument) {
+function createSVGFETurbulenceElement(localName, ownerDocument) {
   const element = Object.create(SVGFETurbulenceElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

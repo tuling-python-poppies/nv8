@@ -5,7 +5,7 @@ import { Document } from "./document-constructor.js";
 import { requireDocument } from "./document-record.js";
 import { createNodeIterator } from "./node-iterator-state.js";
 
-export const createNodeIteratorCallback = {
+const createNodeIteratorCallback = {
   createNodeIterator(root, whatToShow = 0xFFFFFFFF, filter = null) {
     requireDocument(this);
     const result = createNodeIterator(root, whatToShow, filter);

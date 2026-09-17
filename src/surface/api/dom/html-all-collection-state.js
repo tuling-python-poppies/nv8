@@ -42,18 +42,7 @@ export function createHTMLAllCollection(document) {
   return collection;
 }
 
-/**
- * 当前仍被跟踪的 live HTMLAllCollection 数量（测试用）。
- */
-export function liveHTMLAllCollectionCount() {
-  const refs = allCollectionState().liveCollections;
-  for (const ref of refs) {
-    if (ref.deref() === undefined) refs.delete(ref);
-  }
-  return refs.size;
-}
-
-export function requireHTMLAllCollection(value) {
+function requireHTMLAllCollection(value) {
   const state = collectionState.get(value);
   if (state === undefined) {
     throw new TypeError("Illegal invocation");
@@ -99,7 +88,7 @@ export function htmlAllNamedItem(collection, name) {
   return createHTMLCollection(() => matchingItems(collection, normalized));
 }
 
-export function refreshHTMLAllCollection(collection) {
+function refreshHTMLAllCollection(collection) {
   const state = requireHTMLAllCollection(collection);
   const items = htmlAllItems(collection);
   for (let index = items.length; index < state.indexedLength; index += 1) {

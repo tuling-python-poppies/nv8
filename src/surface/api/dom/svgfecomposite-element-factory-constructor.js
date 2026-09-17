@@ -9,7 +9,7 @@ export function SVGFECompositeElement() {
 }
 registerNativeFunction(SVGFECompositeElement, "SVGFECompositeElement");
 
-export function createSVGFECompositeElement(localName, ownerDocument) {
+function createSVGFECompositeElement(localName, ownerDocument) {
   const element = Object.create(SVGFECompositeElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const eventDefaultPrevented = {
+const eventDefaultPrevented = {
   eventDefaultPrevented() {
   const value = requireEvent(this).defaultPrevented;
   traceGetter("window.Event.prototype.defaultPrevented", "Event", value);

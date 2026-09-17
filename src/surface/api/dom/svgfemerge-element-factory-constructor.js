@@ -9,7 +9,7 @@ export function SVGFEMergeElement() {
 }
 registerNativeFunction(SVGFEMergeElement, "SVGFEMergeElement");
 
-export function createSVGFEMergeElement(localName, ownerDocument) {
+function createSVGFEMergeElement(localName, ownerDocument) {
   const element = Object.create(SVGFEMergeElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

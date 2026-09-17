@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const eventCurrentTarget = {
+const eventCurrentTarget = {
   eventCurrentTarget() {
   const value = requireEvent(this).currentTarget;
   traceGetter("window.Event.prototype.currentTarget", "Event", value);

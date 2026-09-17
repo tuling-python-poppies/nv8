@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { ScreenOrientation } from "./screen-orientation-constructor.js";
 import { requireScreenOrientation } from "./screen-orientation-state.js";
 
-export const screenOrientationAngle = Object.getOwnPropertyDescriptor({
+const screenOrientationAngle = Object.getOwnPropertyDescriptor({
   get angle() {
     const value = requireScreenOrientation(this).angle;
     traceGetter("window.ScreenOrientation.prototype.angle", "ScreenOrientation", value);

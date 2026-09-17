@@ -9,7 +9,7 @@ export function SVGAnimateMotionElement() {
 }
 registerNativeFunction(SVGAnimateMotionElement, "SVGAnimateMotionElement");
 
-export function createSVGAnimateMotionElement(localName, ownerDocument) {
+function createSVGAnimateMotionElement(localName, ownerDocument) {
   const element = Object.create(SVGAnimateMotionElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

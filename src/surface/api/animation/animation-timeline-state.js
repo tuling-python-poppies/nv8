@@ -1,4 +1,4 @@
-import { AnimationTimeline } from "./animation-timeline-constructor.js";
+
 import { DocumentTimeline } from "./document-timeline-constructor.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
 
@@ -27,7 +27,7 @@ export function isAnimationTimeline(value) {
   return state.has(value);
 }
 
-export function createDocumentTimeline(originTime = 0) {
+function createDocumentTimeline(originTime = 0) {
   const timeline = Object.create(DocumentTimeline.prototype);
   initializeAnimationTimeline(timeline, -originTime, null);
   return timeline;
@@ -36,10 +36,4 @@ export function createDocumentTimeline(originTime = 0) {
 export function defaultDocumentTimeline() {
   if (timelineState().defaultTimeline === null) timelineState().defaultTimeline = createDocumentTimeline(0);
   return timelineState().defaultTimeline;
-}
-
-export function createAnimationTimeline(currentTime = null, duration = null) {
-  const timeline = Object.create(AnimationTimeline.prototype);
-  initializeAnimationTimeline(timeline, currentTime, duration);
-  return timeline;
 }

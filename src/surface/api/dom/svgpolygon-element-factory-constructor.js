@@ -9,7 +9,7 @@ export function SVGPolygonElement() {
 }
 registerNativeFunction(SVGPolygonElement, "SVGPolygonElement");
 
-export function createSVGPolygonElement(localName, ownerDocument) {
+function createSVGPolygonElement(localName, ownerDocument) {
   const element = Object.create(SVGPolygonElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

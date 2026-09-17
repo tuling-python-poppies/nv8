@@ -9,7 +9,7 @@ export function SVGFEColorMatrixElement() {
 }
 registerNativeFunction(SVGFEColorMatrixElement, "SVGFEColorMatrixElement");
 
-export function createSVGFEColorMatrixElement(localName, ownerDocument) {
+function createSVGFEColorMatrixElement(localName, ownerDocument) {
   const element = Object.create(SVGFEColorMatrixElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

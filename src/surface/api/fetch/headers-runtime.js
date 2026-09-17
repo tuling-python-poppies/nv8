@@ -81,11 +81,7 @@ export function headersValues(headers) {
   return sorted(headers).map(([, value]) => value)[Symbol.iterator]();
 }
 
-export function cloneHeaders(headers) {
-  return new Headers(headers);
-}
-
-export function requireHeaders(value) {
+function requireHeaders(value) {
   const values = state.get(value);
   if (values === undefined) throw new TypeError("Illegal invocation");
   return values;

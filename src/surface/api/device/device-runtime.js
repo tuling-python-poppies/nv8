@@ -105,7 +105,7 @@ export function DeviceOrientationEvent(type, init = {}) {
   });
 }
 
-export const deviceConstructors = Object.freeze([
+const deviceConstructors = Object.freeze([
   GeolocationPositionError, GeolocationPosition, GeolocationCoordinates,
   Geolocation, GamepadHapticActuator, GamepadEvent, GamepadButton, Gamepad,
   Sensor, SensorErrorEvent, Accelerometer, GravitySensor,
@@ -174,14 +174,6 @@ export function deviceOperation(value, name, args) {
     }
   }
   throw new TypeError(`Unsupported device operation: ${name}`);
-}
-
-export function requestDevicePermission(callback) {
-  const promise = Promise.resolve("granted");
-  if (typeof callback === "function") {
-    promise.then(value => Reflect.apply(callback, undefined, [value]));
-  }
-  return promise;
 }
 
 function geolocationOperation(name, args) {

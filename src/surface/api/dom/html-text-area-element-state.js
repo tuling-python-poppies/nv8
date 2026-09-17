@@ -27,10 +27,6 @@ export function initializeTextArea(textArea) {
   );
 }
 
-export function textAreaValue(textArea) {
-  return requireTextArea(textArea).value;
-}
-
 export function requireTextArea(textArea) {
   const state = textAreaState.get(textArea);
   if (state === undefined) {

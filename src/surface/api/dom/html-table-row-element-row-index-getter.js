@@ -22,7 +22,7 @@ export const rowIndex = Object.getOwnPropertyDescriptor({
 }, "rowIndex").get;
 registerNativeGetter(rowIndex, "rowIndex");
 
-export function tableAncestor(node) {
+function tableAncestor(node) {
   let current = requireNode(node).parent;
   while (current !== null) {
     if (current.localName === "table") {

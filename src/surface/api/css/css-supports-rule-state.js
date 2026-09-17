@@ -27,20 +27,20 @@ export function createCSSSupportsRule(
   return rule;
 }
 
-export function requireCSSSupportsRule(value) {
+function requireCSSSupportsRule(value) {
   const record = state.get(value);
   if (record === undefined) throw new TypeError("Illegal invocation");
   requireCSSGroupingRule(value);
   return record;
 }
 
-export function serializeCSSSupportsRule(rule) {
+function serializeCSSSupportsRule(rule) {
   const record = requireCSSSupportsRule(rule);
   const body = requireCSSGroupingRule(rule).rules.map(child => child.cssText).join(" ");
   return `@supports ${record.conditionText} {${body === "" ? "" : ` ${body}`} }`;
 }
 
-export function replaceCSSSupportsRuleText(rule, text) {
+function replaceCSSSupportsRuleText(rule, text) {
   const source = `${text}`.trim();
   const open = source.indexOf("{");
   const close = source.lastIndexOf("}");

@@ -9,7 +9,7 @@ export function SVGFESpotLightElement() {
 }
 registerNativeFunction(SVGFESpotLightElement, "SVGFESpotLightElement");
 
-export function createSVGFESpotLightElement(localName, ownerDocument) {
+function createSVGFESpotLightElement(localName, ownerDocument) {
   const element = Object.create(SVGFESpotLightElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

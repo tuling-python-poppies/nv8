@@ -7,12 +7,6 @@ export function createStylePropertyMapReadOnly(entries = []) {
   return map;
 }
 
-export function createLinkedStylePropertyMapReadOnly(read) {
-  const map = Object.create(StylePropertyMapReadOnly.prototype);
-  state.set(map, { read });
-  return map;
-}
-
 export function registerStylePropertyMapReadOnly(map, read) {
   state.set(map, { read });
 }

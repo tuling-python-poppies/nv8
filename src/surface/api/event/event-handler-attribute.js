@@ -45,7 +45,7 @@ import {
  * @param {unknown} value
  * @returns {boolean}
  */
-export function isEventHandlerValue(value) {
+function isEventHandlerValue(value) {
   if (typeof value === "function") return true;
   return value !== null
     && typeof value === "object"
@@ -60,7 +60,7 @@ export function isEventHandlerValue(value) {
  * @param {Map} listeners 存放已注册代理的 Map，防止重复注册
  * @param {string} name 形如 `onclick`
  */
-export function ensureEventHandlerListener(target, handlers, listeners, name) {
+function ensureEventHandlerListener(target, handlers, listeners, name) {
   if (listeners.has(name)) return;
   if (!isEventHandlerValue(handlers.get(name) ?? null)) return;
 

@@ -6,7 +6,7 @@ import { CustomEvent } from "./custom-event-constructor.js";
 import { requireCustomEvent } from "./custom-event-state.js";
 import { requireEvent } from "./event-state.js";
 
-export const initCustomEvent = {
+const initCustomEvent = {
   initCustomEvent(type) {
   const eventState = requireEvent(this);
   const customState = requireCustomEvent(this);

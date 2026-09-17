@@ -9,7 +9,7 @@ export function SVGFEOffsetElement() {
 }
 registerNativeFunction(SVGFEOffsetElement, "SVGFEOffsetElement");
 
-export function createSVGFEOffsetElement(localName, ownerDocument) {
+function createSVGFEOffsetElement(localName, ownerDocument) {
   const element = Object.create(SVGFEOffsetElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

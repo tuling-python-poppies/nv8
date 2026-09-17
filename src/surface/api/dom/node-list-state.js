@@ -14,17 +14,12 @@ export function createNodeList(source, live = false) {
   return list;
 }
 
-export function requireNodeList(value) {
+function requireNodeList(value) {
   const state = nodeListState.get(value);
   if (state === undefined) {
     throw new TypeError("Illegal invocation");
   }
   return state;
-}
-
-export function nodeListValues(value) {
-  const state = requireNodeList(value);
-  return state.live ? state.source().slice() : state.snapshot.slice();
 }
 
 export function refreshNodeList(value) {

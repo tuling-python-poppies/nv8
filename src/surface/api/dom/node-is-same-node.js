@@ -7,7 +7,7 @@ import {
 import { isSameNodeAlgorithm } from "./node-algorithms.js";
 import { Node } from "./node-constructor.js";
 
-export const isSameNode = {
+const isSameNode = {
   isSameNode(other) {
     const foreignMethod = findCrossRealmPrototypeMethod(
       this,

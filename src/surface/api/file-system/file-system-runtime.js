@@ -91,10 +91,6 @@ export function fileSystemOperation(value, name, args) {
   throw new TypeError(`Unsupported file-system operation: ${name}`);
 }
 
-export function fileSystemBaseOperation(value, name, args) {
-  return handleOperation(requireRecord(value), name, args);
-}
-
 export function fileSystemAsyncIterator(value) {
   return directoryValues(requireKind(value, "directoryHandle"), "entries");
 }

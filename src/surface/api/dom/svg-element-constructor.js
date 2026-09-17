@@ -1,8 +1,4 @@
-import {
-  defineConstructorBacklink,
-  defineGlobalConstructor,
-  defineToStringTag,
-} from "../../../engine/webidl/descriptor.js";
+import { defineGlobalConstructor } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { Element } from "./element-constructor.js";
 import { initializeElement, parseQualifiedName, SVG_NAMESPACE } from "./element-state.js";
@@ -16,7 +12,6 @@ const svgFactorySlot = createRealmSlot(() => ({
 function svgFactoryState() {
   return svgFactorySlot.get(globalThis);
 }
-
 
 export function SVGElement() {
   throw new TypeError("Illegal constructor");
@@ -43,9 +38,4 @@ export function installSVGElementConstructor() {
   Object.setPrototypeOf(SVGElement, Element);
   delete SVGElement.prototype.constructor;
   defineGlobalConstructor("SVGElement", SVGElement);
-}
-
-export function finishSVGElementConstructor() {
-  defineConstructorBacklink(SVGElement.prototype, SVGElement);
-  defineToStringTag(SVGElement.prototype, "SVGElement");
 }

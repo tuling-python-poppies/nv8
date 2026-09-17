@@ -9,7 +9,7 @@ export function SVGFEDistantLightElement() {
 }
 registerNativeFunction(SVGFEDistantLightElement, "SVGFEDistantLightElement");
 
-export function createSVGFEDistantLightElement(localName, ownerDocument) {
+function createSVGFEDistantLightElement(localName, ownerDocument) {
   const element = Object.create(SVGFEDistantLightElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

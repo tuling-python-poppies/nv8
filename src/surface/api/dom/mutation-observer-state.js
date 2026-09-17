@@ -56,7 +56,7 @@ export function liveMutationObserverCount() {
   return count;
 }
 
-export function requireMutationObserver(value) {
+function requireMutationObserver(value) {
   const state = observerState.get(value);
   if (state === undefined) {
     throw new TypeError("Illegal invocation");

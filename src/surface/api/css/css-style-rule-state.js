@@ -1,5 +1,5 @@
 import { createCSSRuleList, refreshCSSRuleList } from "./css-rule-list-state.js";
-import { initializeCSSRule, requireCSSRule, setCSSRuleParents } from "./css-rule-state.js";
+import { initializeCSSRule, requireCSSRule } from "./css-rule-state.js";
 import { createStyleMapForDeclaration, replaceDeclarationText } from "./css-declaration-style-map.js";
 import { createCSSStyleDeclaration } from "./css-style-declaration-state.js";
 import { CSSStyleRule } from "./css-style-rule-constructor.js";
@@ -37,7 +37,7 @@ export function requireCSSStyleRule(value) {
   return record;
 }
 
-export function serializeCSSStyleRule(rule) {
+function serializeCSSStyleRule(rule) {
   const record = requireCSSStyleRule(rule);
   const declarations = record.style.cssText;
   const nested = record.rules.map(child => child.cssText).join(" ");
@@ -45,7 +45,7 @@ export function serializeCSSStyleRule(rule) {
   return `${record.selector} {${body === "" ? "" : ` ${body}`} }`;
 }
 
-export function replaceCSSStyleRuleText(rule, text) {
+function replaceCSSStyleRuleText(rule, text) {
   const source = `${text}`.trim();
   const open = source.indexOf("{");
   const close = source.lastIndexOf("}");
@@ -55,11 +55,4 @@ export function replaceCSSStyleRuleText(rule, text) {
   replaceDeclarationText(record.style, source.slice(open + 1, close));
   record.rules.splice(0);
   refreshCSSRuleList(record.ruleList);
-}
-
-export function setCSSStyleRuleParents(rule, parentStyleSheet, parentRule = null) {
-  setCSSRuleParents(rule, parentStyleSheet, parentRule);
-  for (const child of requireCSSStyleRule(rule).rules) {
-    setCSSRuleParents(child, parentStyleSheet, rule);
-  }
 }

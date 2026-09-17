@@ -9,7 +9,7 @@ export function SVGStopElement() {
 }
 registerNativeFunction(SVGStopElement, "SVGStopElement");
 
-export function createSVGStopElement(localName, ownerDocument) {
+function createSVGStopElement(localName, ownerDocument) {
   const element = Object.create(SVGStopElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

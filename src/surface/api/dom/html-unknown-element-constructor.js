@@ -15,7 +15,7 @@ export function HTMLUnknownElement() {
 }
 registerNativeFunction(HTMLUnknownElement, "HTMLUnknownElement");
 
-export function createHTMLUnknownElement(tagName, ownerDocument) {
+function createHTMLUnknownElement(tagName, ownerDocument) {
   const element = Object.create(HTMLUnknownElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

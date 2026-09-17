@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { PerformanceEntry } from "./performance-entry-constructor.js";
 import { requirePerformanceEntry } from "./performance-entry-state.js";
 
-export const performanceEntryName = {
+const performanceEntryName = {
   performanceEntryName() {
   const value = requirePerformanceEntry(this).name;
   traceGetter("window.PerformanceEntry.prototype.name", "PerformanceEntry", value);

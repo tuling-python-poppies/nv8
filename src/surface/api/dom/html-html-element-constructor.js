@@ -15,7 +15,7 @@ export function HTMLHtmlElement() {
 }
 registerNativeFunction(HTMLHtmlElement, "HTMLHtmlElement");
 
-export function createHTMLHtmlElement(tagName, ownerDocument) {
+function createHTMLHtmlElement(tagName, ownerDocument) {
   const element = Object.create(HTMLHtmlElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

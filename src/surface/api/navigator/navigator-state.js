@@ -163,10 +163,6 @@ export function setVibrationPattern(value, pattern) {
   navigatorRealmState().vibrationPattern = pattern;
 }
 
-export function currentVibrationPattern() {
-  return navigatorRealmState().vibrationPattern.slice();
-}
-
 function createServices() {
   const { profile, capabilities } = navigatorRealmState();
   const legacy = createLegacyCollections(profile.plugins, profile.mimeTypes);

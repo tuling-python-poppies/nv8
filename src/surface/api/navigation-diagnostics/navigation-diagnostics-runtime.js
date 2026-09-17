@@ -36,25 +36,6 @@ export function createFragmentDirective() {
   return create(FragmentDirective, { kind: "fragment-directive" });
 }
 
-export function createNotRestoredReasonDetails(reason) {
-  return create(NotRestoredReasonDetails, {
-    kind: "reason-details",
-    reason: `${reason}`,
-  });
-}
-
-export function createNotRestoredReasons(init = {}) {
-  return create(NotRestoredReasons, {
-    kind: "reasons",
-    src: `${init.src ?? ""}`,
-    id: `${init.id ?? ""}`,
-    name: `${init.name ?? ""}`,
-    url: `${init.url ?? ""}`,
-    reasons: init.reasons ?? null,
-    children: init.children ?? null,
-  });
-}
-
 export function navigationDiagnosticProperty(value, name) {
   const record = requireRecord(value);
   if (record.kind === "reason-details" && name === "reason") {

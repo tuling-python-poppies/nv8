@@ -15,7 +15,7 @@ export function HTMLBodyElement() {
 }
 registerNativeFunction(HTMLBodyElement, "HTMLBodyElement");
 
-export function createHTMLBodyElement(tagName, ownerDocument) {
+function createHTMLBodyElement(tagName, ownerDocument) {
   const element = Object.create(HTMLBodyElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

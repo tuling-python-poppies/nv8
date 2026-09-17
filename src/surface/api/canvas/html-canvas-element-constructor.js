@@ -15,7 +15,7 @@ export function HTMLCanvasElement() {
 }
 registerNativeFunction(HTMLCanvasElement, "HTMLCanvasElement");
 
-export function createHTMLCanvasElement(tagName, ownerDocument) {
+function createHTMLCanvasElement(tagName, ownerDocument) {
   const canvas = Object.create(HTMLCanvasElement.prototype);
   initializeElement(canvas, tagName, ownerDocument, HTML_NAMESPACE);
   initializeHTMLCanvasElement(canvas);

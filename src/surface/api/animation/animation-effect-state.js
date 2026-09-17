@@ -19,7 +19,7 @@ export function initializeAnimationEffect(effect, options) {
   state.set(effect, timing);
 }
 
-export function requireAnimationEffect(value) {
+function requireAnimationEffect(value) {
   const record = state.get(value);
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;

@@ -101,31 +101,10 @@ export function getCryptoRealm(value, subtle = false) {
 }
 
 /**
- * Check if value is a valid crypto object
- */
-export function isCryptoObject(value) {
-  return cryptoObjects.has(value);
-}
-
-/**
- * Check if value is a valid subtle crypto object
- */
-export function isSubtleObject(value) {
-  return subtleObjects.has(value);
-}
-
-/**
  * Set key state for a CryptoKey
  */
 export function setKeyState(key, state) {
   keyState.set(key, state);
-}
-
-/**
- * Get key state for a CryptoKey
- */
-export function getKeyState(key) {
-  return keyState.get(key);
 }
 
 /**
@@ -155,11 +134,4 @@ export function requireKey(value) {
     throw new TypeError("Illegal invocation");
   }
   return state;
-}
-
-/**
- * Clean up crypto state for a Realm
- */
-export function cleanupCryptoState(realm) {
-  realmCryptoState.delete(realm);
 }

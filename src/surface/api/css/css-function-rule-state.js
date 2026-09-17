@@ -8,10 +8,7 @@ import {
   replaceCSSGroupingRules,
   requireCSSGroupingRule,
 } from "./css-grouping-rule-state.js";
-import {
-  initializeCSSStyleDeclaration,
-  requireCSSStyleDeclaration,
-} from "./css-style-declaration-state.js";
+import { initializeCSSStyleDeclaration } from "./css-style-declaration-state.js";
 import { initializeCSSRule, requireCSSRule } from "./css-rule-state.js";
 
 const functionState = new WeakMap();
@@ -43,7 +40,7 @@ export function requireCSSFunctionDeclarations(value) {
   return record;
 }
 
-export function createCSSFunctionDescriptors(text, parentRule) {
+function createCSSFunctionDescriptors(text, parentRule) {
   const style = Object.create(CSSFunctionDescriptors.prototype);
   return initializeCSSStyleDeclaration(style, null, text, parentRule);
 }

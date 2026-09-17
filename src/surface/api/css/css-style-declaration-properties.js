@@ -66,7 +66,7 @@ const propertyNames = CSS_PROPERTY_NAMES;
  *
  * @returns {readonly string[]}
  */
-export function cssPropertyNames() {
+function cssPropertyNames() {
   return propertyNames;
 }
 

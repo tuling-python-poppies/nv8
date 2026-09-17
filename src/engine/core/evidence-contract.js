@@ -59,7 +59,7 @@ export const EVIDENCE_SOURCE_METHODS = Object.freeze([
  * Core 侧的 Evidence 契约错误。
  * 不继承 Evidence 实现层的错误类型，避免反向依赖。
  */
-export class EvidenceContractError extends Error {
+class EvidenceContractError extends Error {
   constructor(code, message, details = {}) {
     super(message);
     this.name = 'EvidenceContractError';

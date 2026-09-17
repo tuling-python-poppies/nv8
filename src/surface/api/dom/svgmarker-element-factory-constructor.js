@@ -9,7 +9,7 @@ export function SVGMarkerElement() {
 }
 registerNativeFunction(SVGMarkerElement, "SVGMarkerElement");
 
-export function createSVGMarkerElement(localName, ownerDocument) {
+function createSVGMarkerElement(localName, ownerDocument) {
   const element = Object.create(SVGMarkerElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

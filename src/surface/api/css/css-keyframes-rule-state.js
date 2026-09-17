@@ -57,13 +57,13 @@ export function deleteCSSKeyframeRule(rule, key) {
   refreshCSSRuleList(record.ruleList);
 }
 
-export function serializeCSSKeyframesRule(rule) {
+function serializeCSSKeyframesRule(rule) {
   const record = requireCSSKeyframesRule(rule);
   const body = record.rules.map(child => child.cssText).join(" ");
   return `@keyframes ${record.name} {${body === "" ? "" : ` ${body}`} }`;
 }
 
-export function replaceCSSKeyframesRuleText(rule, text) {
+function replaceCSSKeyframesRuleText(rule, text) {
   const source = `${text}`.trim();
   const open = source.indexOf("{");
   const close = source.lastIndexOf("}");

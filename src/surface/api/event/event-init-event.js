@@ -5,7 +5,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { Event } from "./event-constructor.js";
 import { requireEvent } from "./event-state.js";
 
-export const initEvent = {
+const initEvent = {
   initEvent(type) {
   const state = requireEvent(this);
   if (state.dispatching) {

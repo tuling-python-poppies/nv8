@@ -1,15 +1,7 @@
 import { initializeEvent } from "../event/event-state.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
 import { Event } from "../event/event-constructor.js";
-import {
-  currentHref,
-  moveHistory,
-  navigationCurrentIndex,
-  navigationEntriesSnapshot,
-  pushHistoryState,
-  replaceHistoryState,
-  traverseHistoryToIndex,
-} from "../../../infra/navigation/navigation-state.js";
+import { currentHref, navigationCurrentIndex, navigationEntriesSnapshot, pushHistoryState, replaceHistoryState, traverseHistoryToIndex } from "../../../infra/navigation/navigation-state.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 
 const state = new WeakMap();
@@ -33,7 +25,7 @@ export function NavigationTransition() { illegalConstructor("NavigationTransitio
 export function NavigationActivation() { illegalConstructor("NavigationActivation", new.target); }
 export function NavigationPrecommitController() { illegalConstructor("NavigationPrecommitController", new.target); }
 
-export const navigationAPIConstructors = Object.freeze([
+const navigationAPIConstructors = Object.freeze([
   Navigation, NavigationHistoryEntry, NavigationCurrentEntryChangeEvent,
   NavigateEvent, NavigationDestination, NavigationTransition,
   NavigationActivation, NavigationPrecommitController,

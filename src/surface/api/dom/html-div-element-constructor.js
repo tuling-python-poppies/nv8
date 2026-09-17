@@ -15,7 +15,7 @@ export function HTMLDivElement() {
 }
 registerNativeFunction(HTMLDivElement, "HTMLDivElement");
 
-export function createHTMLDivElement(tagName, ownerDocument) {
+function createHTMLDivElement(tagName, ownerDocument) {
   const element = Object.create(HTMLDivElement.prototype);
   initializeElement(element, tagName, ownerDocument, HTML_NAMESPACE);
   return element;

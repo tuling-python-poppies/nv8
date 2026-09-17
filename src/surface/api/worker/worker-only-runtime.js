@@ -5,14 +5,7 @@ import {
   FileSystemFileHandle,
   fileSystemBackingNode,
 } from "../file-system/file-system-runtime.js";
-import {
-  defineConstructorBacklink,
-  defineGlobalConstructor,
-  definePrototypeAccessor,
-  definePrototypeGetter,
-  definePrototypeMethod,
-  defineToStringTag,
-} from "../../../engine/webidl/descriptor.js";
+import { defineConstructorBacklink, defineGlobalConstructor, definePrototypeGetter, definePrototypeMethod, defineToStringTag } from "../../../engine/webidl/descriptor.js";
 import {
   registerNativeFunction,
   registerNativeGetter,
@@ -59,7 +52,7 @@ export function installWorkerOnlyAPIs() {
   installLegacyFileSystemGlobals();
 }
 
-export function createFileSystemSyncAccessHandle(
+function createFileSystemSyncAccessHandle(
   backing = { bytes: new Uint8Array(), lastModified: Date.now() },
 ) {
   const handle = Object.create(FileSystemSyncAccessHandle.prototype);
@@ -70,16 +63,6 @@ export function createFileSystemSyncAccessHandle(
     closed: false,
   });
   return handle;
-}
-
-export function createRTCRtpScriptTransformer(options = null) {
-  const transformer = Object.create(RTCRtpScriptTransformer.prototype);
-  transformState.set(transformer, {
-    options,
-    readable: new ReadableStream(),
-    writable: new WritableStream(),
-  });
-  return transformer;
 }
 
 function installFileReaderSync() {

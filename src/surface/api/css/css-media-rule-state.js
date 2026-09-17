@@ -35,13 +35,13 @@ export function requireCSSMediaRule(value) {
   return record;
 }
 
-export function serializeCSSMediaRule(rule) {
+function serializeCSSMediaRule(rule) {
   const record = requireCSSMediaRule(rule);
   const body = requireCSSGroupingRule(rule).rules.map(child => child.cssText).join(" ");
   return `@media ${record.media.mediaText} {${body === "" ? "" : ` ${body}`} }`;
 }
 
-export function replaceCSSMediaRuleText(rule, text) {
+function replaceCSSMediaRuleText(rule, text) {
   const parsed = splitConditionalRule(text, "@media");
   const record = requireCSSMediaRule(rule);
   record.media.mediaText = parsed.condition;

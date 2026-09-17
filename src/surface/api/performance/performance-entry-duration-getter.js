@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { PerformanceEntry } from "./performance-entry-constructor.js";
 import { requirePerformanceEntry } from "./performance-entry-state.js";
 
-export const performanceEntryDuration = {
+const performanceEntryDuration = {
   performanceEntryDuration() {
   const value = requirePerformanceEntry(this).duration;
   traceGetter(

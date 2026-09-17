@@ -9,7 +9,7 @@ export function SVGTextPathElement() {
 }
 registerNativeFunction(SVGTextPathElement, "SVGTextPathElement");
 
-export function createSVGTextPathElement(localName, ownerDocument) {
+function createSVGTextPathElement(localName, ownerDocument) {
   const element = Object.create(SVGTextPathElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;

@@ -39,13 +39,6 @@ export const executionObserverConstructors = Object.freeze([
   Profiler,
 ]);
 
-export function createCreateMonitor() {
-  const monitor = Object.create(CreateMonitor.prototype);
-  initializeEventTarget(monitor);
-  createMonitorState.set(monitor, { ondownloadprogress: null });
-  return monitor;
-}
-
 export const ondownloadprogress = Object.getOwnPropertyDescriptor({
   get ondownloadprogress() {
     return requireCreateMonitor(this).ondownloadprogress;
@@ -76,10 +69,6 @@ export function stop() {
   });
 }
 registerNativeFunction(stop, "stop");
-
-export function createProfilerForTest(options = {}) {
-  return Reflect.construct(Profiler, [options]);
-}
 
 function requireCreateMonitor(value) {
   const state = createMonitorState.get(value);

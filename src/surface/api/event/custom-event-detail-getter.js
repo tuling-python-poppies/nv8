@@ -4,7 +4,7 @@ import { registerNativeGetter } from "../../../engine/webidl/native-function.js"
 import { CustomEvent } from "./custom-event-constructor.js";
 import { requireCustomEvent } from "./custom-event-state.js";
 
-export const customEventDetail = {
+const customEventDetail = {
   customEventDetail() {
   const value = requireCustomEvent(this).detail;
   traceGetter("window.CustomEvent.prototype.detail", "CustomEvent", value);

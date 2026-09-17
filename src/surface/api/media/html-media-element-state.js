@@ -46,10 +46,6 @@ export function requireMediaElement(element) {
   return state;
 }
 
-export function isMediaElement(element) {
-  return mediaState.has(element);
-}
-
 export function resetMediaElement(element) {
   const state = requireMediaElement(element);
   state.currentSrc = "";

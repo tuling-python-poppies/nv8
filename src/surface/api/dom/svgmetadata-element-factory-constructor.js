@@ -9,7 +9,7 @@ export function SVGMetadataElement() {
 }
 registerNativeFunction(SVGMetadataElement, "SVGMetadataElement");
 
-export function createSVGMetadataElement(localName, ownerDocument) {
+function createSVGMetadataElement(localName, ownerDocument) {
   const element = Object.create(SVGMetadataElement.prototype);
   initializeElement(element, localName, ownerDocument, SVG_NAMESPACE);
   return element;
