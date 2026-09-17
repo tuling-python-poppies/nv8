@@ -1,0 +1,3 @@
+# 统一按 LF 检出：Windows 全局 core.autocrlf=true 会让全新克隆把文本文件
+# 转成 CRLF，导致按文本解析数据表的测试失败（tests/window-surface-order-test.js）。
+* text=auto eol=lf
