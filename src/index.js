@@ -470,8 +470,6 @@ export {
 } from './config/presets/index.js';
 export {
   createProfile,
-  generateProfileLockPlan,
-  validateLockPlan,
   profiles,
   resolveProfileCapabilities,
   PROFILE_CAPABILITY_POLICIES,

@@ -16,11 +16,6 @@ import assert from 'node:assert/strict';
 import { normalizeRuntimeOptions } from '../src/public/edge-runtime-options.js';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
-import { validateProfileLockPlan } from '../src/config/profiles/profile-schema.js';
-import {
-  loadProfileFromLockPlan,
-  validateLockPlan as validateFactoryLockPlan,
-} from '../src/config/profiles/profile-factory.js';
 
 // ------------------------------------------------------------- page (IKFD9R)
 
@@ -193,57 +188,6 @@ test('a partial fingerprint keeps a coherent Edge identity inside the realm', as
     await sandbox.close();
     createSandbox.drain();
   }
-});
-
-// -------------------------------------------- profile lock plan host (IKFDAB)
-
-function validLockPlan(host = { nodeVersion: '22.0.0', v8Version: '12.4', features: {} }) {
-  return {
-    profileId: 'profile-test',
-    profileVersion: '1.0.0',
-    createdAt: new Date().toISOString(),
-    plugins: [],
-    config: {},
-    host,
-    digest: '0'.repeat(64),
-  };
-}
-
-test('a profile lock plan must carry a host object', () => {
-  assert.doesNotThrow(() => validateProfileLockPlan(validLockPlan()));
-  const withoutHost = validLockPlan();
-  delete withoutHost.host;
-  assert.throws(() => validateProfileLockPlan(withoutHost), /host/);
-  for (const host of [null, 'node', [], 42]) {
-    assert.throws(() => validateProfileLockPlan(validLockPlan(host)), /host/);
-  }
-});
-
-test('a profile lock plan must carry host.nodeVersion as a non-empty string', () => {
-  for (const nodeVersion of [undefined, null, 22, 22.1, {}]) {
-    assert.throws(
-      () => validateProfileLockPlan(validLockPlan({ nodeVersion })),
-      /host\.nodeVersion/,
-      `nodeVersion = ${String(nodeVersion)} must be rejected`,
-    );
-  }
-});
-
-test('validateLockPlan reports a structured error instead of a TypeError', () => {
-  const result = validateFactoryLockPlan(
-    validLockPlan({}),
-    { nodeVersion: '22.0.0', features: {} },
-  );
-  assert.equal(result.valid, false);
-  assert.ok(result.errors.length > 0);
-  assert.match(result.errors[0], /host\.nodeVersion/);
-});
-
-test('loadProfileFromLockPlan rejects plans without host.nodeVersion', () => {
-  assert.throws(
-    () => loadProfileFromLockPlan(validLockPlan({}), new Map()),
-    /host\.nodeVersion/,
-  );
 });
 
 // ----------------------------------------------------- replay validation (IKFDA2)

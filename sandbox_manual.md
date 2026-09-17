@@ -145,7 +145,7 @@ import {
 | `minimalPreset` / `basicPreset` / `domPreset` / `networkPreset` / `fullPreset` | 插件组合 |
 | `*Plugin`（`domCorePlugin`、`fetchPlugin` …）| 单个内置插件 |
 | `profiles` / `createProfile` | 内置 profile 与自定义 profile 构造 |
-| `generateProfileLockPlan` / `validateLockPlan` | 插件装配的锁定计划 |
+| `createNv8()` 返回的 `lockPlan`（及 `pluginLockPlan` 选项）| 插件装配锁定与校验（`nv8.plugin-lock/v1`）|
 | `collector` / `protocol` | 采集层与请求协议层 |
 
 子路径导出（与 `package.json` 的 `exports` 一一对应）：

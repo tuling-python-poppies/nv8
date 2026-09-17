@@ -3,13 +3,14 @@
  * 
  * 负责：
  * 1. 创建和配置 Profile
- * 2. 生成 Profile Lock Plan
- * 3. 验证和加载 Lock Plan
- * 4. Profile 继承和组合
+ * 2. Profile 继承和组合
+ *
+ * 插件装配的 Lock Plan 由 `engine/core/plugin-lock-plan.js` 统一实现
+ * （`nv8.plugin-lock/v1`），不再在 config 层保留第二套简化方案。
  */
 
 import { createHash } from 'node:crypto';
-import { validateProfileManifest, validateProfileLockPlan } from './profile-schema.js';
+import { validateProfileManifest } from './profile-schema.js';
 
 /**
  * 创建 Profile
@@ -162,92 +163,6 @@ function createProfileInternal(manifest) {
 }
 
 /**
- * 生成 Profile Lock Plan
- * 
- * @param {Profile} profile - Profile
- * @param {Map<string, Plugin[]>} availablePlugins - 可用插件（plugin-id -> versions）
- * @param {Object} hostCapabilities - 宿主能力
- * @returns {ProfileLockPlan}
- */
-export function generateProfileLockPlan(profile, availablePlugins, hostCapabilities) {
-  // 简化版：直接从 profile.plugins 构建 lock plan
-  // TODO: 实现完整的依赖解析（使用 PluginResolver）
-  
-  const pluginLocks = [];
-  
-  for (let i = 0; i < profile.plugins.length; i++) {
-    const pluginRef = profile.plugins[i];
-    const versions = availablePlugins.get(pluginRef.id);
-    
-    if (!versions || versions.length === 0) {
-      if (!pluginRef.optional) {
-        throw new Error(
-          `Required plugin "${pluginRef.id}" is not available`
-        );
-      }
-      continue;
-    }
-    
-    // 选择版本
-    let selectedVersion;
-    
-    if (pluginRef.exactVersion) {
-      selectedVersion = versions.find(p => p.version === pluginRef.exactVersion);
-    } else if (profile.pluginPins && profile.pluginPins[pluginRef.id]) {
-      selectedVersion = versions.find(
-        p => p.version === profile.pluginPins[pluginRef.id]
-      );
-    } else {
-      // 使用第一个匹配的版本
-      selectedVersion = versions[0];
-    }
-    
-    if (!selectedVersion) {
-      if (!pluginRef.optional) {
-        throw new Error(
-          `Cannot find compatible version for plugin "${pluginRef.id}"`
-        );
-      }
-      continue;
-    }
-    
-    pluginLocks.push({
-      id: selectedVersion.id,
-      version: selectedVersion.version,
-      provides: (selectedVersion.provides || []).map(p => 
-        typeof p === 'string' ? p : p.name
-      ),
-      installOrder: i,
-    });
-  }
-  
-  // 计算 profile digest
-  const profileDigest = computeProfileDigest(profile);
-  
-  // 创建 lock plan
-  const lockPlan = {
-    schema: 'nv8.lock/v1',
-    profileId: profile.id,
-    profileVersion: profile.version,
-    profileDigest,
-    createdAt: new Date().toISOString(),
-    plugins: pluginLocks,
-    config: profile.config || {},
-    host: {
-      nodeVersion: process.versions.node,
-      v8Version: process.versions.v8,
-      features: hostCapabilities || {},
-    },
-    digest: '', // 稍后计算
-  };
-  
-  // 计算摘要
-  lockPlan.digest = computeLockPlanDigest(lockPlan);
-  
-  return Object.freeze(lockPlan);
-}
-
-/**
  * 计算 Profile 摘要
  * 
  * @param {Profile} profile - Profile
@@ -275,154 +190,4 @@ function computeProfileDigest(profile) {
   );
   
   return createHash('sha256').update(canonical, 'utf8').digest('hex');
-}
-
-/**
- * 计算 Lock Plan 摘要
- * 
- * @param {ProfileLockPlan} lockPlan - Lock plan（不含 digest 字段）
- * @returns {string} SHA-256 hex digest
- */
-function computeLockPlanDigest(lockPlan) {
-  // 创建规范化的 JSON（排除 digest 字段）
-  const { digest, ...planWithoutDigest } = lockPlan;
-  
-  const canonical = JSON.stringify(planWithoutDigest, (key, value) => {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      // 对象键按字典序排序
-      return Object.keys(value)
-        .sort()
-        .reduce((sorted, k) => {
-          sorted[k] = value[k];
-          return sorted;
-        }, {});
-    }
-    return value;
-  });
-  
-  return createHash('sha256').update(canonical, 'utf8').digest('hex');
-}
-
-/**
- * 验证 Profile Lock Plan
- * 
- * @param {ProfileLockPlan} lockPlan - Lock plan
- * @param {Object} currentHost - 当前宿主信息
- * @returns {ValidationResult}
- */
-export function validateLockPlan(lockPlan, currentHost) {
-  const errors = [];
-  const warnings = [];
-  
-  try {
-    validateProfileLockPlan(lockPlan);
-  } catch (err) {
-    errors.push(`Lock plan validation failed: ${err.message}`);
-    return { valid: false, errors, warnings };
-  }
-  
-  // 验证摘要
-  const computedDigest = computeLockPlanDigest(lockPlan);
-  if (computedDigest !== lockPlan.digest) {
-    errors.push(
-      `Lock plan digest mismatch: expected ${lockPlan.digest}, got ${computedDigest}`
-    );
-  }
-  
-  // 检查 Node 版本兼容性
-  if (currentHost && currentHost.nodeVersion) {
-    const currentNodeMajor = parseInt(currentHost.nodeVersion.split('.')[0], 10);
-    const lockNodeMajor = parseInt(lockPlan.host.nodeVersion.split('.')[0], 10);
-    
-    if (currentNodeMajor !== lockNodeMajor) {
-      warnings.push(
-        `Node major version mismatch: lock plan was created with Node ${lockPlan.host.nodeVersion}, ` +
-        `current is ${currentHost.nodeVersion}`
-      );
-    }
-  }
-  
-  // 检查宿主能力差异
-  if (currentHost && currentHost.features) {
-    const lockFeatures = lockPlan.host.features || {};
-    const currentFeatures = currentHost.features || {};
-    
-    for (const [feature, required] of Object.entries(lockFeatures)) {
-      if (required && !currentFeatures[feature]) {
-        errors.push(
-          `Required host feature "${feature}" is not available in current environment`
-        );
-      }
-    }
-  }
-  
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-  };
-}
-
-/**
- * 从 Lock Plan 加载 Profile
- * 
- * @param {ProfileLockPlan} lockPlan - Lock plan
- * @param {Map<string, Plugin[]>} availablePlugins - 可用插件
- * @returns {Profile}
- */
-export function loadProfileFromLockPlan(lockPlan, availablePlugins) {
-  validateProfileLockPlan(lockPlan);
-  
-  // 从 lock plan 重建插件引用
-  const plugins = lockPlan.plugins.map(lock => ({
-    id: lock.id,
-    exactVersion: lock.version,
-  }));
-  
-  // 创建 pluginPins
-  const pluginPins = {};
-  for (const lock of lockPlan.plugins) {
-    pluginPins[lock.id] = lock.version;
-  }
-  
-  return createProfile({
-    id: lockPlan.profileId,
-    version: lockPlan.profileVersion,
-    name: `Locked Profile (${lockPlan.profileId})`,
-    description: `Profile loaded from lock plan created at ${lockPlan.createdAt}`,
-    plugins,
-    pluginPins,
-    config: lockPlan.config,
-    nodeSupport: {
-      minimum: lockPlan.host.nodeVersion,
-      tested: [lockPlan.host.nodeVersion],
-    },
-  });
-}
-
-/**
- * 保存 Lock Plan 到文件
- * 
- * @param {ProfileLockPlan} lockPlan - Lock plan
- * @param {string} filePath - 文件路径
- * @returns {Promise<void>}
- */
-export async function saveLockPlan(lockPlan, filePath) {
-  const fs = await import('node:fs/promises');
-  const content = JSON.stringify(lockPlan, null, 2);
-  await fs.writeFile(filePath, content, 'utf8');
-}
-
-/**
- * 从文件加载 Lock Plan
- * 
- * @param {string} filePath - 文件路径
- * @returns {Promise<ProfileLockPlan>}
- */
-export async function loadLockPlan(filePath) {
-  const fs = await import('node:fs/promises');
-  const content = await fs.readFile(filePath, 'utf8');
-  const lockPlan = JSON.parse(content);
-  validateProfileLockPlan(lockPlan);
-  return lockPlan;
 }

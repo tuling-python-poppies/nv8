@@ -126,8 +126,9 @@ const result = await nv8Eval('navigator.userAgent', {
 ### Profile 与 preset
 
 Root 导出 `minimalPreset`、`basicPreset`、`domPreset`、`networkPreset`、
-`fullPreset` 和 `defaultPreset`，也导出 `createProfile()`、`profiles`、
-`generateProfileLockPlan()`、`validateLockPlan()` 以及能力策略。
+`fullPreset` 和 `defaultPreset`，也导出 `createProfile()`、`profiles`
+以及能力策略。插件装配的 Lock Plan 由 `createNv8()` 生成并随实例返回，
+见上文 `lockPlan` / `pluginLockPlan`。
 
 内置 Profile 包括：
 
