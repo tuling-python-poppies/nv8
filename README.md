@@ -1115,7 +1115,8 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 | `npm run build:css-defaults` | 从 fixture 重新生成 UA 默认样式表 |
 | `npm run fingerprint:*` | 见[指纹采集脚本](#指纹采集脚本) |
 
-基准数据、子进程 profile 与 bundle 对照结论见 [`docs/backend-benchmark.md`](docs/backend-benchmark.md)。
+基准数据、子进程 profile 与 bundle 对照结论见 [`docs/backend-benchmark.md`](docs/backend-benchmark.md)；
+编译缓存实验（结论：不启用）见 [`docs/compile-cache-experiment.md`](docs/compile-cache-experiment.md)。
 
 ### 关于 `build:bundle`
 
