@@ -21,12 +21,6 @@ export async function captureBootstrapOrderSnapshot() {
   };
 }
 
-export async function readBootstrapSource(name) {
-  const url = BOOTSTRAPS[name];
-  if (url === undefined) throw new RangeError(`Unknown bootstrap: ${name}`);
-  return readFile(url, 'utf8');
-}
-
 async function captureBootstrapEntry(name, url) {
   const source = await readFile(url, 'utf8');
   const functionInfo = findBootstrapFunction(source, name);

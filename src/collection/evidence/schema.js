@@ -57,61 +57,6 @@ export const TRUST_POLICIES = {
 };
 
 /**
- * Manifest Schema
- */
-export const MANIFEST_SCHEMA = {
-  schemaVersion: { type: 'string', required: true },
-  bundleId: { type: 'string', required: true },
-  target: {
-    type: 'object',
-    required: true,
-    properties: {
-      url: { type: 'string', required: true },
-      origin: { type: 'string', required: true },
-      capturedAt: { type: 'string', required: true }, // ISO 8601
-    },
-  },
-  profile: {
-    type: 'object',
-    required: false,
-    properties: {
-      id: { type: 'string', required: false },
-      versionRange: { type: 'string', required: false },
-      requiredCapabilities: { type: 'array', required: false },
-      pluginPins: { type: 'object', required: false },
-    },
-  },
-  files: {
-    type: 'array',
-    required: true,
-    items: {
-      path: { type: 'string', required: true },
-      role: { type: 'string', required: true, enum: Object.values(FILE_ROLES) },
-      mediaType: { type: 'string', required: true },
-      bytes: { type: 'number', required: true },
-      sha256: { type: 'string', required: true, pattern: /^[a-f0-9]{64}$/ },
-    },
-  },
-  entrypoints: { type: 'array', required: false },
-  replay: {
-    type: 'object',
-    required: false,
-    properties: {
-      fixture: { type: 'string', required: true },
-      matching: { type: 'string', required: true },
-    },
-  },
-  redaction: {
-    type: 'object',
-    required: false,
-    properties: {
-      secretsRemoved: { type: 'boolean', required: false },
-      tracePolicy: { type: 'string', required: false },
-    },
-  },
-};
-
-/**
  * 验证路径安全性
  */
 export function isPathSafe(path) {

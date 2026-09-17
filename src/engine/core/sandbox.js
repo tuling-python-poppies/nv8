@@ -1685,7 +1685,7 @@ function createSurfaceRegistry() {
  *   createSharedWorkerConnection: Function, createWorkletModule: Function,
  *   destroyWorkerRealm: Function}}
  */
-export function createWorkerRealmFactories({
+function createWorkerRealmFactories({
   sandboxId,
   profile,
   pluginInstances,
@@ -2302,7 +2302,7 @@ export function createWorkerRealmFactories({
  * @param {object} deps
  * @returns {{createIframeChildRealm: Function, replaceRootWindowClient: Function}}
  */
-export function createWindowRealmFactories({
+function createWindowRealmFactories({
   sandboxId,
   profile,
   pluginInstances,

@@ -453,24 +453,3 @@ export function rejectDynamicImport(specifier, context = 'this context') {
   error.specifier = String(specifier);
   throw error;
 }
-
-/**
- * 兼容旧入口。
- *
- * 保留是因为 `runtime-pool.js` 有三处引用；行为改为按 ADR-0003 先做
- * specifier 校验，让「裸 specifier」和「宿主模块」这两类得到与浏览器
- * 一致的消息，而不是笼统的网络不可用。
- *
- * @param {string} specifier
- * @param {string} [referrer]
- */
-export function rejectUserImport(specifier, referrer = 'https://sandbox.test/') {
-  // 校验会为裸 specifier / 宿主前缀抛出精确错误
-  const target = resolveModuleSpecifier(specifier, referrer);
-  throw replayMissError({
-    specifier,
-    resolvedUrl: target.url,
-    referrer,
-    availableUrls: () => [],
-  });
-}

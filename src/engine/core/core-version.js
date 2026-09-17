@@ -6,11 +6,6 @@
  * deliberately supports the range forms needed by manifests and lock plans.
  */
 export const CORE_VERSION = '0.1.0';
-export const CORE_VERSION_POLICY = Object.freeze({
-  major: 'breaking public API or behavior contract',
-  minor: 'backward-compatible public capability',
-  patch: 'backward-compatible fix or parity correction',
-});
 
 export function parseCoreVersion(value) {
   if (typeof value !== 'string' || !/^\d+\.\d+\.\d+$/.test(value)) {

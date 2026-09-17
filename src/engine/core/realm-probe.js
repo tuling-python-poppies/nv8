@@ -36,14 +36,3 @@ export function hasRealmValue(realmGlobal, name) {
     throw error;
   }
 }
-
-/**
- * 安全读取 Realm 全局上的值，不存在或仅有诊断桩时返回 `undefined`。
- *
- * @param {object} realmGlobal
- * @param {string} name
- * @returns {unknown}
- */
-export function readRealmValue(realmGlobal, name) {
-  return hasRealmValue(realmGlobal, name) ? realmGlobal[name] : undefined;
-}

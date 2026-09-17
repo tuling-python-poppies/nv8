@@ -75,10 +75,6 @@ export function bootstrapWorklet(
   }
 }
 
-export function registeredDefinitionCount() {
-  return definitions.size;
-}
-
 export function enableProxyTrace() {
   enableTrace();
 }

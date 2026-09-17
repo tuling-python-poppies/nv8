@@ -1,6 +1,6 @@
 import { createPrivateKey, createPublicKey, sign, verify } from 'node:crypto';
 
-export const PLUGIN_LOCK_SIGNATURE_ALGORITHM = 'ed25519';
+const PLUGIN_LOCK_SIGNATURE_ALGORITHM = 'ed25519';
 
 /**
  * Sign a lock plan without embedding a trust root in the plan.

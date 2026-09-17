@@ -110,7 +110,7 @@ export function readDependencySpecifiers(module) {
  * @param {object} module
  * @returns {boolean}
  */
-export function hasTopLevelAwait(module) {
+function hasTopLevelAwait(module) {
   return typeof module.hasTopLevelAwait === 'function' && module.hasTopLevelAwait();
 }
 

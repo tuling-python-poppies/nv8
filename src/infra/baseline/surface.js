@@ -13,7 +13,7 @@ const PROTOTYPE_NAMES = Object.freeze([
   'Storage', 'Location', 'Worker', 'ServiceWorkerContainer',
 ]);
 
-export const SURFACE_DESCRIPTOR_EXPRESSION = `(${createExpression()})()`;
+const SURFACE_DESCRIPTOR_EXPRESSION = `(${createExpression()})()`;
 
 export async function captureSurfaceSnapshot(evaluate) {
   if (typeof evaluate !== 'function') throw new TypeError('Surface evaluator must be a function');
@@ -34,7 +34,7 @@ export function summarizeSurfaceSnapshot(snapshot) {
   };
 }
 
-export function normalizeSurfaceSnapshot(snapshot) {
+function normalizeSurfaceSnapshot(snapshot) {
   return normalize(snapshot);
 }
 

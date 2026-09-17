@@ -184,17 +184,6 @@ export function getNativeFunctionContext(realm) {
   return context;
 }
 
-/**
- * Remove a Realm's native function context
- * @param {object} realm - The Realm object used to create the context
- */
-export function removeNativeFunctionContext(realm) {
-  if (realm === null || realm === undefined) return;
-  const isObject = typeof realm === 'object' || typeof realm === 'function';
-  if (!isObject) return;
-  realmContexts.delete(realm);
-}
-
 // Legacy compatibility exports that throw helpful errors
 export function registerNativeFunction() {
   throw new Error(

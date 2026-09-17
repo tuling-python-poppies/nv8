@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
  * not part of the identity: those values are runtime state, not a graph
  * version, and would make the fingerprint unstable across equivalent runs.
  */
-export const WORKER_GRAPH_FINGERPRINT_VERSION = 1;
+const WORKER_GRAPH_FINGERPRINT_VERSION = 1;
 
 export function createWorkerGraphFingerprint({
   kind,

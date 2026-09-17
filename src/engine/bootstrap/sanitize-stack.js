@@ -15,7 +15,7 @@ const PROJECT_WINDOWS_PATH = new URL("../../../", import.meta.url)
   .replace(/^\/([A-Za-z]:)/u, "$1")
   .replaceAll("/", "\\");
 
-export function sanitizeStackText(stack, pageUrl = "<anonymous>") {
+function sanitizeStackText(stack, pageUrl = "<anonymous>") {
   if (typeof stack !== "string") {
     return "";
   }

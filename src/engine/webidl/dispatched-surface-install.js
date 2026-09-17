@@ -86,10 +86,6 @@ export function installDispatchedMethod(
   definePrototypeMethod(Constructor.prototype, name, callback);
 }
 
-export function installDirectMethod(Constructor, name, callback) {
-  definePrototypeMethod(Constructor.prototype, name, callback);
-}
-
 export function installDispatchedConstructorBacklink(Constructor) {
   defineConstructorBacklink(Constructor.prototype, Constructor);
 }

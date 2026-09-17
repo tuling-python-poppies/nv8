@@ -189,7 +189,7 @@ async function captureCoreReset(nv8, realm, scenario) {
   }
 }
 
-export function normalizeBaseline(input) {
+function normalizeBaseline(input) {
   return deepNormalize({
     schema: 'nv8.baseline.baseline/v1',
     mode: input.mode,

@@ -189,7 +189,7 @@ const promiseOperations = new WeakSet();
  * @param {T} callback
  * @returns {T}
  */
-export function markPromiseOperation(callback) {
+function markPromiseOperation(callback) {
   if (typeof callback === "function") promiseOperations.add(callback);
   return callback;
 }

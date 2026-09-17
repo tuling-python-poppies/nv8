@@ -53,7 +53,7 @@
  * 模板（例如 `Failed to execute 'X' on 'Y': N arguments required...`），
  * 文案本身就是可检测特征，不能只比 `name`。
  */
-export const NORMALIZE_HELPER = `
+const NORMALIZE_HELPER = `
   const probe = (fn) => {
     let value;
     try {
@@ -2046,7 +2046,7 @@ export const BEHAVIOR_PROBES = Object.freeze([
 ]);
 
 /** 允许的探针分类。分类是报告和对等测试的稳定维度，不能由拼写漂移产生新组。 */
-export const BEHAVIOR_PROBE_CATEGORIES = Object.freeze([
+const BEHAVIOR_PROBE_CATEGORIES = Object.freeze([
   'nativeToString',
   'illegalInvocation',
   'argumentCount',

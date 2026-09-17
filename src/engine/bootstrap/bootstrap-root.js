@@ -1463,11 +1463,6 @@ export function markWindowClosed() {
   setWindowClosed(true);
 }
 
-export function resetWindowPage(pageHtml, pageReferrer, pageContentType) {
-  configureDocument(pageReferrer, pageContentType);
-  parsePageHTML(pageHtml);
-}
-
 export function exportLocalStorage() {
   return encodeLocalStorage();
 }

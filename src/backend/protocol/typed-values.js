@@ -20,7 +20,7 @@ export function errorRecord(name, message, code, stack) {
   };
 }
 
-export function traceEntry(fields) {
+function traceEntry(fields) {
   return {
     [traceEntryBrand]: true,
     ...fields,

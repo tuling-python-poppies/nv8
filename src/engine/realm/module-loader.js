@@ -411,20 +411,6 @@ export class RealmModuleLoader {
   }
 }
 
-export function realmModuleCacheStats() {
-  let sourceBytes = 0;
-  let cachedDataBytes = 0;
-  for (const cached of SOURCE_CACHE.values()) {
-    sourceBytes += Buffer.byteLength(cached.source, "utf8");
-    cachedDataBytes += cached.cachedData?.byteLength ?? 0;
-  }
-  return Object.freeze({
-    entries: SOURCE_CACHE.size,
-    sourceBytes,
-    cachedDataBytes,
-  });
-}
-
 function assertInsideSourceRoot(url) {
   if (url.protocol !== "file:" || !url.href.startsWith(SOURCE_ROOT.href)) {
     throw new TypeError("Internal module resolved outside the runtime source tree");
