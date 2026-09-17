@@ -24,7 +24,7 @@ export function Request(input) {
   }
   const headers = new Headers(init.headers ?? source?.headers);
   applyBodyContentType(headers, body.type);
-  requestState.set(this, {
+  const state = {
     method,
     url,
     headers,
@@ -43,9 +43,11 @@ export function Request(input) {
       ?? source?.targetAddressSpace
       ?? "unknown"}`,
     bytes: body.bytes,
-    body: body.bytes.length === 0 ? null : byteStream(body.bytes),
+    body: null,
     bodyUsed: false,
-  });
+  };
+  state.body = body.bytes.length === 0 ? null : byteStream(body.bytes, () => { state.bodyUsed = true; });
+  requestState.set(this, state);
 }
 registerNativeFunction(Request, "Request");
 
@@ -59,7 +61,7 @@ export function Response() {
   }
   const headers = new Headers(init.headers);
   applyBodyContentType(headers, body.type);
-  responseState.set(this, {
+  const state = {
     type: "default",
     url: "",
     redirected: false,
@@ -67,9 +69,11 @@ export function Response() {
     statusText: `${init.statusText ?? ""}`,
     headers,
     bytes: body.bytes,
-    body: body.bytes.length === 0 ? null : byteStream(body.bytes),
+    body: null,
     bodyUsed: false,
-  });
+  };
+  state.body = body.bytes.length === 0 ? null : byteStream(body.bytes, () => { state.bodyUsed = true; });
+  responseState.set(this, state);
 }
 registerNativeFunction(Response, "Response");
 
@@ -85,6 +89,11 @@ export function responseProperty(response, name) {
   if (name === "ok") return state.status >= 200 && state.status <= 299;
   if (name === "bodyUsed") return state.bodyUsed;
   return state[name];
+}
+
+export function disturbBody(value) {
+  const state = requestState.get(value) ?? responseState.get(value);
+  if (state !== undefined) state.bodyUsed = true;
 }
 
 export function requestArrayBuffer(request) {
@@ -281,13 +290,19 @@ function bodyRecord(value) {
   }
 }
 
-function byteStream(bytes) {
+function byteStream(bytes, onRead) {
   const copy = bytes.slice();
   return new ReadableStream({
     type: "bytes",
-    start(controller) {
-      controller.enqueue(copy);
+    pull(controller) {
+      if (copy.byteLength === 0) return;
+      onRead?.();
+      controller.enqueue(copy.slice());
+      copy.fill(0);
       controller.close();
+    },
+    start(controller) {
+      if (copy.byteLength === 0) controller.close();
     },
   });
 }

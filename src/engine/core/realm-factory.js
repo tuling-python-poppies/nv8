@@ -212,7 +212,7 @@ export async function createRealm(config) {
     replay = [],
     navigatorProfile = {},
     timingProfile = null,
-    runtime = {},
+    runtime: runtimeInput = {},
     limits = {},
   } = config;
   
@@ -237,13 +237,33 @@ export async function createRealm(config) {
   let pageScriptDispose = null;
   const activatedPlugins = [];
   let disposal = null;
+  let closed = false;
+  const children = new Set();
+  const runtime = { ...runtimeInput };
+  for (const name of ['childRealmFactory', 'workerFactory', 'sharedWorkerFactory', 'workletFactory']) {
+    const factory = runtimeInput[name];
+    if (typeof factory !== 'function') continue;
+    runtime[name] = async options => {
+      if (closed) throw new Error('Owner Realm has been closed');
+      const handle = await factory({ ...options, isOwnerActive: () => !closed });
+      if (closed) {
+        await handle?.close?.();
+        throw new Error('Owner Realm has been closed');
+      }
+      if (handle?.close) children.add(handle);
+      return handle;
+    };
+  }
 
   // 创建失败与正常销毁共用回滚；插件在清理期间仍需使用 Realm 模块。
   function disposeResources() {
     if (disposal !== null) return disposal;
+    closed = true;
     baseGlobals?.disposeTimers();
     disposal = (async () => {
       try {
+        for (const child of children) await child.close();
+        children.clear();
         pageScriptObserver?.disconnect?.();
         pageScriptObserver = null;
         pageScriptDispose?.();
@@ -610,7 +630,12 @@ export async function createRealm(config) {
     
     /**
      * 执行代码
-     * 
+     *
+     * 注意：销毁后的 Realm 仍允许求值。VM context 本身不随 destroy 回收，
+     * 既有契约（engine-lifecycle-fix-test、root-window-client-navigation-test）
+     * 依赖在旧句柄上读取冻结后的状态快照；资源清理由 destroy() 完成，
+     * 子 Realm 创建的闸门在恢复闭包（disposeResources）里单独处理。
+     *
      * @param {string} code - 要执行的代码
      * @param {EvalOptions} options - 执行选项
      * @returns {any}

@@ -183,7 +183,7 @@ function openDatabase(inputName, inputVersion) {
     throw new TypeError("Version must be a positive integer");
   }
   const request = createRequest(null, null, true);
-  Promise.resolve().then(() => {
+  Promise.resolve().then(async () => {
     const runtime = indexedDBState();
     let metadata = runtime.databases.get(name);
     const oldVersion = metadata?.version ?? 0;
@@ -244,11 +244,52 @@ function openDatabase(inputName, inputVersion) {
         );
         return;
       }
-      finishTransaction(transactionRecord);
+      // upgradeneeded 处理器里排队的请求（如 createObjectStore 后立即 put）
+      // 是合法用法：升级事务必须等它们全部落定后再提交（真实 Edge 语义），
+      // 而不是在事件处理器返回时立刻 complete（F14）。
+      await transactionCompletion(transactionRecord, request, () => {
+        rollbackDatabaseSchema(metadata, snapshot, existed, name, runtime);
+        const databaseRecord = requireRecord(database);
+        databaseRecord.version = metadata.version;
+        databaseRecord.closed = true;
+        metadata.connections.delete(database);
+        failRequest(
+          request,
+          transactionRecord.error ?? domError("Transaction aborted", "AbortError"),
+        );
+      });
     }
     succeedRequest(request, database);
   });
   return request;
+}
+
+/**
+ * 等待升级事务收口（complete 或 abort），再把结果落到 open request。
+ *
+ * 排队请求在微任务里执行；`pending === 0` 后由 `scheduleTransactionCompletion`
+ * 在下一个宏任务里 finish。这里轮询到事务不再活跃即可，不需要固定等待。
+ */
+function transactionCompletion(transactionRecord, request, onAbort) {
+  return new Promise(resolve => {
+    const settle = () => {
+      if (transactionRecord.pending > 0) {
+        reserveTimer(settle, 0, [], false);
+        return;
+      }
+      // 等待微任务队列排空（scheduleStoreRequest 的 finally 递减 pending
+      // 之后才可能调度 completion）。
+      Promise.resolve().then(() => {
+        if (!transactionRecord.active) {
+          onAbort();
+        } else {
+          finishTransaction(transactionRecord);
+        }
+        resolve();
+      });
+    };
+    settle();
+  });
 }
 
 /**
@@ -431,6 +472,8 @@ function createTransaction(database, storeNames, mode, durability) {
     pending: 0,
     completionScheduled: false,
     versionchange: false,
+    undo: [],
+    storeSnapshots: new Map(),
     handlers: handlerMap("onabort", "oncomplete", "onerror"),
   };
   state.set(value, record);
@@ -618,7 +661,16 @@ function scheduleStoreRequest(store, name, args, operation, source = store.objec
   Promise.resolve().then(() => {
     try {
       requireActiveTransaction(transaction);
-      succeedRequest(request, operation());
+      const before = transaction.mode === "readwrite"
+        && !transaction.storeSnapshots.has(store.metadata)
+        ? snapshotStoreData(store.metadata)
+        : null;
+      const result = operation();
+      if (before !== null) {
+        transaction.storeSnapshots.set(store.metadata, before);
+        transaction.undo.push(() => restoreStoreData(store.metadata, before));
+      }
+      succeedRequest(request, result);
     } catch (error) {
       transaction.error = error;
       failRequest(request, error);
@@ -1018,8 +1070,28 @@ function finishTransaction(record) {
 function abortTransaction(record, error) {
   if (!record.active) throw domError("Transaction is inactive", "InvalidStateError");
   record.error = error;
+  for (const undo of [...record.undo].reverse()) {
+    try { undo?.(); } catch { /* rollback must not replace AbortError */ }
+  }
+  record.undo.length = 0;
   record.active = false;
   fire(record.object, "abort");
+}
+
+function snapshotStoreData(store) {
+  return {
+    records: new Map([...store.records].map(([key, entry]) => [key, {
+      key: cloneKey(entry.key), value: clone(entry.value),
+    }])),
+    nextKey: store.nextKey,
+    indexes: new Map(store.indexes),
+  };
+}
+
+function restoreStoreData(store, snapshot) {
+  store.records = snapshot.records;
+  store.nextKey = snapshot.nextKey;
+  store.indexes = snapshot.indexes;
 }
 
 function requireActiveTransaction(record) {

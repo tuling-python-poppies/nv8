@@ -200,9 +200,11 @@ export function byteControllerByobRequest(controller) {
 
 export function readerRead(reader, view) {
   const record = requireReader(reader);
+  if (record.byob && view !== undefined && !ArrayBuffer.isView(view)) {
+    return Promise.reject(new TypeError("A view is required"));
+  }
   return readFrom(record.streamState).then(result => {
     if (!record.byob || result.done || view === undefined) return result;
-    if (!ArrayBuffer.isView(view)) throw new TypeError("A view is required");
     const bytes = ArrayBuffer.isView(result.value)
       ? new Uint8Array(
         result.value.buffer,
@@ -211,7 +213,11 @@ export function readerRead(reader, view) {
       )
       : new Uint8Array(result.value);
     const target = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
-    target.set(bytes.subarray(0, target.length));
+    const written = Math.min(bytes.byteLength, target.byteLength);
+    target.set(bytes.subarray(0, written));
+    if (written < bytes.byteLength) {
+      record.streamState.queue.unshift(bytes.slice(written));
+    }
     return { value: view, done: false };
   });
 }
@@ -258,15 +264,19 @@ export function writableLocked(stream) {
 
 export function writableAbort(stream, reason) {
   const state = requireWritable(stream);
-  state.closed = true;
-  return Promise.resolve(callOptional(state.sink.abort, state.sink, [reason]));
+  return Promise.resolve().then(() => callOptional(state.sink.abort, state.sink, [reason])).then(
+    value => { state.closed = true; state.closedResolve?.(); return value; },
+    error => { state.closed = true; state.error = error; state.closedReject?.(error); throw error; },
+  );
 }
 
 export function writableClose(stream) {
   const state = requireWritable(stream);
   if (state.closed) return Promise.reject(new TypeError("The stream is closed"));
-  state.closed = true;
-  return Promise.resolve(callOptional(state.sink.close, state.sink, []));
+  return Promise.resolve().then(() => callOptional(state.sink.close, state.sink, [])).then(
+    value => { state.closed = true; state.closedResolve?.(); return value; },
+    error => { state.closed = true; state.error = error; state.closedReject?.(error); throw error; },
+  );
 }
 
 export function writableGetWriter(stream) {
@@ -281,6 +291,7 @@ export function writableControllerError(controller, error) {
   const state = requireWritableController(controller).streamState;
   state.error = error;
   state.closed = true;
+  state.closedReject?.(error);
 }
 
 export function writerClosed(writer) {
@@ -315,7 +326,7 @@ export function writerWrite(writer, chunk) {
   if (record.streamState.closed) {
     return Promise.reject(new TypeError("The stream is closed"));
   }
-  return Promise.resolve(callOptional(
+  return Promise.resolve().then(() => callOptional(
     record.streamState.sink.write,
     record.streamState.sink,
     [chunk, record.streamState.controller],
@@ -361,6 +372,8 @@ function initializeReadable(stream, source) {
     pending: [],
     closed: false,
     error: null,
+    closedResolve: null,
+    closedReject: null,
     reader: null,
     controller,
   };
@@ -395,6 +408,8 @@ function initializeWritable(stream, sink) {
     writer: null,
     closed: false,
     error: null,
+    closedResolve: null,
+    closedReject: null,
   };
   writableState.set(stream, state);
   writableControllerState.set(controller, {
@@ -410,7 +425,12 @@ function initializeWriter(writer, stream) {
   const record = {
     stream,
     streamState: state,
-    closed: state.closed ? Promise.resolve() : Promise.resolve(),
+    closed: state.closed
+      ? Promise.resolve()
+      : new Promise((resolve, reject) => {
+        state.closedResolve = resolve;
+        state.closedReject = reject;
+      }),
     released: false,
   };
   writerState.set(writer, record);

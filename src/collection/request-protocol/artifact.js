@@ -10,7 +10,7 @@
  * - 工件不包含真实网络能力、凭据来源或代理配置。
  */
 
-import { canonicalDigest, canonicalByteLength, canonicalJson } from './canonical-json.js';
+import { canonicalDigest, canonicalByteLength, canonicalJson, canonicalSnapshot } from './canonical-json.js';
 import { ArtifactInvalidError, ArtifactExpiredError, ProtocolError, ProtocolErrorCode } from './errors.js';
 
 /** 当前工件 schema 版本（major.minor） */
@@ -42,6 +42,11 @@ export const ArtifactKind = {
 };
 
 const ARTIFACT_KINDS = new Set(Object.values(ArtifactKind));
+const validatedArtifacts = new WeakSet();
+
+export function isRuntimeArtifact(value) {
+  return value !== null && typeof value === 'object' && validatedArtifacts.has(value);
+}
 
 const ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9._:-]{0,127}$/;
 
@@ -172,7 +177,7 @@ export function createRuntimeArtifact(input) {
     });
   }
 
-  const record = {
+  let record = {
     schemaVersion,
     id,
     kind,
@@ -187,6 +192,7 @@ export function createRuntimeArtifact(input) {
   let digest;
   let byteLength;
   try {
+    record = canonicalSnapshot(record);
     digest = canonicalDigest(record);
     byteLength = canonicalByteLength(record);
   } catch (error) {
@@ -196,11 +202,13 @@ export function createRuntimeArtifact(input) {
     );
   }
 
-  return Object.freeze({
+  const artifact = Object.freeze({
     ...record,
     digest,
     byteLength,
   });
+  validatedArtifacts.add(artifact);
+  return artifact;
 }
 
 /**

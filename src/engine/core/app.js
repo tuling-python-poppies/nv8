@@ -32,6 +32,15 @@ export function createApp(options = {}) {
     maxEntries: options.maxDiagnosticEntries,
   });
   let destroyed = false;
+  let closing = false;
+  let disposal = null;
+  const pendingCreations = new Set();
+  function assertActive() {
+    if (!closing && !destroyed) return;
+    const error = new Error('App has been closed');
+    error.code = 'ERR_NV8_APP_CLOSED';
+    throw error;
+  }
   lifecycle.emit('app.created', { appId });
   
   // 注册表
@@ -56,6 +65,7 @@ export function createApp(options = {}) {
      * @param {Plugin} plugin - 插件定义
      */
     registerPlugin(plugin) {
+      assertActive();
       logger.info(`Registering plugin: ${plugin.id}@${plugin.version}`);
       
       if (!plugins.has(plugin.id)) {
@@ -98,6 +108,7 @@ export function createApp(options = {}) {
      * @param {Profile} profile - Profile 定义
      */
     registerProfile(profile) {
+      assertActive();
       logger.info(`Registering profile: ${profile.id}`);
       
       if (profiles.has(profile.id)) {
@@ -116,6 +127,11 @@ export function createApp(options = {}) {
      * @returns {Promise<Sandbox>}
      */
     async createSandbox(options) {
+      assertActive();
+      let finish;
+      const pending = new Promise(resolve => { finish = resolve; });
+      pendingCreations.add(pending);
+      try {
       logger.info(`Creating sandbox with profile: ${options.profile || 'default'}`);
       
       // 1. 获取 profile
@@ -160,6 +176,10 @@ export function createApp(options = {}) {
         throw error;
       }
       
+      if (closing || destroyed) {
+        await sandbox.destroy();
+        assertActive();
+      }
       sandboxes.set(sandbox.id, sandbox);
       lifecycle.emit('sandbox.created', {
         appId,
@@ -169,6 +189,10 @@ export function createApp(options = {}) {
       logger.info(`Sandbox created: ${sandbox.id}`);
       
       return sandbox;
+      } finally {
+        pendingCreations.delete(pending);
+        finish();
+      }
     },
     
     /**
@@ -273,6 +297,7 @@ export function createApp(options = {}) {
      * 设置全局状态
      */
     setState(key, value) {
+      assertActive();
       stateRegistry.set(key, value, 'app', null);
     },
     
@@ -298,8 +323,11 @@ export function createApp(options = {}) {
     /**
      * 销毁 App
      */
-    async destroy() {
-      if (destroyed) return;
+    destroy() {
+      if (disposal !== null) return disposal;
+      closing = true;
+      disposal = (async () => {
+      await Promise.all(pendingCreations);
       logger.info(`Destroying app: ${appId}`);
       
       // 销毁所有 Sandbox
@@ -312,6 +340,8 @@ export function createApp(options = {}) {
       destroyed = true;
       lifecycle.emit('app.destroyed', { appId });
       logger.info(`App destroyed: ${appId}`);
+      })();
+      return disposal;
     },
     
     /**

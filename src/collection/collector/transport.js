@@ -1,3 +1,5 @@
+import { awaitWithSignal } from './cancellation.js';
+
 /**
  * Collector Transport
  *
@@ -125,8 +127,6 @@ export function withTimeout(transport, timeoutMs) {
             context: { url: redactRequestUrl(request.url) },
           }));
         }, timeoutMs);
-        // 不阻止进程退出
-        if (typeof timer.unref === 'function') timer.unref();
       });
 
       try {

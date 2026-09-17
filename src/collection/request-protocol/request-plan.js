@@ -9,7 +9,7 @@
  * - plan 里的 URL、header、cookie 和 body 都已完成变换，Collector 不再猜测。
  */
 
-import { canonicalDigest } from './canonical-json.js';
+import { canonicalDigest, canonicalSnapshot } from './canonical-json.js';
 import { ProtocolError, ProtocolErrorCode } from './errors.js';
 
 export const REQUEST_PLAN_SCHEMA_VERSION = '1.0';
@@ -33,6 +33,11 @@ export const BodyEncoding = {
 };
 
 const BODY_ENCODINGS = new Set(Object.values(BodyEncoding));
+const validatedPlans = new WeakSet();
+
+export function isRequestPlan(value) {
+  return value !== null && typeof value === 'object' && validatedPlans.has(value);
+}
 
 function invalid(reason, context) {
   return new ProtocolError(
@@ -342,7 +347,14 @@ export function createRequestPlan(input) {
     });
   }
 
-  const body = normalizeBody(input.body);
+  let body;
+  let metadata;
+  try {
+    body = canonicalSnapshot(normalizeBody(input.body));
+    metadata = canonicalSnapshot(input.metadata ?? null);
+  } catch (error) {
+    throw invalid(`plan data is not canonical JSON: ${error.message}`, {});
+  }
   if (body.encoding === BodyEncoding.TEXT || body.encoding === BodyEncoding.BASE64) {
     const size = Buffer.byteLength(body.value ?? '', 'utf8');
     if (size > limits.maxBodyBytes) {
@@ -369,7 +381,6 @@ export function createRequestPlan(input) {
     throw invalid(`method ${method} must not carry a request body`, { method });
   }
 
-  const metadata = input.metadata ?? null;
   if (metadata !== null && (typeof metadata !== 'object' || Array.isArray(metadata))) {
     throw invalid('metadata must be a plain object or null', {});
   }
@@ -404,7 +415,7 @@ export function createRequestPlan(input) {
     wellKnownMethod,
   };
 
-  return Object.freeze({
+  const plan = Object.freeze({
     ...record,
     headers: Object.freeze(record.headers.map((entry) => Object.freeze({
       name: entry.name,
@@ -414,6 +425,8 @@ export function createRequestPlan(input) {
     body: Object.freeze(record.body),
     digest: canonicalDigest(record),
   });
+  validatedPlans.add(plan);
+  return plan;
 }
 
 /**

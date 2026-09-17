@@ -65,7 +65,13 @@ export function assertPluginLockPlan(actual, expected) {
 }
 
 function normalizeRequirements(values) {
-  return [...values].map(value => `${value}`).sort();
+  return [...values].map(value => {
+    if (typeof value === 'string') {
+      const at = value.indexOf('@', value.startsWith('@') ? 1 : 0);
+      return { id: at < 0 ? value : value.slice(0, at), version: at < 0 ? '*' : value.slice(at + 1) || '*', optional: false };
+    }
+    return { id: value.id ?? value.name, version: value.range ?? value.version ?? '*', optional: value.optional === true };
+  }).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 }
 
 function normalizeCapabilities(values) {

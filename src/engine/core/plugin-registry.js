@@ -3,6 +3,7 @@
  * 
  * 用于注册和解析插件依赖
  */
+import { satisfiesVersionRange } from '../plugin-sdk/define-plugin.js';
 
 /**
  * 创建插件注册表
@@ -71,8 +72,11 @@ export function createPluginRegistry() {
           const dependencyId = typeof dep === 'string'
             ? dependencyName(dep)
             : dep.name || dep.id;
-          const depPlugin = findPluginForDependency(plugins, dependencyId);
-          if (!depPlugin) {
+          const range = (typeof dep === 'string' ? dependencyRange(dep) : dep.range || dep.version) || '*';
+          const candidates = dependencyCandidates(plugins, dependencyId);
+          const match = candidates.find(candidate => satisfiesVersionRange(candidate.version, range));
+          if (!match && dep.optional === true) continue;
+          if (candidates.length === 0) {
             const error = new Error(
               `Plugin "${plugin.id}" requires "${dependencyId}", but it's not registered`,
             );
@@ -81,19 +85,19 @@ export function createPluginRegistry() {
             error.dependencyId = dependencyId;
             throw error;
           }
-          const range = typeof dep === 'string' ? dependencyRange(dep) : dep.version || dep.range;
-          if (range && !satisfiesVersion(depPlugin.version, range)) {
+          if (!match) {
+            const actual = candidates[0].version;
             const error = new Error(
-              `Plugin "${plugin.id}" requires "${dependencyId}@${range}", but ${depPlugin.version} is installed`,
+              `Plugin "${plugin.id}" requires "${dependencyId}@${range}", but ${actual} is installed`,
             );
             error.code = 'DEPENDENCY_VERSION_MISMATCH';
             error.pluginId = plugin.id;
             error.dependencyId = dependencyId;
             error.required = range;
-            error.actual = depPlugin.version;
+            error.actual = actual;
             throw error;
           }
-          visit(depPlugin);
+          visit(match.plugin);
         }
         
         visiting.delete(plugin.id);
@@ -175,18 +179,18 @@ function compareVersion(left, right) {
   return 0;
 }
 
-function findPluginForDependency(plugins, dependencyId) {
+function dependencyCandidates(plugins, dependencyId) {
+  const candidates = [];
   const direct = plugins.get(dependencyId);
-  if (direct) return direct;
+  if (direct) candidates.push({ plugin: direct, version: direct.version });
   
   for (const plugin of plugins.values()) {
     const provides = plugin.provides || [];
-    if (provides.some(capability => (
-      typeof capability === 'string'
-        ? capability === dependencyId
-        : capability.name === dependencyId || capability.id === dependencyId
-    ))) {
-      return plugin;
+    for (const capability of provides) {
+      const name = typeof capability === 'string' ? capability : capability.name || capability.id;
+      if (name === dependencyId) candidates.push({
+        plugin, version: typeof capability === 'string' ? '1.0.0' : capability.version ?? '1.0.0',
+      });
     }
   }
   
@@ -194,7 +198,9 @@ function findPluginForDependency(plugins, dependencyId) {
   const legacyId = dependencyId.endsWith('.base')
     ? dependencyId.slice(0, -'.base'.length)
     : dependencyId;
-  return plugins.get(`@nv8/plugin-${legacyId}`) || null;
+  const legacy = plugins.get(`@nv8/plugin-${legacyId}`);
+  if (candidates.length === 0 && legacy) candidates.push({ plugin: legacy, version: legacy.version });
+  return candidates;
 }
 
 export function normalizePlugin(plugin) {

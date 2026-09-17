@@ -38,6 +38,7 @@ import {
   EvidenceSignatureInvalidError,
 } from './errors.js';
 import { verifyEvidenceManifest } from './bundle-signature.js';
+import { canonicalSnapshot } from '../request-protocol/canonical-json.js';
 
 /**
  * 加载 Evidence Bundle
@@ -93,6 +94,7 @@ class EvidenceBundleLoader {
     this.supportedSchemaVersions = [...supportedSchemaVersions];
     this.manifest = null;
     this.files = new Map(); // path -> file metadata
+    this.contents = new Map();
     this.loadedAt = null;
   }
   
@@ -149,11 +151,12 @@ class EvidenceBundleLoader {
       const content = await fs.readFile(manifestPath, 'utf8');
       
       // 检查 Manifest 大小
-      if (content.length > this.limits.maxManifestBytes) {
+      const byteLength = Buffer.byteLength(content, 'utf8');
+      if (byteLength > this.limits.maxManifestBytes) {
         throw new EvidenceLimitExceededError(
           'maxManifestBytes',
           this.limits.maxManifestBytes,
-          content.length
+          byteLength
         );
       }
       
@@ -352,10 +355,15 @@ class EvidenceBundleLoader {
       }
       
       // 计算并验证 SHA-256
-      const actualHash = await this.computeFileSha256(fullPath);
+      const content = await fs.readFile(fullPath);
+      if (content.length !== metadata.bytes) {
+        throw new EvidenceInvalidManifestError(`file size changed for ${filePath}`);
+      }
+      const actualHash = crypto.createHash('sha256').update(content).digest('hex');
       if (actualHash !== metadata.sha256) {
         throw new EvidenceHashMismatchError(filePath, metadata.sha256, actualHash);
       }
+      this.contents.set(filePath, content);
     } catch (error) {
       if (error.code === 'ENOENT') {
         throw new EvidenceFileMissingError(filePath);
@@ -439,8 +447,9 @@ class EvidenceBundleLoader {
    */
   createBundle() {
     const bundlePath = this.bundlePath;
-    const manifest = this.manifest;
-    const files = this.files;
+    const manifest = canonicalSnapshot(this.manifest);
+    const files = new Map([...this.files].map(([key, value]) => [key, canonicalSnapshot(value)]));
+    const contents = this.contents;
     const loadedAt = this.loadedAt;
     
     return Object.freeze({
@@ -484,8 +493,8 @@ class EvidenceBundleLoader {
           throw new EvidenceFileMissingError(filePath);
         }
         
-        const fullPath = path.join(bundlePath, filePath);
-        return await fs.readFile(fullPath, encoding);
+        const content = contents.get(filePath);
+        return encoding === null ? Buffer.from(content) : content.toString(encoding);
       },
       
       /**
@@ -496,8 +505,7 @@ class EvidenceBundleLoader {
           throw new EvidenceFileMissingError(filePath);
         }
         
-        const fullPath = path.join(bundlePath, filePath);
-        return await fs.readFile(fullPath);
+        return Buffer.from(contents.get(filePath));
       },
       
       /**
@@ -523,7 +531,7 @@ class EvidenceBundleLoader {
        * 获取入口点
        */
       getEntrypoints() {
-        return manifest.entrypoints || [];
+        return [...(manifest.entrypoints || [])];
       },
       
       /**

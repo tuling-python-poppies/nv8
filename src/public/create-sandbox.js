@@ -116,8 +116,10 @@ class Sandbox {
    * Evaluate multiple scripts in sequence, return raw values.
    */
   async runAll(sources) {
-    const results = await this._inner.batchEvaluate(sources);
-    return results.map(r => r.value);
+    if (!Array.isArray(sources)) throw new TypeError('sources must be an array');
+    const results = [];
+    for (const source of sources) results.push(await this.run(source));
+    return results;
   }
 
   /**

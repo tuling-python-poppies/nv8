@@ -1080,14 +1080,18 @@ export class RuntimePool {
       options.creatorOrigin,
     );
     try {
+      // Worklet Realm 级模块缓存（F18）：同 owner 的多个 addModule 入口共享
+      // 依赖时，依赖模块只求值一次——registerPaint 等注册副作用是全局的，
+      // 重复执行会在真实浏览器里抛 NotSupportedError。
+      if (state.modules.has(options.url)) return;
       await evaluateWorkletModule(
         state.realm,
         source,
         options.url,
         this.options.replay,
         this.options.limits.timeoutMs ?? 5000,
+        state.modules,
       );
-      state.modules.add(options.url);
       this.assertGenerationActive(generation);
     } catch (error) {
       if (state.modules.size === 0) {
@@ -1126,7 +1130,7 @@ export class RuntimePool {
       kind: options.kind,
       id: options.id,
       creatorOrigin: options.creatorOrigin,
-      modules: new Set(),
+      modules: new Map(),
     };
   }
 
@@ -1374,7 +1378,7 @@ export class RuntimePool {
     }
     for (const state of this.workletStates) {
       if (state.realm?.destroyed) continue;
-      const modules = [...state.modules].sort();
+      const modules = [...state.modules.keys()].sort();
       const moduleCache = modules.map((url) => ({ url, status: "evaluated" }));
       const fingerprint = createWorkerGraphFingerprint({
         kind: `${state.kind}-worklet`,
@@ -1946,10 +1950,15 @@ async function evaluateWorkletModule(
   url,
   replay,
   timeoutMs,
+  moduleCache = null,
 ) {
   const modules = new Map();
   const origin = new URL(url).origin;
   const createModule = (moduleSource, moduleUrl) => {
+    // 已求值的模块实例必须跨 addModule 复用：link() 拿到已求值实例时不会
+    // 再次执行模块体，registerPaint 等一次性注册副作用才不会重复触发（F18）。
+    const cached = moduleCache?.get(moduleUrl);
+    if (cached !== undefined) return cached;
     const module = new vm.SourceTextModule(moduleSource, {
       context: realm.context,
       identifier: moduleUrl,
@@ -1987,5 +1996,9 @@ async function evaluateWorkletModule(
     await root.evaluate({ timeout: timeoutMs });
   } else {
     await root.evaluate();
+  }
+  // 求值成功后才登记新模块：失败图的半求值模块不能被后续 addModule 复用。
+  if (moduleCache !== null) {
+    for (const [moduleUrl, module] of modules) moduleCache.set(moduleUrl, module);
   }
 }

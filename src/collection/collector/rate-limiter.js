@@ -1,4 +1,5 @@
 import { CollectorConfigError, CollectorError, CollectorErrorCode } from './errors.js';
+import { cancellableDelay } from './cancellation.js';
 
 /**
  * 按 origin 的限流与并发控制。
@@ -83,10 +84,7 @@ export class RateLimiter {
     this.#maxConcurrent = maxConcurrent;
     this.#maxQueued = maxQueued;
     this.#now = now;
-    this.#sleep = config.sleep ?? ((ms) => new Promise((resolve) => {
-      const timer = setTimeout(resolve, ms);
-      if (typeof timer.unref === 'function') timer.unref();
-    }));
+    this.#sleep = config.sleep ?? cancellableDelay;
   }
 
   get requestsPerSecond() { return this.#requestsPerSecond; }
@@ -164,7 +162,7 @@ export class RateLimiter {
         throwIfAborted(signal);
         // 等待要与 abort **竞速**，不能只在轮询点检查。
         // 否则一次长等待期间 abort 不会生效，调用方看到的是「取消了但还在等」。
-        await raceAbort(this.#sleep(this.#nextDelayMs(bucket, ticket)), signal);
+        await raceAbort(this.#sleep(this.#nextDelayMs(bucket, ticket), signal), signal);
       }
     } catch (error) {
       removeTicket(bucket, ticket);

@@ -1434,6 +1434,7 @@ function normalizeReplay(replay, limits) {
  */
 function normalizeLimits(inputLimits) {
   return Object.freeze({
+    maxBatchConcurrency: finiteInteger(inputLimits.maxBatchConcurrency, 4, 'limits.maxBatchConcurrency', 1, 256),
     timeoutMs: finiteInteger(
       inputLimits.timeoutMs,
       DEFAULT_LIMITS.timeoutMs,
@@ -1684,7 +1685,11 @@ export function normalizeRuntimeOptions(options = {}) {
     limits,
   );
   const execution = normalizeExecution(options.execution ?? {});
+  if (options.onCrash !== undefined && options.onCrash !== null && typeof options.onCrash !== 'function') {
+    throw new TypeError('onCrash must be a function');
+  }
   return Object.freeze({
+    onCrash: options.onCrash ?? null,
     limits,
     execution,
     evidence: normalizeEvidence(options.evidence),

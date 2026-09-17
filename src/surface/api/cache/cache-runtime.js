@@ -5,6 +5,7 @@ import {
   requireResponse,
   responseClone,
 } from "../fetch/request-response-runtime.js";
+import { headersGet } from "../fetch/headers-runtime.js";
 import { replayRequest } from "../fetch/fetch-replay.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 
@@ -88,6 +89,7 @@ function cacheEntryOperation(record, name, args) {
         entry.request,
         normalizeRequest(input),
         options,
+        entry.response,
       ));
     return Promise.resolve(matches.map(entry => responseClone(entry.response)));
   }
@@ -107,6 +109,7 @@ function cacheEntryOperation(record, name, args) {
         entry.request,
         normalizeRequest(input),
         options,
+        entry.response,
       ));
     return Promise.resolve(entries.map(entry => requestClone(entry.request)));
   }
@@ -126,15 +129,24 @@ async function addRequests(record, inputs) {
 }
 
 function matchingIndex(record, request, options) {
-  return record.entries.findIndex(entry => requestsMatch(entry.request, request, options));
+  return record.entries.findIndex(entry => requestsMatch(entry.request, request, options, entry.response));
 }
 
-function requestsMatch(left, right, options) {
+function requestsMatch(left, right, options, response = null) {
   const leftState = requireRequest(left);
   const rightState = requireRequest(right);
   if (!options.ignoreMethod && rightState.method !== "GET") return false;
-  return requestURL(leftState.url, options.ignoreSearch)
-    === requestURL(rightState.url, options.ignoreSearch);
+  if (requestURL(leftState.url, options.ignoreSearch)
+    !== requestURL(rightState.url, options.ignoreSearch)) return false;
+  if (options.ignoreVary) return true;
+  if (!response) return true;
+  const vary = headersGet(requireResponse(response).headers, 'vary');
+  if (vary === null || vary.trim() === '') return true;
+  if (vary.trim() === '*') return false;
+  for (const name of vary.split(',').map(value => value.trim().toLowerCase())) {
+    if (headersGet(leftState.headers, name) !== headersGet(rightState.headers, name)) return false;
+  }
+  return true;
 }
 
 function requestURL(value, ignoreSearch) {

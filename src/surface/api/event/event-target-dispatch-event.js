@@ -187,6 +187,8 @@ function invokeListeners(
       if (index !== -1) {
         listeners.splice(index, 1);
       }
+      listener.removed = true;
+      listener.signal?.removeEventListener?.('abort', listener.abortHandler);
     }
     eventRecord.inPassiveListener = listener.passive;
     try {

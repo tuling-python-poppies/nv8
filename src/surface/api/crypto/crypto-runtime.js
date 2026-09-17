@@ -59,7 +59,10 @@ export function createCryptoObjects(realm, entropy = null) {
 
 export function cryptoGetRandomValues(crypto, array) {
   requireCrypto(crypto);
-  if (!ArrayBuffer.isView(array) || array instanceof DataView) {
+  const integerView = ArrayBuffer.isView(array)
+    && !(array instanceof DataView)
+    && ![Float32Array, Float64Array].some(Type => array instanceof Type);
+  if (!integerView) {
     const detail = array instanceof DataView
       ? "ArrayBufferView is of type 'DataView', which is not an integer array type"
       : "ArrayBufferView is not an integer array type";

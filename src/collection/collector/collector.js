@@ -12,7 +12,7 @@
  * Collector 不生成签名，不执行 JavaScript，不解析 DOM。
  */
 
-import { createRequestPlan } from '../request-protocol/request-plan.js';
+import { createRequestPlan, isRequestPlan } from '../request-protocol/request-plan.js';
 import { CredentialStore, redactCookies, redactHeaders, redactRequestUrl } from './credentials.js';
 import { NetworkPolicy } from './network-policy.js';
 import { RetryPolicy } from './retry-policy.js';
@@ -27,6 +27,7 @@ import {
   CollectorRequestError,
   CollectorRetryExhaustedError,
 } from './errors.js';
+import { awaitWithSignal, cancellableDelay, throwIfCancelled } from './cancellation.js';
 
 const DEFAULT_LIMITS = Object.freeze({
   maxAuditEntries: 1000,
@@ -45,6 +46,8 @@ export class Collector {
   #audit = [];
   #disposed = false;
   #sleep;
+  #active = new Map();
+  #disposal = null;
 
   /**
    * @param {object} config
@@ -85,10 +88,7 @@ export class Collector {
       ? withTimeout(transport, this.#limits.timeoutMs)
       : transport;
 
-    this.#sleep = config.sleep ?? ((ms) => new Promise((resolve) => {
-      const timer = setTimeout(resolve, ms);
-      if (typeof timer.unref === 'function') timer.unref();
-    }));
+    this.#sleep = config.sleep ?? cancellableDelay;
   }
 
   get policy() { return this.#policy; }
@@ -117,8 +117,25 @@ export class Collector {
    */
   async send(plan, options = {}) {
     this.#assertActive();
+    const controller = new AbortController();
+    const onAbort = () => controller.abort(options.signal.reason);
+    if (options.signal?.aborted) onAbort();
+    else options.signal?.addEventListener('abort', onAbort, { once: true });
+    const operation = this.#send(plan, { ...options, signal: controller.signal });
+    this.#active.set(controller, operation);
+    try {
+      return await operation;
+    } finally {
+      this.#active.delete(controller);
+      options.signal?.removeEventListener('abort', onAbort);
+    }
+  }
 
-    const normalized = Object.isFrozen(plan) && typeof plan.digest === 'string'
+  async #send(plan, options) {
+    this.#assertActive();
+    throwIfCancelled(options.signal);
+
+    const normalized = isRequestPlan(plan)
       ? plan
       : createRequestPlan(plan);
 
@@ -130,34 +147,21 @@ export class Collector {
       this.#credentials.require(normalized.url);
     }
 
-    const prepared = this.#prepare(normalized);
-
     let attempt = 0;
     let lastError = null;
     const attempts = [];
+    let prepared = normalized;
 
     while (attempt < this.#retry.maxAttempts) {
+      this.#assertActive();
+      throwIfCancelled(options.signal);
       attempt += 1;
       const startedAt = Date.now();
-
-      let releaseSlot = null;
-      let sentToTransport = false;
       try {
-        // 限流在每次**尝试**内取许可：每次重试都是一次新请求。
-        // 放在 send() 外面只会限住"逻辑请求数"，重试就绕过了限速。
-        releaseSlot = await this.#rateLimiter.acquire(normalized.url, {
-          signal: options.signal,
-        });
-
-        // 熔断检查移到真正发送之前，且每次尝试都做：
-        // - half-open 探针在会真正发送时才取得，本地排队/配置失败不会泄漏它，
-        //   否则该 origin 会永久停在半开、拒绝所有后续请求
-        // - 重试不再绕过已跳闸的电路（在 breaker.assert 之后才发送）
-        this.#breaker.assert(normalized.url);
-        sentToTransport = true;
-
-        const { response, redirected } =
-          await this.#sendFollowingRedirects(prepared, normalized, options.signal);
+        prepared = this.#prepare(normalized);
+        const { response, redirected } = await this.#sendFollowingRedirects(
+          prepared, normalized, options.signal,
+        );
 
         attempts.push({
           attempt,
@@ -166,8 +170,6 @@ export class Collector {
           error: null,
         });
 
-        this.#breaker.record(normalized.url, { response });
-
         if (this.#retry.shouldRetry({
           attempt,
           method: normalized.method,
@@ -175,7 +177,7 @@ export class Collector {
         })) {
           const delay = this.#retry.delayFor({ attempt, response });
           this.#record(prepared, { response, attempt, retriedAfterMs: delay });
-          await this.#sleep(delay);
+          await awaitWithSignal(() => this.#sleep(delay, options.signal), options.signal);
           continue;
         }
 
@@ -203,12 +205,6 @@ export class Collector {
           error: collectorError.code,
         });
         lastError = collectorError;
-        // 只有真正进入发送路径的失败才反馈给熔断器：CIRCUIT_OPEN / RATE_LIMITED
-        // 等本地拒绝记录进去会误清并发探针的占用，或把本地节流当目标故障。
-        if (sentToTransport) {
-          this.#breaker.record(normalized.url, { error: collectorError });
-        }
-
         // 策略违规立即失败，绝不重试
         if (collectorError.isPolicyViolation) {
           this.#record(prepared, { error: collectorError, attempt });
@@ -218,16 +214,12 @@ export class Collector {
         if (this.#retry.shouldRetry({ attempt, method: normalized.method, error: collectorError })) {
           const delay = this.#retry.delayFor({ attempt });
           this.#record(prepared, { error: collectorError, attempt, retriedAfterMs: delay });
-          await this.#sleep(delay);
+          await awaitWithSignal(() => this.#sleep(delay, options.signal), options.signal);
           continue;
         }
 
         this.#record(prepared, { error: collectorError, attempt });
         throw collectorError;
-      } finally {
-        // 并发额度必须无条件归还——异常路径漏掉就会把 origin 的并发慢慢耗尽，
-        // 表现为"跑一阵之后越来越慢直到卡死"，很难追。
-        releaseSlot?.();
       }
     }
 
@@ -264,7 +256,28 @@ export class Collector {
     let bodyDiscarded = false;
 
     for (;;) {
-      const response = await this.#transport.send(current, { signal });
+      this.#assertActive();
+      throwIfCancelled(signal);
+      const release = await this.#rateLimiter.acquire(current.url, { signal });
+      let response;
+      let checked = false;
+      try {
+        this.#assertActive();
+        throwIfCancelled(signal);
+        this.#breaker.assert(current.url);
+        checked = true;
+        response = await awaitWithSignal(
+          () => this.#transport.send(current, { signal }), signal,
+        );
+        this.#assertActive();
+        throwIfCancelled(signal);
+        this.#breaker.record(current.url, { response });
+      } catch (error) {
+        if (checked) this.#breaker.record(current.url, { error });
+        throw error;
+      } finally {
+        release();
+      }
       this.#cookieJar.acceptFromResponse(current.url, response);
       const location = getResponseHeader(response, 'location');
       if (!REDIRECT_STATUS.has(response.status) || location == null
@@ -351,6 +364,7 @@ export class Collector {
 
   /** 写入脱敏审计记录（有界） */
   #record(request, outcome) {
+    if (this.#disposed) return;
     if (this.#audit.length >= this.#limits.maxAuditEntries) {
       this.#audit.shift();
     }
@@ -390,14 +404,21 @@ export class Collector {
   }
 
   /** 释放资源。幂等。 */
-  async dispose() {
-    if (this.#disposed) return;
+  dispose() {
+    if (this.#disposal !== null) return this.#disposal;
     this.#disposed = true;
+    const error = new CollectorPolicyError(
+      CollectorErrorCode.DISPOSED,
+      'collector has been disposed',
+    );
+    for (const controller of this.#active.keys()) controller.abort(error);
     this.#audit.length = 0;
     this.#cookieJar.clear();
-    if (typeof this.#transport.dispose === 'function') {
-      await this.#transport.dispose();
-    }
+    this.#disposal = (async () => {
+      await Promise.allSettled(this.#active.values());
+      await this.#transport.dispose?.();
+    })();
+    return this.#disposal;
   }
 }
 

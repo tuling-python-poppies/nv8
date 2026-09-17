@@ -369,7 +369,7 @@ export async function createSandbox(config) {
   const {
     appId,
     profile,
-    plugins,
+    plugins: pluginDefinitions,
     stateRegistry,
     trace,
     logger,
@@ -377,6 +377,8 @@ export async function createSandbox(config) {
     runtime = {},
     limits = {},
   } = config;
+  // 安装状态属于 Sandbox，不能复用调用方插件上的 _installed 标志。
+  const plugins = pluginDefinitions.map(plugin => ({ ...plugin, _installed: false, _exports: null }));
   
   // Realm 管理
   const realms = new Map(); // realm-id -> Realm
@@ -569,6 +571,7 @@ export async function createSandbox(config) {
   logger.info(`[Sandbox ${sandboxId}] Initializing with ${plugins.length} plugins`);
   
   // 1. 安装所有插件（按依赖顺序）
+  try {
   for (const plugin of plugins) {
     await installPlugin(
       plugin,
@@ -589,6 +592,16 @@ export async function createSandbox(config) {
         : capability.name;
       if (name) capabilityIndex.set(name, plugin);
     }
+  }
+  } catch (error) {
+    for (const plugin of [...pluginInstances].reverse()) {
+      try { await plugin.uninstall?.(pluginContextFor(plugin)); }
+      catch (cleanupError) { logger.error('Plugin installation rollback failed:', cleanupError); }
+      plugin._installed = false;
+      plugin._exports = null;
+    }
+    stateRegistry.destroyContext('sandbox', sandboxId);
+    throw error;
   }
   
   logger.info(`[Sandbox ${sandboxId}] All plugins installed`);
@@ -916,7 +929,7 @@ export async function createSandbox(config) {
       await waitForWorkerCreations();
       
       // 卸载所有插件
-      for (const plugin of pluginInstances) {
+      for (const plugin of [...pluginInstances].reverse()) {
         if (plugin.uninstall && plugin._installed) {
           try {
             logger.info(`[Sandbox ${sandboxId}] Uninstalling plugin: ${plugin.id}`);
@@ -935,6 +948,8 @@ export async function createSandbox(config) {
             logger.error(`[Sandbox ${sandboxId}] Plugin uninstall failed:`, error);
           }
         }
+        plugin._installed = false;
+        plugin._exports = null;
       }
       
       disposeServiceWorkerHandles();
@@ -1494,10 +1509,15 @@ async function evaluateCoreWorkletModule(
   url,
   replayState,
   timeoutMs = 5000,
+  moduleCache = null,
 ) {
   const modules = new Map();
   const origin = new URL(url).origin;
   const createModule = (moduleSource, moduleUrl) => {
+    // 已求值的模块实例跨 addModule 复用：link() 拿到已求值实例不会再次执行
+    // 模块体，registerPaint 等一次性注册副作用才不会重复触发（F18）。
+    const reused = moduleCache?.get(moduleUrl);
+    if (reused !== undefined) return reused;
     const module = new vm.SourceTextModule(moduleSource, {
       context: realm.context,
       identifier: moduleUrl,
@@ -1535,6 +1555,11 @@ async function evaluateCoreWorkletModule(
     );
   });
   await evaluateModuleWithTimeout(root, timeoutMs, url);
+  // 求值成功后才把模块图登记进缓存：失败图里的半求值模块不能被后续
+  // addModule 复用（副作用状态不明），失败路径由调用方销毁整个 worklet。
+  if (moduleCache !== null) {
+    for (const [moduleUrl, module] of modules) moduleCache.set(moduleUrl, module);
+  }
 }
 
 async function evaluateModuleWithTimeout(module, timeoutMs, url) {
@@ -1554,8 +1579,8 @@ async function evaluateCoreWorkerSource(
     const modules = new Map();
     const sourceEntries = new Map([[url, source]]);
     const moduleOrigin = new URL(url).origin;
-    const load = async specifier => {
-      const resolved = new URL(`${specifier}`, url);
+    const load = async (specifier, referencingModule) => {
+      const resolved = new URL(`${specifier}`, referencingModule?.identifier ?? url);
       if (resolved.origin !== moduleOrigin) {
         const error = new TypeError(
           `Worker module import must use the worker origin: ${resolved.href}`,
@@ -2179,13 +2204,17 @@ export function createWorkerRealmFactories({
           destroyWorkletRealm(workletRealm);
           throw createRealmLifecycleError();
         }
-        worklet = { realm: workletRealm };
+        worklet = { realm: workletRealm, modules: new Map() };
         realmsForOwner.set(key, worklet);
         workletRealms.add(workletRealm);
       } finally {
         releaseRealm();
       }
     }
+    // Worklet Realm 级模块缓存：同一 owner 的多个 addModule 入口共享依赖时，
+    // 依赖模块只能求值一次（registerPaint 等注册副作用是全局的，重复执行
+    // 会在真实浏览器里直接抛 NotSupportedError）。
+    if (worklet.modules.has(options.url)) return;
     try {
       const source = resolveCoreWorkerSource(options.url, workerReplayState);
       await evaluateCoreWorkletModule(
@@ -2194,6 +2223,7 @@ export function createWorkerRealmFactories({
         options.url,
         workerReplayState,
         limits.timeoutMs ?? 5000,
+        worklet.modules,
       );
     } catch (error) {
       realmsForOwner.delete(key);
@@ -2273,7 +2303,7 @@ export function createWindowRealmFactories({
   } = workers;
 
   async function createIframeChildRealm(options) {
-    if (lifecycleState.closed) throw createRealmLifecycleError();
+    if (lifecycleState.closed || options.isOwnerActive?.() === false) throw createRealmLifecycleError();
     const generation = lifecycleState.generation;
     const releaseRealm = reserveRealmCapacity();
     let childRealm;
@@ -2347,7 +2377,7 @@ export function createWindowRealmFactories({
         },
       },
     });
-    if (lifecycleState.closed || generation !== lifecycleState.generation) {
+    if (lifecycleState.closed || generation !== lifecycleState.generation || options.isOwnerActive?.() === false) {
       childRealm.destroyed = true;
       await childRealm.destroy().catch(() => {});
       throw createRealmLifecycleError();

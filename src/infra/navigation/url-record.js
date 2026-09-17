@@ -484,7 +484,7 @@ function normalizePath(pathname) {
         segments.push("");
       }
     } else {
-      segments.push(segment);
+      segments.push(encodePathSegment(segment));
     }
     start = index + 1;
   }
@@ -497,6 +497,23 @@ function isDoubleDotPathSegment(segment) {
 
 function isSingleDotPathSegment(segment) {
   return segment === "." || /^%2e$/iu.test(segment);
+}
+
+/** path 的 percent-encode 集合（WHATWG path percent-encode set）。 */
+const PATH_PERCENT_ENCODE = new Set([
+  " ",
+  "\"",
+  "#",
+  "<",
+  ">",
+  "?",
+  "`",
+  "{",
+  "}",
+]);
+
+function encodePathSegment(segment) {
+  return percentEncodeForSet(segment, PATH_PERCENT_ENCODE);
 }
 
 // ------------------------------------------------------------- 主机与端口
@@ -542,14 +559,17 @@ function parseHostAndPort(value, protocol) {
   if (hostname === null) {
     return null;
   }
+  const normalizedHostname = SPECIAL_SCHEMES.has(protocol)
+    ? parseIPv4(hostname) ?? hostname
+    : hostname;
   const port = normalizePortValue(split.port, protocol);
   if (port === null) {
     return null;
   }
   return {
-    hostname,
+    hostname: normalizedHostname,
     port,
-    host: port === "" ? hostname : `${hostname}:${port}`,
+    host: port === "" ? normalizedHostname : `${normalizedHostname}:${port}`,
   };
 }
 
@@ -629,10 +649,11 @@ function parseDomainHost(value) {
     }
     const code = value.codePointAt(index);
     if (code > 0x7f) {
-      // 没有 IDN / punycode 实现，非 ASCII 原样保留。
-      output += String.fromCodePoint(code);
-      index += code > 0xffff ? 2 : 1;
-      continue;
+      // 非 ASCII 走 ToASCII（punycode）。真实浏览器把 `你好.test` 序列化为
+      // `xn--6qq79v.test`；原样保留会造出与浏览器不同的 href（F24）。
+      // 需要整段主机一次性转换（IDNA 是按 label 的），这里在检测到首个
+      // 非 ASCII 字符时对整段重新走 domainToASCII，失败则整个解析失败。
+      return asciiDomain(value) ?? null;
     }
     index += 1;
     if (isForbiddenDomainByte(code)) {
@@ -652,6 +673,131 @@ function isForbiddenDomainByte(byte) {
     return true;
   }
   return FORBIDDEN_DOMAIN_CHARS.has(String.fromCharCode(byte));
+}
+
+/**
+ * domain 主机的 ToASCII：逐 label 处理，非 ASCII label 转 punycode，
+ * ASCII label 走与解析阶段一致的 safe/escape/forbidden 分类；
+ * 空 label（末尾点除外）或转换失败返回 null。
+ */
+function asciiDomain(value) {
+  const labels = value.split(".");
+  if (labels.some((label, index) => label.length === 0 && index !== labels.length - 1)) {
+    return null;
+  }
+  const output = [];
+  for (const label of labels) {
+    const ascii = asciiLabel(label);
+    if (ascii === null) return null;
+    output.push(ascii);
+  }
+  return output.join(".");
+}
+
+function asciiLabel(label) {
+  if (label === "") return "";
+  let output = "";
+  for (const character of label) {
+    const code = character.codePointAt(0);
+    if (code > 0x7f) return punycodeLabel(label);
+    if (isForbiddenDomainByte(code)) return null;
+    if (SAFE_DOMAIN_CHAR.test(character)) {
+      output += character.toLowerCase();
+      continue;
+    }
+    output += percentEncodeByte(code);
+  }
+  return output;
+}
+
+// RFC 3492 bootstring encoder. Kept local because internal Realm modules may not
+// import node:url (the module loader deliberately rejects host-module imports).
+const PUNYCODE_BASE = 36;
+const PUNYCODE_TMIN = 1;
+const PUNYCODE_TMAX = 26;
+const PUNYCODE_SKEW = 38;
+const PUNYCODE_DAMP = 700;
+const PUNYCODE_INITIAL_BIAS = 72;
+const PUNYCODE_INITIAL_N = 128;
+
+function punycodeLabel(label) {
+  const codePoints = [...label].map(character => character.codePointAt(0));
+  let output = codePoints.filter(code => code < 0x80).map(code => String.fromCharCode(code));
+  const basicCount = output.length;
+  let handled = basicCount;
+  if (handled > 0) output.push("-");
+  let n = PUNYCODE_INITIAL_N;
+  let delta = 0;
+  let bias = PUNYCODE_INITIAL_BIAS;
+  while (handled < codePoints.length) {
+    let minimum = Number.MAX_SAFE_INTEGER;
+    for (const code of codePoints) {
+      if (code >= n && code < minimum) minimum = code;
+    }
+    if (!Number.isSafeInteger(minimum) || minimum - n > Math.floor(
+      (Number.MAX_SAFE_INTEGER - delta) / (handled + 1),
+    )) return null;
+    delta += (minimum - n) * (handled + 1);
+    n = minimum;
+    for (const code of codePoints) {
+      if (code < n) delta += 1;
+      if (code !== n) continue;
+      let quotient = delta;
+      for (let k = PUNYCODE_BASE;; k += PUNYCODE_BASE) {
+        const threshold = k <= bias + PUNYCODE_TMIN
+          ? PUNYCODE_TMIN
+          : k >= bias + PUNYCODE_TMAX
+            ? PUNYCODE_TMAX
+            : k - bias;
+        if (quotient < threshold) break;
+        const digit = threshold + (quotient - threshold) % (PUNYCODE_BASE - threshold);
+        output.push(punycodeDigit(digit));
+        quotient = Math.floor((quotient - threshold) / (PUNYCODE_BASE - threshold));
+      }
+      output.push(punycodeDigit(quotient));
+      bias = punycodeAdapt(delta, handled + 1, handled === basicCount);
+      delta = 0;
+      handled += 1;
+    }
+    delta += 1;
+    n += 1;
+  }
+  const result = `xn--${output.join("")}`;
+  return result.length <= 63 ? result : null;
+}
+
+function punycodeDigit(value) {
+  return String.fromCharCode(value < 26 ? 0x61 + value : 0x30 + value - 26);
+}
+
+function punycodeAdapt(delta, points, first) {
+  let value = first ? Math.floor(delta / PUNYCODE_DAMP) : Math.floor(delta / 2);
+  value += Math.floor(value / points);
+  let divisions = 0;
+  while (value > Math.floor(
+    ((PUNYCODE_BASE - PUNYCODE_TMIN) * PUNYCODE_TMAX) / 2,
+  )) {
+    value = Math.floor(value / (PUNYCODE_BASE - PUNYCODE_TMIN));
+    divisions += PUNYCODE_BASE;
+  }
+  return divisions + Math.floor(
+    ((PUNYCODE_BASE - PUNYCODE_TMIN + 1) * value)
+      / (value + PUNYCODE_SKEW),
+  );
+}
+
+function parseIPv4(value) {
+  if (!/^\d+(?:\.\d+){0,3}$/u.test(value)) return null;
+  const parts = value.split(".").map(Number);
+  if (parts.some(part => !Number.isSafeInteger(part) || part < 0)) return null;
+  // WHATWG：最后一段必须小于 256 ** (5 − 段数)，其余段必须是字节。
+  const limit = [0x100000000, 0x1000000, 0x10000, 0x100][parts.length - 1];
+  if (parts.slice(0, -1).some(part => part > 255) || parts.at(-1) >= limit) return null;
+  let number = parts.at(-1);
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    number += parts[index] * 256 ** (3 - index);
+  }
+  return [number >>> 24, (number >>> 16) & 255, (number >>> 8) & 255, number & 255].join(".");
 }
 
 function parseOpaqueHost(value) {
@@ -707,10 +853,13 @@ function withHostname(record, hostname) {
   if (parsed === null) {
     return record;
   }
+  const normalized = SPECIAL_SCHEMES.has(record.protocol)
+    ? parseIPv4(parsed) ?? parsed
+    : parsed;
   return {
     ...record,
-    hostname: parsed,
-    host: record.port === "" ? parsed : `${parsed}:${record.port}`,
+    hostname: normalized,
+    host: record.port === "" ? normalized : `${normalized}:${record.port}`,
   };
 }
 

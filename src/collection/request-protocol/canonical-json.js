@@ -85,6 +85,18 @@ export function canonicalJson(value) {
   return encode(value, [], 0, new Set());
 }
 
+/** 校验一次并取得独立、递归冻结的数据快照；不冻结调用方对象。 */
+export function canonicalSnapshot(value) {
+  const freeze = item => {
+    if (item !== null && typeof item === 'object') {
+      for (const child of Object.values(item)) freeze(child);
+      Object.freeze(item);
+    }
+    return item;
+  };
+  return freeze(JSON.parse(canonicalJson(value)));
+}
+
 /**
  * 计算 canonical JSON 的 sha256 摘要
  * @param {unknown} value

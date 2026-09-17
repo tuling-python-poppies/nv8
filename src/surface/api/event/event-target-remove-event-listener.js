@@ -30,6 +30,8 @@ export const removeEventListener = {
       && listener.capture === options.capture
     ));
     if (index !== -1) {
+      listeners[index].removed = true;
+      listeners[index].signal?.removeEventListener?.('abort', listeners[index].abortHandler);
       listeners.splice(index, 1);
     }
   }

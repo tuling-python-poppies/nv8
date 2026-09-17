@@ -42,6 +42,7 @@ export const addEventListener = {
     return;
   }
   const options = toEventListenerOptions(arguments[2]);
+  if (options.signal?.aborted) return;
   let listeners = state.listeners.get(normalizedType);
   if (listeners === undefined) {
     listeners = [];
@@ -51,13 +52,25 @@ export const addEventListener = {
     listener.callback === callback && listener.capture === options.capture
   ));
   if (!duplicate) {
-    listeners.push({
+    const listener = {
       callback,
       capture: options.capture,
       once: options.once,
       passive: options.passive,
       removed: false,
-    });
+      signal: options.signal,
+      abortHandler: null,
+    };
+    if (options.signal !== null) {
+      listener.abortHandler = () => {
+        listener.removed = true;
+        const current = state.listeners.get(normalizedType);
+        const index = current?.indexOf(listener) ?? -1;
+        if (index >= 0) current.splice(index, 1);
+      };
+      options.signal.addEventListener('abort', listener.abortHandler, { once: true });
+    }
+    listeners.push(listener);
   }
   traceCall(
     "window.EventTarget.prototype.addEventListener",

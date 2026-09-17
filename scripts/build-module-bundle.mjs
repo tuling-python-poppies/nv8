@@ -126,6 +126,13 @@ if (checkOnly) {
   const keys = Object.keys(existing);
   const matching = keys.filter((key) => graph.has(key)).length;
   console.log(`模块包：${keys.length} 个键，其中 ${matching} 个匹配本机路径`);
+  if (keys.length !== graph.size || keys.some(key => {
+    const entry = existing[key];
+    return !graph.has(key) || (typeof entry === 'string' ? entry : entry?.source) !== graph.get(key);
+  })) {
+    console.error('模块包的模块集合或源码已过期，请重新运行 build:bundle。');
+    process.exit(1);
+  }
   if (matching === 0 && keys.length > 0) {
     console.error(
       '这份包是在别的机器上生成的，命中率为 0，只会拖慢启动。'

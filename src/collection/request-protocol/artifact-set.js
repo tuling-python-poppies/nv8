@@ -12,6 +12,7 @@ import { canonicalDigest } from './canonical-json.js';
 import {
   DEFAULT_ARTIFACT_LIMITS,
   createRuntimeArtifact,
+  isRuntimeArtifact,
   isArtifactExpired,
   serializeArtifact,
 } from './artifact.js';
@@ -55,7 +56,7 @@ export class ArtifactSet {
    * @returns {Readonly<object>} 已冻结的工件
    */
   add(input) {
-    const artifact = Object.isFrozen(input) && typeof input.digest === 'string'
+    const artifact = isRuntimeArtifact(input)
       ? input
       : createRuntimeArtifact(input);
 
@@ -115,7 +116,7 @@ export class ArtifactSet {
    * @returns {Readonly<object>}
    */
   replace(input) {
-    const artifact = Object.isFrozen(input) && typeof input.digest === 'string'
+    const artifact = isRuntimeArtifact(input)
       ? input
       : createRuntimeArtifact(input);
     const previous = this.#artifacts.get(artifact.id);
