@@ -19,7 +19,11 @@ export class RequestHandler {
         this.applyProtocolLimits(payload);
         return undefined;
       case Opcode.EVALUATE:
-        return this.withRuntime((runtime) => runtime.evaluate(payload.source));
+        return this.withRuntime((runtime) => (
+          payload.payload === undefined
+            ? runtime.evaluate(payload.source)
+            : runtime.evaluateWithPayload(payload.source, payload.payload)
+        ));
       case Opcode.BATCH_EVALUATE:
         return this.withRuntime((runtime) => runtime.batchEvaluate(payload.sources));
       case Opcode.EVALUATE_MODULE:

@@ -259,6 +259,9 @@ export class RuntimePool {
     this.pendingRealmCreations = 0;
     this.generation = 0;
     this.closed = false;
+    // 命名载荷求值的 FIFO 队列：容器是 Realm 全局上的固定名字，并发进入会
+    // 互相覆盖，因此串行；队列本身吞掉失败，避免一次拒绝卡死后续求值。
+    this.payloadChain = Promise.resolve();
     this.heapSafeRealmLimit = heapSafeRealmLimitFor(
       options.limits.maxHeapBytes,
     );
@@ -1151,6 +1154,28 @@ export class RuntimePool {
   async evaluate(source) {
     const script = getCachedScript(source);
     return this.evaluateCompiled(script);
+  }
+
+  /**
+   * 带命名二进制载荷的求值（B1）。
+   *
+   * 载荷对象直接挂在 contextified global 上：与 Realm 同 isolate，字节不再
+   * 经过 base64 或 JS 逐字符解码。容器在本次求值（含 Promise 结算）结束后
+   * 删除，不跨调用泄漏；并发调用按 `payloadChain` 串行。
+   */
+  async evaluateWithPayload(source, payload) {
+    const task = this.payloadChain.catch(() => {}).then(async () => {
+      const realm = assertLiveRealm(this.realm);
+      const context = realm.context;
+      context.__nv8Payload = Object.freeze({ ...payload });
+      try {
+        return await this.evaluate(source);
+      } finally {
+        delete context.__nv8Payload;
+      }
+    });
+    this.payloadChain = task.catch(() => {});
+    return task;
   }
 
   async batchEvaluate(sources) {

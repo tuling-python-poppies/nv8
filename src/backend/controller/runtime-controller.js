@@ -79,6 +79,10 @@ export class RuntimeController {
     return this.send(Opcode.EVALUATE, { source });
   }
 
+  evaluateWithPayload(source, payload) {
+    return this.send(Opcode.EVALUATE, { source, payload });
+  }
+
   batchEvaluate(sources) {
     return this.send(Opcode.BATCH_EVALUATE, { sources });
   }

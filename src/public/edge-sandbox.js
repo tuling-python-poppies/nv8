@@ -36,6 +36,20 @@ export class EdgeSandbox {
     return toPublicEvaluationResult(await this.controller.evaluate(normalized));
   }
 
+  /**
+   * 带命名二进制载荷求值：`payload` 是 `{ name: Uint8Array }`，
+   * Realm 内在本次求值期间可通过 `globalThis.__nv8Payload` 读取。
+   */
+  async evaluateWithPayload(source, payload = {}) {
+    const normalized = normalizeSource(source, this.options.limits);
+    return toPublicEvaluationResult(
+      await this.controller.evaluateWithPayload(
+        normalized,
+        normalizePayload(payload),
+      ),
+    );
+  }
+
   async batchEvaluate(sources) {
     if (!Array.isArray(sources)) {
       throw new TypeError("sources must be an array of strings");
@@ -124,6 +138,20 @@ export class EdgeSandbox {
   async [Symbol.asyncDispose]() {
     await this.close();
   }
+}
+
+function normalizePayload(payload) {
+  if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new TypeError("payload must be a record of name → Uint8Array");
+  }
+  const normalized = {};
+  for (const [name, bytes] of Object.entries(payload)) {
+    if (!(bytes instanceof Uint8Array)) {
+      throw new TypeError(`payload.${name} must be a Uint8Array`);
+    }
+    normalized[name] = bytes;
+  }
+  return normalized;
 }
 
 function toPublicNetworkRequest(record) {

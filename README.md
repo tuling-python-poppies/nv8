@@ -219,6 +219,7 @@ const sandbox = await EdgeSandbox.create(options);
 | 方法 | 用途 |
 |---|---|
 | `evaluate(source)` | 执行一段脚本，返回结构化结果 |
+| `evaluateWithPayload(source, payload)` | 带命名二进制载荷执行：`payload` 为 `{ name: Uint8Array }`，Realm 内本次求值期间经 `globalThis.__nv8Payload` 读取；字节走协议原生类型，不经 base64 |
 | `batchEvaluate(sources)` | 批量执行，共享同一个 Realm |
 | `evaluateModule(source, url)` | 以 ES 模块方式执行 |
 | `setPage(page)` | 更换页面（URL / HTML / Cookie） |
@@ -958,7 +959,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，1259 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，1242 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 当前 Node / backend 的性能基准
 npm run benchmark:matrix # Node 18/20/22/24 × 两种 backend 性能矩阵
@@ -1100,7 +1101,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（1259 项 / 147 个 .js 文件，自动发现） |
+| `npm test` | 全量测试（1242 项 / 148 个 .js 文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、Realm 创建销毁 |
@@ -1345,7 +1346,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）**1259/1259 全绿**。差异分两类处理：
+四档（18 / 20 / 22 / 24）**1242/1242 全绿**。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。
