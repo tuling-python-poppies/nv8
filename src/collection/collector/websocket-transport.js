@@ -733,7 +733,8 @@ function connectDirect(target, options) {
     const timer = setTimeout(() => {
       fail(new CollectorTimeoutError(options.timeoutMs, { context: { url: target.href } }));
     }, options.timeoutMs);
-    if (typeof timer.unref === 'function') timer.unref();
+    // 不 unref：连接期间 socket 本身会保持事件循环，unref 只会让「必须
+    // 兑现的超时」在极端时序下被进程退出抢先（与 Collector F10 同类）。
     const cleanup = () => {
       clearTimeout(timer);
       socket.removeListener(event, onOpen);

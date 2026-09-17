@@ -37,6 +37,8 @@ function scheduleCleanup() {
     }
     if (idlePool.length > 0) scheduleCleanup();
   }, IDLE_THREAD_TTL_MS);
+  // 空闲线程的 TTL 回收不应维持进程存活：线程池是基础设施缓存，
+  // 进程退出时随进程一起释放（测试可用 drainWorkerThreadPool 显式收口）。
   cleanupTimer.unref?.();
 }
 

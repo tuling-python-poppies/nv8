@@ -81,6 +81,8 @@ export async function createNv8(options = {}) {
     ? null
     : createEvidenceSource(await loadEvidenceBundle(evidence.bundlePath, {
       trustedScriptPolicy: evidence.trustedScriptPolicy,
+      signaturePolicy: evidence.signaturePolicy,
+      trustedKeys: evidence.trustedKeys ?? undefined,
     }));
   const configuredReplay = normalizeCoreReplay(options.replay);
   // 显式 options.replay 永远优先；useNetworkReplay:false 只禁用**证据 Bundle**
@@ -315,7 +317,10 @@ function normalizeCoreReplay(input) {
 
 async function loadCoreReplay(source) {
   const fixture = await source.getNetworkReplayFixture();
-  if (!fixture || !Array.isArray(fixture.requests)) {
+  // 没有 replay fixture 的 Bundle（只含脚本/页面）是合法输入：没有回放
+  // 就返回空表。只有「声明了 fixture 但结构不对」才算格式错误。
+  if (fixture === null || fixture === undefined) return [];
+  if (!Array.isArray(fixture.requests)) {
     throw new TypeError('Evidence replay fixture must contain a requests array');
   }
   const entries = [];
@@ -374,6 +379,13 @@ function normalizeCoreEvidence(input) {
   if (typeof useNetworkReplay !== 'boolean') {
     throw new TypeError('evidence.useNetworkReplay must be a boolean');
   }
+  // 签名选项必须在高层入口就贯通到 loadEvidenceBundle，否则调用方以为
+  // 启用了校验，实际加载器仍按 optional 跳过（F-E1）。
+  const signaturePolicy = value.signaturePolicy ?? 'optional';
+  if (!['optional', 'required', 'disabled'].includes(signaturePolicy)) {
+    throw new TypeError('evidence.signaturePolicy must be optional, required, or disabled');
+  }
+  const trustedKeys = normalizeCoreTrustedKeys(value.trustedKeys);
   return Object.freeze({
     bundlePath: value.bundlePath,
     trustedScriptPolicy,
@@ -383,7 +395,50 @@ function normalizeCoreEvidence(input) {
     // 必须透传给下游（runtime-pool 依据它决定是否装载证据回放）；
     // 与 public 路径 edge-runtime-options 的默认值保持一致
     useNetworkReplay,
+    signaturePolicy,
+    trustedKeys,
   });
+}
+
+/**
+ * 校验可信公钥集合。Core 路径在进程内校验，key 可以是 KeyObject、PEM/DER
+ * 字符串或可迭代的 [keyId, key] 对（与 loadEvidenceBundle 契约一致）。
+ */
+function normalizeCoreTrustedKeys(input) {
+  if (input === undefined || input === null) return null;
+  if (input instanceof Map) {
+    for (const [keyId, key] of input) {
+      assertTrustedKeyEntry(keyId, key);
+    }
+    return input;
+  }
+  if (typeof input === 'object' && typeof input[Symbol.iterator] === 'function') {
+    const pairs = [];
+    for (const entry of input) {
+      if (!Array.isArray(entry) || entry.length < 2) {
+        throw new TypeError('evidence.trustedKeys entries must be [keyId, key] pairs');
+      }
+      assertTrustedKeyEntry(entry[0], entry[1]);
+      pairs.push([entry[0], entry[1]]);
+    }
+    return pairs;
+  }
+  if (typeof input !== 'object' || Array.isArray(input)) {
+    throw new TypeError('evidence.trustedKeys must be a Map, iterable of pairs, or object');
+  }
+  for (const [keyId, key] of Object.entries(input)) {
+    assertTrustedKeyEntry(keyId, key);
+  }
+  return input;
+}
+
+function assertTrustedKeyEntry(keyId, key) {
+  if (typeof keyId !== 'string' || !/^[A-Za-z0-9._:-]{1,128}$/.test(keyId)) {
+    throw new TypeError('evidence.trustedKeys keyId must be 1-128 safe identifier characters');
+  }
+  if (key === null || key === undefined) {
+    throw new TypeError(`evidence.trustedKeys["${keyId}"] must be a public key`);
+  }
 }
 
 /**

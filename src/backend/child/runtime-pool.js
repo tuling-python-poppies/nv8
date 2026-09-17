@@ -430,6 +430,12 @@ export class RuntimePool {
     
     const bundle = await loadEvidenceBundle(evidence.bundlePath, {
       trustedScriptPolicy: evidence.trustedScriptPolicy,
+      // 签名选项由高层入口贯通（F-E1）：公共路径只传得出可序列化的
+      // PEM/DER 字符串，进程内路径传 KeyObject 也不经过这里。
+      signaturePolicy: evidence.signaturePolicy ?? 'optional',
+      ...(evidence.trustedKeys === undefined || evidence.trustedKeys === null
+        ? {}
+        : { trustedKeys: evidence.trustedKeys }),
     });
     // 往后的读取全部走抽象契约，不再直接触碰 Bundle 格式
     this.evidenceSource = createEvidenceSource(bundle);
@@ -1073,26 +1079,33 @@ export class RuntimePool {
     }
     this.assertGenerationActive(generation);
     this.workletStates.add(state);
-    const source = resolveWorkerSource(
-      options.url,
-      this.options.replay,
-      this.objectURLRegistry,
-      options.creatorOrigin,
-    );
     try {
       // Worklet Realm 级模块缓存（F18）：同 owner 的多个 addModule 入口共享
       // 依赖时，依赖模块只求值一次——registerPaint 等注册副作用是全局的，
       // 重复执行会在真实浏览器里抛 NotSupportedError。
+      // 并发 addModule 通过 per-Realm 队列串行，后到者重新检查缓存（F-E3）。
       if (state.modules.has(options.url)) return;
-      await evaluateWorkletModule(
-        state.realm,
-        source,
-        options.url,
-        this.options.replay,
-        this.options.limits.timeoutMs ?? 5000,
-        state.modules,
-      );
-      this.assertGenerationActive(generation);
+      const previous = state.chain ?? Promise.resolve();
+      const task = previous.catch(() => {}).then(async () => {
+        if (state.modules.has(options.url)) return;
+        const source = resolveWorkerSource(
+          options.url,
+          this.options.replay,
+          this.objectURLRegistry,
+          options.creatorOrigin,
+        );
+        await evaluateWorkletModule(
+          state.realm,
+          source,
+          options.url,
+          this.options.replay,
+          this.options.limits.timeoutMs ?? 5000,
+          state.modules,
+        );
+        this.assertGenerationActive(generation);
+      });
+      state.chain = task.catch(() => {});
+      await task;
     } catch (error) {
       if (state.modules.size === 0) {
         if (worklets.get(key) === creating) worklets.delete(key);
@@ -1131,6 +1144,7 @@ export class RuntimePool {
       id: options.id,
       creatorOrigin: options.creatorOrigin,
       modules: new Map(),
+      chain: Promise.resolve(),
     };
   }
 

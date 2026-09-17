@@ -958,7 +958,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，1173 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量，1259 项（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 当前 Node / backend 的性能基准
 npm run benchmark:matrix # Node 18/20/22/24 × 两种 backend 性能矩阵
@@ -1100,7 +1100,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（1173 项 / 132 个 .js 文件，自动发现） |
+| `npm test` | 全量测试（1259 项 / 147 个 .js 文件，自动发现） |
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、Realm 创建销毁 |
@@ -1334,8 +1334,9 @@ Node 直接抛。规范条文也把空格列为 forbidden domain code point，�
 `nv8-unknown://x`、`about://x`）一律 `"null"`——拼出 `protocol//host` 会让两个
 不同的不透明 origin 被判成同源，而同源判断错在放宽方向上比报错危险。
 
-仍未实现：IDN / punycode（非 ASCII 主机原样保留）、IPv6 压缩形式的重新序列化、
-IPv4 点分十进制的数值归一化。三者都无探针覆盖。
+已补齐：非 ASCII 主机的 IDN / punycode（`你好.test` → `xn--6qq79v.test`）、
+IPv4 点分十进制的数值归一化（`127.1` → `127.0.0.1`）、路径字符的 percent-encode
+（`/a b` → `/a%20b`）。IPv6 压缩形式的重新序列化仍未实现（无探针覆盖）。
 
 ### legacy 导航
 
@@ -1344,7 +1345,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）**1173/1173 全绿**。差异分两类处理：
+四档（18 / 20 / 22 / 24）**1259/1259 全绿**。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。

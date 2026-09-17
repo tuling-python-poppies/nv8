@@ -35,6 +35,7 @@ export class ScriptInjector {
     this.pendingScripts = [];
     this.loadedScripts = new Set();
     this.scriptCallbacks = new Map(); // URL -> [callbacks]
+    this.disposed = false;
   }
 
   /** @param {string} message @param {unknown} error */
@@ -133,7 +134,14 @@ export class ScriptInjector {
       error: null,
       element,
     };
-    
+
+    // dispose 之后不再排队也不再执行：注入器与 Realm 生命周期绑定，
+    // 销毁后已排程的任务不能把脚本重新注入一个已拆除的 Realm。
+    if (this.disposed) {
+      script.executed = true;
+      return script;
+    }
+
     this.pendingScripts.push(script);
     
     // 异步加载（模拟真实浏览器的异步行为）
@@ -170,6 +178,7 @@ export class ScriptInjector {
     // 如果脚本已经加载，异步调用回调
     if (this.loadedScripts.has(url)) {
       setTimeout(() => {
+        if (this.disposed) return;
         try {
           callback();
         } catch (error) {
@@ -196,7 +205,7 @@ export class ScriptInjector {
    * 执行脚本
    */
   executeScript(script) {
-    if (script.executed) {
+    if (this.disposed || script.executed) {
       return;
     }
     
@@ -248,6 +257,7 @@ export class ScriptInjector {
     // 所有回调都在下一轮任务中执行
     for (const callback of callbacks) {
       setTimeout(() => {
+        if (this.disposed) return;
         try {
           callback();
         } catch (error) {
@@ -263,7 +273,10 @@ export class ScriptInjector {
   triggerErrorCallbacks(url, error) {
     const callbacks = this.scriptErrorCallbacks?.get(url) || [];
     for (const callback of callbacks) {
-      setTimeout(() => callback(error), 0);
+      setTimeout(() => {
+        if (this.disposed) return;
+        callback(error);
+      }, 0);
     }
     this.scriptErrorCallbacks?.delete(url);
   }
@@ -300,7 +313,7 @@ export class ScriptInjector {
   async waitForAllScripts() {
     return new Promise((resolve) => {
       const check = () => {
-        if (this.getPendingCount() === 0) {
+        if (this.disposed || this.getPendingCount() === 0) {
           resolve();
         } else {
           setTimeout(check, 10);
@@ -314,6 +327,7 @@ export class ScriptInjector {
    * 清理
    */
   dispose() {
+    this.disposed = true;
     this.pendingScripts = [];
     this.loadedScripts.clear();
     this.scriptCallbacks.clear();

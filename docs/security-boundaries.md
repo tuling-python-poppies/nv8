@@ -74,9 +74,16 @@ Collector 是唯一真实网络出口。发送前必须完成：绝对 URL、方
 
 - `tests/gate5-end-to-end-test.js`：目标脚本无真实网络、Protocol 无 IO、Collector allowlist 阻止外发；
 - `tests/script-policy-test.js` 与 `tests/script-policy-integration-test.js`：脚本类别、来源、module 依赖和拒绝事件；
-- `tests/evidence-contract-test.js`、`tests/evidence-signature-test.js`：Evidence 契约、签名和信任策略；
+- `tests/evidence-contract-test.js`、`tests/evidence-signature-test.js`、`tests/whole-audit-evidence-options-test.js`：Evidence 契约、签名信任策略与高层入口贯通；
 - `tests/protocol-artifact-test.js`：adapter 上下文不暴露 transport/Collector；
 - `tests/collector-test.js` 与 `tests/collector-websocket-test.js`：唯一出口、代理/凭据脱敏、重试和 WebSocket 生命周期；
+- `tests/whole-audit-host-test.js`、`tests/whole-audit-surface-test.js`、`tests/whole-audit-closeout-test.js`、`tests/whole-audit-collector-test.js`：生命周期、双后端 surface、Worklet/模块图与 Collector 会话边界；
 - `tests/test-hygiene-test.js`：固定等待、越界依赖和敏感实现耦合的静态检查。
+
+明确不承诺的范围（避免把测试通过误读为形式化安全证明）：
+
+- 不对全部 Web API 做 WPT 级一致性验证；行为基准是仓库内 fixtures 针对真实 Edge 的探针与对照测试；
+- `vm.Context` 不是抵抗任意恶意脚本或 V8/Node 逃逸的形式化边界，生产须使用进程隔离与最小权限；
+- 公共后端（child-process / worker-thread）的证据签名只接受可序列化的 PEM/DER 字符串；KeyObject 等宿主对象仅限进程内 `createNv8` 入口。
 
 新增能力必须同时说明：拥有该能力的组件、输入是否可信、是否可产生 IO、错误如何诊断，以及 reset/dispose 后是否仍有句柄或待处理工作。

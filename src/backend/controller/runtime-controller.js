@@ -40,6 +40,9 @@ export class RuntimeController {
         });
     }
     await this.starting;
+    // close() 可能在 start 进行中发生；启动完成后再确认一次生命周期，
+    // 避免调用方拿到一个已终止连接的句柄（F-E2）。
+    this.assertOpen();
   }
 
   initPayload() {
@@ -60,7 +63,15 @@ export class RuntimeController {
 
   async send(opcode, payload, timeoutMs = this.options.limits.timeoutMs) {
     this.assertOpen();
-    await this.start();
+    try {
+      await this.start();
+    } catch (error) {
+      // 关闭与启动竞争时，优先报告「已关闭」，而不是底层 terminate 的
+      // 传输错误——调用方需要能区分生命周期状态与真实传输故障。
+      this.assertOpen();
+      throw error;
+    }
+    this.assertOpen();
     return this.connection.request(opcode, payload, timeoutMs);
   }
 

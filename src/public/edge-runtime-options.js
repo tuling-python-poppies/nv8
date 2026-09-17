@@ -563,6 +563,17 @@ function normalizeEvidence(evidence) {
       `evidence.trustedScriptPolicy must be one of ${ACCEPTED_TRUST_POLICIES.join(", ")}`,
     );
   }
+  const signaturePolicy = stringOption(
+    input.signaturePolicy,
+    "optional",
+    "evidence.signaturePolicy",
+    32,
+  );
+  if (!["optional", "required", "disabled"].includes(signaturePolicy)) {
+    throw new RangeError(
+      "evidence.signaturePolicy must be optional, required, or disabled",
+    );
+  }
   return Object.freeze({
     bundlePath,
     trustedScriptPolicy,
@@ -583,7 +594,45 @@ function normalizeEvidence(evidence) {
       true,
       "evidence.useNetworkReplay",
     ),
+    signaturePolicy,
+    trustedKeys: normalizeTrustedKeys(input.trustedKeys),
   });
+}
+
+/**
+ * 公共路径的 trustedKeys 必须能跨 IPC/线程边界传输，因此只接受
+ * `{ keyId: pemOrDerString }`；KeyObject 实例请使用进程内 createNv8 入口。
+ */
+function normalizeTrustedKeys(input) {
+  if (input === undefined || input === null) return null;
+  if (typeof input !== "object" || Array.isArray(input)) {
+    throw new TypeError("evidence.trustedKeys must be an object of keyId -> PEM string");
+  }
+  const entries = Object.entries(input);
+  if (entries.length === 0) {
+    throw new TypeError("evidence.trustedKeys must not be empty");
+  }
+  if (entries.length > 16) {
+    throw new RangeError("evidence.trustedKeys supports at most 16 keys");
+  }
+  const output = {};
+  for (const [keyId, key] of entries) {
+    if (!/^[A-Za-z0-9._:-]{1,128}$/.test(keyId)) {
+      throw new TypeError(
+        "evidence.trustedKeys keyId must be 1-128 safe identifier characters",
+      );
+    }
+    if (typeof key !== "string" || key.length === 0) {
+      throw new TypeError(
+        `evidence.trustedKeys["${keyId}"] must be a non-empty PEM/DER string`,
+      );
+    }
+    if (Buffer.byteLength(key, "utf8") > 16 * 1024) {
+      throw new RangeError(`evidence.trustedKeys["${keyId}"] exceeds its byte limit`);
+    }
+    output[keyId] = key;
+  }
+  return Object.freeze(output);
 }
 
 function normalizePage(page, limits) {

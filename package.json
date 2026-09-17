@@ -19,6 +19,7 @@
     "check:bundle": "node scripts/build-module-bundle.mjs --check",
     "check:generated": "node scripts/check-generated-artifacts.mjs",
     "check:surface-order": "node scripts/build-window-surface-order.mjs",
+    "ci": "npm test && npm run check:surface-order && npm run check:generated && npm run build:bundle && npm run check:bundle && npm run audit:state",
     "fingerprint:behavior": "node scripts/collect-edge-behavior.mjs --out fixtures/fingerprint/edge-behavior.json",
     "fingerprint:async-behavior": "node scripts/collect-edge-async-behavior.mjs --out fixtures/fingerprint/edge-async-behavior.json",
     "fingerprint:collect": "node scripts/collect-edge-fingerprint.mjs --out fixtures/fingerprint/edge-real.json",

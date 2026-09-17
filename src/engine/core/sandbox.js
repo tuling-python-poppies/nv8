@@ -2187,48 +2187,83 @@ export function createWorkerRealmFactories({
       workletRealmsByOwner.set(options.owner, realmsForOwner);
     }
     const key = `${options.kind}\0${options.id}`;
-    let worklet = realmsForOwner.get(key);
-    if (worklet === undefined) {
+    let entry = realmsForOwner.get(key);
+    // 已销毁的 Realm 不能被复用（reset/destroy 会清空 workletRealms，
+    // 但 WeakMap 里可能还留着指向已销毁句柄的 entry）。
+    if (entry !== undefined && entry.realm?.destroyed) {
+      realmsForOwner.delete(key);
+      entry = undefined;
+    }
+    if (entry === undefined) {
       const generation = lifecycleState.generation;
       const releaseRealm = reserveRealmCapacity();
-      try {
-        const workletRealm = await createWorkletRealm({
-          label: `sandbox-${sandboxId}-${options.kind}-worklet-${options.id}`,
-          kind: options.kind,
-          origin: options.creatorOrigin,
-          traceEnabled: trace,
-          maxTraceEntries: 100_000,
-          objectURLRegistry: null,
-        });
-        if (lifecycleState.closed || generation !== lifecycleState.generation) {
-          destroyWorkletRealm(workletRealm);
-          throw createRealmLifecycleError();
+      const createdEntry = {
+        realm: null,
+        modules: new Map(),
+        chain: Promise.resolve(),
+        creating: null,
+      };
+      // 同 key 并发创建只保留一个 Realm：创建 promise 先入表，后来者等待
+      // 同一个 promise，而不是各自建一个后互相覆盖（泄漏前者）。
+      createdEntry.creating = (async () => {
+        try {
+          const workletRealm = await createWorkletRealm({
+            label: `sandbox-${sandboxId}-${options.kind}-worklet-${options.id}`,
+            kind: options.kind,
+            origin: options.creatorOrigin,
+            traceEnabled: trace,
+            maxTraceEntries: 100_000,
+            objectURLRegistry: null,
+          });
+          if (lifecycleState.closed || generation !== lifecycleState.generation) {
+            destroyWorkletRealm(workletRealm);
+            throw createRealmLifecycleError();
+          }
+          createdEntry.realm = workletRealm;
+          workletRealms.add(workletRealm);
+          return workletRealm;
+        } finally {
+          releaseRealm();
         }
-        worklet = { realm: workletRealm, modules: new Map() };
-        realmsForOwner.set(key, worklet);
-        workletRealms.add(workletRealm);
-      } finally {
-        releaseRealm();
-      }
+      })().catch(error => {
+        if (realmsForOwner.get(key) === createdEntry) realmsForOwner.delete(key);
+        throw error;
+      });
+      realmsForOwner.set(key, createdEntry);
+      entry = createdEntry;
     }
+    const workletRealm = entry.realm ?? await entry.creating;
+
     // Worklet Realm 级模块缓存：同一 owner 的多个 addModule 入口共享依赖时，
     // 依赖模块只能求值一次（registerPaint 等注册副作用是全局的，重复执行
-    // 会在真实浏览器里直接抛 NotSupportedError）。
-    if (worklet.modules.has(options.url)) return;
-    try {
+    // 会在真实浏览器里直接抛 NotSupportedError）。并发 addModule 通过 per-Realm
+    // 队列串行：后到者在前者完成后重新检查缓存，共享依赖只求值一次（F-E3）。
+    if (entry.modules.has(options.url)) return;
+    const previous = entry.chain ?? Promise.resolve();
+    const task = previous.catch(() => {}).then(async () => {
+      if (entry.modules.has(options.url)) return;
       const source = resolveCoreWorkerSource(options.url, workerReplayState);
       await evaluateCoreWorkletModule(
-        worklet.realm,
+        workletRealm,
         source,
         options.url,
         workerReplayState,
         limits.timeoutMs ?? 5000,
-        worklet.modules,
+        entry.modules,
       );
+    });
+    entry.chain = task.catch(() => {});
+    try {
+      await task;
     } catch (error) {
-      realmsForOwner.delete(key);
-      workletRealms.delete(worklet.realm);
-      destroyWorkletRealm(worklet.realm);
+      // 评估失败且该 worklet 尚无任何成功模块时，销毁整个 worklet；
+      // 已有成功模块时保留 Realm（浏览器里单次 addModule 失败不会撤销
+      // 之前注册的模块），失败 URL 不进缓存、可重试。
+      if (entry.modules.size === 0) {
+        if (realmsForOwner.get(key) === entry) realmsForOwner.delete(key);
+        workletRealms.delete(workletRealm);
+        destroyWorkletRealm(workletRealm);
+      }
       throw error;
     }
   }

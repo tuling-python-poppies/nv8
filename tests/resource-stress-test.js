@@ -17,13 +17,18 @@ const replay = [
   },
 ];
 
+// 资源累积断言与单次求值速度无关；timeout 只是防挂死的安全网。
+// 默认并发（npm test）下重负载会让单次 reset 超过 3s，卡太紧只会制造
+// 被学会忽略的假警报（README 的 CI 波动原则）。
+const STRESS_LIMITS = Object.freeze({ timeoutMs: 30_000, maxRealms: 32 });
+
 for (const backend of ['child-process', 'worker-thread']) {
   test(`repeated reset does not accumulate Realm resources on ${backend}`, async () => {
     const sandbox = await EdgeSandbox.create({
       execution: { backend },
       page: { url: 'https://example.test/' },
       replay,
-      limits: { timeoutMs: 3_000, maxRealms: 32 },
+      limits: STRESS_LIMITS,
     });
     try {
       for (let index = 0; index < 4; index += 1) {
@@ -59,7 +64,7 @@ for (const backend of ['child-process', 'worker-thread']) {
       execution: { backend },
       page: { url: 'https://example.test/' },
       replay,
-      limits: { timeoutMs: 3_000, maxRealms: 32 },
+      limits: STRESS_LIMITS,
     });
     try {
       const evaluation = sandbox.evaluate(`(() => {

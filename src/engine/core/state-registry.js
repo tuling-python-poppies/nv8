@@ -13,14 +13,15 @@ export function createStateRegistry(options = {}) {
   const limits = normalizeLimits(options);
   // 状态存储结构：
   // app -> { key -> value }              （单例，插件 SDK 的 'app' 作用域）
-  // sandbox -> { key -> value }
+  // sandbox -> { sandboxId -> { key -> value } }
   // realm -> { realmId -> { key -> value } }
   // plugin -> { pluginInstanceId -> { key -> value } }
   //
-  // app/plugin 作用域与 plugin-sdk 的 createStateAccessor 对接，避免插件
-  // context.state.get 抛 `Invalid scope`（IKF39V(b)）。
+  // sandbox 必须按 sandboxId 分桶：createApp 可以让多个 Sandbox 共用一个
+  // registry，销毁其中一个时清空整张单例表会串扰其他 Sandbox 的状态（F-E4）。
+  // 四个作用域统一走 contextStore，配额与原子性语义保持一致。
   const appState = new Map();
-  const sandboxState = new Map();
+  const sandboxStates = new Map();
   const realmStates = new Map();
   const pluginStates = new Map();
 
@@ -60,10 +61,33 @@ export function createStateRegistry(options = {}) {
   }
 
   function totalKeyCount() {
-    let count = sandboxState.size + appState.size;
+    let count = appState.size;
+    for (const store of sandboxStates.values()) count += store.size;
     for (const store of realmStates.values()) count += store.size;
     for (const store of pluginStates.values()) count += store.size;
     return count;
+  }
+
+  /** 按 scope/contextId 取桶（只读，不创建）。 */
+  function storeFor(scope, contextId) {
+    if (scope === 'app') return appState;
+    if (scope === 'sandbox') return sandboxStates.get(contextId);
+    if (scope === 'realm') return realmStates.get(contextId);
+    if (scope === 'plugin') return pluginStates.get(contextId);
+    throw new Error(`Invalid scope: ${scope}`);
+  }
+
+  /** 带原子配额检查地写入一个 context 桶；失败时不留下空桶。 */
+  function setInContext(map, contextId, scope, key, value) {
+    const existed = map.has(contextId);
+    const store = contextStore(map, contextId, scope, true);
+    try {
+      assertKeyCapacity(store, key, scope);
+      store.set(key, value);
+    } catch (error) {
+      if (!existed && store.size === 0) map.delete(contextId);
+      throw error;
+    }
   }
 
   function normalizeLimits(value) {
@@ -92,7 +116,8 @@ export function createStateRegistry(options = {}) {
      */
     get(key, scope = 'sandbox', realmId = null) {
       if (scope === 'sandbox') {
-        return sandboxState.get(key);
+        const sandboxStore = contextStore(sandboxStates, realmId, 'sandbox');
+        return sandboxStore?.get(key);
       }
       
       if (scope === 'realm') {
@@ -122,23 +147,12 @@ export function createStateRegistry(options = {}) {
      */
     set(key, value, scope = 'sandbox', realmId = null) {
       if (scope === 'sandbox') {
-        assertKeyCapacity(sandboxState, key, scope);
-        sandboxState.set(key, value);
+        setInContext(sandboxStates, realmId, scope, key, value);
         return;
       }
       
       if (scope === 'realm') {
-        const existed = realmStates.has(realmId);
-        const realmState = contextStore(realmStates, realmId, scope, true);
-        try {
-          assertKeyCapacity(realmState, key, scope);
-          realmState.set(key, value);
-        } catch (error) {
-          // 容量拒绝必须是原子的：不能留下一个空的 realm bucket，
-          // 否则反复尝试会耗尽 context 配额。
-          if (!existed && realmState.size === 0) realmStates.delete(realmId);
-          throw error;
-        }
+        setInContext(realmStates, realmId, scope, key, value);
         return;
       }
 
@@ -149,15 +163,7 @@ export function createStateRegistry(options = {}) {
       }
 
       if (scope === 'plugin') {
-        const existed = pluginStates.has(realmId);
-        const pluginState = contextStore(pluginStates, realmId, scope, true);
-        try {
-          assertKeyCapacity(pluginState, key, scope);
-          pluginState.set(key, value);
-        } catch (error) {
-          if (!existed && pluginState.size === 0) pluginStates.delete(realmId);
-          throw error;
-        }
+        setInContext(pluginStates, realmId, scope, key, value);
         return;
       }
       
@@ -174,7 +180,8 @@ export function createStateRegistry(options = {}) {
      */
     has(key, scope = 'sandbox', realmId = null) {
       if (scope === 'sandbox') {
-        return sandboxState.has(key);
+        const sandboxStore = contextStore(sandboxStates, realmId, 'sandbox');
+        return sandboxStore?.has(key) ?? false;
       }
       
       if (scope === 'realm') {
@@ -204,7 +211,11 @@ export function createStateRegistry(options = {}) {
      */
     delete(key, scope = 'sandbox', realmId = null) {
       if (scope === 'sandbox') {
-        return sandboxState.delete(key);
+        const sandboxStore = contextStore(sandboxStates, realmId, 'sandbox');
+        if (sandboxStore === undefined) return false;
+        const deleted = sandboxStore.delete(key);
+        if (sandboxStore.size === 0) sandboxStates.delete(realmId);
+        return deleted;
       }
       
       if (scope === 'realm') {
@@ -238,7 +249,15 @@ export function createStateRegistry(options = {}) {
      */
     clear(scope = 'sandbox', realmId = null) {
       if (scope === 'sandbox') {
-        sandboxState.clear();
+        if (realmId === null || realmId === undefined) {
+          sandboxStates.clear();
+        } else {
+          const sandboxStore = contextStore(sandboxStates, realmId, 'sandbox');
+          if (sandboxStore !== undefined) {
+            sandboxStore.clear();
+            sandboxStates.delete(realmId);
+          }
+        }
         return;
       }
       
@@ -300,11 +319,23 @@ export function createStateRegistry(options = {}) {
         appState.clear();
         return true;
       } else if (scope === 'sandbox') {
-        sandboxState.clear();
-        return true;
+        return sandboxStates.delete(contextId);
       } else {
         throw new Error(`Invalid context scope: ${scope}`);
       }
+    },
+
+    /** 列出某个作用域桶内的键（调试/兼容 SDK StateAccessor）。 */
+    keys(scope, contextId = null) {
+      const store = storeFor(scope, contextId);
+      return store ? Array.from(store.keys()) : [];
+    },
+
+    /** 返回作用域桶的浅快照（调试/兼容 SDK StateAccessor）。 */
+    snapshot(scope, contextId = null) {
+      const store = storeFor(scope, contextId);
+      if (!store) return {};
+      return Object.fromEntries(store);
     },
     
     /**
@@ -317,8 +348,10 @@ export function createStateRegistry(options = {}) {
     stats() {
       let realmKeyCount = 0;
       for (const store of realmStates.values()) realmKeyCount += store.size;
+      let sandboxKeyCount = 0;
+      for (const store of sandboxStates.values()) sandboxKeyCount += store.size;
       return Object.freeze({
-        sandboxKeys: sandboxState.size,
+        sandboxKeys: sandboxKeyCount,
         appKeys: appState.size,
         realmContexts: realmStates.size,
         pluginContexts: pluginStates.size,
@@ -329,7 +362,12 @@ export function createStateRegistry(options = {}) {
 
     inspect() {
       return {
-        sandbox: Object.fromEntries(sandboxState),
+        sandboxes: Object.fromEntries(
+          Array.from(sandboxStates.entries()).map(([sandboxId, state]) => [
+            sandboxId,
+            Object.fromEntries(state),
+          ])
+        ),
         app: Object.fromEntries(appState),
         realms: Object.fromEntries(
           Array.from(realmStates.entries()).map(([realmId, state]) => [

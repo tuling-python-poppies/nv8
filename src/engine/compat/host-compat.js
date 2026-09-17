@@ -191,6 +191,9 @@ export function abortSignalTimeout(milliseconds) {
   const timer = setTimeout(() => {
     controller.abort(new DOMException('The operation was aborted due to timeout', 'TimeoutError'));
   }, milliseconds);
+  // 保持 unref：Node 原生 AbortSignal.timeout 的计时器同样不维持事件循环
+  // （实测 `node -e "AbortSignal.timeout(5000)"` 立即退出），兼容实现必须
+  // 与原生行为一致；abort 只在进程仍存活时才有意义。
   if (typeof timer.unref === 'function') timer.unref();
   return controller.signal;
 }
