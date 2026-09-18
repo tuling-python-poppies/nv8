@@ -261,11 +261,3 @@ export class NetworkPolicy {
     };
   }
 }
-
-/**
- * 默认离线策略：拒绝一切真实网络访问
- * @returns {NetworkPolicy}
- */
-export function createOfflinePolicy() {
-  return new NetworkPolicy({ enabled: false });
-}

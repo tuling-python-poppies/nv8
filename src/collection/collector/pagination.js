@@ -326,13 +326,3 @@ function assertNonNegativeInteger(name, value) {
     );
   }
 }
-
-/**
- * 便捷构造。
- *
- * @param {object} config
- * @returns {PaginationScheduler}
- */
-export function createPaginationScheduler(config) {
-  return new PaginationScheduler(config);
-}

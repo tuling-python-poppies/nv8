@@ -3,7 +3,7 @@ import {
   createMemoryResultSink,
   createStubTransport,
   PaginationStop,
-  createPaginationScheduler,
+  PaginationScheduler,
 } from '../src/collection/collector/index.js';
 
 const pages = [
@@ -33,7 +33,7 @@ const sink = createMemoryResultSink({
   batchSize: 2,
   keyOf: item => item.id,
 });
-const scheduler = createPaginationScheduler({
+const scheduler = new PaginationScheduler({
   collector,
   nextRequest: ({ index, previous }) => {
     if (index >= pages.length) return null;

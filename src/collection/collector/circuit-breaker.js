@@ -357,14 +357,3 @@ function originOf(url) {
     return `${url}`;
   }
 }
-
-/**
- * 创建一个永不熔断的熔断器。
- *
- * 用于「明确不要熔断」的场景，比显式传一大堆阈值清楚。
- *
- * @returns {CircuitBreaker}
- */
-export function createDisabledCircuitBreaker() {
-  return new CircuitBreaker({ failureThreshold: Number.MAX_SAFE_INTEGER });
-}

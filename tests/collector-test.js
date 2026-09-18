@@ -17,7 +17,6 @@ import {
   RetryPolicy,
   createCollector,
   createCollectorResponse,
-  createOfflinePolicy,
   createStubTransport,
   getResponseHeader,
   parseSetCookie,
@@ -62,8 +61,8 @@ test('network is disabled by default', () => {
   assert.equal(result.code, CollectorErrorCode.NETWORK_DISABLED);
 });
 
-test('createOfflinePolicy denies everything', () => {
-  const policy = createOfflinePolicy();
+test('offline policy denies everything', () => {
+  const policy = new NetworkPolicy({ enabled: false });
   assert.equal(policy.enabled, false);
   assert.throws(
     () => policy.assert(`${ORIGIN}/api`, 'GET'),

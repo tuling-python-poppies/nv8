@@ -15,7 +15,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { RateLimiter, createUnlimitedRateLimiter } from '../src/collection/collector/rate-limiter.js';
+import { RateLimiter } from '../src/collection/collector/rate-limiter.js';
 import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
 const URL_A = 'https://a.test/path';
@@ -100,7 +100,7 @@ test('rejects invalid numeric configuration', () => {
 });
 
 test('an unlimited limiter admits everything immediately', async () => {
-  const limiter = createUnlimitedRateLimiter();
+  const limiter = new RateLimiter();
   const releases = [];
   for (let index = 0; index < 50; index += 1) {
     releases.push(await limiter.acquire(URL_A));

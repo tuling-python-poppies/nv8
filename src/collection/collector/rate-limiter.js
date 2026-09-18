@@ -343,14 +343,3 @@ function originOf(url) {
     return `${url}`;
   }
 }
-
-/**
- * 创建一个不做任何限制的限流器。
- *
- * 比显式传一堆 0 清楚。
- *
- * @returns {RateLimiter}
- */
-export function createUnlimitedRateLimiter() {
-  return new RateLimiter();
-}

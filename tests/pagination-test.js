@@ -25,7 +25,6 @@ import assert from 'node:assert/strict';
 import {
   PaginationScheduler,
   PaginationStop,
-  createPaginationScheduler,
 } from '../src/collection/collector/pagination.js';
 import { CollectorErrorCode } from '../src/collection/collector/errors.js';
 
@@ -388,14 +387,4 @@ test('extractItems defaults to no items so request sequencing works alone', asyn
   // 只关心请求序列（比如预热 cookie）时不必提供 extractItems
   assert.deepEqual([...result.items], []);
   assert.equal(result.pages.length, 1);
-});
-
-test('createPaginationScheduler builds the same thing', () => {
-  const scheduler = createPaginationScheduler({
-    collector: fakeCollector({}),
-    nextRequest: () => null,
-    limits: { maxPages: 7 },
-  });
-  assert.ok(scheduler instanceof PaginationScheduler);
-  assert.equal(scheduler.limits.maxPages, 7);
 });

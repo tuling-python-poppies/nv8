@@ -20,7 +20,6 @@ import assert from 'node:assert/strict';
 import {
   CircuitBreaker,
   CircuitState,
-  createDisabledCircuitBreaker,
 } from '../src/collection/collector/circuit-breaker.js';
 import {
   CollectorError,
@@ -377,7 +376,7 @@ test('an unparseable url still gets its own circuit', () => {
 });
 
 test('the disabled breaker never opens', () => {
-  const breaker = createDisabledCircuitBreaker();
+  const breaker = new CircuitBreaker({ failureThreshold: Number.MAX_SAFE_INTEGER });
   for (let index = 0; index < 1_000; index += 1) {
     breaker.record(URL_A, { error: timeoutError() });
   }

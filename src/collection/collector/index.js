@@ -10,7 +10,7 @@
 
 export { Collector, createCollector } from './collector.js';
 
-export { NetworkPolicy, createOfflinePolicy } from './network-policy.js';
+export { NetworkPolicy } from './network-policy.js';
 
 export {
   CredentialStore,
@@ -23,20 +23,18 @@ export {
   registerSensitiveHeader,
 } from './credentials.js';
 
-export { RetryPolicy, createNoRetryPolicy, readRetryAfter } from './retry-policy.js';
+export { RetryPolicy, readRetryAfter } from './retry-policy.js';
 
 export {
   CircuitBreaker,
   CircuitState,
-  createDisabledCircuitBreaker,
 } from './circuit-breaker.js';
 
-export { RateLimiter, createUnlimitedRateLimiter } from './rate-limiter.js';
+export { RateLimiter } from './rate-limiter.js';
 
 export {
   PaginationScheduler,
   PaginationStop,
-  createPaginationScheduler,
 } from './pagination.js';
 
 export { createProxyTransport } from './proxy-transport.js';

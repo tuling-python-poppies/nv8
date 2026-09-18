@@ -174,8 +174,3 @@ export function readRetryAfter(response) {
   if (Number.isNaN(timestamp)) return null;
   return Math.max(0, timestamp - Date.now());
 }
-
-/** 不重试的策略 */
-export function createNoRetryPolicy() {
-  return new RetryPolicy({ maxAttempts: 1 });
-}
