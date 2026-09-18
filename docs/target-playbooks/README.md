@@ -1,7 +1,7 @@
 # 目标适配协议与 playbook
 
 > 面向「把某个站点的签名/风控脚本接进 nv8 常驻签名服务」的适配协议与逐目标记录。
-> 协议来自两个真实目标（荔枝网 gdtv、抖音 BDMS）的实际差异，不是预想的抽象。
+> 协议来自真实目标的共同需求；通用的是运行协议和生命周期，不是任意站点的零适配兼容。
 
 ## 1. 适配协议
 
@@ -25,18 +25,20 @@
    basename 读取（wasm/文本/JSON 都是原始字节，自行解释）。
 4. `null` 参数语义用 `mapNullToUndefined` 声明（gdtv 的默认参数依赖 undefined）。
 
-## 2. 已暴露的边界（两个目标实测）
+## 2. 已暴露的边界
 
 - **返回值形状不预假设**：gdtv 返回对象（headers），抖音返回字符串（a_bogus）。
   服务端统一 `{kind, result}`，由调用方解释——不要再用 `Object.fromEntries`
   之类的目标专属包装。
-- **仅同步入口**：`sign` 立即序列化返回值；返回 Promise 的目标会拿到 `{}`。
-  异步目标需要队列 + await 语义，当前**未实现**（第三个目标若出现再加）。
-- **请求 FIFO**：`handleLine` 是 fire-and-forget。同步入口在 Realm 内是原子的，
-  无影响；异步入口并发进入同一 Realm 需要串行队列（未实现）。
-- **一个目标一个服务进程**：不同目标不共享 Sandbox（Cookie/Storage/时间环境隔离）。
+- **同步和异步入口**：`sign` / `init` 会等待 Promise；所有请求按 FIFO 串行进入同一 Realm。
+- **一个目标一个服务进程**：不同 session 共享目标脚本和资源定义，但不共享 Sandbox 内的
+  Cookie、Storage、全局变量和有状态 SDK。
 - **环境采集型签名**：如抖音 BDMS，a_bogus 内嵌 Realm 环境采集值。
   Realm 指纹（UA/平台/屏幕）必须与发包层声明一致，否则线上可能被判定矛盾。
+- **脚本加载边界**：服务入口接收已打包脚本；`require` 只为声明资源提供
+  `readFileSync`，不会自动解析任意 npm/CommonJS 模块。
+- **网络边界**：服务本身不发送真实业务请求。目标 fetch/XHR 受 nv8 profile 和网络策略约束，
+  外部 client 负责真实请求、headers、代理和线上验收。
 
 ## 3. Playbook 索引
 

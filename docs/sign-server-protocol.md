@@ -3,6 +3,29 @@
 `examples/sign-server.mjs` 是一个通用的 stdio JSON-lines 运行器。它只负责把目标脚本
 放进 nv8 Realm，并串行调度目标入口；真实网络请求仍由调用方完成。
 
+这里的“通用”指**服务协议和运行生命周期不绑定某个站点**，不是“任意网站脚本无需适配
+即可运行”。每个新目标仍需要一份能在 nv8 Realm 中加载的脚本、明确的入口和资源清单；
+如果目标依赖特殊浏览器表面、动态模块、在线 bootstrap 或站点专属状态，仍需要目标适配。
+
+### 适配边界
+
+- 目标脚本必须在启动时暴露一个全局函数，默认名为 `__sign`，也可以用
+  `--sign-entry` 或请求字段 `signEntry` 改名。
+- `--script` 是一个已打包的脚本文件。服务只提供受限的 `require("fs").readFileSync`，
+  用于读取已声明资源；不会替目标自动解析任意 npm/CommonJS 依赖。需要模块图时先打包，
+  或直接使用 nv8 的 `evaluateModule` API。
+- `--asset` 只注入脚本明确声明的本地资源。WASM、JSON 和二进制不会自动从网络下载，
+  也不会猜测第一个资源。
+- 目标脚本可以使用 nv8 已安装的浏览器表面，包括 DOM、存储、Crypto、WASM 和异步 API；
+  但具体 surface/profile、指纹参数和网络回放策略仍由 Sandbox 配置决定。
+- 服务进程本身不发送业务请求，也不代替调用方维护真实 HTTP headers、代理、验证码或
+  站点登录流程。目标的 `fetch` / XHR 是否可用，取决于 nv8 的网络策略和离线回放配置。
+- 目标若把签名逻辑绑定到真实浏览器的版本、字体、屏幕、时间或会话状态，仍必须把这些
+  条件配置到 Sandbox，并让外部发包层保持一致；协议通用性不会消除这些业务约束。
+
+因此，新增目标的最小交付物不是只换一个 `--script` 路径，而是：脚本入口、资源清单、
+必要的 Realm 配置、session 初始化方式，以及一组目标自己的签名样本。
+
 ## 启动
 
 ```bash
@@ -75,3 +98,14 @@ node examples/sign-server.mjs \
 目标入口通过启动参数配置：`--sign-entry`、`--init-entry`、`--reset-entry`、
 `--health-entry`。也可以在请求中覆盖对应的 `signEntry`、`initEntry`、`resetEntry` 或
 `healthEntry`。
+
+## 新目标验收清单
+
+接入一个新目标时，至少验证以下项目：
+
+1. 入口名不是服务的隐含约定，使用目标自己的函数名仍可调用。
+2. 同步值、Promise、`null`、`undefined` 和目标实际返回结构都能稳定传输。
+3. 每个外部文件都通过命名资源读取，资源内容和类型不依赖加载顺序。
+4. 两个 session 的 cookie、storage、全局计数器和 SDK 状态互不污染。
+5. `reset` / `reload` 后按目标预期保留或清除状态。
+6. 连续签名样本与原实现一致；最终 HTTP 请求由外部 client 完成并单独验收。
