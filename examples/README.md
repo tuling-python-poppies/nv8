@@ -16,7 +16,11 @@ node --experimental-vm-modules examples/pagination.mjs
 | `basic-eval.mjs` | 创建最小 Profile，执行一次 Realm 求值 | 无真实网络 |
 | `protocol-collector.mjs` | Artifact → Protocol → Collector 完整链路 | 使用 stub transport，不出网 |
 | `pagination.mjs` | 有界 cursor 分页、结果落地与去重 | 使用 stub transport，不出网 |
+| `sign-server.mjs` | 通用常驻签名服务（stdio JSON-lines） | Realm 内离线运行目标脚本 |
 
 示例刻意不把真实凭据写入源码，也不默认开启真实网络。生产环境必须显式配置
 Collector 的 `NetworkPolicy` allowlist，并通过凭据管理器注入 origin-bound 凭据。
 页面脚本只能在 Realm 内运行，不能直接访问 Collector、文件系统或网络出口。
+
+`sign-server.mjs` 的协议、资源声明和 session 生命周期见
+[`docs/sign-server-protocol.md`](../docs/sign-server-protocol.md)。
