@@ -1394,6 +1394,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 | [docs/node-compatibility.md](docs/node-compatibility.md) | Node 18–24 兼容矩阵 |
 | [docs/api-reference.md](docs/api-reference.md) | 包入口、Protocol / Collector API、错误与生命周期 |
 | [docs/rust-migration-map.json](docs/rust-migration-map.json) | Rust 原实现 → JS 实现对应关系 |
+| [docs/target-playbooks/](docs/target-playbooks/) | 目标适配协议与逐目标 playbook |
 | [docs/adr/](docs/adr/) | 架构决策记录（8 篇） |
 | [sandbox_manual.md](sandbox_manual.md) | Sandbox 使用手册 |
 
