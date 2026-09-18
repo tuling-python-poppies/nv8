@@ -42,8 +42,8 @@
   不是签名问题；见下方矩阵）。
 - **当前接口要求两个签名**：`a_bogus`（BDMS）**和** `x-secsdk-web-signature`
   （字节 secsdk / Argus 插件）。只换 `a_bogus`（nv8 与原实现都一样）→
-  `403 Blocked by ArgusSecurityPlugin Sign Invalid`——两个签名与 URL 强耦合，
-  单独替换 a_bogus 必然无效。
+  `403 Blocked by ArgusSecurityPlugin Sign Invalid`；根因是 Realm 指纹与请求声明
+  不一致（见 3.1），不是签名算法变化。
 
 | 实验 | 内容 | 结果 |
 |---|---|---|
@@ -59,9 +59,35 @@
 策略 `webSign`）只处理应用自身的请求层，且签名器在模块闭包内（`window.use`
 等入口在页面上不可见）。
 
-**结论**：旧版纯 a_bogus 方案在当前站点无法通过；要让 nv8 产出可用的抖音签名，
-必须先移植 secsdk 签名器（新的逆向任务，运行时依赖远端策略配置），
-或改用不要求第二签名的目标验证签名管线。
+## 3.1 secsdk 移植（2026-09-18 完成）
+
+secsdk 运行时（`lf-security.bytegoofy.com/obj/security-secsdk/runtime_bundler_34.js`，
+`@byted/secsdk-strategy v1.0.40`）**可以直接在 nv8 沙箱里运行**，产出与真实浏览器
+同构的双签名。要点：
+
+1. 加载前给 `document.currentScript` 打补丁（bundle 只用它读上报属性，eval 加载
+   时为 null 会中断初始化）。
+2. 先写入 **UIFID cookie**（签名结果内嵌该值；缺它时签名器原样返回 URL）。
+3. `window.use("webSignUrl")(url)` 返回 `{url, headers}`，向 URL 追加
+   `uifid` + `x-secsdk-web-signature`，headers 带 `x-secsdk-web-signature` /
+   `x-secsdk-web-expire`。`expire` 取签名时刻（秒）。
+4. **Realm 指纹必须与请求声明一致**：UA/platform/screen/hardwareConcurrency/
+   deviceMemory 与请求参数一致（本案例 Chrome 152 / Win32 / 1920x1080 / 28 核 /
+   16GB）。不一致时即使由页面自身的 secsdk 给 nv8 的 a_bogus 签名，服务端仍返回
+   `Sign Invalid`——这是此前全部线上失败的真正原因，**不是算法过期**。
+
+端到端实测（`secsdk/sign-full.mjs`：同一沙箱内先跑 BDMS a_bogus，再跑 secsdk）：
+
+```text
+a_bogus(196) + x-secsdk-web-signature + uifid → GET /aweme/v1/web/aweme/post/
+→ HTTP 200，1.78MB 真实 aweme_list（两次独立运行均通过）
+```
+
+对应实现：`C:\Users\poppies\Desktop\nv8代码测试目录\douyin-bdms\secsdk\sign-full.mjs`
+（BDMS 用 2025 版补环境脚本，secsdk 用当前线上 v1.0.40 runtime）。
+
+**结论（修正）**：抖音当前的双签名方案已可在 nv8 中完整离线复现；
+a_bogus 算法未变，缺的是 secsdk 第二签名与环境一致性。
 
 ## 4. 最小 surface 集（实测观察）
 
