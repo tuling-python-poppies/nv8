@@ -34,11 +34,34 @@
 | 原实现对照 | execjs 一次性 ~866ms/次（每次调用都重新编译执行脚本） |
 | 原实现 a_bogus | 168 字符（jsdom 简化环境） |
 
-线上验收（携带案例的 msToken/cookies 请求
-`/aweme/v1/web/aweme/post/`）：**原实现与 nv8 移植都返回
-403 `Blocked by ArgusSecurityPlugin Signature Not Found`**——案例会话为
-2025-04 采集，早已失效，两边结果一致，因此本次无法用线上结果区分签名有效性。
-真实验收需要从浏览器拿新会话（新 msToken + cookies）后重放。
+线上验收（2026-09-18，新会话）：
+
+- 会话来源：CloakBrowser（Chromium 146，headless）访问目标用户页，捕获真实 API 请求
+  （含 cookie、`a_bogus`、`x-secsdk-web-signature`、timestamp）并用其 cookies 复现。
+- **精确重放捕获请求 → HTTP 200 + 真实 `aweme_list`**（旧的 2025-04 会话 403 属过期，
+  不是签名问题；见下方矩阵）。
+- **当前接口要求两个签名**：`a_bogus`（BDMS）**和** `x-secsdk-web-signature`
+  （字节 secsdk / Argus 插件）。只换 `a_bogus`（nv8 与原实现都一样）→
+  `403 Blocked by ArgusSecurityPlugin Sign Invalid`——两个签名与 URL 强耦合，
+  单独替换 a_bogus 必然无效。
+
+| 实验 | 内容 | 结果 |
+|---|---|---|
+| A | 捕获 URL + 浏览器双签名，Python/curl_cffi 重放 | **200**（真实数据） |
+| B | A 去掉 `x-secsdk-web-signature` | 403 `Signature Not Found` |
+| C | A 的 `a_bogus` 换成 nv8 生成的 | 403 `Sign Invalid` |
+| D | A 的 `a_bogus` 换成原 jsdom 实现生成的 | 403 `Sign Invalid` |
+| E | nv8 的 a_bogus + 无 secsdk | 403 `Signature Not Found` |
+
+页面内实验（CloakBrowser 同源 XHR）：手动 XHR 不会被 secsdk 重写
+（fresh URL 一律 "Not Found"），原捕获 URL 在页面内重放仍 200；secsdk 运行时
+（`lf-security.bytegoofy.com/obj/security-secsdk/runtime_bundler_34.js`，
+策略 `webSign`）只处理应用自身的请求层，且签名器在模块闭包内（`window.use`
+等入口在页面上不可见）。
+
+**结论**：旧版纯 a_bogus 方案在当前站点无法通过；要让 nv8 产出可用的抖音签名，
+必须先移植 secsdk 签名器（新的逆向任务，运行时依赖远端策略配置），
+或改用不要求第二签名的目标验证签名管线。
 
 ## 4. 最小 surface 集（实测观察）
 
@@ -57,6 +80,9 @@
   基线；`--page-url` 必须用目标域（本案例 `https://www.douyin.com/`）。
 - **时间**：a_bogus 内嵌时间戳/时间差，逐次调用必变；不存在"固定期望值"回归，
   验收只检查格式（base64url 字符集、长度量级）与接口响应。
+- **第二签名（2026-09 起）**：接口同时校验 `x-secsdk-web-signature`，且它与
+  `a_bogus`、URL 三元耦合；只复现 a_bogus 会在线上得到 403
+  `Signature Not Found`（缺 secsdk）或 `Sign Invalid`（替换了 a_bogus）。
 
 ## 6. 复现
 
