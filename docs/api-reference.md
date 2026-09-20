@@ -1,8 +1,8 @@
 # NV8 公共 API 参考
 
-本文档只描述当前 package root（`nv8`）、`nv8/protocol` 和 `nv8/collector`
+本文档只描述当前 package root（`nv8`）、`nv8/agent`、`nv8/protocol` 和 `nv8/collector`
 实际导出的 API。内部模块路径不是稳定公共入口；需要扩展运行时的调用方应优先使用
-Profile、插件、Protocol 和 Collector 的公开对象，而不是直接操作 `src/engine/`。
+Profile、插件、Protocol、Agent Session 和 Collector 的公开对象，而不是直接操作 `src/engine/`。
 
 ## 设计边界
 
@@ -30,6 +30,7 @@ import {
   protocol,
   collector,
 } from 'nv8';
+import { createAgentSession } from 'nv8/agent';
 ```
 
 ### `createNv8(options)`
@@ -141,6 +142,37 @@ Root 导出 `minimalPreset`、`basicPreset`、`domPreset`、`networkPreset`、
 
 Profile 的 required 能力缺失会启动失败；optional 能力默认记录显式 degradation，
 不会伪造成可用。`legacy-full` 还必须通过其兼容插件和 baseline 维护策略校验。
+
+## Agent Session
+
+`nv8/agent` 提供受控的 Agent 会话编排。它不会读取宿主 Agent 的内部状态，也不会因为 `agentId` 自动切换指纹；Agent 只能通过声明式、可审计的 EnvironmentPatch 调整页面、已知指纹字段和离线 replay。完整协议见 [`docs/agent-bridge.md`](agent-bridge.md)。
+
+```js
+const session = await createAgentSession({
+  agent: {
+    agentId: 'codex',
+    agentVersion: '1.0',
+    agentCapabilities: ['evaluate', 'observe', 'patch'],
+  },
+  sandbox: {
+    page: { url: 'https://target.test/' },
+    proxyTrace: { enabled: true },
+  },
+});
+try {
+  const version = session.snapshot.environmentVersion;
+  await session.applyEnvironmentPatch({
+    baseVersion: version,
+    reason: 'match observed desktop geometry',
+    changes: { fingerprint: { screen: { width: 1440, height: 900 } } },
+  });
+  console.log(await session.observe());
+} finally {
+  await session.close();
+}
+```
+
+补丁不能修改 `limits`、`execution`、Evidence、Collector 凭据、真实网络策略或脚本策略。页面变化复用 Realm reset；指纹和 replay 变化先创建新 Sandbox，成功后才关闭旧 Sandbox。版本冲突、未知字段和过期补丁都会 fail closed。
 
 ## Protocol API
 

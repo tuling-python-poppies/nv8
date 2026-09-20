@@ -498,6 +498,7 @@ export * as collector from './collection/collector/index.js';
  */
 export { EdgeSandbox } from './public/edge-sandbox.js';
 export { createSandbox } from './public/create-sandbox.js';
+export { createAgentSession, validateEnvironmentPatch } from './public/agent-session.js';
 
 /**
  * 冻结浏览器指纹（Edge 150/151/152），与 `nv8/fingerprint/*` 子路径同源。
