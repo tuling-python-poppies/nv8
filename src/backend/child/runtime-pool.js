@@ -229,6 +229,9 @@ export class RuntimePool {
     this.evidenceScriptObserver = null;
     this.evidenceReplayEntries = null;
     this.traceEnabled = options.proxyTrace.enabled;
+    this.watchApis = Array.isArray(options.proxyTrace.watchApis)
+      ? options.proxyTrace.watchApis
+      : [];
     this.networkRequestCapture = new NetworkRequestCapture(
       options.networkCapture,
       options.persistence?.networkCapture ?? null,
@@ -581,6 +584,7 @@ export class RuntimePool {
       pageUrl: pageUrl.href,
       traceEnabled: this.traceEnabled,
       maxTraceEntries: this.options.proxyTrace.maxEntries,
+      watchApis: this.watchApis,
       screenProfile: this.options.fingerprint.screen,
       navigatorProfile: this.options.fingerprint.navigator,
       localStorageData: this.localStorageByOrigin.get(pageUrl.origin) ?? "",
@@ -648,6 +652,7 @@ export class RuntimePool {
         serviceWorkerPageUrl: serviceWorkerPageUrl.href,
         traceEnabled: this.traceEnabled,
         maxTraceEntries: this.options.proxyTrace.maxEntries,
+        watchApis: this.watchApis,
         screenProfile: this.options.fingerprint.screen,
         navigatorProfile: this.options.fingerprint.navigator,
         localStorageData: this.localStorageByOrigin.get(childOrigin) ?? "",
@@ -1369,6 +1374,16 @@ export class RuntimePool {
 
   clearTrace() {
     assertLiveRealm(this.realm).bootstrap.clearProxyTrace();
+  }
+
+  // 运行时设置/更新 API 访问断点；同时记住列表，使后续 setPage 重建的 Realm 保留。
+  setWatchApis(list) {
+    this.watchApis = Array.isArray(list) ? list : [];
+    const realm = assertLiveRealm(this.realm);
+    if (typeof realm.bootstrap.setProxyWatchApis === "function") {
+      realm.bootstrap.setProxyWatchApis(this.watchApis);
+    }
+    return undefined;
   }
 
   readTrace() {

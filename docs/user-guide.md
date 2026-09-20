@@ -1389,6 +1389,37 @@ macOS 已安装 Edge 时，可给支持 `--edge` 的采集脚本显式传入
 `/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge`。
 Chrome 可作为调试前端，但采集 Chrome 的结果不能直接当作 Edge 基线。
 
+### 16.1.1 API 访问断点（watchApis）
+
+`watchApis(list)` 设置一组子串：当被追踪的浏览器 API 被读/写/调用、且其
+`api` 标签（如 `window.Document.prototype.cookie`）包含列表中任一子串（不区分
+大小写）时，如果已通过 `openInspector()` 附上调试器，就在**访问处暂停**。
+这补上了“不知道代码在哪里读指纹”时的定位：不需先找到行号，按 API 语义直接断下。
+
+```js
+const sandbox = await EdgeSandbox.create({
+  execution: { backend: 'child-process' },
+  proxyTrace: { enabled: true }, // watchApis 建在追踪 hook 上，需先开启 trace
+  limits: { timeoutMs: 300_000 },
+});
+await sandbox.openInspector();      // 先附调试器
+await sandbox.enableTrace();
+await sandbox.watchApis(['cookie', 'userAgent', 'toDataURL']);
+// 连接 DevTools 后，目标脚本一读 document.cookie 就会在该访问处暂停。
+await sandbox.watchApis([]);        // 传空数组清除全部断点
+```
+
+- **前提**：需先 `enableTrace()`；断点只对 **NV8 已追踪的表面**生效（navigator.*、
+  document.cookie、canvas/webgl 方法等），**不是任意属性拦截**。要监视未被
+  追踪的 API 需先给它加 trace hook。
+- **暂停点**落在 NV8 的 trace 收口处（`pauseForWatch`），DevTools 调用栈**往上一
+  帧**即目标访问代码。
+- 子串匹配 `api` 标签。`"cookie"` 会匹配 `window.Document.prototype.cookie`；
+  可用更长的子串（如 `"Navigator.prototype.userAgent"`）缩小范围。
+- 未附调试器时完全无可观测副作用（底层是 no-op 的 `debugger`）；`setPage()`
+  重建 Realm 后断点仍生效。
+- 断点靠 inspector，因此实际暂停仅 `child-process` 后端可用（与 `openInspector()` 一致）。
+
 ### 16.2 启动时暂停与超时开关
 
 调试实际执行页面代码的 child process 前，在调用 `EdgeSandbox.create()` 之前设置环境变量：

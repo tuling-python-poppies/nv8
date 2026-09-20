@@ -139,6 +139,13 @@ function withCachedData(graph) {
   let cached = 0;
   for (const [identifier, source] of graph) {
     let cachedData = null;
+    // 带了字节码缓存的模块里，`debugger` 会失效（变成空语句、不再暂停），
+    // 实测确认如此。所以只要模块里写了 `debugger`，就不给它做字节码缓存，
+    // 改用源码编译，保证 watchApis / 调试断点能停下。代价只是这个极小的模块不缓存。
+    if (/\bdebugger\b/.test(source)) {
+      payload[identifier] = source;
+      continue;
+    }
     try {
       const module = new vm.SourceTextModule(source, {
         identifier,

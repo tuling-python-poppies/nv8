@@ -51,6 +51,8 @@ export class RequestHandler {
         return this.withRuntime((runtime) => runtime.readResources());
       case Opcode.OPEN_INSPECTOR:
         return this.withRuntime(() => openInspector(payload));
+      case Opcode.SET_WATCH_APIS:
+        return this.withRuntime((runtime) => runtime.setWatchApis(payload.watchApis));
       case Opcode.CLOSE:
         return this.close();
       default:

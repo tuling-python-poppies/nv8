@@ -150,6 +150,22 @@ export class EdgeSandbox {
     });
   }
 
+  /**
+   * 设置 API 访问断点：当被追踪的浏览器 API（如 `navigator.userAgent`、
+   * `document.cookie`、`toDataURL`）被读/写/调用时，如果已通过
+   * `openInspector()` 附上调试器，则在访问处暂停。子串匹配 trace 的 api
+   * 标签，不区分大小写。传空数组清除所有断点。
+   *
+   * 前提：需先 `enableTrace()`（断点建在追踪 hook 上）；且仅对 NV8 已追踪的
+   * 表面生效，不是任意属性拦截。
+   *
+   * @param {string[]} list 要监视的 api 子串列表
+   * @returns {Promise<string[]>} 当前生效的监视列表
+   */
+  async watchApis(list = []) {
+    return this.controller.watchApis(normalizeWatchApis(list));
+  }
+
   close() {
     return this.controller.close();
   }
@@ -157,6 +173,20 @@ export class EdgeSandbox {
   async [Symbol.asyncDispose]() {
     await this.close();
   }
+}
+
+function normalizeWatchApis(list) {
+  if (!Array.isArray(list)) {
+    throw new TypeError("watchApis expects an array of strings");
+  }
+  const normalized = [];
+  for (const entry of list) {
+    if (typeof entry !== "string" || entry.length === 0) {
+      throw new TypeError("watchApis entries must be non-empty strings");
+    }
+    normalized.push(entry);
+  }
+  return normalized;
 }
 
 function normalizeInspectorOptions(options) {

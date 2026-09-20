@@ -22,6 +22,8 @@ export const Opcode = Object.freeze({
   // 在承载 Realm 的子进程里打开 V8 inspector，返回 CDP WebSocket 地址供
   // Chrome DevTools 连接。仅 child-process 后端支持（见 inspector-control.js）。
   OPEN_INSPECTOR: 16,
+  // 设置/更新 API 访问断点列表：命中的 trace api 在附 inspector 时暂停。
+  SET_WATCH_APIS: 17,
   RESPONSE_FLAG: 0x8000,
   ERROR: 0xffff,
 });

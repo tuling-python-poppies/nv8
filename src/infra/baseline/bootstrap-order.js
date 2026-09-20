@@ -82,7 +82,7 @@ export function diffBootstrapSequence(expected, actual) {
     for (let index = 0; index < delta; index += 1) added.push(entry);
   }
 
-  // 集合一致时才比顺序；否则位置偏移会涞没真正的信号
+  // 集合一致时才比顺序；否则位置偏移会淹没真正的信号
   const reordered = [];
   if (removed.length === 0 && added.length === 0) {
     for (let index = 0; index < expected.length; index += 1) {

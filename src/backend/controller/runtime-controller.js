@@ -15,6 +15,9 @@ export class RuntimeController {
     this.starting = null;
     this.persistence = null;
     this.traceEnabled = options.proxyTrace.enabled;
+    this.watchApiList = Array.isArray(options.proxyTrace.watchApis)
+      ? options.proxyTrace.watchApis.slice()
+      : [];
     this.restartPolicy = options.execution?.restart === RESTART_POLICY_RESTART
       ? RESTART_POLICY_RESTART
       : RESTART_POLICY_FAIL_FAST;
@@ -52,6 +55,7 @@ export class RuntimeController {
       proxyTrace: {
         ...this.options.proxyTrace,
         enabled: this.traceEnabled,
+        watchApis: this.watchApiList,
       },
       networkCapture: this.options.networkCapture,
       replay: this.options.replay,
@@ -108,6 +112,7 @@ export class RuntimeController {
           proxyTrace: {
             ...updatedOptions.proxyTrace,
             enabled: this.traceEnabled,
+            watchApis: this.watchApiList,
           },
           networkCapture: updatedOptions.networkCapture,
           replay: updatedOptions.replay,
@@ -239,6 +244,13 @@ export class RuntimeController {
 
   openInspector(options) {
     return this.send(Opcode.OPEN_INSPECTOR, options ?? Object.create(null));
+  }
+
+  async watchApis(list) {
+    // 记住列表，使 setPage 重建 Realm 后断点仍生效。
+    this.watchApiList = Array.isArray(list) ? list.slice() : [];
+    await this.send(Opcode.SET_WATCH_APIS, { watchApis: this.watchApiList });
+    return this.watchApiList.slice();
   }
 
   async close() {

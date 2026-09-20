@@ -25,6 +25,7 @@ import {
   disableTrace,
   enableTrace,
   readTrace,
+  setWatchApis,
 } from "../../infra/trace/trace-state.js";
 import {
   configureNativeFunctionRegistry,
@@ -1421,6 +1422,12 @@ export function disableProxyTrace() {
 
 export function clearProxyTrace() {
   clearTrace();
+}
+
+// 设置/更新 API 访问断点列表（子串匹配 trace 的 api 标签）。
+// 由 activateRealmShell 在 bootstrapRoot 后调用，以及运行时 setWatchApis 链路。
+export function setProxyWatchApis(list) {
+  setWatchApis(list);
 }
 
 export function proxyTrace() {

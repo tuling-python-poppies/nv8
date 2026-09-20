@@ -36,7 +36,7 @@ let evidenceBridgeCounter = 0;
 // 下面四个常量看起来像「Core 穿透到 api / install 层」，实际上是这套架构的
 // **必要机制**：这些模块操作的是 Realm 的 `globalThis`，必须由 Realm 自己的
 // moduleLoader 加载（`importUrlSyncCached` / `importUrlAsync`）。改成顶部静态 `import`
-// 会把表面装到**孿主进程**的 globalThis 上——那是污染，不是分层。
+// 会把表面装到**宿主进程**的 globalThis 上——那是污染，不是分层。
 //
 // 同一条约束解释了为什么插件的三参数 `install()` 会被当成 legacy 跳过，
 // 而真正装表面得在 `activate(context)` 里经 `context.moduleLoader` 做。

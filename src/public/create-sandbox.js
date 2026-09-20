@@ -182,6 +182,11 @@ class Sandbox {
     return this._inner.openInspector(options);
   }
 
+  /** Set API access breakpoints; watched trace APIs pause when an inspector is attached. */
+  async watchApis(list = []) {
+    return this._inner.watchApis(list);
+  }
+
   /** Close the sandbox and release resources */
   async close() {
     return this._inner.close();

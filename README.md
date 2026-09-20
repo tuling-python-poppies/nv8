@@ -233,6 +233,7 @@ const sandbox = await EdgeSandbox.create(options);
 | `enableTrace()` / `trace()` | 记录属性访问与函数调用，用于定位签名入口 |
 | `resources()` | 当前 Realm / Worker / 定时器等资源占用 |
 | `openInspector({ port?, host? })` | 打开子进程 V8 调试端点，返回 `{ url, alreadyOpen }`；默认 `127.0.0.1` 随机端口，详见[调试指南](docs/user-guide.md#16-调试沙箱子进程) |
+| `watchApis(list)` | 设置 API 访问断点：被追踪的 API 命中时若已附 inspector 则在访问处暂停；需先 `enableTrace()`，传空数组清除 |
 | `close()` | 关闭，幂等 |
 
 ### `createNv8`（面向可裁剪装配）

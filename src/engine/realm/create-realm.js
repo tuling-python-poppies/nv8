@@ -48,6 +48,7 @@ export function activateRealmShell(shell, options) {
     pageUrl,
     traceEnabled = false,
     maxTraceEntries = 100_000,
+    watchApis = null,
     screenProfile = null,
     navigatorProfile = null,
     localStorageData = "",
@@ -141,6 +142,10 @@ export function activateRealmShell(shell, options) {
     timezone,
     cryptoEntropy,
   );
+  // API 访问断点列表不占 bootstrapRoot 的位置参数（已约 40 个），在其后单独下发。
+  if (Array.isArray(watchApis) && typeof bootstrap.namespace.setProxyWatchApis === "function") {
+    bootstrap.namespace.setProxyWatchApis(watchApis);
+  }
   if (typeof onContext === "function") onContext(context);
   return {
     context,
