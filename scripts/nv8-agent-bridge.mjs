@@ -1,4 +1,5 @@
 import { createInterface } from "node:readline";
+import { readFileSync } from "node:fs";
 import { createAgentSession } from "../src/public/agent-session.js";
 
 const session = await createAgentSession({
@@ -10,7 +11,7 @@ const session = await createAgentSession({
       .map(value => value.trim())
       .filter(Boolean),
   },
-  sandbox: parseOptions(process.env.NV8_SANDBOX_OPTIONS),
+  sandbox: parseOptions(),
 });
 
 const input = createInterface({ input: process.stdin, crlfDelay: Infinity });
@@ -75,16 +76,33 @@ async function dispatch(method, params) {
   }
 }
 
-function parseOptions(value) {
+function parseOptions() {
+  // 大 replay/evidence 配置会撞 Windows 32KB 环境变量上限，所以优先支持
+  // 文件形式；NV8_SANDBOX_OPTIONS 只留给小配置（page 等）。
+  const file = process.env.NV8_SANDBOX_OPTIONS_FILE;
+  if (file !== undefined && file !== "") {
+    let raw;
+    try {
+      raw = readFileSync(file, "utf8");
+    } catch (error) {
+      throw new TypeError(`cannot read NV8_SANDBOX_OPTIONS_FILE: ${error.message}`);
+    }
+    return parseJsonObject(raw, `NV8_SANDBOX_OPTIONS_FILE (${file})`);
+  }
+  const value = process.env.NV8_SANDBOX_OPTIONS;
   if (value === undefined) return {};
+  return parseJsonObject(value, "NV8_SANDBOX_OPTIONS");
+}
+
+function parseJsonObject(raw, source) {
   try {
-    const parsed = JSON.parse(value);
+    const parsed = JSON.parse(raw);
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-      throw new TypeError("NV8_SANDBOX_OPTIONS must be a JSON object");
+      throw new TypeError(`${source} must be a JSON object`);
     }
     return parsed;
   } catch (error) {
-    throw new TypeError(`invalid NV8_SANDBOX_OPTIONS: ${error.message}`);
+    throw new TypeError(`invalid ${source}: ${error.message}`);
   }
 }
 
@@ -102,6 +120,15 @@ function writeError(id, error) {
 function write(value) {
   process.stdout.write(`${JSON.stringify(value)}\n`);
 }
+
+// reader 关掉 stdout（如上游只读一行）时，EPIPE 应干净退出，不能抛未捕获错误。
+process.stdout.on("error", error => {
+  if (error?.code === "EPIPE") {
+    session.close().finally(() => process.exit(0));
+    return;
+  }
+  throw error;
+});
 
 process.once("SIGINT", () => session.close().finally(() => process.exit(0)));
 process.once("SIGTERM", () => session.close().finally(() => process.exit(0)));

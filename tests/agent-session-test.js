@@ -33,6 +33,14 @@ test("Agent patches are declarative, versioned, and fail closed", async () => {
   );
 });
 
+test("createAgentSession rejects sandbox options leaked to the top level", async () => {
+  // 扁平形式混入 sandbox 字段时必须 fail closed，不能静默丢弃 page。
+  await assert.rejects(
+    createAgentSession({ agentId: "x", agentVersion: "1", page: { url: "https://x.test/" } }),
+    /unexpected top-level option "page"/u,
+  );
+});
+
 test("Agent session observes, rebuilds, rolls back, and serializes changes", async () => {
   const session = await createAgentSession({
     agent: {

@@ -3,6 +3,10 @@ import { normalizeRuntimeOptions } from "./edge-runtime-options.js";
 import { Buffer } from "node:buffer";
 
 const PATCHABLE_FIELDS = new Set(["page", "fingerprint", "replay"]);
+const TOP_LEVEL_WRAPPER_KEYS = new Set(["agent", "sandbox", "maxHistory"]);
+const FLAT_AGENT_KEYS = new Set([
+  "agentId", "agentVersion", "agentCapabilities", "id", "version", "capabilities",
+]);
 const FORBIDDEN_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const MAX_REASON_BYTES = 4 * 1024;
 const MAX_AGENT_STRING_BYTES = 1024;
@@ -20,6 +24,21 @@ let sessionSequence = 0;
  */
 export async function createAgentSession(options = {}) {
   assertRecord(options, "options");
+  // 两种输入形式：显式 `{ agent, sandbox }`，或扁平的 agent 字段（无 sandbox）。
+  // 混用时（如 `{ agentId, page }` 忘了包 sandbox）旧实现会静默丢弃
+  // sandbox 字段。这是信任边界上的暗坑，改为 fail closed。
+  const usesWrapper = options.agent !== undefined || options.sandbox !== undefined;
+  for (const key of Object.keys(options)) {
+    const allowed = usesWrapper
+      ? TOP_LEVEL_WRAPPER_KEYS.has(key)
+      : FLAT_AGENT_KEYS.has(key) || key === "maxHistory";
+    if (!allowed) {
+      throw new TypeError(
+        `createAgentSession: unexpected top-level option "${key}"; `
+        + "sandbox options must go under { sandbox: {...} }",
+      );
+    }
+  }
   const agent = normalizeAgent(options.agent ?? options);
   const sandboxOptions = options.sandbox ?? {};
   assertRecord(sandboxOptions, "options.sandbox");

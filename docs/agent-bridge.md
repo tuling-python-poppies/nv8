@@ -82,6 +82,12 @@ NV8_AGENT_CAPABILITIES=evaluate,observe,patch \
 npm run agent:bridge
 ```
 
+sandbox 配置有两种传入方式：
+
+- `NV8_SANDBOX_OPTIONS`：内联 JSON，适合 `page` 等小配置；
+- `NV8_SANDBOX_OPTIONS_FILE`：JSON 文件路径，优先于内联。大 replay/evidence
+  配置会撞 Windows 32KB 环境变量上限，必须走文件形式。
+
 每行一个 JSON-RPC 2.0 请求。会话在进程启动时根据 `NV8_SANDBOX_OPTIONS` 创建，响应写到 stdout；目标脚本和网络内容不应被当作 Agent 指令执行。
 
 支持的方法：
