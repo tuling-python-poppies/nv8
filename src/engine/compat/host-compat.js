@@ -40,9 +40,13 @@ const HAS_NATIVE_ABORT_TIMEOUT = typeof AbortSignal?.timeout === 'function';
  *   从未发生的属性读取）
  * - 抛错型 getter（严格能力诊断）会让 `in` 直接抛，而不是返回 true
  *
- * 这是 V8/Node 的宿主能力，用户态无法修补——只能记录并在依赖它的地方按版本
- * 分支。不要试图用 Proxy 包 globalThis 来抹平：那会引入代理对象自身的可检测面，
- * 比这条差异危险得多。
+ * 这是 V8/Node 的宿主能力，用户态无法修补。**刻意不修**：唯一的抹平手段是用
+ * Proxy 包 globalThis，那会引入代理对象自身的可检测面，比这条差异危险得多。
+ * 因此生产代码不按它分支，而是让抛错 getter 的自然行为发生（旧 Node 上
+ * `'X' in globalThis` 抛、新 Node 上返回 true，两者都是确定行为）。这个常量的
+ * 作用是**登记这条不可修复的差异并让测试钉住两种版本行为**（见
+ * `tests/capability-diagnostics-test.js` 对 `installStrictCapabilityDiagnostics`
+ * 的分叉断言），同时进入 `describeHostCompat()` 诊断输出。
  */
 export const HAS_VM_PROPERTY_QUERY_CALLBACK =
   Number(/^(\d+)/.exec(process.versions.node)?.[1] ?? 0) >= 22;
@@ -58,5 +62,6 @@ export function describeHostCompat() {
     nativeStructuredClone: HAS_NATIVE_STRUCTURED_CLONE,
     nativeAsyncDispose: HAS_NATIVE_ASYNC_DISPOSE,
     nativeAbortTimeout: HAS_NATIVE_ABORT_TIMEOUT,
+    vmPropertyQueryCallback: HAS_VM_PROPERTY_QUERY_CALLBACK,
   });
 }
