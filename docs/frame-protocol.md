@@ -49,6 +49,10 @@ payload }` 交给上层解码。上层必须使用同一组协议限制调用 `d
 公开 API 的 `limits` 接受并校验 `maxPayloadBytes`、`maxValueDepth`、`maxArrayLength`、
 `maxFieldCount`、`maxStringBytes`、`maxBytesLength`；`maxPayloadBytes` **不包含**16 字节帧头。
 
+`OPEN_INSPECTOR`（opcode `16`）由 child-process 后端在已初始化的 Runtime 子进程中
+打开 Node/V8 inspector，返回 `{ url, alreadyOpen }`。URL 是独立于 Frame Protocol
+的 CDP WebSocket 地址，不能在现有帧通道中转发；worker-thread 后端返回结构化错误。
+
 编码失败时后端必须回结构化 `ERROR`，并保留真实错误码（`LIMIT_STRING_BYTES`、
 `LIMIT_BYTES`、`LIMIT_PAYLOAD_BYTES` 等），不得改写成与根因无关的限制名。
 

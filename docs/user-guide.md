@@ -1334,6 +1334,63 @@ try {
 
 ## 16. 调试沙箱子进程
 
+### 16.1 按需打开 inspector（无需 Edge）
+
+`openInspector({ port = 0, host = '127.0.0.1' })` 返回
+`{ url, alreadyOpen }`。端口 `0` 由系统分配，重复调用复用已有端点；更换参数
+不会重绑定已打开的端口。沙箱 `close()` 终止子进程时端点随之关闭；`setPage()`
+正常重建 Realm 时端点保留，但 execution context ID 会变化。子进程崩溃或重启后
+需重新调用并获取新 URL。
+
+```js
+import { createInterface } from 'node:readline/promises';
+import { EdgeSandbox } from 'nv8';
+
+const sandbox = await EdgeSandbox.create({
+  execution: { backend: 'child-process' },
+  limits: { timeoutMs: 300_000 }, // 暂停时间也计入这 5 分钟预算
+});
+const terminal = createInterface({ input: process.stdin, output: process.stdout });
+try {
+  const { url } = await sandbox.openInspector();
+  console.log('CDP:', url);
+  console.log('在 chrome://inspect/#devices 配置:', new URL(url).host);
+  await terminal.question('连接 Node target、打开 Sources 后按 Enter 执行：');
+  console.log(await sandbox.evaluate(`
+    const value = 40;
+    debugger;
+    value + 2;
+    //# sourceURL=nv8-debug-example.js
+  `));
+} finally {
+  terminal.close();
+  await sandbox.close();
+}
+```
+
+此示例在 Windows、macOS、Linux 上使用相同的 Node API，不查找或启动 Edge。
+Chrome DevTools 的 Console context 下拉框选择 `edge-root-window`，即可访问
+`document`、`navigator` 等模拟对象；默认 Node context 是子进程宿主。
+也可在 VS Code 使用 Node attach 连接返回 URL 中的端口。服务器可以完全没有浏览器，
+通过 SSH 端口转发从本地调试。使用 `createSandbox()` 时经 `sandbox.openInspector()` 调用。
+
+- 当前入口支持 `child-process`；`worker-thread` 返回 `ERR_EDGE_INSPECTOR_UNSUPPORTED`。
+- 提供 Node/V8 的 JS 断点、单步、作用域和求值；不是 Chromium 的完整 CDP，
+  不提供浏览器 Elements/Network 面板。NV8 请求记录仍通过 `networkRequests()` 读取。
+- `openInspector()` 不关闭现有 wall-clock 超时；默认 1000ms 不适合手动单步。
+  可像示例增大预算，或使用下节已有的调试环境变量。禁用超时时应先恢复暂停再关闭沙箱。
+- 页面初始化脚本在 `create()` 中已执行。要调试加载阶段，先创建空页面、连接并下断点，
+  再调用 `setPage()`；或使用下节的启动断点。此入口保留原始 `debugger;` 行为。
+- inspector 可检查和执行整个子进程的代码，默认只监听本地回环地址。
+
+**没有 Edge 怎么更新基线？** 日常运行和回归测试消费仓库内已有的冻结基线。
+需要更新 `fingerprint:*` 时，在装有相应版本 Edge 的机器采集并同步产物即可；
+macOS 已安装 Edge 时，可给支持 `--edge` 的采集脚本显式传入
+`/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge`。
+Chrome 可作为调试前端，但采集 Chrome 的结果不能直接当作 Edge 基线。
+
+### 16.2 启动时暂停与超时开关
+
 调试实际执行页面代码的 child process 前，在调用 `EdgeSandbox.create()` 之前设置环境变量：
 
 ```powershell

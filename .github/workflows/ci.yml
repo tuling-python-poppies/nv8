@@ -50,6 +50,18 @@ jobs:
       - name: Run tests
         run: npm test
 
+  # macOS 上验证无需 Edge 的 inspector 与隔离后端契约。
+  macos:
+    name: macOS Node 24 / Inspector
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Run inspector and backend contract tests
+        run: node --experimental-vm-modules --test tests/inspector-open-test.js tests/backend-contract-test.js
+
   # 后端 × Node 交叉矩阵：child-process 与 worker-thread 的后端契约必须行为一致。
   #
   # 取 Node 24（主目标）与 20（最老的在役 LTS）两档：更老的 18 已在 Linux

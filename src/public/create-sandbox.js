@@ -177,6 +177,11 @@ class Sandbox {
     return this._inner.clearProxyTrace();
   }
 
+  /** Open the child-process V8 inspector and return its CDP WebSocket URL. */
+  async openInspector(options) {
+    return this._inner.openInspector(options);
+  }
+
   /** Close the sandbox and release resources */
   async close() {
     return this._inner.close();

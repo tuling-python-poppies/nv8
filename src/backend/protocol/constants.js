@@ -19,6 +19,9 @@ export const Opcode = Object.freeze({
   READ_RESOURCES: 14,
   // INIT 前的小握手，父侧收到确认才发送 INIT（含可能超过 8MiB 的 replay）。
   UPDATE_LIMITS: 15,
+  // 在承载 Realm 的子进程里打开 V8 inspector，返回 CDP WebSocket 地址供
+  // Chrome DevTools 连接。仅 child-process 后端支持（见 inspector-control.js）。
+  OPEN_INSPECTOR: 16,
   RESPONSE_FLAG: 0x8000,
   ERROR: 0xffff,
 });

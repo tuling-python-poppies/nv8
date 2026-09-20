@@ -237,6 +237,10 @@ export class RuntimeController {
     return this.send(Opcode.READ_RESOURCES, Object.create(null));
   }
 
+  openInspector(options) {
+    return this.send(Opcode.OPEN_INSPECTOR, options ?? Object.create(null));
+  }
+
   async close() {
     if (this.closed) {
       return;

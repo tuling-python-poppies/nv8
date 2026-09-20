@@ -131,6 +131,25 @@ export class EdgeSandbox {
     return this.controller.readResources();
   }
 
+  /**
+   * 在承载 Realm 的子进程里打开 V8 inspector，返回 CDP WebSocket 地址，
+   * 供 Chrome DevTools（chrome://inspect 或 devtools://）连接下断点、单步、
+   * 看作用域。仅 child-process 后端支持。
+   *
+   * @param {{ port?: number, host?: string }} [options] 端口默认 0（随机），
+   *   host 默认 127.0.0.1。
+   * @returns {Promise<{ url: string, alreadyOpen: boolean }>}
+   */
+  async openInspector(options = {}) {
+    const result = await this.controller.openInspector(
+      normalizeInspectorOptions(options),
+    );
+    return Object.freeze({
+      url: result.url,
+      alreadyOpen: result.alreadyOpen === true,
+    });
+  }
+
   close() {
     return this.controller.close();
   }
@@ -138,6 +157,26 @@ export class EdgeSandbox {
   async [Symbol.asyncDispose]() {
     await this.close();
   }
+}
+
+function normalizeInspectorOptions(options) {
+  if (options === null || typeof options !== "object" || Array.isArray(options)) {
+    throw new TypeError("openInspector options must be an object");
+  }
+  const normalized = Object.create(null);
+  if (options.port !== undefined) {
+    if (!Number.isInteger(options.port) || options.port < 0 || options.port > 65_535) {
+      throw new RangeError("openInspector port must be an integer in [0, 65535]");
+    }
+    normalized.port = options.port;
+  }
+  if (options.host !== undefined) {
+    if (typeof options.host !== "string") {
+      throw new TypeError("openInspector host must be a string");
+    }
+    normalized.host = options.host;
+  }
+  return normalized;
 }
 
 function normalizePayload(payload) {

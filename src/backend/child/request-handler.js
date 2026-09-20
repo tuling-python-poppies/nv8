@@ -3,6 +3,7 @@ import { errorRecord } from "../protocol/typed-values.js";
 import { resolveProtocolLimits } from "../protocol/limits.js";
 import { sanitizeErrorRecord } from "../../engine/bootstrap/sanitize-stack.js";
 import { RuntimePool } from "./runtime-pool.js";
+import { openInspector } from "./inspector-control.js";
 
 export class RequestHandler {
   constructor() {
@@ -48,6 +49,8 @@ export class RequestHandler {
         return this.withRuntime((runtime) => runtime.clearNetworkRequests());
       case Opcode.READ_RESOURCES:
         return this.withRuntime((runtime) => runtime.readResources());
+      case Opcode.OPEN_INSPECTOR:
+        return this.withRuntime(() => openInspector(payload));
       case Opcode.CLOSE:
         return this.close();
       default:

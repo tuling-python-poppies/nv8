@@ -86,6 +86,12 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
   直接用 `createNv8`（进程内）或跑仓库测试/构建时才需要自己加
 - 零依赖，`npm install` 不装任何包
 
+**运行 NV8 不需要安装 Edge、Chrome 或 Chromium。** Windows、macOS、Linux
+均使用 Node 自带的 V8 与仓库内的冻结 Profile；`EdgeSandbox` 是模拟环境的名称。
+`openInspector()` 也只依赖 Node inspector，图形调试可用 Chrome DevTools 或 VS Code。
+只有主动运行 `fingerprint:*` 重新采集 Edge 基线时才需要真实 Edge；没有 Edge 的机器
+直接使用仓库已有基线，不必执行这些采集命令。
+
 **指纹敏感场景请用 Node 22+。** Node 18/20 的 V8（10.x / 11.x）在 dictionary
 模式的 global object 上把**可枚举键排在不可枚举键之前**，不按插入序——违反
 `[[OwnPropertyKeys]]`。后果是 `Object.getOwnPropertyNames(window)` 的顺序无法与真实
@@ -226,6 +232,7 @@ const sandbox = await EdgeSandbox.create(options);
 | `networkRequests()` | 取出脚本发起过的所有请求（协议恢复的主要产出） |
 | `enableTrace()` / `trace()` | 记录属性访问与函数调用，用于定位签名入口 |
 | `resources()` | 当前 Realm / Worker / 定时器等资源占用 |
+| `openInspector({ port?, host? })` | 打开子进程 V8 调试端点，返回 `{ url, alreadyOpen }`；默认 `127.0.0.1` 随机端口，详见[调试指南](docs/user-guide.md#16-调试沙箱子进程) |
 | `close()` | 关闭，幂等 |
 
 ### `createNv8`（面向可裁剪装配）
