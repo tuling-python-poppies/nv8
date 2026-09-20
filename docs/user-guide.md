@@ -2,7 +2,7 @@
 
 本文档面向需要在本机运行浏览器 JavaScript、调试指纹读取、执行离线网络回放或采集请求数据的使用者。
 
-**说明：** 本文档中的 `<nv8-root>` 指 Nv8 的安装目录（本文档所在目录）。在实际使用时，请将 `<nv8-root>` 替换为您的实际安装路径，例如 `/home/user/Nv8` 或 `D:\develop_software\Nv8`。
+**说明：** 本文档中的 `<nv8-root>` 指 Nv8 的安装目录（本文档所在目录的上一级，即仓库根）。在实际使用时，请将 `<nv8-root>` 替换为您的实际安装路径，例如 `/home/user/Nv8` 或 `D:\develop_software\Nv8`。
 
 当前运行基线：
 
@@ -1376,8 +1376,12 @@ npm run test:matrix        # 等价于逐档 node --experimental-vm-modules --te
 `npm test` 与矩阵用的是**同一条命令**（`--test` 不带参数，自动发现 `tests/`）。
 目录形式与 glob 形式在 Node 18/20 与 22+ 之间不兼容，所以两处都用无参数模式。
 
-Node 18 生成的 module bundle 已在 Node 24 上验证。版本元数据不匹配时，加载器会忽略
-`cachedData` 并从源码加载，而不是使用错误 V8 版本的字节码。
+module bundle 现在携带 V8 字节码缓存（`cachedData`），加载时用一次 `readFileSync`
+替代约 4000 次文件读取，并跳过源码解析+编译，使冷启动与每次 Realm 创建更快。
+因此该文件除了与本机路径绑定，还与 **V8 版本**绑定：换 Node 大版本后重跑
+`npm run build:bundle` 可恢复字节码加速。版本或路径不匹配时，加载器**静默回退**
+到从源码加载（忽略 `cachedData`），行为不变、只是失去这部分加速，绝不会使用错误
+版本的字节码。没有 `--experimental-vm-modules` 时 `build:bundle` 会降级生成纯源码包。
 
 **Node 18/20 有一处宿主限制**：Window 全局的枚举顺序做不到与真实 Edge 一致
 （V8 < 12 把可枚举键排在不可枚举键之前）。指纹敏感场景请用 Node 22+，
@@ -1417,6 +1421,10 @@ npm run benchmark
 
 报冷启动、热复用、Realm 创建销毁与常驻内存。上界断言取多次采样的**最小值**——
 竞争只会让采样变大，最小值受污染最少。
+
+带字节码缓存的 module bundle（`npm run build:bundle`）会明显降低冷启动与 Realm
+创建耗时（实测冷启动约降 19%，每个 Realm 少约 76ms 的模块编译）。热复用与签名
+工作流本就是亚毫秒级，不受影响。常驻服务只在进程启动付一次冷启动，之后走热路径。
 
 ## 18. 常见问题
 

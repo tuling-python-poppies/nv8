@@ -1043,7 +1043,7 @@ plugin-sdk 那份测试原来在 `src/engine/core/` 下，用 `console.log` 分�
 
 ### 文档失步要靠断言，不靠 review
 
-`sandbox_manual.md` 曾有一版在整节里介绍 `ExecutionCore` /
+`docs/user-guide.md` 曾有一版在整节里介绍 `ExecutionCore` /
 `createExecutionCore` / `edgeCompatPlugins` 与四个 `nv8/` 子路径——**全部不存在**；
 第 17 节还描述了一套九阶段审计，用到 5 个 npm 脚本，一个都没有。这类失步已由
 `tests/docs-contract-test.js` 变成机械断言，不再依赖人工 review。
@@ -1396,7 +1396,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 | [docs/rust-migration-map.json](docs/rust-migration-map.json) | Rust 原实现 → JS 实现对应关系 |
 | [docs/target-playbooks/](docs/target-playbooks/) | 目标适配协议与逐目标 playbook |
 | [docs/adr/](docs/adr/) | 架构决策记录（8 篇） |
-| [sandbox_manual.md](sandbox_manual.md) | Sandbox 使用手册 |
+| [docs/user-guide.md](docs/user-guide.md) | 使用手册 |
 
 ### ADR 索引
 

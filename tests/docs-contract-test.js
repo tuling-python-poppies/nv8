@@ -4,7 +4,7 @@
  * 文档失步的典型症状不是「写得不好」，是**照着文档写出跑不通的代码**。
  * 已经踩到的实例：
  *
- * - `sandbox_manual.md` 用一整节介绍 `ExecutionCore` / `createExecutionCore` /
+ * - `docs/user-guide.md` 用一整节介绍 `ExecutionCore` / `createExecutionCore` /
  *   `edgeCompatPlugins`，以及 `nv8/core`、`nv8/plugins`、`nv8/plugin-sdk`、
  *   `nv8/profiles` 四个子路径——**全部不存在**。
  * - 同一份手册的第 17 节描述了一套九阶段审计（`npm run audit`、
@@ -41,7 +41,7 @@ const PATH_EXEMPTIONS = new Set([
 ]);
 
 async function collectDocs() {
-  const docs = ['README.md', 'sandbox_manual.md'];
+  const docs = ['README.md'];
   for (const entry of await readdir(new URL('docs/', REPO_ROOT), { withFileTypes: true })) {
     if (entry.isDirectory()) {
       for (const nested of await readdir(new URL(`docs/${entry.name}/`, REPO_ROOT))) {
@@ -62,7 +62,7 @@ const docs = await collectDocs();
 
 test('the doc set is actually being scanned', () => {
   assert.ok(docs.length >= 10, `expected the whole doc set, got ${docs.length}`);
-  for (const name of ['README.md', 'sandbox_manual.md', 'docs/edge-parity.md', 'docs/api-reference.md']) {
+  for (const name of ['README.md', 'docs/user-guide.md', 'docs/edge-parity.md', 'docs/api-reference.md']) {
     assert.ok(docs.some((doc) => doc.path === name), `${name} 没被扫到`);
   }
 });
