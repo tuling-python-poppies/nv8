@@ -96,7 +96,8 @@ function parseOptions() {
 
 function parseJsonObject(raw, source) {
   try {
-    const parsed = JSON.parse(raw);
+    // Windows 编辑器常在 UTF-8 JSON 文件前写 BOM；JSON.parse 不接受它。
+    const parsed = JSON.parse(raw.replace(/^\uFEFF/, ""));
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new TypeError(`${source} must be a JSON object`);
     }

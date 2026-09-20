@@ -73,7 +73,7 @@ Trace 和 API watch 是会话控制，不属于 EnvironmentPatch。Sandbox 重�
 
 ## Stdio JSON-RPC
 
-仓库提供单会话、无依赖的 stdio 入口：
+仓库提供单会话、无依赖的 stdio 入口。会话在进程启动时根据 `NV8_SANDBOX_OPTIONS_FILE`（优先）或 `NV8_SANDBOX_OPTIONS` 创建；如果两者都未设置，则使用默认 Sandbox 配置。
 
 ```bash
 NV8_AGENT_ID=pi \
