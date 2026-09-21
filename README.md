@@ -984,7 +984,7 @@ node scripts/build-window-surface-order.mjs --write
 ## 测试
 
 ```bash
-npm test              # 全量，1242 项（`node --test` 自动发现 tests/，新增测试不用注册）
+npm test              # 全量（`node --test` 自动发现 tests/，新增测试不用注册）
 npm run test:matrix   # Node 18 / 20 / 22 / 24
 npm run benchmark     # 当前 Node / backend 的性能基准
 npm run benchmark:matrix # Node 18/20/22/24 × 两种 backend 性能矩阵
@@ -1126,7 +1126,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（1242 项 / 148 个 .js 文件，自动发现） |
+| `npm test` | 全量测试（自动发现 tests/；文件并发取 `min(8, 核数-1)`，理由见 `scripts/run-tests.mjs`）|
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、签名载荷、崩溃恢复、Realm 创建销毁 |
@@ -1206,7 +1206,7 @@ src/
     ├── trace/         API 调用追踪
     └── utils/         logger
 
-tests/                 132 个 .js 测试文件
+tests/                 151 个 .js 测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -1375,7 +1375,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）**1242/1242 全绿**。差异分两类处理：
+四档（18 / 20 / 22 / 24）全绿：18/20 各 1257 项、22/24 各 1259 项，fail 0。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。

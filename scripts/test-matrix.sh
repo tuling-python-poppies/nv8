@@ -26,9 +26,10 @@ for v in "${VERSIONS[@]}"; do
     continue
   fi
 
-  # 与 `npm test` 同一条命令：`--test` 不带参数在四档 Node 上都是自动发现，
-  # 而目录/glob 形式在 18/20 与 22+ 之间不兼容（前者只认目录，后者只认 glob）。
-  out=$(timeout 900 "$BIN" --experimental-vm-modules --test 2>&1)
+  # 与 `npm test` 同一条命令（含同一个并发上限）：`--test` 不带参数在四档 Node 上
+  # 都是自动发现，而目录/glob 形式在 18/20 与 22+ 之间不兼容（前者只认目录，
+  # 后者只认 glob）。
+  out=$(timeout 900 "$BIN" scripts/run-tests.mjs 2>&1)
   summary=$(echo "$out" | grep -E '^(#|ℹ) (pass|fail)' | tr '\n' ' ')
   if echo "$out" | grep -qE '^(#|ℹ) fail [1-9]'; then
     printf '  %-10s FAIL  %s\n' "$v" "$summary"

@@ -5,7 +5,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --experimental-vm-modules --test",
+    "test": "node scripts/run-tests.mjs",
     "audit:state": "node scripts/audit-module-state.mjs",
     "baseline": "npm run baseline:bootstrap && npm run baseline:surface && npm run baseline:observability",
     "baseline:bootstrap": "node scripts/capture-bootstrap-order.mjs",
