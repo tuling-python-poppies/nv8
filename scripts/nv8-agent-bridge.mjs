@@ -48,6 +48,8 @@ async function dispatch(method, params) {
       return session.snapshot;
     case "session.evaluate":
       return session.evaluate(params.source);
+    case "session.compareEnvironment":
+      return session.compareEnvironment(params.source, params.patch);
     case "session.observe":
       return session.observe();
     case "session.applyEnvironmentPatch":

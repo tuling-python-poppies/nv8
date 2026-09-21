@@ -62,6 +62,7 @@ try {
 会话提供：
 
 - `evaluate(source)`：在当前 Realm 求值；
+- `compareEnvironment(source, patch)`：在两个新鲜、隔离的 Sandbox 中执行同一脚本，比较补丁前后的求值结果、Trace、网络请求和资源摘要；不改变当前会话版本，也不继承当前 Realm 的 Cookie/Storage 状态；
 - `observe()`：读取环境摘要、Trace、网络捕获和资源摘要；
 - `enableTrace()`、`disableTrace()`、`clearTrace()`；
 - `watchApis(list)`：复用 NV8 已有 trace hook 的 API 访问断点；
@@ -88,13 +89,14 @@ sandbox 配置有两种传入方式：
 - `NV8_SANDBOX_OPTIONS_FILE`：JSON 文件路径，优先于内联。大 replay/evidence
   配置会撞 Windows 32KB 环境变量上限，必须走文件形式。
 
-每行一个 JSON-RPC 2.0 请求。会话在进程启动时根据 `NV8_SANDBOX_OPTIONS` 创建，响应写到 stdout；目标脚本和网络内容不应被当作 Agent 指令执行。
+每行一个 JSON-RPC 2.0 请求。会话配置在进程启动时从 `NV8_SANDBOX_OPTIONS_FILE`（优先）或 `NV8_SANDBOX_OPTIONS` 读取，响应写到 stdout；目标脚本和网络内容不应被当作 Agent 指令执行。
 
 支持的方法：
 
 ```text
 session.describe
 session.evaluate
+session.compareEnvironment
 session.observe
 session.applyEnvironmentPatch
 session.rollback
@@ -110,7 +112,8 @@ session.close
 
 ```json
 {"id":1,"method":"session.evaluate","params":{"source":"screen.width"}}
-{"id":2,"method":"session.applyEnvironmentPatch","params":{"patch":{"baseVersion":0,"reason":"match desktop","changes":{"fingerprint":{"screen":{"width":1440}}}}}}
+{"id":2,"method":"session.compareEnvironment","params":{"source":"JSON.stringify({width:screen.width})","patch":{"baseVersion":0,"reason":"match desktop","changes":{"fingerprint":{"screen":{"width":1440}}}}}}
+{"id":3,"method":"session.applyEnvironmentPatch","params":{"patch":{"baseVersion":0,"reason":"match desktop","changes":{"fingerprint":{"screen":{"width":1440}}}}}}
 ```
 
 ## 安全边界

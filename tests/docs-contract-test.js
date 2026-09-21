@@ -133,3 +133,23 @@ test('path exemptions stay justified', () => {
     );
   }
 });
+
+test('the agent bridge doc lists exactly the methods the bridge dispatches', async () => {
+  // 已踩过的漂移：session.compareEnvironment 加进了 dispatch，文档方法表却没跟上。
+  // 方法表和 dispatch case 必须逐行一致，任一侧新增都要红。
+  const bridge = await readFile(new URL('scripts/nv8-agent-bridge.mjs', REPO_ROOT), 'utf8');
+  const dispatched = new Set(
+    [...bridge.matchAll(/case "(session\.[a-zA-Z]+)":/g)].map((match) => match[1]),
+  );
+  const doc = docs.find((entry) => entry.path === 'docs/agent-bridge.md').source;
+  const methodBlock = doc.match(/支持的方法：\s*```text\n([\s\S]*?)```/u);
+  assert.ok(methodBlock, 'agent-bridge.md 缺少「支持的方法」代码块');
+  const documented = new Set(
+    methodBlock[1].split('\n').map((line) => line.trim()).filter(Boolean),
+  );
+  assert.deepEqual(
+    [...documented].sort(),
+    [...dispatched].sort(),
+    'agent-bridge.md 的方法表与 bridge dispatch 不一致',
+  );
+});

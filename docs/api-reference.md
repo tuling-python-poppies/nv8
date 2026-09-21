@@ -145,7 +145,7 @@ Profile 的 required 能力缺失会启动失败；optional 能力默认记录�
 
 ## Agent Session
 
-`nv8/agent` 提供受控的 Agent 会话编排。它不会读取宿主 Agent 的内部状态，也不会因为 `agentId` 自动切换指纹；Agent 只能通过声明式、可审计的 EnvironmentPatch 调整页面、已知指纹字段和离线 replay。完整协议见 [`docs/agent-bridge.md`](agent-bridge.md)。
+`nv8/agent` 提供受控的 Agent 会话编排。它不会读取宿主 Agent 的内部状态，也不会因为 `agentId` 自动切换指纹；Agent 只能通过声明式、可审计的 EnvironmentPatch 调整页面、已知指纹字段和离线 replay。会话提供 `evaluate()`、`compareEnvironment()`、`observe()`、`applyEnvironmentPatch()`、`rollback()`、`watchApis()` 和 `openInspector()`；完整协议见 [`docs/agent-bridge.md`](agent-bridge.md)。
 
 ```js
 const session = await createAgentSession({
@@ -171,6 +171,8 @@ try {
   await session.close();
 }
 ```
+
+`compareEnvironment(source, patch)` 是逆向侦察阶段推荐的验证入口：它在两个新鲜 Sandbox 中执行相同脚本，返回 `before`、`after` 和 `diff`，比较求值结果、Trace、网络请求和资源摘要。它不会推进当前会话的 `environmentVersion`，也不会把当前 Realm 的 Cookie/Storage 带入比较；确认假设后再调用 `applyEnvironmentPatch()`。
 
 补丁不能修改 `limits`、`execution`、Evidence、Collector 凭据、真实网络策略或脚本策略。页面变化复用 Realm reset；指纹和 replay 变化先创建新 Sandbox，成功后才关闭旧 Sandbox。版本冲突、未知字段和过期补丁都会 fail closed。
 

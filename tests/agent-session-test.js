@@ -128,6 +128,36 @@ test("agentCapabilities are advisory-only and never gate methods", async () => {
   }
 });
 
+test("Agent session compares an environment hypothesis without mutating the session", async () => {
+  const session = await createAgentSession({
+    agent: { agentId: "codex", agentVersion: "test", agentCapabilities: ["observe"] },
+    sandbox: {
+      execution: { backend: "worker-thread" },
+      proxyTrace: { enabled: true },
+      limits: { timeoutMs: 10_000 },
+    },
+  });
+  try {
+    const comparison = await session.compareEnvironment(
+      "JSON.stringify({ width: screen.width, ua: navigator.userAgent })",
+      {
+        baseVersion: 0,
+        reason: "test desktop geometry hypothesis",
+        changes: { fingerprint: { screen: { width: 1440, height: 900 } } },
+      },
+    );
+    assert.equal(comparison.environmentVersion, 0);
+    assert.equal(comparison.before.evaluation.value.includes('1920'), true);
+    assert.equal(comparison.after.evaluation.value.includes('1440'), true);
+    assert.equal(comparison.diff.changed, true);
+    assert.equal(comparison.diff.evaluationChanged, true);
+    assert.equal(session.snapshot.environmentVersion, 0);
+    assert.equal((await session.evaluate("screen.width")).value, 1920);
+  } finally {
+    await session.close();
+  }
+});
+
 test("Agent session serializes concurrent operations", async () => {
   const session = await createAgentSession({
     agent: { agentId: "codex", agentVersion: "test" },

@@ -124,34 +124,12 @@ class AgentSession {
   }
 
   describe() {
-    const fingerprint = this.options.fingerprint;
-    const navigator = fingerprint.navigator;
-    const screen = fingerprint.screen;
     return {
       schemaVersion: 1,
       sessionId: this.id,
       agent: this.agent,
       environmentVersion: this.version,
-      page: { ...this.options.page },
-      fingerprint: {
-        browserMajorVersion: fingerprint.browserMajorVersion,
-        locale: fingerprint.locale,
-        timezone: fingerprint.timezone,
-        navigator: {
-          userAgent: navigator.userAgent,
-          languages: [...navigator.languages],
-          webdriver: navigator.webdriver,
-        },
-        screen: {
-          width: screen.width,
-          height: screen.height,
-          availWidth: screen.availWidth,
-          availHeight: screen.availHeight,
-          colorDepth: screen.colorDepth,
-          pixelDepth: screen.pixelDepth,
-        },
-      },
-      replay: { entryCount: this.options.replay.length },
+      ...describeEnvironment(this.options),
       controls: {
         traceEnabled: this.traceEnabled,
         watchedApis: [...this.watchedApis],
@@ -167,18 +145,65 @@ class AgentSession {
     });
   }
 
+  /**
+   * Execute the same source in fresh before/after Sandboxes without changing
+   * this session. Useful for testing an environment hypothesis before commit.
+   */
+  async compareEnvironment(source, patch) {
+    return this.runExclusive(async () => {
+      this.assertOpen();
+      if (typeof source !== "string") {
+        throw new TypeError("compareEnvironment source must be a string");
+      }
+      const normalizedPatch = validateEnvironmentPatch(patch);
+      if (normalizedPatch.baseVersion !== this.version) {
+        throw createSessionError(
+          "ERR_NV8_AGENT_VERSION_CONFLICT",
+          `patch targets environment version ${normalizedPatch.baseVersion}, current version is ${this.version}`,
+        );
+      }
+      const traceOptions = {
+        ...this.options.proxyTrace,
+        enabled: true,
+      };
+      const beforeOptions = normalizeRuntimeOptions({
+        ...this.options,
+        proxyTrace: traceOptions,
+      });
+      const afterOptions = normalizeRuntimeOptions({
+        ...deepMerge(this.options, normalizedPatch.changes),
+        proxyTrace: traceOptions,
+      });
+      const before = await runComparisonCase(beforeOptions, source);
+      const after = await runComparisonCase(afterOptions, source);
+      return toSerializable({
+        schemaVersion: 1,
+        environmentVersion: this.version,
+        patch: {
+          baseVersion: normalizedPatch.baseVersion,
+          reason: normalizedPatch.reason,
+          changedPaths: Object.keys(normalizedPatch.changes),
+        },
+        before,
+        after,
+        diff: compareObservations(before, after),
+      });
+    });
+  }
+
   async observe() {
     return this.runExclusive(async () => {
       this.assertOpen();
-      const [trace, requests] = await Promise.all([
+      const [trace, requests, resources] = await Promise.all([
         this.sandbox.proxyTrace(),
         this.sandbox.networkRequests(),
+        this.sandbox.resources(),
       ]);
       return toSerializable({
         environment: this.describe(),
         trace,
         requests,
-        resources: this.sandbox.resources(),
+        resources,
       });
     });
   }
@@ -365,6 +390,81 @@ class AgentSession {
       throw createSessionError("ERR_NV8_AGENT_SESSION_CLOSED", "Agent session is closed");
     }
   }
+}
+
+function describeEnvironment(options) {
+  const fingerprint = options.fingerprint;
+  const navigator = fingerprint.navigator;
+  const screen = fingerprint.screen;
+  return {
+    page: { ...options.page },
+    fingerprint: {
+      browserMajorVersion: fingerprint.browserMajorVersion,
+      locale: fingerprint.locale,
+      timezone: fingerprint.timezone,
+      navigator: {
+        userAgent: navigator.userAgent,
+        languages: [...navigator.languages],
+        webdriver: navigator.webdriver,
+      },
+      screen: {
+        width: screen.width,
+        height: screen.height,
+        availWidth: screen.availWidth,
+        availHeight: screen.availHeight,
+        colorDepth: screen.colorDepth,
+        pixelDepth: screen.pixelDepth,
+      },
+    },
+    replay: { entryCount: options.replay.length },
+  };
+}
+
+async function runComparisonCase(options, source) {
+  const sandbox = await EdgeSandbox.create(options);
+  try {
+    let evaluation;
+    try {
+      evaluation = toSerializable(await sandbox.evaluate(source));
+    } catch (error) {
+      evaluation = { error: serializeError(error) };
+    }
+    const [trace, requests, resources] = await Promise.all([
+      sandbox.proxyTrace(),
+      sandbox.networkRequests(),
+      sandbox.resources(),
+    ]);
+    return {
+      environment: describeEnvironment(options),
+      evaluation,
+      trace: toSerializable(trace),
+      requests: toSerializable(requests),
+      resources: toSerializable(resources),
+    };
+  } finally {
+    await sandbox.close();
+  }
+}
+
+function compareObservations(before, after) {
+  const fields = ["environment", "evaluation", "trace", "requests", "resources"];
+  const changedFields = fields.filter(field => !sameJson(before[field], after[field]));
+  return {
+    changed: changedFields.length > 0,
+    changedFields,
+    evaluationChanged: changedFields.includes("evaluation"),
+    traceChanged: changedFields.includes("trace"),
+    requestsChanged: changedFields.includes("requests"),
+    resourceGraphChanged: changedFields.includes("resources"),
+  };
+}
+
+function serializeError(error) {
+  return {
+    name: error?.name ?? "Error",
+    code: error?.code ?? null,
+    message: `${error?.message ?? error}`,
+  };
 }
 
 function normalizeAgent(input) {

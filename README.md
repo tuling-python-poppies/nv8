@@ -259,6 +259,23 @@ const nv8 = await createNv8({
 `plugin` 模式覆盖面较小，按需拉取——这是有意为之的决策，见
 [ADR-0001](docs/adr/0001-plugin-surface-coverage.md)。
 
+### `createAgentSession`（面向 AI 辅助逆向侦察）
+
+面向「让 Agent 观察并试探性调整模拟环境」。它是宿主侧控制面：Agent 不能直接改
+ Realm 的 `globalThis`，只能提交声明式、可审计的 `EnvironmentPatch`（仅 `page` /
+`fingerprint` / `replay`），并可用 `compareEnvironment()` 在隔离 Sandbox 里先验证
+假设再落地。也有 stdio JSON-RPC 桥（`npm run agent:bridge`）。完整协议见
+[docs/agent-bridge.md](docs/agent-bridge.md)。
+
+```js
+import { createAgentSession } from 'nv8/agent';
+
+const session = await createAgentSession({
+  agent: { agentId: 'pi', agentVersion: '1.0' },
+  sandbox: { page: { url: 'https://target.test/' }, proxyTrace: { enabled: true } },
+});
+```
+
 ---
 
 ## 浏览器运行时
@@ -1121,6 +1138,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 | `npm run check:bundle` | 校验缓存是否属于本机 |
 | `npm run check:surface-order` | 校验 Window 全局顺序表与采集 fixture 一致 |
 | `npm run build:css-defaults` | 从 fixture 重新生成 UA 默认样式表 |
+| `npm run agent:bridge` | 启动单会话 stdio JSON-RPC Agent 桥（见 [docs/agent-bridge.md](docs/agent-bridge.md)）|
 | `npm run fingerprint:*` | 见[指纹采集脚本](#指纹采集脚本) |
 
 基准数据、子进程 profile 与 bundle 对照结论见 [`docs/backend-benchmark.md`](docs/backend-benchmark.md)；
