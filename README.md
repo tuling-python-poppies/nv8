@@ -1,10 +1,16 @@
-# NV8
+# NV8 — Node 原生的 Edge 浏览器运行时模拟与 Web 采集框架
 
-一个零依赖的 Node.js 浏览器运行时模拟与 Web 采集框架。
+[![图灵课堂](https://img.shields.io/badge/Training%20institution-%E5%9B%BE%E7%81%B5%E8%AF%BE%E5%A0%82-blue)](https://gitee.com/tuling-python)
+[![node](https://img.shields.io/badge/node-%3E%3D18.18.0-339933?logo=nodedotjs&logoColor=white)](#环境要求)
+[![Edge](https://img.shields.io/badge/Edge-150%20%7C%20151%20%7C%20152-0078D7?logo=microsoftedge&logoColor=white)](#三层对齐)
+![dependencies](https://img.shields.io/badge/dependencies-%E9%9B%B6%E4%BE%9D%E8%B5%96-brightgreen)
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
+[![license](https://img.shields.io/badge/license-MulanPSL--2.0-blue)](LICENSE)
+[![Gitee](https://img.shields.io/badge/Gitee-nv8-c71d23?logo=gitee&logoColor=white)](https://gitee.com/tuling-python/nv8)
 
-NV8 在 Node 进程里重建一个与真实 Microsoft Edge 无法区分的 JavaScript 执行环境，
-用来运行目标站点的前端代码，从中恢复请求签名、令牌与协议行为；同时提供一套完整的
-采集调度层，把恢复出来的协议变成可持续运行的数据采集。
+NV8 是一个零依赖的运行时：它在 Node 进程里重建一个与真实 Microsoft Edge 无法区分的
+JavaScript 执行环境，用来运行目标站点的前端代码，从中恢复请求签名、令牌与协议行为；
+同时提供一套完整的采集调度层，把恢复出来的协议变成可持续运行的数据采集。
 
 **许可证：木兰宽松许可证，第 2 版（MulanPSL-2.0）。**
 
@@ -13,9 +19,10 @@ NV8 在 Node 进程里重建一个与真实 Microsoft Edge 无法区分的 JavaS
 ## 目录
 
 - [定位：它解决什么问题](#定位它解决什么问题)
+- [特性一览](#特性一览)
 - [不做什么](#不做什么)
 - [快速开始](#快速开始)
-- [两条使用路径](#两条使用路径)
+- [三条使用路径](#三条使用路径)
 - [浏览器运行时](#浏览器运行时)
 - [三层对齐](#三层对齐)
 - [采集层](#采集层)
@@ -54,9 +61,37 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
 
 补到什么程度是可以量化的，见[三层对齐](#三层对齐)。
 
+协议恢复正在变成人机协作：Agent 可以观察环境、提出指纹假设，在隔离 Sandbox 里
+验证（`compareEnvironment`）后再落地。NV8 对此提供受控的
+[Agent 会话层](#三条使用路径)：变更只能走声明式的 `EnvironmentPatch`，带版本、
+可回滚、有审计记录，Agent 不能直接改 Realm。
+
 协议恢复出来之后，采集本身还有一整套工程问题——分页、限流、熔断、代理轮换、
 断点续采、去重落库。NV8 的[采集层](#采集层)把这些做完了，所以从「跑通一次签名」
 到「稳定跑一个月」之间不需要另起一个项目。
+
+---
+
+## 特性一览
+
+- **Edge 环境模拟**：DOM、事件、页面生命周期、CSSOM、Worker、存储、Canvas、WebGL
+  等表面在 Node 内重建，原生函数伪装为 `[native code]`；不需要安装 Edge、Chrome
+  或 Chromium，对齐程度可量化，见[三层对齐](#三层对齐)。
+- **两种装配方式**：`EdgeSandbox` 开箱即用完整表面；`createNv8` 以 plugin 模式按需
+  裁剪，见[三条使用路径](#三条使用路径)。
+- **协议恢复工具链**：`networkRequests()` 取出脚本发起的全部请求，`trace()` /
+  `watchApis()` / `openInspector()` 把签名入口定位出来并下断点。
+- **Agent 会话层**：面向 LLM Agent 的宿主侧控制面——声明式 `EnvironmentPatch`
+  （仅 `page` / `fingerprint` / `replay`）、版本化 + 回滚 + 审计，
+  `compareEnvironment()` 在隔离 Sandbox 里先验证假设再落地；附 stdio JSON-RPC 桥
+  （`npm run agent:bridge`），见 [docs/agent-bridge.md](docs/agent-bridge.md)。
+- **离线回放与 Evidence**：运行目标脚本时不联网，回放未命中就在本地失败，绝不回落
+  真实网络；采集产物可固化为可复现的 Evidence Bundle，见
+  [Evidence 与离线回放](#evidence-与离线回放)。
+- **采集调度层**：分页、限流、熔断、代理轮换、断点续采、去重落库，把恢复出的协议
+  变成可持续运行的数据采集，见[采集层](#采集层)。
+- **进程后端与资源上限**：worker-thread 与 child-process 两种后端可切换，含资源配额
+  与崩溃恢复，见[进程后端与资源上限](#进程后端与资源上限)。
 
 ---
 
@@ -208,9 +243,10 @@ await sink.close();
 
 ---
 
-## 两条使用路径
+## 三条使用路径
 
-NV8 有两个入口，对应两种心智模型。
+NV8 有三个入口，对应三种心智模型：跑目标脚本（`EdgeSandbox`）、按需裁剪装配
+（`createNv8`）、让 Agent 受控观察与试探（`createAgentSession`）。
 
 ### `EdgeSandbox`（推荐用于协议恢复）
 
