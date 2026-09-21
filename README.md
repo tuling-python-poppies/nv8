@@ -7,6 +7,7 @@
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 [![license](https://img.shields.io/badge/license-MulanPSL--2.0-blue)](LICENSE)
 [![Gitee](https://img.shields.io/badge/Gitee-nv8-c71d23?logo=gitee&logoColor=white)](https://gitee.com/tuling-python/nv8)
+[![GitHub](https://img.shields.io/badge/GitHub-mirror-181717?logo=github&logoColor=white)](https://github.com/tuling-python-poppies/nv8)
 
 NV8 是一个零依赖的运行时：它在 Node 进程里重建一个与真实 Microsoft Edge 无法区分的
 JavaScript 执行环境，用来运行目标站点的前端代码，从中恢复请求签名、令牌与协议行为；
