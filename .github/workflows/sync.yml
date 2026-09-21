@@ -1,0 +1,48 @@
+name: Sync from Gitee
+
+# 把 Gitee 的 master 镜像到 GitHub。Gitee 是主仓库，GitHub 只作为镜像。
+#
+# 早期版本把这个文件只放在 GitHub 上，同步时靠「reset 到 Gitee 的树之后，再把自己
+# 复制回来单独提交一次」来保住自己。这有两个问题：
+#
+#   1. 本文件不进版本控制，Gitee 侧看不到它，两边历史必然分叉；
+#   2. 一旦 Gitee 上也有了同名文件，「复制回来再提交」就没有任何改动可提交，
+#      在 `set -e` 下 commit 直接失败，同步从此静默停摆。
+#
+# 现在本文件由仓库版本控制（Gitee 上也有同一份），reset 到 Gitee 的树之后它本来就在，
+# 所以那段自保逻辑整个不需要了：镜像动作退化成一次 `git push --force`。
+#
+# 另注：GitHub 对长期无活动的仓库会自动停用定时任务，需要时用 workflow_dispatch
+# 手动触发一次即可恢复。
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gitee-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 祖先判断需要完整历史，浅克隆会让 merge-base 得出错误结论。
+          fetch-depth: 0
+
+      - name: Mirror from Gitee
+        run: |
+          set -euo pipefail
+          git remote add gitee https://gitee.com/tuling-python/nv8.git
+          git fetch --no-tags gitee master
+          if git merge-base --is-ancestor FETCH_HEAD HEAD; then
+            echo "Gitee master 已经在 GitHub master 里，无需同步"
+            exit 0
+          fi
+          git push --force origin "FETCH_HEAD:refs/heads/master"
