@@ -354,7 +354,7 @@ const sandbox = await EdgeSandbox.create({
 });
 ```
 
-所有受支持的配置字段会在启动执行单元前校验。类型错误、越界数值、重复 replay 记录或不支持的字段值会使 `create()` 拒绝。
+所有受支持的配置字段会在启动执行单元前校验。未知顶层配置键（例如把 `proxyTrace` 拼成 `proxyTrac`）、类型错误、越界数值和重复 replay 记录都会使 `create()` 拒绝，不会被静默忽略。
 
 ### 5.2 页面配置
 

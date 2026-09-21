@@ -17,6 +17,28 @@ import { normalizeRuntimeOptions } from '../src/public/edge-runtime-options.js';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
 
+// --------------------------------------------- unknown top-level keys
+
+test('unknown top-level options fail closed instead of being silently dropped', () => {
+  for (const options of [
+    { environment: {} },
+    { proxyTrac: {} },
+    { totallyBogusKey: 1 },
+  ]) {
+    assert.throws(
+      () => normalizeRuntimeOptions(options),
+      error => error instanceof TypeError && /not supported/.test(error.message),
+      `${Object.keys(options)[0]} must be rejected`,
+    );
+  }
+});
+
+test('every key returned by normalization is accepted back as input', () => {
+  // setPage 与 Agent Session 会把归一化结果重新传回本函数：白名单必须覆盖全部返回键。
+  const normalized = normalizeRuntimeOptions({});
+  assert.doesNotThrow(() => normalizeRuntimeOptions({ ...normalized }));
+});
+
 // ------------------------------------------------------------- page (IKFD9R)
 
 test('a page string is accepted as a { url } shorthand', () => {
