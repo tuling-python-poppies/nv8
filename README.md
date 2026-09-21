@@ -1126,7 +1126,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 | 命令 | 说明 |
 |---|---|
-| `npm test` | 全量测试（自动发现 tests/；文件并发取 `min(8, 核数-1)`，理由见 `scripts/run-tests.mjs`）|
+| `npm test` | 全量测试（自动发现 tests/；文件并发取 `min(8, 核数-1, 内存/1GiB)`，理由见 `scripts/run-tests.mjs`）|
 | `npm run test:matrix` | 多 Node 版本矩阵 |
 | `npm run test:node18` | 只跑 Node 18 |
 | `npm run benchmark` | 当前 Node / backend 的冷启动、热执行、签名载荷、崩溃恢复、Realm 创建销毁 |
