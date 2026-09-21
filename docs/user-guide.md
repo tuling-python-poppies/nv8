@@ -4,15 +4,6 @@
 
 **说明：** 本文档中的 `<nv8-root>` 指 Nv8 的安装目录（本文档所在目录的上一级，即仓库根）。在实际使用时，请将 `<nv8-root>` 替换为您的实际安装路径，例如 `/home/user/Nv8` 或 `D:\develop_software\Nv8`。
 
-当前运行基线：
-
-- 支持 Node.js `>=18.18.0`（在 18/20/22/24 四档均有测试；**指纹敏感场景请用 Node 22+**，
-  原因见 README「环境要求」）；手册中的直接 Node 命令均带 `--experimental-vm-modules`。
-- 默认环境 profile：`edge-compat`，默认指纹目标为 Edge 150。
-- 默认执行后端：`child-process`。
-- Node 18/20 使用异步 VM module linker；Node 22/24 使用批量链接快速路径。两条路径对公共行为等价。
-- Core、插件与隔离后端的验证命令见第 17 节；依赖证据文件的完整审计仅能在证据齐全的开发副本运行。
-
 这个项目是 Node V8 加浏览器兼容层，不是 Chromium renderer，也不是 Microsoft Edge 私有 V8 构建。它适合执行需要浏览器全局对象、DOM/Web IDL、Realm、Worker、确定性时序和离线 replay 的 JavaScript bundle。
 
 ## 目录
@@ -60,7 +51,7 @@ nvm use 22
 nvm use 24
 ```
 
-Nv8 使用 `vm.SourceTextModule`。所有 `npm` 测试和构建脚本已经带有 `--experimental-vm-modules`；手动调用 Node 运行 Core、测试或 bundle 构建时必须显式添加该 flag：
+需要 VM Modules 的 npm 测试和构建脚本已经带有 `--experimental-vm-modules`；手动调用 Node 运行 Core、测试或 bundle 构建时必须显式添加该 flag：
 
 ```powershell
 node --experimental-vm-modules --test tests/node-compat-test.js
@@ -76,11 +67,7 @@ node --experimental-vm-modules scripts/build-module-bundle.mjs
 ### 1.2 依赖
 
 运行时不依赖浏览器、Chromium、Playwright、Selenium 或 iv8。项目**零依赖**
-（`dependencies` 与 `devDependencies` 均为空），`npm install` 不装任何包：
-
-```powershell
-npm install --ignore-scripts
-```
+（`dependencies` 与 `devDependencies` 均为空）；安装命令见 §2.1。
 
 沙箱执行单元不能导入 Node 内置模块、npm 包、本地文件或网络模块。
 
@@ -135,31 +122,10 @@ import {
 } from "nv8";
 ```
 
-顶层 `nv8` 的导出：
-
-| 导出 | 作用 |
-| --- | --- |
-| `EdgeSandbox` / `createSandbox` | 创建和控制隔离沙箱（子进程边界）|
-| `edge150Fingerprint` / `edge151Fingerprint` / `edge152Fingerprint` | 冻结浏览器指纹（与 `nv8/fingerprint/edge-150` 等子路径同源）|
-| `createNv8` / `nv8Eval` | 面向可裁剪装配的进程内入口 |
-| `minimalPreset` / `basicPreset` / `domPreset` / `networkPreset` / `fullPreset` | 插件组合 |
-| `*Plugin`（`domCorePlugin`、`fetchPlugin` …）| 单个内置插件 |
-| `profiles` / `createProfile` | 内置 profile 与自定义 profile 构造 |
-| `createNv8()` 返回的 `lockPlan`（及 `pluginLockPlan` 选项）| 插件装配锁定与校验（`nv8.plugin-lock/v1`）|
-| `collector` / `protocol` | 采集层与请求协议层 |
-
-子路径导出（与 `package.json` 的 `exports` 一一对应）：
-
-| 导入路径 | 内容 |
-| --- | --- |
-| `nv8/fingerprint/edge-150` | Edge 150 冻结指纹 |
-| `nv8/fingerprint/edge-151` | Edge 151 冻结指纹 |
-| `nv8/fingerprint/edge-152` | 本机 Edge 152 冻结指纹（当前对等性基准） |
-| `nv8/protocol` | 请求协议层（`src/collection/request-protocol/`）|
-| `nv8/collector` | 采集层（`src/collection/collector/`）|
-
-`EdgeSandbox` / `createSandbox` 与三个指纹都在顶层导出里；`nv8/fingerprint/edge-150`
-等子路径保留给只需要指纹的调用方，两者同源。仓库内部（未装依赖）仍可用相对路径导入。
+根入口提供 `EdgeSandbox`、`createNv8`、Agent Session、冻结指纹、preset、Profile、
+Protocol 和 Collector；冻结指纹、Agent、Protocol 和 Collector 也有对应的子路径入口。
+完整导出和参数说明见
+[`docs/api-reference.md`](api-reference.md)。仓库内部（未装依赖）仍可用相对路径导入。
 
 ### 2.3 第一次验证
 
@@ -256,14 +222,8 @@ await sandbox.disableTrace();
 await sandbox.clearTrace();
 ```
 
-以下方法是别名：
-
-| 主方法 | 别名 |
-| --- | --- |
-| `enableProxyTrace()` | `enableTrace()` |
-| `disableProxyTrace()` | `disableTrace()` |
-| `proxyTrace()` | `trace()` |
-| `clearProxyTrace()` | `clearTrace()` |
+`enableProxyTrace()`、`disableProxyTrace()`、`proxyTrace()` 和 `clearProxyTrace()`
+保留为兼容别名。
 
 Trace 只观察兼容层 API 调用，不代表真实 Chromium DevTools 调用栈。
 
@@ -295,25 +255,19 @@ const nv8 = await createNv8({
 });
 
 try {
-  const realm = await nv8.sandbox.createRealm({ type: "root" });
-  console.log(realm.evaluate("document.body.textContent"));
+  const global = await nv8.createRealm({ type: "root" });
+  console.log(global.document.body.textContent);
 } finally {
   await nv8.destroy();
 }
 ```
 
-插件在 Realm 启动前按声明的依赖关系拓扑排序。每个插件提供唯一 `id`、`version`、
-`capabilities`、`dependencies`，以及 `install(sandbox, registry, config)` 与
-（需要往 Realm 里装表面时）`activate(context)`。
+### 3.9 Agent Session
 
-**`install` 与 `activate` 的分工是硬约束**：`install-*` 函数操作的是宿主的
-`globalThis`，在 Realm 建立之前跑会污染宿主进程。现代插件用单参数
-`install(context)` 只登记元数据/表面预留，真正装表面必须在 `activate` 里经
-`context.moduleLoader.importUrlAsync()` 在 Realm 内完成。旧式三参数
-`install(sandbox, registry, config)` 仍会被兼容调用（宿主作用域，不会装进
-Realm）；显式标记 `legacy: true` 的插件则整段跳过，只保留元数据。
-`plugins/canvas` 曾经把安装写在 `install` 里，结果整个插件是个空壳
-（加不加它 surface 一模一样），而它还声明了 `canvas.base` 能力。
+`createAgentSession()` 是宿主侧的受控环境编排入口：它可以观察环境、比较补丁前后的
+结果，并只通过声明式 `EnvironmentPatch` 修改 `page`、`fingerprint` 和 `replay`，不会
+直接改写 Realm。完整方法、版本、回滚和 stdio JSON-RPC 约定见
+[`docs/agent-bridge.md`](agent-bridge.md)。
 
 ## 4. 最小可运行示例
 
@@ -383,9 +337,6 @@ const sandbox = await EdgeSandbox.create({
   execution: {
     backend: "child-process",
   },
-  environment: {
-    profile: "edge-compat",
-  },
   proxyTrace: {
     enabled: false,
     mirrorToConsole: false,
@@ -436,17 +387,21 @@ execution: {
 
 默认生产和不受信任代码场景应保留 `child-process`。
 
-### 5.4 环境 profile
+### 5.4 `createNv8` Profile
 
-`environment.profile` 决定在隔离后端中安装的浏览器能力集合：
+Profile 只用于 `createNv8({ profile })` 的进程内插件装配，不是 `EdgeSandbox`
+配置字段。当前内置 Profile 包括：
 
-| profile | 安装内容 | 适用场景 |
-| --- | --- | --- |
-| `edge-compat` | 默认完整 Window、DOM、Fetch、Canvas、Worker、Storage、设备与渲染兼容层 | 需要现有 Edge 兼容表面的 bundle |
-| `web-foundation` | Console、Timers、DOMException、Events、URL 与 Text Encoding | 不需要 DOM 或网络的轻量 Web 脚本 |
-| `minimal` | ECMAScript、模块、Promise 驱动与 Node-global 审计 | 纯 JavaScript 或插件基础验证 |
+| Profile | 内容 |
+| --- | --- |
+| `minimal` | WebIDL、错误、内建对象和 Console |
+| `minimal-fetch` | `minimal` 加离线 Fetch |
+| `dom-replay` | DOM、Storage、Fetch/XHR 离线回放 |
+| `legacy-full` | 迁移期完整兼容入口，experimental |
+| `browser-profile-edge-v150` | Edge 150 浏览器 Profile |
 
-`edge-compat` 是默认值。两个较小的 profile 仍经 `child-process` 或显式选择的 `worker-thread` 运行；它们不因缩小 API 表面而改变隔离模型。`minimal` 不安装 `console`、timer、URL、`document` 或浏览器 API。
+`createNv8` 的 `runtimeMode: "plugin"` 按 Profile 和插件裁剪表面；`legacy` 是兼容装配
+路径，实际表面取决于所选 Profile 或 preset。需要子进程安全边界时使用 `EdgeSandbox`。
 
 ## 6. 页面、Realm 和 Worker
 
@@ -761,39 +716,27 @@ const fingerprint = {
 
 ### 9.2 浏览器 major version
 
-Edge 150 是默认值：
+Edge 150 是默认值；版本特定的 profile 应与对应 UA 一起使用：
 
 ```js
-fingerprint: {
-  browserMajorVersion: 150,
-}
+import { edge151Fingerprint } from "nv8/fingerprint/edge-151";
+import { edge152Fingerprint } from "nv8/fingerprint/edge-152";
+
+const sandbox = await EdgeSandbox.create({ fingerprint: edge151Fingerprint });
+// Edge 152: { fingerprint: edge152Fingerprint }
 ```
 
-Edge 151 只能显式 opt-in：
+当前 `browserMajorVersion` 只接受 `150`、`151` 和 `152`。如果自定义 UA，必须满足：
 
-```js
-fingerprint: {
-  browserMajorVersion: 151,
-}
-```
+- 包含对应版本的 `Chrome/<major>.`；
+- 如果包含 `Edg/<major>`，其主版本必须与 `Chrome/<major>` 一致；
+- 不把浏览器版本与 UA 主版本混用。
 
-当前只接受 `150` 和 `151`。如果自定义 UA，必须满足：
+如果复制 profile 后修改版本号，必须同时提供匹配的 `navigator.userAgent`。
 
-- 包含对应版本的 `Chrome/150.` 或 `Chrome/151.`；
-- 不包含 `Edg/` token；
-- 不把 Edge 151 profile 与 Chrome/150 UA 混用。
-
-151 profile 只提供已验证的 JavaScript-visible additions，包括：
-
-- `FontFaceSet` 相关表面；
-- `WheelEvent.prototype.momentum`；
-- `TransitionEvent.prototype.animation`；
-- `AnimationEvent.prototype.animation`；
-- `PerformanceNavigationTiming.navigationId`；
-- `Intl.v8BreakIterator` 的兼容 adapter；
-- Edge 151 观测到的 `Error.stackTraceLimit` descriptor。
-
-这不是完整 Edge 151、Chromium 或 V8 版本切换。没有证据的 API 不会因为设置 `151` 而伪造出来。
+151/152 profile 只提供仓库已验证的 JavaScript-visible 版本差异，包括版本门控的
+全局、原型成员、Range、字体、Intl、Performance 和错误 descriptor。它们不是完整
+Edge、Chromium 或 V8 版本切换；没有证据的 API 不会因为设置版本号而伪造出来。
 
 ### 9.3 Navigator 和 UA-CH
 
@@ -805,7 +748,7 @@ const fingerprint = {
     userAgent:
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
       + "AppleWebKit/537.36 (KHTML, like Gecko) "
-      + "Chrome/150.0.0.0 Safari/537.36",
+      + "Chrome/150.0.0.0 Safari/537.36 Edg/150.0.0.0",
     platform: "Win32",
     languages: ["zh-CN", "zh"],
     language: "zh-CN",
@@ -1245,9 +1188,18 @@ const result = await sandbox.evaluateModule(
 | `maxHtmlBytes` | `4 MiB` | `1 B`–`64 MiB` |
 | `maxOutputBytes` | `1 MiB` | `1 B`–`64 MiB` |
 | `maxPayloadBytes` | `8 MiB` | `1 KiB`–`128 MiB` |
-| `maxInFlightRequests` | `32` | `1`–`1024` |
-| `maxQueuedBytes` | `16 MiB` | `1 B`–`512 MiB` |
+| `maxFrameQueueBytes` | `32 MiB` | `1 KiB`–`512 MiB` |
+| `maxValueDepth` | `32` | `1`–`256` |
+| `maxArrayLength` | `100000` | `1`–`10000000` |
+| `maxFieldCount` | `10000` | `1`–`1000000` |
+| `maxStringBytes` | `4 MiB` | `1 B`–`128 MiB` |
+| `maxBytesLength` | `4 MiB` | `1 B`–`128 MiB` |
 | `maxRealms` | `12` | `1`–`4096` |
+| `maxWorkerRealms` | `4096` | `0`–`4096` |
+| `maxWorkerConnections` | `4096` | `0`–`16384` |
+| `maxWorkerDepth` | `64` | `0`–`256` |
+| `prewarmChildRealms` | `0` | `0`–`8` |
+| `maxBatchConcurrency` | `4` | `1`–`256` |
 
 调整示例：
 
@@ -1260,8 +1212,7 @@ const sandbox = await EdgeSandbox.create({
     maxHtmlBytes: 8 * 1024 * 1024,
     maxOutputBytes: 2 * 1024 * 1024,
     maxPayloadBytes: 16 * 1024 * 1024,
-    maxInFlightRequests: 32,
-    maxQueuedBytes: 32 * 1024 * 1024,
+    maxFrameQueueBytes: 32 * 1024 * 1024,
     maxRealms: 32,
   },
 });
@@ -1269,9 +1220,11 @@ const sandbox = await EdgeSandbox.create({
 
 ### 14.2 超时处理
 
-用户代码超过 `timeoutMs` 时，控制器会终止整个 child process group，并为后续请求启动干净的执行单元。不要依赖超时后的全局变量、DOM 对象、Promise 或 Worker 继续存在。
+用户代码超过 `timeoutMs` 时，控制器会终止当前执行单元，并为后续请求启动干净的执行单元。不要依赖超时后的全局变量、DOM 对象、Promise 或 Worker 继续存在。
 
-`maxInFlightRequests` 和 `maxQueuedBytes` 同时限制连接上的 IPC 并发和未完成请求帧大小；超限请求会以 `ERR_EDGE_IPC_LIMIT` 在发送前失败。
+`maxFrameQueueBytes` 限制连接上尚未完成的 IPC 请求帧总大小；超限请求会在发送前以
+`LIMIT_FRAME_QUEUE_BYTES` 失败。`maxPayloadBytes`、`maxValueDepth` 等字段限制协议值的
+编码和解码。
 
 Realm 引导和 `setPage()` 使用单独的启动 deadline；不会简单地把初始化阶段无限延长。
 
@@ -1302,35 +1255,11 @@ try {
 
 不要为了减少启动开销而在不受信任代码场景切换到 `worker-thread`。
 
-### 15.2 明确不提供的宿主访问
+### 15.2 宿主访问边界
 
-以下能力不会打开真实资源：
-
-- 外部 Fetch、XHR、WebSocket、EventSource、WebTransport；
-- 文件系统、进程、环境变量和子进程；
-- GPU、显示器和图形驱动；
-- 摄像头、麦克风和屏幕捕获；
-- 系统 codec、声卡和 TTS；
-- 物理传感器；
-- Bluetooth、HID、Serial 和 USB；
-- 系统级 ServiceWorker 网络拦截。
-
-### 15.3 不要把兼容层当作真实浏览器
-
-本地 V8 的结果适合作为：
-
-- 浏览器 JavaScript bundle 的离线执行环境；
-- 签名、Cookie、请求 body 和 API 参数的生成环境；
-- 固定 replay 的协议调试环境；
-- 浏览器可观察字段和 Worker/Realm 关系的测试环境。
-
-它不能证明：
-
-- 真实 Chromium renderer 通过；
-- 真实 Edge 私有 V8 intrinsic 通过；
-- TLS、HTTP/2、HTTP/3、代理或 ClientHello 指纹一致；
-- 真实 GPU、字体、媒体设备或操作系统行为一致；
-- 真实浏览器进程和渲染进程调度一致。
+页面脚本只能使用兼容层和离线 replay；网络、文件、进程、GPU、媒体、传感器、外设
+和系统级 ServiceWorker 不会打开真实资源。真实 HTTP 只属于 Collector 层。
+本地 V8 的能力边界和不能替代真实 Chromium/Edge 的项目见 §19。
 
 ## 16. 调试沙箱子进程
 
@@ -1464,12 +1393,8 @@ npm run test:matrix        # 等价于逐档 node --experimental-vm-modules --te
 `npm test` 与矩阵用的是**同一条命令**（`--test` 不带参数，自动发现 `tests/`）。
 目录形式与 glob 形式在 Node 18/20 与 22+ 之间不兼容，所以两处都用无参数模式。
 
-module bundle 现在携带 V8 字节码缓存（`cachedData`），加载时用一次 `readFileSync`
-替代约 4000 次文件读取，并跳过源码解析+编译，使冷启动与每次 Realm 创建更快。
-因此该文件除了与本机路径绑定，还与 **V8 版本**绑定：换 Node 大版本后重跑
-`npm run build:bundle` 可恢复字节码加速。版本或路径不匹配时，加载器**静默回退**
-到从源码加载（忽略 `cachedData`），行为不变、只是失去这部分加速，绝不会使用错误
-版本的字节码。没有 `--experimental-vm-modules` 时 `build:bundle` 会降级生成纯源码包。
+需要冷启动优化时，可在目标 Node 版本上运行 `npm run build:bundle` 生成本机模块包；
+版本或路径不匹配时会回退源码加载，不改变行为。
 
 **Node 18/20 有一处宿主限制**：Window 全局的枚举顺序做不到与真实 Edge 一致
 （V8 < 12 把可枚举键排在不可枚举键之前）。指纹敏感场景请用 Node 22+，
@@ -1510,9 +1435,8 @@ npm run benchmark
 报冷启动、热复用、Realm 创建销毁与常驻内存。上界断言取多次采样的**最小值**——
 竞争只会让采样变大，最小值受污染最少。
 
-带字节码缓存的 module bundle（`npm run build:bundle`）会明显降低冷启动与 Realm
-创建耗时（实测冷启动约降 19%，每个 Realm 少约 76ms 的模块编译）。热复用与签名
-工作流本就是亚毫秒级，不受影响。常驻服务只在进程启动付一次冷启动，之后走热路径。
+字节码缓存主要影响冷启动和 Realm 创建；具体测量方法与结果见
+`docs/backend-benchmark.md`。
 
 ## 18. 常见问题
 
@@ -1531,19 +1455,8 @@ Node 必须是 `18.18.0` 或更新版本。通过 `npm test`、`npm run test:mat
 
 ### 18.2 `fingerprint userAgent must describe Chrome ...`
 
-检查 `browserMajorVersion` 和 UA 是否一致：
-
-```js
-fingerprint: {
-  browserMajorVersion: 151,
-  navigator: {
-    userAgent: "Mozilla/5.0 Chrome/151.0.0.0 Safari/537.36",
-  },
-}
-```
-
-UA 可以带 `Edg/<major>`（Edge profile 本身就带），但一旦出现，其主版本必须与
-`Chrome/<major>` 一致；不带 `Edg/` 按 Chrome 处理。
+检查 `browserMajorVersion` 与 UA 主版本是否一致；`Edg/<major>` 可选，但存在时必须
+与 `Chrome/<major>` 一致。完整规则见 §9.2。
 
 ### 18.3 `fetch()` 返回 `TypeError`
 
@@ -1616,7 +1529,7 @@ UA 可以带 `Edg/<major>`（Edge profile 本身就带），但一旦出现，�
 - 可配置 Navigator、UA-CH、Screen、WebGL/WebGPU 和设备能力 profile；
 - 可配置 Date、Performance、timer 和 animation frame 时序；
 - 受限、可审计的 API Trace 和网络请求 capture；
-- 默认 child-process 超时终止与干净重启。
+- 默认 child-process 超时终止；运行时崩溃重启需设置 `execution.restart: "restart"`。
 
 ### 19.2 不应宣称的能力
 
