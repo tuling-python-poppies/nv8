@@ -13,7 +13,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { normalizeRuntimeOptions } from '../src/public/edge-runtime-options.js';
+import { normalizeRuntimeOptions, RUNTIME_OPTION_KEYS } from '../src/public/edge-runtime-options.js';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
 
@@ -33,10 +33,12 @@ test('unknown top-level options fail closed instead of being silently dropped', 
   }
 });
 
-test('every key returned by normalization is accepted back as input', () => {
-  // setPage 与 Agent Session 会把归一化结果重新传回本函数：白名单必须覆盖全部返回键。
-  const normalized = normalizeRuntimeOptions({});
-  assert.doesNotThrow(() => normalizeRuntimeOptions({ ...normalized }));
+test('whitelist exactly matches the keys normalization emits (no drift either way)', () => {
+  // 双向相等断言，把 jev 点名的 whitelist_drift 焊死：
+  //   缺键 → 归一化新增的选项会被误拒（且 setPage / Agent Session 回环会红）；
+  //   多键 → 白名单放过一个归一化其实不读的键，退回静默丢弃。
+  const emitted = Object.keys(normalizeRuntimeOptions({})).sort();
+  assert.deepStrictEqual(emitted, [...RUNTIME_OPTION_KEYS].sort());
 });
 
 // ------------------------------------------------------------- page (IKFD9R)

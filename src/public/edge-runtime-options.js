@@ -1727,7 +1727,7 @@ function normalizeExecution(inputExecution) {
  * 未知键必须报错而不是静默丢弃：`proxyTrac` 这类拼写错误会让调用方以为
  * 配置生效（trace 其实没开），且全程没有任何信号。
  */
-const RUNTIME_OPTION_KEYS = Object.freeze([
+export const RUNTIME_OPTION_KEYS = Object.freeze([
   "onCrash",
   "limits",
   "execution",
