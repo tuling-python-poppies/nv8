@@ -196,7 +196,14 @@ export function createFileCheckpointStore(config = {}) {
       // 临时名带随机后缀：同一 job 并发保存时不能互相截断
       const temporary = `${target}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
       await writeFile(temporary, `${JSON.stringify(checkpoint, null, 2)}\n`, 'utf8');
-      await rename(temporary, target);
+      try {
+        await rename(temporary, target);
+      } catch (error) {
+        // rename 失败时清理临时文件，避免目录里累积 .tmp 垃圾
+        //（进程在两者之间被杀的残留无法在此处理）。
+        try { await unlink(temporary); } catch { /* 临时文件可能已不存在 */ }
+        throw error;
+      }
     },
 
     async clear(jobId) {

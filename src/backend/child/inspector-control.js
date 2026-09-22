@@ -29,6 +29,8 @@ export function openInspector(options = {}) {
   inspector.open(port, host, false);
   const url = inspector.url();
   if (typeof url !== "string" || url.length === 0) {
+    // 开了但拿不到 URL 时先关端点再抛，否则 WebSocket 服务器会悬着泄漏。
+    try { inspector.close(); } catch { /* 端点未真正建立时 close 可能抛，忽略 */ }
     throw inspectorError(
       "ERR_EDGE_INSPECTOR_NO_URL",
       "Inspector could not open a WebSocket endpoint; check the host and port",
