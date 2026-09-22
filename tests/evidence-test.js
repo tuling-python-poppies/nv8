@@ -397,19 +397,21 @@ describe('Network Replay', () => {
       assert.strictEqual(result.response.status, 200);
       assert.strictEqual(result.response.body, '{"result": "success"}');
       
-      // 第二次请求应该失败（repeat: once）
+      // 第二次请求：记录存在但 repeat:once 配额已用尽→ EXHAUSTED（而非 NOT_FOUND）。
+      // 旧行为把“耗尽”报成“压根没记录”，调用方无法区分。
       const result2 = await replay.match({
         method: 'GET',
         url: 'https://api.example.com/data',
       });
       
-      assert.strictEqual(result2.result, REPLAY_RESULT.NOT_FOUND);
+      assert.strictEqual(result2.result, REPLAY_RESULT.EXHAUSTED);
       
       // 检查统计信息
       const stats = replay.getStats();
       assert.strictEqual(stats.total, 2);
       assert.strictEqual(stats.matched, 1);
-      assert.strictEqual(stats.notFound, 1);
+      assert.strictEqual(stats.exhausted, 1);
+      assert.strictEqual(stats.notFound, 0);
     } finally {
       await cleanupTestBundle(bundlePath);
     }

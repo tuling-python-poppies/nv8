@@ -280,7 +280,8 @@ test('maxTotalItems stops once enough items are collected', async () => {
   // 第二页跨过了上限就停，不会为了凑整继续翻
   assert.equal(result.items.length, 4);
   assert.equal(result.pages.length, 2);
-  assert.equal(result.stop.reason, PaginationStop.EXHAUSTED);
+  // 撞上限 != 数据采完：用独立原因 MAX_TOTAL_ITEMS，不再跟 EXHAUSTED 混用
+  assert.equal(result.stop.reason, PaginationStop.MAX_TOTAL_ITEMS);
 });
 
 // ------------------------------------------------------ 取消与错误

@@ -40,6 +40,7 @@ import {
 export const PaginationStop = Object.freeze({
   EXHAUSTED: 'exhausted',
   MAX_PAGES: 'max-pages',
+  MAX_TOTAL_ITEMS: 'max-total-items',
   CURSOR_LOOP: 'cursor-loop',
   EMPTY_PAGES: 'empty-pages',
   ABORTED: 'aborted',
@@ -218,7 +219,9 @@ export class PaginationScheduler {
         this.#limits.maxTotalItems > 0
         && totalItems >= this.#limits.maxTotalItems
       ) {
-        yield this.#stopMarker(index, PaginationStop.EXHAUSTED, totalItems);
+        // 撞 maxTotalItems 上限 != 目标数据采完：用独立原因，否则调用方
+        // 拿到 EXHAUSTED 会误判"数据已采全"。EXHAUSTED 只留给游标自然采完。
+        yield this.#stopMarker(index, PaginationStop.MAX_TOTAL_ITEMS, totalItems);
         return;
       }
     }

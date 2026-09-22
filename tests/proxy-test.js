@@ -255,9 +255,11 @@ test('health() is safe to log', () => {
   pool.reportFailure(pool.acquire('o'));
 
   const health = pool.health();
-  assert.deepEqual(health[0], {
-    label: 'http://a:1', coolingDown: true, cooldownRemainingMs: 250,
-  });
+  // 带凭据的代理 label 追加脱敏哈希后缀（区分同 host:port 不同 auth），
+  // 但绝不带明文密码。
+  assert.match(health[0].label, /^http:\/\/a:1#[a-f0-9]{8}$/);
+  assert.equal(health[0].coolingDown, true);
+  assert.equal(health[0].cooldownRemainingMs, 250);
   assert.ok(!JSON.stringify(health).includes('secret'));
 });
 

@@ -90,6 +90,7 @@ export class NetworkReplay {
     }
     
     // 按策略匹配
+    let sawExhausted = false;
     for (const record of candidates) {
       const matched = await this.matchRecord(request, record);
       
@@ -99,8 +100,10 @@ export class NetworkReplay {
         const count = this.usageCount.get(record.id);
         
         if (repeat === 'once' && count >= 1) {
+          sawExhausted = true;
           continue; // 已使用，跳过
         } else if (typeof repeat === 'number' && count >= repeat) {
+          sawExhausted = true;
           continue; // 已耗尽
         }
         
@@ -119,6 +122,11 @@ export class NetworkReplay {
       }
     }
     
+    // 区分“有候选但全部耗尽”与“压根没匹配”：前者返回 EXHAUSTED（否则
+    // REPLAY_RESULT.EXHAUSTED 永不产生，getStats().exhausted 恒为 0）。
+    if (sawExhausted) {
+      return this.recordResult(REPLAY_RESULT.EXHAUSTED, request, null);
+    }
     // 未找到匹配
     return this.recordResult(REPLAY_RESULT.NOT_FOUND, request, null);
   }

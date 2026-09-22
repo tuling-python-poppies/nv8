@@ -1,5 +1,6 @@
 import net from 'node:net';
 import tls from 'node:tls';
+import { createHash } from 'node:crypto';
 
 import { CollectorConfigError, CollectorError, CollectorErrorCode } from './errors.js';
 
@@ -92,7 +93,13 @@ export function parseProxy(input) {
     throw new CollectorConfigError('proxy has a password but no username');
   }
 
-  const label = `${protocol}://${raw.host}:${port}`;
+  // label 是 cooldown / sticky / 错误消息的键。不含凭据时，同 host:port 但
+  // 不同 auth 的两个代理会共享 cooldown/sticky 状态（一个挂了把另一个也误冻）。
+  // 所以带凭据时追加一个脱敏哈希区分；密码绝不明文进 label（label 会进错误消息）。
+  const baseLabel = `${protocol}://${raw.host}:${port}`;
+  const label = username === null
+    ? baseLabel
+    : `${baseLabel}#${createHash('sha256').update(`${username}:${password}`).digest('hex').slice(0, 8)}`;
 
   const proxy = {
     protocol,
