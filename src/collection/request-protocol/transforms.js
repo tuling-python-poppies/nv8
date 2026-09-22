@@ -120,7 +120,9 @@ export function createTransform(kind, spec = {}, options = {}) {
       if (spec.patch === null || typeof spec.patch !== 'object' || Array.isArray(spec.patch)) {
         throw invalid('patch must be a plain object', { kind });
       }
-      record.patch = spec.patch;
+      // 克隆而不是按引用存：否则创建后外部修改同一 patch 对象
+      // 会静默改变已冻结 transform 的内容，破坏不可变与 digest 确定性。
+      record.patch = structuredClone(spec.patch);
       break;
 
     case TransformKind.SET_FORM_FIELD:

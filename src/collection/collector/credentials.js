@@ -107,6 +107,13 @@ export class CredentialStore {
 
       const headers = new Map();
       for (const [name, value] of Object.entries(entry?.headers ?? {})) {
+        // header 名也必须挡 CR/LF/NUL：否则带控制字符的凭据名可造成 header 注入。
+        if (/[\r\n\0]/.test(name)) {
+          throw new CollectorConfigError(
+            `credential header name "${name}" for ${origin} contains CR, LF or NUL`,
+            { context: { origin, header: name } }
+          );
+        }
         if (typeof value !== 'string') {
           throw new CollectorConfigError(
             `credential header "${name}" for ${origin} must be a string`,

@@ -176,7 +176,17 @@ export function createKeyedStateSlot(options = {}) {
     },
 
     set(host, key, value) {
-      bucket(host).set(key, value);
+      const map = bucket(host);
+      // 与 get() 一致：仅新增 key 时受 maxKeys 约束，更新已有 key 不限。
+      // 旧实现 set() 完全不检查，显式写入可绕过主机键上限（声明的配额形同虚设）。
+      if (!map.has(key) && map.size >= maxKeys) {
+        const error = new RangeError(
+          `${label} exceeded maxKeys (${maxKeys}) for this scope host`
+        );
+        error.code = 'ERR_NV8_STATE_KEY_LIMIT';
+        throw error;
+      }
+      map.set(key, value);
       return value;
     },
 

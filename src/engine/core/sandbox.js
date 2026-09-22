@@ -1218,7 +1218,10 @@ async function restorePluginSnapshots(
   sandboxId,
 ) {
   for (const plugin of pluginInstances) {
-    if (!plugin.restore || !snapshot.state[plugin.id]) continue;
+    // 用 hasOwnProperty 而不是真值判断：旧的 `!snapshot.state[plugin.id]` 会把
+    // 值为 0 / "" / false 的合法插件状态当成「没状态」静默跳过不恢复。
+    if (!plugin.restore) continue;
+    if (!Object.prototype.hasOwnProperty.call(snapshot.state, plugin.id)) continue;
     try {
       await plugin.restore(createContext(plugin), snapshot.state[plugin.id]);
     } catch (error) {

@@ -7,9 +7,9 @@ export function createLifecycleRecorder(options = {}) {
     emit(name, data = {}) {
       if (entries.length >= maxEntries) entries.shift();
       entries.push(Object.freeze({
+        ...sanitize(data),
         name,
         timestamp: Date.now(),
-        ...sanitize(data),
       }));
     },
     snapshot() {

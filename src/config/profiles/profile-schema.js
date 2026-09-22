@@ -111,13 +111,15 @@ export function validateProfileManifest(manifest) {
     validateNodeSupport(manifest.nodeSupport);
   }
   
-  // pluginPins 必须是对象（如果存在）
-  if (manifest.pluginPins !== undefined && typeof manifest.pluginPins !== 'object') {
+  // pluginPins 必须是对象（如果存在）；typeof null === 'object'，需单独排除 null。
+  if (manifest.pluginPins !== undefined
+    && (manifest.pluginPins === null || typeof manifest.pluginPins !== 'object' || Array.isArray(manifest.pluginPins))) {
     throw new Error('Profile manifest "pluginPins" must be an object');
   }
   
   // config 必须是对象（如果存在）
-  if (manifest.config !== undefined && typeof manifest.config !== 'object') {
+  if (manifest.config !== undefined
+    && (manifest.config === null || typeof manifest.config !== 'object' || Array.isArray(manifest.config))) {
     throw new Error('Profile manifest "config" must be an object');
   }
 

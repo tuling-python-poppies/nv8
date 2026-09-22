@@ -132,10 +132,11 @@ class ValueWriter {
       return;
     }
     if (typeof value === "number") {
-      if (Number.isSafeInteger(value)) {
+      if (Number.isSafeInteger(value) && !Object.is(value, -0)) {
         this.uint8(ValueTag.SIGNED_INTEGER);
         this.int64(value);
       } else {
+        // -0 走 DOUBLE 分支保留负零符号；int64 编码会把 -0 转成 0 丢符号。
         this.uint8(ValueTag.DOUBLE);
         this.double(value);
       }

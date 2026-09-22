@@ -68,9 +68,9 @@ export class DiagnosticsCollector {
 
   _append(level, data) {
     const entry = Object.freeze({
+      ...sanitize(data),
       level,
       timestamp: Date.now(),
-      ...sanitize(data),
     });
     if (this._items.length < this._maxEntries) {
       this._items.push(entry);

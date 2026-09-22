@@ -73,7 +73,11 @@ function getBuiltInProfile(id) {
     globalThis.__NV8_PROFILE_REGISTRY__ = {};
   }
   
-  return globalThis.__NV8_PROFILE_REGISTRY__[id] || null;
+  // 用 hasOwnProperty 而不是 `registry[id] || null`：后者会把 `__proto__` /
+  // `constructor` / `toString` 等原型链属性当成合法内置 Profile 返回。
+  return Object.prototype.hasOwnProperty.call(globalThis.__NV8_PROFILE_REGISTRY__, id)
+    ? globalThis.__NV8_PROFILE_REGISTRY__[id]
+    : null;
 }
 
 /**

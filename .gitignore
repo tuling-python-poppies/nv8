@@ -29,3 +29,6 @@ output/
 # 提交它等于给别人一份命中率为 0 却仍要 readFileSync + JSON.parse 的负担
 # （实测拖慢冷启动约 90ms）。用 npm run build:bundle 本地生成。
 /src/engine/realm/module-bundle.json
+
+# 开发期本地工具配置（子代理定义、并发设置），不属于框架
+.pi/

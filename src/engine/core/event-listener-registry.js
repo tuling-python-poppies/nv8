@@ -93,7 +93,8 @@ export function createEventListenerRegistry() {
       const typeMap = listenerMap.get(target);
       if (!typeMap) return [];
       
-      return typeMap.get(type) || [];
+      // 返回副本：旧实现直接交出内部数组引用，调用方修改会破坏注册表状态。
+      return [...(typeMap.get(type) || [])];
     },
     
     /**
@@ -108,7 +109,7 @@ export function createEventListenerRegistry() {
       if (!typeMap) return false;
       
       const listeners = typeMap.get(type);
-      return listeners && listeners.length > 0;
+      return listeners !== undefined && listeners.length > 0;
     },
     
     /**

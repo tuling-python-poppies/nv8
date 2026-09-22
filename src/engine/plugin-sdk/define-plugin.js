@@ -133,6 +133,14 @@ function validatePluginDefinition(def) {
       if (typeof req === 'string') continue;
       // 与 normalizeRequirements 保持一致：对象形态 { id, version?, optional? }
       if (req !== null && typeof req === 'object' && typeof req.id === 'string') {
+        // version/range 若给了必须是字符串：否则 normalizeRequirements 会产出
+        // 数值 version，后续 compareVersions/satisfiesVersionRange 调 .split 抛 TypeError。
+        if (req.version !== undefined && typeof req.version !== 'string') {
+          throw new Error(`Plugin "${def.id}" requires entry "version" must be a string`);
+        }
+        if (req.range !== undefined && typeof req.range !== 'string') {
+          throw new Error(`Plugin "${def.id}" requires entry "range" must be a string`);
+        }
         continue;
       }
       throw new Error(

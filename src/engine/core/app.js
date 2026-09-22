@@ -248,18 +248,21 @@ export function createApp(options = {}) {
       if (!versions) return null;
       
       if (version === '*') {
-        // 返回最高版本
-        versions.sort((a, b) => {
+        // 复制后再排：旧实现 versions.sort() 原地排序，直接改写注册表内部数组顺序。
+        const sorted = [...versions].sort((a, b) => {
           const partsA = a.version.split('.').map(Number);
           const partsB = b.version.split('.').map(Number);
-          
-          for (let i = 0; i < 3; i++) {
-            if (partsA[i] > partsB[i]) return -1;
-            if (partsA[i] < partsB[i]) return 1;
+          const segments = Math.max(partsA.length, partsB.length);
+          for (let i = 0; i < segments; i++) {
+            // 段数不等时缺失段补 0，避免 `"1.2"` vs `"1.2.0"` 比出 undefined 而恒为 0。
+            const av = partsA[i] ?? 0;
+            const bv = partsB[i] ?? 0;
+            if (av > bv) return -1;
+            if (av < bv) return 1;
           }
           return 0;
         });
-        return versions[0];
+        return sorted[0];
       }
       
       return versions.find(p => p.version === version);
