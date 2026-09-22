@@ -96,7 +96,7 @@ export class RealmModuleLoader {
     this.pending.add(pending);
     const work = Promise.resolve().then(operation);
     // cancellation 胜出（dispose）后，work 若随后 reject 就没人接→ unhandledRejection。
-    // 给 work 单独挂一个兑底 catch；race 仍用原 work 给调用方传结果，不影响语义。
+    // 给 work 单独挂一个兜底 catch；race 仍用原 work 给调用方传结果，不影响语义。
     work.catch(() => {});
     return Promise.race([work, cancellation]).finally(() => {
       this.pending.delete(pending);

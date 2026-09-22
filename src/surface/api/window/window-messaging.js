@@ -168,7 +168,7 @@ export function windowTop() {
  *
  * `notifyIncumbent` 挂在 `parentPostMessage` 函数对象上，随同一条通道下发。
  * 这样做是为了不再往 `bootstrapRoot()` 的 40+ 个位置参数里加第 4 个透传项——
- * 两个能力属于同一段父子关系，放在一起比分开穿更不容易漏。
+ * 两个能力属于同一段父子关系，放在一起比分开传更不容易漏。
  *
  * 顶层窗口没有 `parentPostMessage`，这里整体是 no-op。
  */

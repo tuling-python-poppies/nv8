@@ -82,7 +82,7 @@ const KNOWN_EXTRA_MEMBERS = Object.freeze({});
  *
  * 从 `src/surface/install/window-surface-order.js` 的 `pending` 字段读，不在这里另列
  * 一份名单——旧版本这里写死三个名字并注“理由见 edge-surface-parity-test.js”，
- * 那就是同一份账目拄在三处。
+ * 那就是同一份账目挂在三处。
  */
 const KNOWN_MISSING_PROTOTYPES = Object.freeze(
   WINDOW_GLOBAL_ORDER

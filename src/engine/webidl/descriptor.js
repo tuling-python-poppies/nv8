@@ -255,7 +255,7 @@ function resolveInterfaceName(prototype) {
       return constructor.name;
     }
   } catch {
-    // 访问器抩错就当推断不出来
+    // 访问器抛错就当推断不出来
   }
   return null;
 }

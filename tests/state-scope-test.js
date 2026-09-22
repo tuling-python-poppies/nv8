@@ -149,7 +149,7 @@ test('state scope module has no Node or browser implementation dependencies', as
  * 经 RealmModuleLoader 加载的模块在每个 Realm 都会得到新实例，
  * 因此那条路径天然隔离；真正会跨 Sandbox 泄漏的是宿主图。
  *
- * 这个阀值只允许下调。它不是“当前很完美”的证明，而是防止迁移
+ * 这个阈值只允许下调。它不是“当前很完美”的证明，而是防止迁移
  * 过程中反向新增。
  */
 const HOST_GRAPH_STATE_BUDGET = 4;

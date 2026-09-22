@@ -44,7 +44,7 @@ function surfaceTier() {
  *
  * **不在这份文件里维护**：名单住在 `src/install/window-surface-order.js`，
  * 因为那张表同时拿着**位置**信息——实现好了只需删掉 `pending` 字段，
- * 全局就自动落在正确的枚举索引上。在这里再拄一份名单必然漂移。
+ * 全局就自动落在正确的枚举索引上。在这里再挂一份名单必然漂移。
  *
  * @type {Map<string, string>} 全局名 → 为什么还没补
  */

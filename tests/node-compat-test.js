@@ -285,7 +285,7 @@ test('synchronous import works when the host supports sync linking', () => {
   const loader = new RealmModuleLoader(vm.createContext({}));
 
   if (!detectLinkStrategy().supportsSyncLink) {
-    // Node 18–22：必须拒绍，而不是返回半初始化模块
+    // Node 18–22：必须拒绝，而不是返回半初始化模块
     assert.throws(
       () => loader.importUrl(SAMPLE_MODULE_URL),
       (error) => error.code === 'ERR_NV8_MODULE_SYNC_LINK_UNAVAILABLE'
