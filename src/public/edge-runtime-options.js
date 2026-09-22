@@ -643,6 +643,7 @@ function normalizePage(page, limits) {
     // 字符串是 `{ url }` 的简写，与 `Sandbox.navigate()` 的既有语义一致。
     input = { url: page };
   } else if (typeof page === "object" && !Array.isArray(page)) {
+    assertKnownNestedKeys(page, "page");
     input = page;
   } else {
     // 此前非法输入被逐字段回退成默认页：页面静默停在 sandbox.test 上，
@@ -1214,6 +1215,7 @@ function normalizeFingerprint(fingerprint) {
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
     throw new TypeError("fingerprint must be a JavaScript object");
   }
+  assertKnownNestedKeys(input, "fingerprint");
   const navigator = input.navigator ?? edge150Fingerprint.navigator;
   const screen = input.screen ?? edge150Fingerprint.screen;
   const rendering = input.rendering ?? edge150Fingerprint.rendering;
@@ -1482,6 +1484,10 @@ function normalizeReplay(replay, limits) {
  * 校验顺序与错误优先级不变。
  */
 function normalizeLimits(inputLimits) {
+  if (inputLimits === null || typeof inputLimits !== "object" || Array.isArray(inputLimits)) {
+    throw new TypeError("limits must be an object");
+  }
+  assertKnownNestedKeys(inputLimits, "limits");
   return Object.freeze({
     maxBatchConcurrency: finiteInteger(inputLimits.maxBatchConcurrency, 4, 'limits.maxBatchConcurrency', 1, 256),
     timeoutMs: finiteInteger(
@@ -1611,6 +1617,10 @@ function normalizeLimits(inputLimits) {
 
 /** 归一化 `proxyTrace`；类型检查与拆分前一样放在对象构造之后。 */
 function normalizeProxyTrace(inputTrace) {
+  if (inputTrace === null || typeof inputTrace !== "object" || Array.isArray(inputTrace)) {
+    throw new TypeError("proxyTrace must be an object");
+  }
+  assertKnownNestedKeys(inputTrace, "proxyTrace");
   const proxyTrace = Object.freeze({
     enabled: inputTrace.enabled ?? DEFAULT_TRACE.enabled,
     mirrorToConsole: inputTrace.mirrorToConsole ?? DEFAULT_TRACE.mirrorToConsole,
@@ -1645,6 +1655,7 @@ function normalizeNetworkCapture(inputNetworkCapture, limits) {
   ) {
     throw new TypeError("networkCapture must be an object");
   }
+  assertKnownNestedKeys(inputNetworkCapture, "networkCapture");
   const maximumCaptureBytes = Math.max(
     1,
     Math.floor(limits.maxPayloadBytes * 0.75),
@@ -1708,6 +1719,7 @@ function normalizeExecution(inputExecution) {
   ) {
     throw new TypeError("execution must be an object");
   }
+  assertKnownNestedKeys(inputExecution, "execution");
   const backend = inputExecution.backend ?? DEFAULT_EXECUTION.backend;
   if (!["child-process", "worker-thread"].includes(backend)) {
     throw new RangeError(
@@ -1739,6 +1751,50 @@ export const RUNTIME_OPTION_KEYS = Object.freeze([
   "replay",
 ]);
 const RUNTIME_OPTION_KEY_SET = new Set(RUNTIME_OPTION_KEYS);
+
+/**
+ * 嵌套子对象的合法键。顶层键已 fail closed，但子对象此前仍静默丢弃未知键，
+ * 而且后果比顶层拼错更隐蔽：
+ *   { limits: { timeoutMS: 60000 } }   → 大小写写错，timeoutMs 停在默认 1000ms，长跑脚本被 1s 杀掉
+ *   { proxyTrace: { enable: true } }   → 少个 d，trace 实际没开，全程无任何信号
+ *   { fingerprint: { scren: {...} } }  → 拼错 screen，指纹补丁完全未生效
+ *
+ * 每组键集必须与对应归一化函数的输出逐键相等（由 tests/options-fix-test.js
+ * 的双向断言焊死）。注意 fingerprint 只校验**顶层** 8 个键；其下 navigator /
+ * screen / rendering / capabilities 的深层子键与基线合并，不在此层校验
+ * （如 fingerprint.screen.widht 仍会静默回退基线）。
+ */
+export const NESTED_OPTION_KEYS = Object.freeze({
+  limits: Object.freeze([
+    "maxBatchConcurrency", "timeoutMs", "maxHeapBytes", "maxSourceBytes",
+    "maxHtmlBytes", "maxOutputBytes", "maxPayloadBytes", "maxFrameQueueBytes",
+    "maxValueDepth", "maxArrayLength", "maxFieldCount", "maxStringBytes",
+    "maxBytesLength", "maxRealms", "maxWorkerRealms", "maxWorkerConnections",
+    "maxWorkerDepth", "prewarmChildRealms",
+  ]),
+  proxyTrace: Object.freeze(["enabled", "mirrorToConsole", "maxEntries"]),
+  networkCapture: Object.freeze([
+    "enabled", "maxEntries", "maxTotalBytes", "maxBodyBytes", "maxHeaderBytes",
+  ]),
+  execution: Object.freeze(["backend", "restart"]),
+  page: Object.freeze(["url", "html", "referrer", "contentType"]),
+  fingerprint: Object.freeze([
+    "browserMajorVersion", "capabilities", "locale", "navigator",
+    "rendering", "screen", "timezone", "timing",
+  ]),
+});
+
+/** 拒绝嵌套子对象里的未知键，不再静默丢弃。`input` 由调用方保证是 record。 */
+function assertKnownNestedKeys(input, group) {
+  const allowed = NESTED_OPTION_KEYS[group];
+  for (const key of Object.keys(input)) {
+    if (!allowed.includes(key)) {
+      throw new TypeError(
+        `${group} option "${key}" is not supported; supported options: ${allowed.join(", ")}`,
+      );
+    }
+  }
+}
 
 export function normalizeRuntimeOptions(options = {}) {
   if (options === null || typeof options !== "object" || Array.isArray(options)) {

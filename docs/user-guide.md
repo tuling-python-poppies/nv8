@@ -354,7 +354,7 @@ const sandbox = await EdgeSandbox.create({
 });
 ```
 
-所有受支持的配置字段会在启动执行单元前校验。未知顶层配置键（例如把 `proxyTrace` 拼成 `proxyTrac`）、类型错误、越界数值和重复 replay 记录都会使 `create()` 拒绝，不会被静默忽略。
+所有受支持的配置字段会在启动执行单元前校验。未知配置键（顶层如把 `proxyTrace` 拼成 `proxyTrac`，子对象内如把 `limits.timeoutMs` 拼成 `timeoutMS`）、类型错误、越界数值和重复 replay 记录都会使 `create()` 拒绝，不会被静默忽略。（`fingerprint` 只校验顶层键；其下 navigator/screen/rendering 等深层子键与基线合并，拼错仍会回退基线值。）
 
 ### 5.2 页面配置
 
@@ -1179,6 +1179,10 @@ const result = await sandbox.evaluateModule(
 ## 14. 生命周期、超时和资源限制
 
 ### 14.1 默认限制
+
+下表是 `EdgeSandbox`（子进程入口）的默认值。**进程内入口 `createNv8` 的默认不同**：
+`timeoutMs` 默认 `5000`（非 `1000`）、`maxRealms` 默认 `64`（非 `12`），面向可信插件
+开发场景故而更宽松。两个入口的其余限制及范围一致。
 
 | 字段 | 默认值 | 允许范围 |
 | --- | ---: | --- |

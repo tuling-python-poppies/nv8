@@ -13,7 +13,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { normalizeRuntimeOptions, RUNTIME_OPTION_KEYS } from '../src/public/edge-runtime-options.js';
+import { normalizeRuntimeOptions, RUNTIME_OPTION_KEYS, NESTED_OPTION_KEYS } from '../src/public/edge-runtime-options.js';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
 
@@ -39,6 +39,55 @@ test('whitelist exactly matches the keys normalization emits (no drift either wa
   //   多键 → 白名单放过一个归一化其实不读的键，退回静默丢弃。
   const emitted = Object.keys(normalizeRuntimeOptions({})).sort();
   assert.deepStrictEqual(emitted, [...RUNTIME_OPTION_KEYS].sort());
+});
+
+// --------------------------------------------- unknown nested keys
+
+test('unknown nested keys fail closed too (not just top-level)', () => {
+  // 顶层修了但嵌套层曾静默丢弃，后果更隐蔽：
+  //   proxyTrace.enable 拼错 → trace 没开；limits.timeoutMS → 长跑脚本被 1s 杀。
+  for (const options of [
+    { proxyTrace: { enable: true } },
+    { limits: { timeoutMS: 60_000 } },
+    { networkCapture: { enable: false } },
+    { execution: { backends: 'worker-thread' } },
+    { page: { url: 'https://a.test/', htlm: '<p>' } },
+    { fingerprint: { scren: { width: 1440 } } },
+  ]) {
+    const group = Object.keys(options)[0];
+    assert.throws(
+      () => normalizeRuntimeOptions(options),
+      error => error instanceof TypeError && /not supported/.test(error.message),
+      `${group} 的嵌套拼错必须报错`,
+    );
+  }
+});
+
+test('correct nested keys still take effect (no false rejection)', () => {
+  const o = normalizeRuntimeOptions({
+    proxyTrace: { enabled: true },
+    limits: { timeoutMs: 60_000, maxBatchConcurrency: 8 },
+    networkCapture: { enabled: false },
+    execution: { backend: 'worker-thread', restart: 'restart' },
+    fingerprint: { locale: 'zh-CN', screen: { width: 1440 } },
+  });
+  assert.equal(o.proxyTrace.enabled, true);
+  assert.equal(o.limits.timeoutMs, 60_000);
+  assert.equal(o.networkCapture.enabled, false);
+  assert.equal(o.execution.restart, 'restart');
+  assert.equal(o.fingerprint.screen.width, 1440);
+});
+
+test('each nested whitelist exactly matches the keys that group emits (no drift)', () => {
+  // 与顶层同款的双向断言，逐组焊死。fingerprint 只比顶层键（深层有意不管）。
+  const normalized = normalizeRuntimeOptions({});
+  for (const [group, keys] of Object.entries(NESTED_OPTION_KEYS)) {
+    const emitted = Object.keys(normalized[group]).sort();
+    assert.deepStrictEqual(
+      emitted, [...keys].sort(),
+      `${group} 的嵌套白名单与输出键集不一致`,
+    );
+  }
 });
 
 // ------------------------------------------------------------- page (IKFD9R)
