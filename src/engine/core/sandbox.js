@@ -418,6 +418,10 @@ export async function createSandbox(config) {
   const nativeFunctionRegistry = createNativeFunctionRegistry();
   const eventListenerRegistry = createEventListenerRegistry();
   const objectURLRegistry = createObjectURLRegistry();
+  // 跨模块图 MessagePort 注册表：每个 Realm 是独立模块图，port 记录默认
+  // 只在创建图可见；以 port 对象为键共享一份，让 structured clone 能识别
+  // 并 transfer 外图 port（见 messaging-runtime.js 顶部注释）。
+  const messagePortRegistry = new WeakMap();
   const surfaceRegistry = createSurfaceRegistry();
   const broadcastGroups = new Map();
   const sharedWorkerRecords = new Map();
@@ -471,6 +475,7 @@ export async function createSandbox(config) {
     nativeFunctionRegistry,
     eventListenerRegistry,
     objectURLRegistry,
+    messagePortRegistry,
   };
 
   // 生命周期闸门读数器：destroy/reset 在 await 之间改写这两个值，

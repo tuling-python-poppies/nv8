@@ -4,7 +4,7 @@ import {
 import { Event } from "../event/event-constructor.js";
 import { EventTarget } from "../event/event-target-constructor.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
-import { MessageEvent } from "../messaging/messaging-runtime.js";
+import { MessageEvent, localizeIncomingPorts } from "../messaging/messaging-runtime.js";
 import {
   Request,
   Response,
@@ -224,12 +224,24 @@ function installWorkerScopeHandlers() {
 
 export function receiveOwnerMessage(message, options, ports = []) {
   if (workerClosed) return;
-  const cloned = performStructuredCloneDetailed(message, options);
+  const rawPorts = Array.isArray(ports) && ports.length > 0 ? ports : [];
+  const localPorts = localizeIncomingPorts(rawPorts);
+  const incomingReplacements = new Map();
+  for (let i = 0; i < rawPorts.length; i++) {
+    incomingReplacements.set(rawPorts[i], localPorts[i]);
+  }
+  const normalizedOptions = normalizeTransferOptions(options);
+  const cloneOptions = incomingReplacements.size > 0
+    ? { ...normalizedOptions, replacements: incomingReplacements }
+    : normalizedOptions;
+  const cloned = performStructuredCloneDetailed(message, cloneOptions);
   Promise.resolve().then(() => {
     if (workerClosed) return;
     const event = new MessageEvent("message", {
       data: cloned.value,
-      ports: ports.length === 0 ? cloned.transferred : ports,
+      // owner 方向的 transfer 在 owner 图里克隆，replacement 是外图原型；
+      // 交给 worker 页面之前换成本图对象（记录跨图共享，只换门面）。
+      ports: rawPorts.length === 0 ? cloned.transferred : localPorts,
       source: globalKind === "service" ? serviceClient({
         postMessage(message, ports = []) {
           if (workerClosed || outbound === null) return;

@@ -120,6 +120,7 @@ import { installMessaging } from "../../surface/install/install-messaging.js";
 import {
   closeAllBroadcastChannels,
   configureBroadcastConnector,
+  configureMessagePortRegistry,
 } from "../../surface/api/messaging/messaging-runtime.js";
 import { installWorker } from "../../surface/install/install-worker.js";
 import {
@@ -908,6 +909,9 @@ export function bootstrapRoot(
   timezone = null,
   // 宿主提供的密码学熵源。不能回退到页面可覆盖的 Math.random/Date。
   cryptoEntropy = null,
+  // Sandbox 级共享 MessagePort 注册表（跨模块图 transfer 用，见
+  // messaging-runtime.js 顶部注释）。
+  messagePortRegistry = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -933,6 +937,7 @@ export function bootstrapRoot(
   configureNativeFunctionRegistry(nativeFunctionRegistry);
   configureBlobRegistry(objectURLRegistry);
   configureObjectURLRegistry(objectURLRegistry);
+  configureMessagePortRegistry(messagePortRegistry);
   installNativeFunctionToString();
   installErrorStackGuard(browserMajorVersion >= 151);
   installModernBuiltins();

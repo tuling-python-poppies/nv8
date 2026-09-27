@@ -77,6 +77,7 @@ export function activateRealmShell(shell, options) {
     timingProfile = null,
     nativeFunctionRegistry = null,
     objectURLRegistry = null,
+    messagePortRegistry = null,
     frameElement = null,
     documentBaseUrl = null,
     serviceWorkerPageUrl = null,
@@ -141,6 +142,7 @@ export function activateRealmShell(shell, options) {
     workerDepth,
     timezone,
     cryptoEntropy,
+    messagePortRegistry,
   );
   // API 访问断点列表不占 bootstrapRoot 的位置参数（已约 40 个），在其后单独下发。
   if (Array.isArray(watchApis) && typeof bootstrap.namespace.setProxyWatchApis === "function") {

@@ -68,6 +68,7 @@ import { installMessaging } from "../../surface/install/install-messaging.js";
 import {
   closeAllBroadcastChannels,
   configureBroadcastConnector,
+  configureMessagePortRegistry,
 } from "../../surface/api/messaging/messaging-runtime.js";
 import { installGPU } from "../../surface/install/install-gpu.js";
 import { configureGPUProfile } from "../../surface/api/gpu/gpu-runtime.js";
@@ -233,11 +234,13 @@ export function bootstrapWorker(
   workerDepth = 0,
   timezone = null,
   cryptoEntropy = null,
+  messagePortRegistry = null,
 ) {
   hideNodeGlobals();
   configureTimingProfile(timingProfile);
   configureBlobRegistry(objectURLRegistry);
   configureObjectURLRegistry(objectURLRegistry);
+  configureMessagePortRegistry(messagePortRegistry);
   // 与 bootstrap-root 相同的约束：worker 是「legacy 模式的第二个 Realm」，
   // 没有插件 activate 会来建立上下文；不先 establish，
   // installNativeFunctionToString 与所有 registerNativeFunction 都会滞留队列，

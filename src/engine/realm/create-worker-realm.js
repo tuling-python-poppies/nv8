@@ -24,6 +24,7 @@ export async function createWorkerRealm({
   browserMajorVersion = 150,
   timingProfile = null,
   objectURLRegistry = null,
+  messagePortRegistry = null,
   workerDepth = 0,
   // profile 的 fingerprint.timezone。worker_threads 与宿主共享 ICU，
   // 线程级 TZ 不影响已初始化的默认时区，因此由 Realm 内 hook 覆盖
@@ -79,6 +80,7 @@ export async function createWorkerRealm({
     workerDepth,
     timezone,
     cryptoEntropy,
+    messagePortRegistry,
   );
   return {
     context,
