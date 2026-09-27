@@ -1,6 +1,5 @@
 import { CSS_PROPERTY_NAMES } from "./css-property-names.js";
 import {
-  normalizeCSSPropertyName,
   parseCSSDeclarations,
   readCSSDeclarations,
   serializeCSSDeclarations,
@@ -81,7 +80,12 @@ function cssPropertyNames() {
 export function installCSSPropertyAccessors(declaration, readonly = false) {
   const names = cssPropertyNames();
   for (const name of names) {
-    const cssName = normalizeCSSPropertyName(name);
+    // IDL 名（fontFamily）→ CSS 属性名（font-family）。存储键必须与 cssText 解析、
+    // setProperty、getComputedStyle 用的 kebab-case 键一致；旧代码只做 toLowerCase，
+    // 于是 `style.fontFamily = x` 存成 `fontfamily:`（无连字符），且 cssText 里的
+    // `font-family` 读不回来。与 get-computed-style-global.js 的 camel→kebab 同规则。
+    // ponytail: 这条 camel→kebab 正则在仓里出现了 3 处，暂不抽公共函数（改 3 处调用点风险大于收益）。
+    const cssName = name.replace(/[A-Z]/gu, letter => `-${letter.toLowerCase()}`);
     Object.defineProperty(declaration, name, {
       get() {
         return readCSSDeclarations(this).get(cssName)?.value ?? "";
