@@ -1240,7 +1240,7 @@ function normalizeFingerprint(fingerprint) {
     150,
     "fingerprint.browserMajorVersion",
     150,
-    152,
+    154,
   );
   // `navigator` 是局部覆盖与基线的合并入口：只要调用方没有整体提供 navigator，
   // `fingerprint.locale` 就驱动 `navigator.language` / `navigator.languages`，

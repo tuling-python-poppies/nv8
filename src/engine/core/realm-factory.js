@@ -346,7 +346,12 @@ export async function createRealm(config) {
     if (!performanceModule?.namespace?.configureTimingProfile) {
       throw new Error('Realm module loader cannot configure Performance timing');
     }
-    performanceModule.namespace.configureTimingProfile(timingProfile);
+    // 宿主高分辨率时钟：真实 Edge 的 performance.now 有 0.1ms 量子的亚毫秒值，
+    // realm 内只有整毫秒的 Date.now()。以宿主 performance 为源，跨 Realm 传入。
+    performanceModule.namespace.configureTimingProfile(
+      timingProfile,
+      () => performance.timeOrigin + performance.now(),
+    );
   }
 
   const hasNavigatorPlugin = plugins.some(plugin => (

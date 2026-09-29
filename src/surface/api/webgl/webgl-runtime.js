@@ -31,7 +31,7 @@ const valueState = new WeakMap();
  */
 const defaultProfile = Object.freeze({
   webglVendor: "Google Inc. (NVIDIA)",
-  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)",
+  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
 });
 
 export function WebGLRenderingContext() { illegalConstructor("WebGLRenderingContext", new.target); }
@@ -468,6 +468,9 @@ function getParameter(state, parameter) {
     [c("MAX_COMBINED_TEXTURE_IMAGE_UNITS"), 32],
     [c("MAX_TEXTURE_IMAGE_UNITS"), 16],
     [c("MAX_VERTEX_TEXTURE_IMAGE_UNITS"), 16],
+    [c("MAX_VERTEX_UNIFORM_VECTORS"), 4095],
+    [c("MAX_VARYING_VECTORS"), 30],
+    [c("MAX_FRAGMENT_UNIFORM_VECTORS"), 1024],
     [c("MAX_DRAW_BUFFERS"), 8],
     [c("MAX_COLOR_ATTACHMENTS"), 8],
     [c("MAX_SAMPLES"), 8],
@@ -535,12 +538,60 @@ function getExtension(context, state, requestedName) {
 }
 
 function supportedExtensions(version) {
-  const common = [
+  // 与真机 Edge 154 有头采集逐项对齐（v1/v2 各自独立列表）。
+  if (version === 2) {
+    return [
+      "EXT_clip_control",
+      "EXT_color_buffer_float",
+      "EXT_color_buffer_half_float",
+      "EXT_conservative_depth",
+      "EXT_depth_clamp",
+      "EXT_disjoint_timer_query_webgl2",
+      "EXT_float_blend",
+      "EXT_polygon_offset_clamp",
+      "EXT_render_snorm",
+      "EXT_texture_compression_bptc",
+      "EXT_texture_compression_rgtc",
+      "EXT_texture_filter_anisotropic",
+      "EXT_texture_mirror_clamp_to_edge",
+      "EXT_texture_norm16",
+      "KHR_parallel_shader_compile",
+      "NV_shader_noperspective_interpolation",
+      "OES_draw_buffers_indexed",
+      "OES_sample_variables",
+      "OES_shader_multisample_interpolation",
+      "OES_texture_float_linear",
+      "OVR_multiview2",
+      "WEBGL_blend_func_extended",
+      "WEBGL_clip_cull_distance",
+      "WEBGL_compressed_texture_s3tc",
+      "WEBGL_compressed_texture_s3tc_srgb",
+      "WEBGL_debug_renderer_info",
+      "WEBGL_debug_shaders",
+      "WEBGL_lose_context",
+      "WEBGL_multi_draw",
+      "WEBGL_polygon_mode",
+      "WEBGL_provoking_vertex",
+      "WEBGL_stencil_texturing",
+    ];
+  }
+  return [
     "ANGLE_instanced_arrays",
     "EXT_blend_minmax",
+    "EXT_clip_control",
     "EXT_color_buffer_half_float",
+    "EXT_depth_clamp",
+    "EXT_disjoint_timer_query",
     "EXT_float_blend",
+    "EXT_frag_depth",
+    "EXT_polygon_offset_clamp",
+    "EXT_shader_texture_lod",
+    "EXT_texture_compression_bptc",
+    "EXT_texture_compression_rgtc",
     "EXT_texture_filter_anisotropic",
+    "EXT_texture_mirror_clamp_to_edge",
+    "EXT_sRGB",
+    "KHR_parallel_shader_compile",
     "OES_element_index_uint",
     "OES_fbo_render_mipmap",
     "OES_standard_derivatives",
@@ -549,31 +600,18 @@ function supportedExtensions(version) {
     "OES_texture_half_float",
     "OES_texture_half_float_linear",
     "OES_vertex_array_object",
+    "WEBGL_blend_func_extended",
     "WEBGL_color_buffer_float",
     "WEBGL_compressed_texture_s3tc",
+    "WEBGL_compressed_texture_s3tc_srgb",
     "WEBGL_debug_renderer_info",
     "WEBGL_debug_shaders",
     "WEBGL_depth_texture",
     "WEBGL_draw_buffers",
     "WEBGL_lose_context",
     "WEBGL_multi_draw",
+    "WEBGL_polygon_mode",
   ];
-  if (version === 2) {
-    return [
-      "EXT_color_buffer_float",
-      "EXT_disjoint_timer_query_webgl2",
-      "EXT_float_blend",
-      "EXT_texture_filter_anisotropic",
-      "OES_draw_buffers_indexed",
-      "OES_texture_float_linear",
-      "WEBGL_compressed_texture_s3tc",
-      "WEBGL_debug_renderer_info",
-      "WEBGL_debug_shaders",
-      "WEBGL_lose_context",
-      "WEBGL_multi_draw",
-    ];
-  }
-  return common;
 }
 
 function createResource(context, kind, extra = {}) {
@@ -801,13 +839,19 @@ function getActiveInfo(context, args, kind) {
 }
 
 function createPrecisionFormat(precisionType) {
+  // 真机 D3D11/ANGLE（Edge 154 有头实测基准）：
+  //   FLOAT 系列 {precision:23, rangeMin:127, rangeMax:127}
+  //   INT 系列   {precision:0,  rangeMin:31,  rangeMax:30}
+  //   HIGH_INT   真实浏览器返回 null
+  // 旧值 10/14/14 是移动端 GL 形态，与「宣称 D3D11 独立显卡」自相矛盾。
+  if (precisionType === 0x8df6) return null;
   const object = Object.create(WebGLShaderPrecisionFormat.prototype);
-  const high = precisionType === 0x8df2 || precisionType === 0x8df5;
+  const isInt = precisionType === 0x8df4 || precisionType === 0x8df5;
   valueState.set(object, {
     kind: "precisionFormat",
-    rangeMin: high ? 127 : 14,
-    rangeMax: high ? 127 : 14,
-    precision: high ? 23 : 10,
+    rangeMin: isInt ? 31 : 127,
+    rangeMax: isInt ? 30 : 127,
+    precision: isInt ? 0 : 23,
   });
   return object;
 }

@@ -69,7 +69,7 @@ const screenProfile = Object.freeze({
 
 const renderingProfile = Object.freeze({
   webglVendor: "Google Inc. (NVIDIA)",
-  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)",
+  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
   webgpu: Object.freeze({
     vendor: "nvidia",
     architecture: "",
@@ -132,7 +132,7 @@ const timingProfile = Object.freeze({
   timeOriginMs: null,
   wallClockOffsetMs: 0,
   dateNowResolutionMs: 0,
-  performanceResolutionMs: 0,
+  performanceResolutionMs: 0.1,
   performanceJitterMs: 0,
   jitterSeed: 0x4e5638,
   minimumTimerDelayMs: 0,

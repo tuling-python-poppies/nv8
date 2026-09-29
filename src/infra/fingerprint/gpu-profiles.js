@@ -8,7 +8,7 @@
  *
  * ```
  * webglVendor      "Google Inc. (NVIDIA)"
- * webglRenderer    "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)"
+ * webglRenderer    "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)"
  * webgpu.vendor    "nvidia"
  * webgpu.device    "NVIDIA GeForce RTX 5060"
  * webgpu.description "NVIDIA driver 32.0.15.8097"
@@ -46,11 +46,12 @@ const ANGLE_VENDOR_NAMES = Object.freeze({
  * @param {object} spec
  * @param {'nvidia'|'amd'|'intel'} spec.vendor
  * @param {string} spec.device 完整型号，如 `NVIDIA GeForce RTX 5060`
+ * @param {string} spec.deviceId PCI 设备 ID（4 位 hex，不含 0x），如 `2D05`
  * @param {string} spec.driver 驱动版本串，如 `32.0.15.8097`
  * @param {string} [spec.architecture] WebGPU architecture，Chromium 桌面通常为空
  * @returns {object} 冻结的 GPU 身份
  */
-function deriveGpuIdentity({ vendor, device, driver, architecture = '' }) {
+function deriveGpuIdentity({ vendor, device, deviceId, driver, architecture = '' }) {
   const angleVendor = ANGLE_VENDOR_NAMES[vendor];
   if (angleVendor === undefined) {
     throw new TypeError(`unknown GPU vendor: ${vendor}`);
@@ -65,7 +66,7 @@ function deriveGpuIdentity({ vendor, device, driver, architecture = '' }) {
     // 否则得到 "nvidia-nvidia-geforce-..." 这种冗余 id
     id: device.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
     webglVendor: `Google Inc. (${angleVendor})`,
-    webglRenderer: `ANGLE (${angleVendor}, ${device} Direct3D11)`,
+    webglRenderer: `ANGLE (${angleVendor}, ${device} (0x0000${deviceId}) Direct3D11 vs_5_0 ps_5_0, D3D11)`,
     webgpu: Object.freeze({
       vendor,
       architecture,
@@ -86,19 +87,19 @@ function deriveGpuIdentity({ vendor, device, driver, architecture = '' }) {
  */
 export const GPU_IDENTITIES = Object.freeze([
   deriveGpuIdentity({
-    vendor: 'nvidia', device: 'NVIDIA GeForce RTX 5060', driver: '32.0.15.8097',
+    vendor: 'nvidia', device: 'NVIDIA GeForce RTX 5060', deviceId: '2D05', driver: '32.0.15.8097',
   }),
   deriveGpuIdentity({
-    vendor: 'nvidia', device: 'NVIDIA GeForce RTX 4060', driver: '32.0.15.7688',
+    vendor: 'nvidia', device: 'NVIDIA GeForce RTX 4060', deviceId: '2882', driver: '32.0.15.7688',
   }),
   deriveGpuIdentity({
-    vendor: 'nvidia', device: 'NVIDIA GeForce RTX 3060', driver: '31.0.15.5222',
+    vendor: 'nvidia', device: 'NVIDIA GeForce RTX 3060', deviceId: '2504', driver: '31.0.15.5222',
   }),
   deriveGpuIdentity({
-    vendor: 'amd', device: 'AMD Radeon RX 7600', driver: '32.0.12033.1030',
+    vendor: 'amd', device: 'AMD Radeon RX 7600', deviceId: '7480', driver: '32.0.12033.1030',
   }),
   deriveGpuIdentity({
-    vendor: 'intel', device: 'Intel(R) UHD Graphics 770', driver: '31.0.101.5333',
+    vendor: 'intel', device: 'Intel(R) UHD Graphics 770', deviceId: '4680', driver: '31.0.101.5333',
   }),
 ]);
 

@@ -91,6 +91,14 @@ export function highEntropyUaData(hints) {
  */
 function brandList(major, full) {
   const builds = buildVersions(major);
+  if (major >= "154") {
+    // 本机真机 Edge 154 有头实测：品牌顺序与 GREASE 串再次变化。
+    return [
+      { brand: "Chromium", version: full ? builds.chromium : major },
+      { brand: "Microsoft Edge", version: full ? builds.edge : major },
+      { brand: "Not A(Brand", version: full ? "99.0.0.0" : "99" },
+    ];
+  }
   if (major >= "152") {
     return [
       { brand: "Chromium", version: full ? builds.chromium : major },
@@ -121,6 +129,8 @@ function buildVersions(major) {
     // 采集自真实 Edge 151/152 的本机基准。
     "151": { edge: "151.0.4129.101", chromium: "151.0.7922.170" },
     "152": { edge: "152.0.4191.53", chromium: "152.0.7977.65" },
+    // 采集自本机真机 Edge 154 有头实测（CDP 高熵采集）。
+    "154": { edge: "154.0.4258.37", chromium: "154.0.8037.58" },
   };
   const entry = known[major];
   return {

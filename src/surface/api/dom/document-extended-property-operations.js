@@ -64,7 +64,13 @@ export const alinkColorValue = colorValue("alinkColor");
 export const setAlinkColor = setColor("alinkColor");
 export const bgColorValue = colorValue("bgColor");
 export const setBgColor = setColor("bgColor");
-export function scrollingElementValue(document) { return documentBody(document) ?? documentElementOf(document); }
+export function scrollingElementValue(document) {
+  const state = requireDocument(document);
+  if (state.compatMode === "BackCompat") {
+    return documentBody(document) ?? documentElementOf(document);
+  }
+  return documentElementOf(document);
+}
 export function falseValue(document) { requireDocument(document); return false; }
 export function trueValue(document) { requireDocument(document); return true; }
 export function visibleValue(document) { requireDocument(document); return "visible"; }

@@ -79,6 +79,7 @@ export async function createWorkerRealm({
     workerDepth,
     timezone,
     cryptoEntropy,
+    () => performance.timeOrigin + performance.now(),
   );
   return {
     context,

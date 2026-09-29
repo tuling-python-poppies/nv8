@@ -42,21 +42,29 @@ const clockSlot = createRealmSlot(() => ({
   lastTimestamp: 0,
   lastWallClock: defaultTimingProfile.timeOriginMs,
   jitterState: defaultTimingProfile.jitterSeed >>> 0,
+  hostClock: null,
 }), "monotonic-clock");
 
 function clock() {
   return clockSlot.get(globalThis);
 }
 
-export function configureTimingProfile(input = null) {
+export function configureTimingProfile(input = null, hostClock = null) {
   const state = clock();
   const selected = input ?? defaultTimingProfile;
+  // 宿主高分辨率时钟（跨 Realm 传入）。真实 Chromium 的 performance.now
+  // 以 0.1ms 为量子暴露亚毫秒值；realm 内只有整毫秒的 Date.now()，
+  // 无法复现。未传时保留已有值，后配置不带时钟不会丢。
+  if (typeof hostClock === "function") state.hostClock = hostClock;
+  const fallbackOrigin = state.hostClock !== null
+    ? state.hostClock()
+    : defaultTimingProfile.timeOriginMs;
   state.profile = Object.freeze({
     ...defaultTimingProfile,
     ...selected,
     timeOriginMs: Number.isFinite(selected.timeOriginMs)
       ? selected.timeOriginMs
-      : defaultTimingProfile.timeOriginMs,
+      : fallbackOrigin,
   });
   state.sessionTimeOrigin = state.profile.timeOriginMs
     + state.profile.wallClockOffsetMs;
@@ -89,10 +97,10 @@ export function wallClockNow() {
 
 export function monotonicNow() {
   const state = clock();
-  const elapsed = Math.max(
-    0,
-    nativeDateNow() + state.profile.wallClockOffsetMs - state.sessionTimeOrigin,
-  );
+  const raw = state.hostClock !== null
+    ? state.hostClock()
+    : nativeDateNow() + state.profile.wallClockOffsetMs;
+  const elapsed = Math.max(0, raw - state.sessionTimeOrigin);
   const resolution = state.profile.performanceResolutionMs;
   let value = resolution > 0
     ? Math.floor(elapsed / resolution) * resolution

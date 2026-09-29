@@ -233,9 +233,11 @@ export function bootstrapWorker(
   workerDepth = 0,
   timezone = null,
   cryptoEntropy = null,
+  // 宿主高分辨率时钟（与 bootstrap-root 一致）。
+  hostClock = null,
 ) {
   hideNodeGlobals();
-  configureTimingProfile(timingProfile);
+  configureTimingProfile(timingProfile, hostClock);
   configureBlobRegistry(objectURLRegistry);
   configureObjectURLRegistry(objectURLRegistry);
   // 与 bootstrap-root 相同的约束：worker 是「legacy 模式的第二个 Realm」，

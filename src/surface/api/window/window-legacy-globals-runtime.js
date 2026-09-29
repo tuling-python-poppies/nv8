@@ -722,26 +722,7 @@ function createChromeCompatibility() {
       "runningState",
     ]
   ) registerNativeFunction(app[name], name);
-  return { loadTimes, csi, app, runtime: createChromeRuntime() };
-}
-
-function createChromeRuntime() {
-  const noOp = function() {};
-  const runtime = {
-    id: undefined,
-    connect: noOp,
-    sendMessage: noOp,
-    onMessage: { addListener: noOp, removeListener: noOp, hasListener: noOp },
-    onConnect: { addListener: noOp, removeListener: noOp, hasListener: noOp },
-    onInstalled: { addListener: noOp, removeListener: noOp, hasListener: noOp },
-    getURL: function getURL(path) { return `chrome-extension://undefined/${path}`; },
-    getManifest: function getManifest() { return {}; },
-    lastError: undefined,
-  };
-  for (const name of ["connect","sendMessage","getURL","getManifest"]) {
-    registerNativeFunction(runtime[name], name);
-  }
-  return runtime;
+  return { loadTimes, csi, app };
 }
 
 function createTemporalNamespace() {

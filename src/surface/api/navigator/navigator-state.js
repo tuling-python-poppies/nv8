@@ -4,6 +4,7 @@ import {
   createServiceWorkerContainer,
 } from "../worker/service-worker-runtime.js";
 import { createGPU } from "../gpu/gpu-runtime.js";
+import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { createXRSystem } from "../xr/xr-core-runtime.js";
 import {
   createClipboard,
@@ -170,8 +171,8 @@ function createServices() {
     scheduling: createScheduling(),
     userActivation: createUserActivation(),
     geolocation: createGeolocation(),
-    webkitTemporaryStorage: taggedService("DeprecatedStorageQuota"),
-    webkitPersistentStorage: taggedService("DeprecatedStorageQuota"),
+    webkitTemporaryStorage: createDeprecatedStorageQuota(),
+    webkitPersistentStorage: createDeprecatedStorageQuota(),
     windowControlsOverlay: createWindowControlsOverlay(),
     plugins: legacy.plugins,
     mimeTypes: legacy.mimeTypes,
@@ -219,12 +220,35 @@ function createServices() {
   });
 }
 
-function taggedService(tag) {
+function createDeprecatedStorageQuota() {
+  // 真机（Edge 154）的 webkitPersistentStorage / webkitTemporaryStorage 是
+  // 带方法的 DeprecatedStorageQuota 对象，不只是标签壳；方法缺失本身即特征。
   const value = {};
   Object.defineProperty(value, Symbol.toStringTag, {
-    value: tag,
+    value: "DeprecatedStorageQuota",
     configurable: true,
   });
+  value.queryUsageAndQuota = function queryUsageAndQuota(successCallback, errorCallback) {
+    if (typeof successCallback === "function") {
+      queueMicrotask(() => {
+        Reflect.apply(successCallback, undefined, [{ usage: 0, quota: 10737418240 }]);
+      });
+    } else if (typeof errorCallback === "function") {
+      queueMicrotask(() => { Reflect.apply(errorCallback, undefined, []); });
+    }
+  };
+  value.requestQuota = function requestQuota(newQuota, successCallback, errorCallback) {
+    if (typeof successCallback === "function") {
+      const granted = Number(newQuota);
+      queueMicrotask(() => {
+        Reflect.apply(successCallback, undefined, [Number.isFinite(granted) ? granted : 0]);
+      });
+    } else if (typeof errorCallback === "function") {
+      queueMicrotask(() => { Reflect.apply(errorCallback, undefined, []); });
+    }
+  };
+  registerNativeFunction(value.queryUsageAndQuota, "queryUsageAndQuota");
+  registerNativeFunction(value.requestQuota, "requestQuota");
   return value;
 }
 

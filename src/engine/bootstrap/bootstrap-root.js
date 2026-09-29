@@ -908,6 +908,9 @@ export function bootstrapRoot(
   timezone = null,
   // 宿主提供的密码学熵源。不能回退到页面可覆盖的 Math.random/Date。
   cryptoEntropy = null,
+  // 宿主高分辨率时钟：performance.now 的 0.1ms 量子需要亚毫秒时间源，
+  // realm 内 Date.now() 只有整毫秒。未提供时退回旧行为。
+  hostClock = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -929,7 +932,7 @@ export function bootstrapRoot(
   // 这是最经典的检测手法之一。模块求值期排入队列的注册会在这里被冲刷。
   establishNativeFunctionContext();
   hideNodeGlobals();
-  configureTimingProfile(timingProfile);
+  configureTimingProfile(timingProfile, hostClock);
   configureNativeFunctionRegistry(nativeFunctionRegistry);
   configureBlobRegistry(objectURLRegistry);
   configureObjectURLRegistry(objectURLRegistry);

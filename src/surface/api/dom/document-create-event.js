@@ -19,7 +19,7 @@ export const createEvent = {
       result = new CustomEvent("");
     } else {
       throw new DOMException(
-        "The requested event interface is not supported.",
+        `Failed to execute 'createEvent' on 'Document': The provided event type ('${interfaceName}') is invalid.`,
         "NotSupportedError",
       );
     }

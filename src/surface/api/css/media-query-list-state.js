@@ -67,6 +67,8 @@ function evaluateFeature(part, width, height, devicePixelRatio) {
   if (name === "max-resolution") return devicePixelRatio <= resolutionDppx(value);
   if (name === "resolution") return devicePixelRatio === resolutionDppx(value);
   if (name === "prefers-color-scheme") return value === "light";
+  if (name === "color-gamut") return value === "srgb";
+  if (name === "display-mode") return value === "browser";
   if (name === "prefers-reduced-motion") return value === "no-preference";
   if (name === "prefers-contrast") return value === "no-preference";
   if (name === "forced-colors") return value === "none";
