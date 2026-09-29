@@ -887,7 +887,7 @@ limits: { timeoutMs: 30_000 }
 ### 关于 `maxHeapBytes`
 
 这个值有两个**互不相干**的用途：算 Realm 容量守卫，和设 V8 老生代上限。
-后者有硬地板——引导一个完整 Realm（346 步装配）本身就要相当的老生代空间。
+后者有硬地板——引导一个完整 Realm（347 步装配）本身就要相当的老生代空间。
 
 实测（Node 24，各 6 次并发）：
 
@@ -1243,7 +1243,7 @@ src/
     ├── trace/         API 调用追踪
     └── utils/         logger
 
-tests/                 153 个 .js 测试文件
+tests/                 154 个 .js 测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -1414,7 +1414,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1279 项全过；18/20 档 1279 项中 2 项按版本分支跳过。差异分两类处理：
+四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1283 项全过；18/20 档 1283 项中 2 项按版本分支跳过。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。
