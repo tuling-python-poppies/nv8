@@ -1,5 +1,6 @@
 import { withWindowEvent } from "./window-state-globals-runtime.js";
 import { getState } from '../../../engine/plugin-sdk/state-registry.js';
+import { isErrorEvent } from "../general-events/general-events-runtime.js";
 
 function getHandlers(realm) {
   return getState('window-event-handler:handlers', 'realm', realm, () => new Map());
@@ -29,6 +30,26 @@ export function setWindowEventHandler(name, value, realm = globalThis) {
   }
   handlers.set(name, value);
   const listener = event => withWindowEvent(event, () => {
+    // Window 的 `onerror` 是 [SpecialOperation]：ErrorEvent 触发时按
+    // (message, filename, lineno, colno, error) 五参调用，返回 true 取消
+    // 默认动作（console 不再打印 Uncaught ...）。`{ handleEvent }` 对象
+    // 形式不走特例，与真实浏览器一致。
+    if (type === "error" && isErrorEvent(event)) {
+      if (typeof value === "function") {
+        const result = Reflect.apply(value, realm, [
+          event.message,
+          event.filename,
+          event.lineno,
+          event.colno,
+          event.error,
+        ]);
+        if (result === true) {
+          event.preventDefault();
+        }
+        return result;
+      }
+      return Reflect.apply(value.handleEvent, value, [event]);
+    }
     const result = typeof value === "function"
       ? Reflect.apply(value, realm, [event])
       : Reflect.apply(value.handleEvent, value, [event]);

@@ -3,6 +3,7 @@ import {
   timingProfile,
   wallClockNow,
 } from "./monotonic-clock.js";
+import { reportException } from "../../surface/api/event/report-exception.js";
 
 let nextTimerId = 1;
 const tasks = new Map();
@@ -112,8 +113,9 @@ export function runDueTimers() {
       } else {
         Reflect.apply(task.callback, globalThis, task.callbackArguments);
       }
-    } catch {
-      // A browser reports timer callback errors without rejecting the task itself.
+    } catch (error) {
+      // 浏览器不因定时器回调抛错而中断任务，但会把它上报成窗口 `error` 事件。
+      reportException(error);
     }
   }
   // After executing timers some were removed or rescheduled.

@@ -11,6 +11,7 @@ import {
 } from "./event-target-state.js";
 import { isNode, requireNode, rootOf } from "../dom/node-state.js";
 import { requireArguments } from "../../../engine/webidl/conversions.js";
+import { reportException } from "./report-exception.js";
 
 export function ensureEventTarget(value) {
   const receiver = eventTargetReceiver(value);
@@ -200,8 +201,10 @@ function invokeListeners(
           Reflect.apply(handleEvent, listener.callback, [event]);
         }
       }
-    } catch {
-      // Browser dispatch reports listener errors without throwing.
+    } catch (error) {
+      // 浏览器不向 dispatchEvent 调用方抛监听器异常，但会把它上报成窗口
+      // `error` 事件（见 report-exception.js）。
+      reportException(error);
     } finally {
       eventRecord.inPassiveListener = false;
     }

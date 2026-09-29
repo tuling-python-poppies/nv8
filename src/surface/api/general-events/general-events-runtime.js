@@ -183,3 +183,7 @@ function requireRecord(value) {
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;
 }
+
+export function isErrorEvent(value) {
+  return state.get(value)?.kind === "ErrorEvent";
+}

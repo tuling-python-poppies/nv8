@@ -1,6 +1,7 @@
 import { traceCall } from "../../../infra/trace/trace-function.js";
 import { defineGlobalFunction } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
+import { reportException } from "../event/report-exception.js";
 import {
   captureScheduledCallbackIncumbent,
   notifyScheduledCallbackIncumbent,
@@ -22,8 +23,9 @@ export const queueMicrotask = {
     Promise.resolve().then(() => {
       notifyScheduledCallbackIncumbent(incumbentSource);
       callback();
-    }).catch(() => {
-      // Browser hosts report microtask exceptions through their error channel.
+    }).catch(error => {
+      // 微任务里的未捕获异常同样上报成窗口 `error` 事件。
+      reportException(error);
     });
     traceCall("window.queueMicrotask", "Window", [callback], undefined);
   },
