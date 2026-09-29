@@ -26,7 +26,30 @@ node --experimental-vm-modules main.mjs
 
 实测 `level=verified`：`v` 为 60 字符、前缀 `A`、格式合法。动态凭据落盘只留长度、摘要与前缀。
 
-## 4. 边界
+## 4. 线上验收（实测）
+
+案例工作区带出口：先跑 `main.mjs` 生成 `hexin-v`，再由 `live_fetch.py` 带凭据请求
+真实行情接口（涨跌幅榜 ajax 页，公开行情、无需登录）：
+
+```bash
+node --experimental-vm-modules main.mjs          # 产出 output/proof-result.json
+python live_fetch.py                             # 带 hexin-v 联网发包
+```
+
+实测：
+
+```text
+NV8 生成 hexin-v: len=60 prefix=A9_QE4mJyS3-
+HTTP 200  bytes=17982
+解析出 20 条股票行情，前 3 条：
+  {"代码": "301716", "名称": "N瑞富",  "现价": "578.88", "涨跌幅": "653.16"}
+  {"代码": "920202", "名称": "N泰凯",  "现价": "26.16",  "涨跌幅": "246.49"}
+  {"代码": "920779", "名称": "武汉蓝电", "现价": "28.40",  "涨跌幅": "29.98"}
+```
+
+即：NV8 产出的 `hexin-v` 被目标站认可，真实数据出数。
+
+## 5. 边界
 
 - 脚本是捕获产物（SHA256 记录在 `config.example.json` 的 `expectedSha256`），换版本需重新捕获。
 - 移植过程中未遇到 NV8 框架自身的问题。

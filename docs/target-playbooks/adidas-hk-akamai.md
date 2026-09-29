@@ -22,8 +22,12 @@
 ## 3. 实测
 
 - 离线：sensor POST 4210 字节、`application/json`、`outcome=replayed`；原始 Python 单测 **8/8 通过**。
-- live 采集链（在案例 `reference/` 内）：NV8 产 sensor POST → `curl_cffi` 转发取准入 cookie →
-  请求 SFCC `Search-UpdateGrid` → 解析商品。
+- **线上全链（实测）**：`akamai_sensor_generator.mjs` 抓真挑战页（真 sensor 约 500KB）→
+  NV8 执行 → 捕获 sensor POST 4623 字节 → Python（`curl_cffi`）转发 **HTTP 200**、
+  拿到 `ak_bmsc` 等准入 cookie → 请求 SFCC `Search-UpdateGrid` → **HTTP 200 / 459KB /
+  48 件真实商品**（真实商品名与价格，如 `KV4428 … HK$ 1,199.00`）。
+- 运行方式（reference）：`python main.py`；`node_modules/nv8` 指向本机 nv8 根
+  （Windows 下 junction 即可），Node 22/24 均可；合集补齐了被裁掉的 `utils/logger.py`。
 
 ## 4. 边界
 

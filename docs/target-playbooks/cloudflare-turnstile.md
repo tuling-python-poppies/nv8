@@ -39,7 +39,38 @@ NV8_PROOF_DUMP_TRACE=1 node --experimental-vm-modules main.mjs   # 额外导出�
 诊断字段：`consoleLog` / `handlerErrors` / `challengeHarness` / `sentMessages` /
 `parentMessages` / `resources` / `stringifyFails`。
 
-## 5. 边界
+## 5. 线上素材刷新（实测）
+
+案例工作区带 `live_refresh.mjs`：**无浏览器**刷新当轮素材并接管验收。
+
+```bash
+set NV8_ROOT=<nv8-root> && node --experimental-vm-modules live_refresh.mjs
+# 抓活 api.js → NV8 里跑活 api.js 发现当轮挑战 URL → Node fetch 真挑战 HTML
+# → 写 js_reverse_cache/live/ + config.local.json → 再跑 main.mjs
+```
+
+两个关键点：
+
+- 挑战 iframe 建在 **closed shadow root** 里（页面脚本查不到、`iframeCount=0`），
+  src 只能通过 tap `HTMLIFrameElement.prototype.src` setter /
+  `Element.prototype.setAttribute("src")` 获得（网络捕获里也没有 iframe 请求）。
+- api.js 靠 `performance.getEntriesByType("resource")` 看到自己的加载记录才继续
+  渲染 → 需要资源计时补偿 shim（`buildResourceTimingShim`）。
+
+实测（非交互测试页，sitekey `0x4AAAAAAABS7vwvV6VFfMcD`）：
+
+```text
+api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 263791 字节
+用活素材跑 main.mjs：握手 4/4 全过（extraParamsReplied / executeSent / widgetRendered / workerConstructed）
+```
+
+**submit 仍被挑战引擎阻塞**：挑战启动代码在 nv8 内抛
+`Uncaught TypeError: Cannot read properties of null (reading 'eval')`（挑战自身用
+Trusted Types 保护动态 eval；该异常在真实浏览器不复现），最终 `fail` / 300010。
+这是 nv8 保真度缺口，需要专项对齐后才能宣称线上 submit——本项目如实记录，
+不用握手冒充通过。原案例 8 月那次 `status: complete` 是碰上非交互放行，不可稳定复现。
+
+## 6. 边界
 
 - 离线只证明「捕获的 challenge 在 nv8 里能走到握手完成」，不代表线上通过；真实网络出口归 Python。
-- 素材换轮需从真实浏览器重新采集。
+- 素材换轮需重新采集；`live_refresh.mjs` 已能无浏览器完成刷新。

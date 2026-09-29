@@ -48,8 +48,8 @@
 | 抖音 BDMS（a_bogus） | [douyin-bdms.md](douyin-bdms.md) | 已接入（本地验证；线上受旧会话限制） |
 | 欧冶 ouyeel（瑞数 RS6 `*P`） | [ouyeel-rs6.md](ouyeel-rs6.md) | 已接入（线上真实业务数据验收） |
 | 中文期刊 cqvip（瑞数 RS6 `*P`） | [cqvip-rs6.md](cqvip-rs6.md) | 已接入（线上真实检索数据验收） |
-| 加速乐（`__jsl_clearance_s`） | [jsl-clearance.md](jsl-clearance.md) | 离线自证（sha256=ct） |
-| 同花顺（`hexin-v`） | [10jqka-hexin-v.md](10jqka-hexin-v.md) | 离线自证（格式+完整性） |
-| 五秒盾 Cloudflare Turnstile | [cloudflare-turnstile.md](cloudflare-turnstile.md) | 离线握手（submit 需服务端放行） |
-| 小红书（`x-s` / `x-s-common`） | [xiaohongshu-x-s.md](xiaohongshu-x-s.md) | 离线自证 + 浏览器无关出数（200/30 条） |
-| Akamai 阿迪达斯 HK | [adidas-hk-akamai.md](adidas-hk-akamai.md) | 离线自证（合成 sensor+replay；live 链备有实现） |
+| 加速乐（`__jsl_clearance_s`） | [jsl-clearance.md](jsl-clearance.md) | 已接入（线上真实页面 200 验收） |
+| 同花顺（`hexin-v`） | [10jqka-hexin-v.md](10jqka-hexin-v.md) | 已接入（线上真实行情验收） |
+| 五秒盾 Cloudflare Turnstile | [cloudflare-turnstile.md](cloudflare-turnstile.md) | 线上素材刷新 + 握手（submit 待 nv8 对齐，见文档） |
+| 小红书（`x-s` / `x-s-common`） | [xiaohongshu-x-s.md](xiaohongshu-x-s.md) | 已接入（线上真实笔记验收） |
+| Akamai 阿迪达斯 HK | [adidas-hk-akamai.md](adidas-hk-akamai.md) | 已接入（线上真实商品验收，48 件） |

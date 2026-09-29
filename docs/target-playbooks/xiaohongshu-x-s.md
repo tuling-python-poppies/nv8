@@ -31,9 +31,17 @@ x-s = "XYS_" + 自定义表base64(JSON.stringify({x0..x7}))
 解码 `x-s` 核对：`x0/x1/x2` 与常量一致、`x5 === md5(canonicalInput)`（证明 `x3` 针对当前请求、
 而非返回常量/缓存）、`x3` 非空。
 
-## 4. 实测
+## 4. 线上验收（实测）
 
-- 离线签名 + `fetch_signed.py` 联网发包 → **HTTP 200 / 41388 字节 / 30 条真实笔记**（浏览器无关出数）。
+```bash
+python fetch_signed.py homefeed      # 调 sign_offline.mjs 产签名 → curl_cffi 联网发包
+```
+
+- 离线签名（NV8 里跑站点 mns 运行时）+ 联网发包 → **HTTP 200 / 37301 字节 /
+  `code=0 success=true msg=成功` / 28 条真实笔记**（浏览器无关出数；历史会话出过
+  30 条 / 41388 字节）。
+- Windows 控制台注意：`UnicodeEncodeError` 是 `ValueError` 的子类，打印笔记标题会
+  撞上 `except ValueError` 的「非 JSON 响应」分支——脚本已加 UTF-8 stdout 兜底。
 - 设备材料为会话级：`webSsk`（ECDH 换取）、`b1`（长度轮转）、`cookies.json`（含 `a1`）、
   `x-s-common`（`x9` 派生算法未定，采集一次写入 `signer.local.json` 复用）。
 

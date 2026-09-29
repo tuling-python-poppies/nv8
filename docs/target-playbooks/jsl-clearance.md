@@ -30,7 +30,29 @@ node --experimental-vm-modules main.mjs        # NV8_ROOT 可指向任意 nv8 �
 
 实测：`level=verified`（47 字符 cookie，sha256 与脚本内 `ct` 逐字匹配）。
 
-## 5. 边界
+## 5. 线上验收（实测）
+
+案例工作区带完整出口链：`live_fetch.py`（Python 请求侧）+ `jsl_live_solve.mjs`
+（NV8 挑战求解器，读 stdin 脚本、回收 `cookieWrites`）。
+
+```bash
+set NV8_ROOT=<nv8-root> && python live_fetch.py
+```
+
+实测（`https://www.mps.gov.cn/n7598382/index.html`）：
+
+```text
+[1] 首次请求 -> HTTP 521 set-cookie=__jsluid_s
+[2] NV8 求解首段 -> __jsl_clearance_s 写出，errors=[]
+[3] 带 cookie1 重放 -> HTTP 521（下发二段混淆脚本）
+[4] NV8 求解二段 -> __jsl_clearance_s 写出，errors=[]
+[5] 带 cookie2 重放 -> HTTP 200  57193 字节  title=中华人民共和国公安部
+```
+
+两个 Windows 适配点（已在案例代码里处理）：求解器支持 `NV8_ROOT` 环境变量；
+Python 给子进程的 `env` 必须继承完整环境（只传 `PATH` 会让 Node 在原生初始化阶段崩溃）。
+
+## 6. 边界
 
 - 二段脚本与那一轮 `ct/chars/bts` 绑定，换轮需重新捕获。
 - 脚本会顺带改 `location`，nv8 里不会真的跳转，符合离线自证预期。
