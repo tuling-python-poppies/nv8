@@ -227,7 +227,34 @@ await sandbox.clearTrace();
 
 Trace 只观察兼容层 API 调用，不代表真实 Chromium DevTools 调用栈。
 
-### 3.7 关闭
+### 3.7 可信输入与回调异常上报
+
+宿主可以派发 `isTrusted === true` 的输入事件——真实 Edge 里只有用户 / 宿主输入
+可信，反爬脚本据此拒绝纯脚本合成的 `dispatchEvent`：
+
+```js
+await sandbox.dispatchTrustedInput("click");
+await sandbox.dispatchTrustedInput("keydown", { key: "Enter", code: "Enter" });
+```
+
+支持 `click` / `dblclick` / `mousedown` / `mouseup` / `mousemove`（PointerEvent）、
+`keydown` / `keyup`（KeyboardEvent）、`input` / `change`（Event），其余类型抛
+`TypeError`。事件目标是文档当前活动元素，沿正常冒泡路径到达 window 监听器。
+
+同一层的 Edge 行为对齐：
+
+- 事件监听器 / 定时器 / `queueMicrotask` 回调中的未捕获异常上报为窗口 `error`
+  事件（`Uncaught Error: ...` 文案；`window.onerror` 五参调用，返回 true 取消
+  console 输出；`event.preventDefault()` 同理）。
+- 未处理 Promise 拒绝派发 `unhandledrejection`，之后被接住再派发
+  `rejectionhandled`（`promise` / `reason` 齐全；`event.preventDefault()` 取消
+  console 默认输出）。
+- 跨源窗口的非白名单命名属性读取抛 `SecurityError`（Edge 文案），不再静默返回
+  `undefined`。
+- 对话框调用（`alert` / `confirm` / `prompt`）会进入 proxy trace（`window.alert`
+  等条目）。
+
+### 3.8 关闭
 
 ```js
 await sandbox.close();

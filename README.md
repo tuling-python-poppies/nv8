@@ -271,6 +271,7 @@ const sandbox = await EdgeSandbox.create(options);
 | `resources()` | 当前 Realm / Worker / 定时器等资源占用 |
 | `openInspector({ port?, host? })` | 打开子进程 V8 调试端点，返回 `{ url, alreadyOpen }`；默认 `127.0.0.1` 随机端口，详见[调试指南](docs/user-guide.md#16-调试沙箱子进程) |
 | `watchApis(list)` | 设置 API 访问断点：被追踪的 API 命中时若已附 inspector 则在访问处暂停；需先 `enableTrace()`，传空数组清除 |
+| `dispatchTrustedInput(type, init?)` | 派发宿主可信输入事件（`isTrusted === true`）：`click` / `dblclick` / `mousedown` / `mouseup` / `mousemove` / `keydown` / `keyup` / `input` / `change`，其余类型抛 `TypeError`；事件从当前活动元素冒泡 |
 | `close()` | 关闭，幂等 |
 
 ### `createNv8`（面向可裁剪装配）
@@ -1184,7 +1185,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 ### 关于 `build:bundle`
 
-`RealmModuleLoader` 支持把 4027 个模块预打包成一个 JSON 以减少文件读取。
+`RealmModuleLoader` 支持把 4030 个模块预打包成一个 JSON 以减少文件读取。
 这个缓存**以绝对 `file://` URL 为键**，因此与生成它的机器路径绑定。
 
 仓库里曾提交过一份这样的包（3992 个键，全部以 `file:///D:/develop_software/Nv8/`
@@ -1244,7 +1245,7 @@ src/
     ├── trace/         API 调用追踪
     └── utils/         logger
 
-tests/                 154 个 .js 测试文件
+tests/                 159 个 .js 测试文件
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
@@ -1416,7 +1417,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1284 项全过；18/20 档 1284 项中 2 项按版本分支跳过。差异分两类处理：
+四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1303 项全过；18/20 档 1303 项中 2 项按版本分支跳过。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。

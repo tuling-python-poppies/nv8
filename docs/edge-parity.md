@@ -219,6 +219,26 @@ Object.getOwnPropertyNames(new Event('x')).includes('isTrusted')
   `hide-node-globals.js` 删除。
 - `webkitAudioContext` — Edge 151 已移除的旧别名。不再安装。
 
+### 回调异常、跨源读取、Promise 拒绝与可信输入（行为层）
+
+- **未捕获异常上报**：事件监听器 / 定时器 / `queueMicrotask` 回调里的异常此前
+  被静默吞掉（与被调用根本没执行同形）。现在按 Edge 语义派发窗口 `error`
+  事件：`Uncaught Error: ...` 文案、`window.onerror` 五参调用、返回 true 或
+  `preventDefault()` 取消 console 输出；错误处理器自身再抛不再递归。
+- **跨源窗口读取**：门面此前对白名单之外的属性返回静默 `undefined`。现在抛
+  `Failed to read a named property 'document' from 'Window': Blocked a frame
+  with origin "..." from accessing a cross-origin frame.`（`Location.href` 同理）；
+  符号键 / `in` / 属性描述符仍不抛，`then` 读取保持可用。
+- **Promise 拒绝生命周期**：未处理拒绝此前只有子进程 stderr 诊断。现在派发
+  `unhandledrejection`（cancelable，`promise` / `reason` / `isTrusted` 齐全，
+  `preventDefault()` 取消 console 默认输出），之后被接住再派发
+  `rejectionhandled`。
+- **宿主可信输入**：新增 `dispatchTrustedInput(type, init?)` 入口
+  （`isTrusted === true`）；脚本 `dispatchEvent` 仍为 `false`。非输入类型
+  （`error` / `custom-event` 等）拒绝，信任位不借给任意事件类型。
+- **对话框可观测**：`alert` / `confirm` / `prompt` 进入 proxy trace
+  （`window.alert` 等条目）。
+
 ## 采集
 
 采集分多个脚本，因为各份数据的规模和人工核对需求差别很大：
