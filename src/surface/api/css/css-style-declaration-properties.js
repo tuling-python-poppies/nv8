@@ -88,7 +88,13 @@ export function installCSSPropertyAccessors(declaration, readonly = false) {
     const cssName = name.replace(/[A-Z]/gu, letter => `-${letter.toLowerCase()}`);
     Object.defineProperty(declaration, name, {
       get() {
-        return readCSSDeclarations(this).get(cssName)?.value ?? "";
+        const stored = readCSSDeclarations(this).get(cssName)?.value ?? "";
+        // CSSOM 读回串行化：font-family 的族名按「能否作单个 ident」决定是否加双引号
+        // （`Padauk Book Bold` → `"Padauk Book Bold"`、`Arial` → `Arial`）。
+        // RS6 字体枚举会读回该值，裸串会与真机不一致。
+        return cssName === "font-family" && stored !== ""
+          ? serializeFontFamilyValue(stored)
+          : stored;
       },
       set(value) {
         if (readonly) {
@@ -167,6 +173,22 @@ function isValidFontFamily(value) {
     if (!name.split(/\s+/u).every(part => CSS_IDENT.test(part))) return false;
   }
   return true;
+}
+
+/**
+ * font-family 读回的 CSSOM 串行化：去掉多余引号、需要引号的（多词/非 ident）用双引号，
+ * 候选之间统一 ", "。实测真机：`Padauk Book Bold` → `"Padauk Book Bold"`、
+ * `'Arial'` → `Arial`、`Times New Roman` → `"Times New Roman"`。
+ */
+function serializeFontFamilyValue(value) {
+  return value
+    .split(",")
+    .map(segment => {
+      const name = segment.trim().replace(/^["']|["']$/gu, "").trim();
+      if (name === "") return name;
+      return CSS_IDENT.test(name) ? name : `"${name}"`;
+    })
+    .join(", ");
 }
 
 export { parseCSSDeclarations, serializeCSSDeclarations };

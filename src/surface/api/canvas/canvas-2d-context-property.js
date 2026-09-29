@@ -80,14 +80,29 @@ function normalizeCanvasFont(value) {
   const style = match[1]?.toLowerCase() ?? null;
   const variant = match[2]?.toLowerCase() ?? null;
   const weight = match[3]?.toLowerCase() ?? null;
-  const sizeAndFamily = `${match[4]}${match[6]}`;
+  const size = match[4].trim();
+  const families = serializeFontFamilies(match[6]);
   const normalizedWeight = weight === "400" ? null : weight === "700" ? "bold" : weight;
   return [
     style === "normal" ? null : style,
     variant === "normal" ? null : variant,
     normalizedWeight === "normal" ? null : normalizedWeight,
-    sizeAndFamily,
+    size,
+    families,
   ].filter(Boolean).join(" ");
+}
+
+// Chromium 的字体串行化：可作 ident 的族名去引号，含空格等需引号的加双引号。
+function serializeFontFamilies(rawList) {
+  const serialized = [];
+  for (const raw of rawList.split(",")) {
+    const name = raw.trim().replace(/^["']|["']$/gu, "").trim();
+    if (name === "") continue;
+    serialized.push(/^-?[A-Za-z_\u00a0-\uffff][A-Za-z0-9_\-\u00a0-\uffff]*$/u.test(name)
+      ? name
+      : `"${name}"`);
+  }
+  return serialized.join(", ");
 }
 
 function normalizeProperty(name, value) {

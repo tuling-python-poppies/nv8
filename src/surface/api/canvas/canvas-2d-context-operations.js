@@ -3,7 +3,6 @@ import { createDOMMatrix } from "../geometry/dom-matrix-constructor.js";
 import { matrixFromValue } from "../geometry/dom-matrix-state.js";
 import { createCanvasGradient } from "./canvas-gradient-state.js";
 import { createCanvasPattern } from "./canvas-pattern-state.js";
-import { timingProfile } from "../../../infra/scheduler/monotonic-clock.js";
 import {
   canvasColorBytes,
   defaultCanvasDrawingState,
@@ -13,6 +12,7 @@ import {
 import { createImageData, requireImageData } from "./image-data-state.js";
 import { isPath2D, requirePath2D } from "./path-2d-state.js";
 import { createTextMetrics } from "./text-metrics-state.js";
+import { CANVAS_GLYPH_ADVANCES } from "./canvas-glyph-advances.js";
 
 export function noResult() {}
 
@@ -112,18 +112,10 @@ export function getImageDataOperation(state, args) {
       }
     }
   }
-  // Per-session deterministic pixel noise: flip ±1 on ~1 in 64 non-alpha bytes.
-  // Seeded by jitterSeed so fingerprint hash differs across sessions but is
-  // reproducible within a single sandbox session.
-  const seed = timingProfile().jitterSeed;
-  let s = (seed ^ width ^ (height << 8)) >>> 0;
-  for (let i = 0; i < bytes.length; i += 4) {
-    s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
-    if ((s & 0x3f) === 0) {
-      const ch = s % 3; // R, G, or B channel only (not alpha)
-      bytes[i + ch] = (bytes[i + ch] + ((s & 0x40) ? 1 : -1)) & 0xff;
-    }
-  }
+  // 真实浏览器的画布像素是确定性的：同一次绘制在同一环境下逐像素一致。
+  // 这里曾加入「逐会话 ±1 像素噪音」作为反指纹手段——但反爬脚本正是用
+  // 「纯色填充的像素必须完全均匀」来鉴别模拟画布，噪音会让 getImageData
+  // 返回非均匀值（如 224/223、204/205 的 ±1 抖动），直接暴露环境。
   return createImageData(width, height, bytes, state.colorSpace);
 }
 export function putImageDataOperation(state, args) {
@@ -186,7 +178,7 @@ export const isPointInStrokeOperation = isPointInPathOperation;
 export function measureTextOperation(state, args) {
   const text = `${args[0]}`;
   const fontSize = parseFontSize(state.drawing.font);
-  const width = [...text].length * fontSize * 0.6;
+  const width = canvasTextWidth(text, state.drawing.font, fontSize);
   return createTextMetrics({
     width,
     actualBoundingBoxLeft: 0,
@@ -313,6 +305,37 @@ function selectedPath(state, args) {
 function parseFontSize(font) {
   const match = /([\d.]+)px/u.exec(font);
   return match === null ? 10 : Number(match[1]);
+}
+
+// 未收录字符的回退推进（非 CJK）；CJK 用表中「中」的推进（真机为 1em）。
+const CANVAS_DEFAULT_ADVANCE = 0.6;
+
+function canvasTextWidth(text, font, fontSize) {
+  const advances = resolveCanvasGlyphAdvances(font);
+  let width = 0;
+  for (const ch of text) {
+    const advance = advances[ch];
+    if (advance !== undefined) {
+      width += advance * fontSize;
+      continue;
+    }
+    const code = ch.codePointAt(0);
+    width += (code !== undefined && code > 0x2e80
+      ? (advances["\u4e2d"] ?? 1)
+      : CANVAS_DEFAULT_ADVANCE) * fontSize;
+  }
+  return width;
+}
+
+function resolveCanvasGlyphAdvances(font) {
+  const match = /\d+(?:\.\d+)?px(?:\/[^\s]+)?\s+(.+)$/u.exec(font);
+  const list = match === null ? [] : match[1].split(",");
+  for (const raw of list) {
+    const name = raw.trim().replace(/^["']|["']$/gu, "").toLowerCase();
+    const advances = CANVAS_GLYPH_ADVANCES[name];
+    if (advances !== undefined) return advances;
+  }
+  return CANVAS_GLYPH_ADVANCES["sans-serif"];
 }
 function structuredCloneDrawingState(drawing) {
   return {

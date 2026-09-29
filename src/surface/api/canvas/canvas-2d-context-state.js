@@ -103,8 +103,41 @@ export function normalizeCanvasColor(value) {
     red: "#ff0000",
     blue: "#0000ff",
     green: "#008000",
+    yellow: "#ffff00",
+    lime: "#00ff00",
+    aqua: "#00ffff",
+    cyan: "#00ffff",
+    fuchsia: "#ff00ff",
+    magenta: "#ff00ff",
+    maroon: "#800000",
+    navy: "#000080",
+    olive: "#808000",
+    purple: "#800080",
+    silver: "#c0c0c0",
+    teal: "#008080",
+    gray: "#808080",
+    grey: "#808080",
+    orange: "#ffa500",
   };
-  return named[normalized] ?? normalized;
+  if (named[normalized] !== undefined) return named[normalized];
+  // Chromium 的颜色读回串行化：`#rgb` 展开成 `#rrggbb`、`rgb()`/`rgba(*,1)`
+  // 也归一为 `#rrggbb`；只有 alpha < 1 的 rgba 保持 `rgba(r, g, b, a)`。
+  // RS 的 canvas 阶段会设置随机颜色并在后续读取该值，裸串会与真机不一致。
+  const shortHex = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/u.exec(normalized);
+  if (shortHex !== null) {
+    return `#${shortHex[1]}${shortHex[1]}${shortHex[2]}${shortHex[2]}${shortHex[3]}${shortHex[3]}`;
+  }
+  const rgb = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/u.exec(normalized);
+  if (rgb !== null) {
+    const alpha = rgb[4] === undefined ? 1 : Number(rgb[4]);
+    if (alpha >= 1) {
+      return `#${[rgb[1], rgb[2], rgb[3]]
+        .map(channel => Number(channel).toString(16).padStart(2, "0"))
+        .join("")}`;
+    }
+    return `rgba(${Number(rgb[1])}, ${Number(rgb[2])}, ${Number(rgb[3])}, ${alpha})`;
+  }
+  return normalized;
 }
 
 export function canvasColorBytes(style, alpha = 1) {
