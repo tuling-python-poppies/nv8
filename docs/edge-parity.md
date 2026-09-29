@@ -43,7 +43,7 @@ NV8 从一开始就和真实浏览器不一样。这份检查补上后者。
 Worker / ServiceWorker 异步行为由 `tests/worker-async-parity-test.js` 对照
 `fixtures/fingerprint/edge-async-behavior.json` 验证。
 
-**同步基线为 186 个探针分 25 类**；另有独立的 **5 个 Worker / ServiceWorker 异步探针**（2 个 Dedicated Worker、3 个 ServiceWorker）。同步内容包括报错文案、`toString` 形态、类型标签、非法接收者、
+**同步基线为 211 个探针分 28 类**；另有独立的 **5 个 Worker / ServiceWorker 异步探针**（2 个 Dedicated Worker、3 个 ServiceWorker）。同步内容包括报错文案、`toString` 形态、类型标签、非法接收者、
 构造器守卫、arity 元数据、Error 形态、集合语义、Worker 入口契约、CSSOM、Canvas 形状、
 字体解析、DOM/Range/Selection、Storage、Fetch、Crypto、XHR、WebSocket、IndexedDB、音频指纹、
 Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL 解析。
@@ -63,7 +63,7 @@ Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL
 | Dedicated Worker 异步 | 2 | 消息往返、terminate 后消息行为，真实 Edge 双轮采集一致 |
 | ServiceWorker 异步 | 3 | 注册元数据、控制器接管、页面消息往返，真实 Edge 双轮采集一致 |
 
-同步基线现状：**182 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。Worker / ServiceWorker 异步基线另有 5 项，由 `edge-async-behavior.json` 锁定。
+同步基线现状：**207 项一致，4 项登记**——2 项动态 iframe 时序，2 项宿主级差异。Worker / ServiceWorker 异步基线另有 5 项，由 `edge-async-behavior.json` 锁定。
 
 同步探针定义在 `src/infra/baseline/behavior-probes.js`，Worker / ServiceWorker 异步探针定义在
 `src/infra/baseline/async-behavior-probes.js`，各自的采集脚本与测试共用同一份定义——
@@ -227,7 +227,7 @@ Object.getOwnPropertyNames(new Event('x')).includes('isTrusted')
 npm run fingerprint:collect   # 指纹字段（UA/brands/WebGL），小，需人工核对
 npm run fingerprint:globals   # 全局名列表，1239 项
 npm run fingerprint:members   # 原型成员明细，8957 项
-npm run fingerprint:behavior  # 同步行为探针，186 项（跑两轮校验确定性）
+npm run fingerprint:behavior  # 同步行为探针，211 项（跑两轮校验确定性）
 npm run fingerprint:async-behavior  # Worker / ServiceWorker 异步探针，5 项（跑两轮校验确定性）
 ```
 
@@ -274,7 +274,7 @@ GPU 组合（选取 Steam 硬件调查份额较高的型号，冷门型号反而
 
 ```
 webglVendor        "Google Inc. (NVIDIA)"
-webglRenderer      "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)"
+webglRenderer      "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)"
 webgpu.vendor      "nvidia"
 webgpu.device      "NVIDIA GeForce RTX 5060"
 webgpu.description "NVIDIA driver 32.0.15.8097"

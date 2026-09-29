@@ -726,7 +726,7 @@ const sandbox = await EdgeSandbox.create({ fingerprint: edge151Fingerprint });
 // Edge 152: { fingerprint: edge152Fingerprint }
 ```
 
-当前 `browserMajorVersion` 只接受 `150`、`151` 和 `152`。如果自定义 UA，必须满足：
+当前 `browserMajorVersion` 接受 `150` 到 `154`（`154` 的 UA-CH 品牌串按真机实测校准；冻结指纹导出仍是 `nv8/fingerprint/edge-150`、`edge-151`、`edge-152`）。如果自定义 UA，必须满足：
 
 - 包含对应版本的 `Chrome/<major>.`；
 - 如果包含 `Edg/<major>`，其主版本必须与 `Chrome/<major>` 一致；
@@ -842,7 +842,7 @@ const fingerprint = {
     ...edge150Fingerprint.rendering,
     webglVendor: "Google Inc. (NVIDIA)",
     webglRenderer:
-      "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 Direct3D11)",
+      "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
     webgpu: {
       ...edge150Fingerprint.rendering.webgpu,
       vendor: "nvidia",
@@ -901,6 +901,8 @@ const sandbox = await EdgeSandbox.create({ fingerprint });
 | `animationFrameIntervalMs` | `16` | `requestAnimationFrame` 的模拟帧间隔 |
 
 `dateNowResolutionMs` 必须是 `0` 到 `60000` 的整数。`performanceResolutionMs` 为 `0` 到 `60000` 的有限数字。`performanceJitterMs` 为 `0` 到 `1000` 的有限数字。`animationFrameIntervalMs` 为 `1` 到 `1000` 的有限数字。
+
+内置 Edge 档案（150/151/152）在 profile 内设置 `performanceResolutionMs: 0.1`，对齐真机实测的 `performance.now()` 粒度；表内默认值指不配置档案时的通用默认。
 
 ### 10.3 验证时钟
 
@@ -1530,6 +1532,7 @@ Node 必须是 `18.18.0` 或更新版本。通过 `npm test`、`npm run test:mat
 - Node V8 中的浏览器兼容全局对象；
 - DOM、Web IDL brand、事件、Storage、Cookie、Fetch/XHR replay；
 - iframe、DedicatedWorker、SharedWorker、ServiceWorker 和 Worklet 的兼容 Realm；
+- `document.all` 的 `[[IsHTMLDDA]]` 语义（宿主以 `--allow-natives-syntax` 启动且 Worker/子进程继承该 flag 时提供；未开启回退普通可调用对象）；
 - 可配置 Navigator、UA-CH、Screen、WebGL/WebGPU 和设备能力 profile；
 - 可配置 Date、Performance、timer 和 animation frame 时序；
 - 受限、可审计的 API Trace 和网络请求 capture；
@@ -1539,7 +1542,6 @@ Node 必须是 `18.18.0` 或更新版本。通过 `npm test`、`npm run test:mat
 
 以下行为需要真实 Chromium/Blink、V8 私有 patch、浏览器进程或系统网络栈，当前实现不伪造：
 
-- `document.all` 的原生 `[[IsHTMLDDA]]`；
 - 完整原生 `WindowProxy` exotic 行为；
 - 真正的 Edge 私有 V8 intrinsic；
 - V8 JIT、GC、rendering 和 compositor timing 等 engine-only 行为；
