@@ -1382,6 +1382,54 @@ export class RuntimePool {
     assertLiveRealm(this.realm).bootstrap.enableProxyTrace();
   }
 
+  dispatchTrustedInput(type, init) {
+    return assertLiveRealm(this.realm).bootstrap.dispatchTrustedInput(type, init);
+  }
+
+  /**
+   * 把 Node 的未处理拒绝路由到拥有该 Promise 的 Realm 并派发窗口
+   * `unhandledrejection` 事件。返回是否路由成功——没有 Realm 认领时调用方
+   * （entry）保留 stderr 诊断，不静默。
+   */
+  handleUnhandledRejection(reason, promise) {
+    for (const realm of this.liveRealmHandles()) {
+      try {
+        if (realm.bootstrap.ownsPromise(promise)) {
+          realm.bootstrap.reportUnhandledRejection(promise, reason);
+          return true;
+        }
+      } catch {
+        // 单个 Realm 的归属判定失败不能阻止其他 Realm 认领。
+      }
+    }
+    return false;
+  }
+
+  handleRejectionHandled(promise, reason) {
+    for (const realm of this.liveRealmHandles()) {
+      try {
+        if (realm.bootstrap.ownsPromise(promise)) {
+          realm.bootstrap.reportRejectionHandled(promise, reason);
+          return true;
+        }
+      } catch {
+        // 同上：判定失败继续扫描。
+      }
+    }
+    return false;
+  }
+
+  liveRealmHandles() {
+    const realms = [];
+    if (this.realm !== null && !this.realm.destroyed) {
+      realms.push(this.realm);
+    }
+    for (const realm of this.childRealms) {
+      if (!realm.destroyed) realms.push(realm);
+    }
+    return realms;
+  }
+
   disableTrace() {
     this.traceEnabled = false;
     assertLiveRealm(this.realm).bootstrap.disableProxyTrace();

@@ -24,6 +24,8 @@ export const Opcode = Object.freeze({
   OPEN_INSPECTOR: 16,
   // 设置/更新 API 访问断点列表：命中的 trace api 在附 inspector 时暂停。
   SET_WATCH_APIS: 17,
+  // 派发宿主可信输入事件（isTrusted === true），供反爬交互检测使用。
+  DISPATCH_TRUSTED_INPUT: 18,
   RESPONSE_FLAG: 0x8000,
   ERROR: 0xffff,
 });

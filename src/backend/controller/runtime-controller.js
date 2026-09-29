@@ -253,6 +253,10 @@ export class RuntimeController {
     return this.watchApiList.slice();
   }
 
+  dispatchTrustedInput(type, init) {
+    return this.send(Opcode.DISPATCH_TRUSTED_INPUT, { type, init });
+  }
+
   async close() {
     if (this.closed) {
       return;

@@ -157,6 +157,54 @@ class Sandbox {
     return this._inner.clearNetworkRequests();
   }
 
+  /**
+   * Full-API passthroughs (same names/shapes as EdgeSandbox) so the quick
+   * wrapper exposes the whole observation surface without `.raw`.
+   */
+  async evaluate(source) {
+    return this._inner.evaluate(source);
+  }
+
+  async evaluateWithPayload(source, payload = {}) {
+    return this._inner.evaluateWithPayload(source, payload);
+  }
+
+  async batchEvaluate(sources) {
+    return this._inner.batchEvaluate(sources);
+  }
+
+  async evaluateModule(source, url) {
+    return this._inner.evaluateModule(source, url);
+  }
+
+  async resources() {
+    return this._inner.resources();
+  }
+
+  async networkRequests() {
+    return this._inner.networkRequests();
+  }
+
+  async clearNetworkRequests() {
+    return this._inner.clearNetworkRequests();
+  }
+
+  async enableProxyTrace() {
+    return this._inner.enableProxyTrace();
+  }
+
+  async disableProxyTrace() {
+    return this._inner.disableProxyTrace();
+  }
+
+  async clearProxyTrace() {
+    return this._inner.clearProxyTrace();
+  }
+
+  async proxyTrace() {
+    return this._inner.proxyTrace();
+  }
+
   /** Enable API proxy tracing */
   async startTrace() {
     return this._inner.enableProxyTrace();
@@ -185,6 +233,14 @@ class Sandbox {
   /** Set API access breakpoints; watched trace APIs pause when an inspector is attached. */
   async watchApis(list = []) {
     return this._inner.watchApis(list);
+  }
+
+  /**
+   * Dispatch a host-trusted input event (`isTrusted === true`).
+   * Same contract as EdgeSandbox.dispatchTrustedInput().
+   */
+  async dispatchTrustedInput(type, init = {}) {
+    return this._inner.dispatchTrustedInput(type, init);
   }
 
   /** Close the sandbox and release resources */

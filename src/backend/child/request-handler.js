@@ -53,6 +53,10 @@ export class RequestHandler {
         return this.withRuntime(() => openInspector(payload));
       case Opcode.SET_WATCH_APIS:
         return this.withRuntime((runtime) => runtime.setWatchApis(payload.watchApis));
+      case Opcode.DISPATCH_TRUSTED_INPUT:
+        return this.withRuntime((runtime) => (
+          runtime.dispatchTrustedInput(payload.type, payload.init)
+        ));
       case Opcode.CLOSE:
         return this.close();
       default:
@@ -126,6 +130,16 @@ export class RequestHandler {
 
   responseLimits() {
     return this.protocolLimits ?? undefined;
+  }
+
+  // Node 未处理拒绝的路由入口（child-process / worker-thread 两个 entry 共用）。
+  // 返回是否已路由到某个 Realm；没认领就走调用方的诊断回退。
+  handleUnhandledRejection(reason, promise) {
+    return this.runtime?.handleUnhandledRejection(reason, promise) ?? false;
+  }
+
+  handleRejectionHandled(promise, reason) {
+    return this.runtime?.handleRejectionHandled(promise, reason) ?? false;
   }
 
   protocolValueLimits() {

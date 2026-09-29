@@ -73,6 +73,11 @@ import {
   observePromise,
   readPromiseObserver,
 } from "../realm/promise-observer.js";
+import { dispatchTrustedInputEvent } from "../../surface/api/event/trusted-input-dispatch.js";
+import {
+  reportRejectionHandledEvent,
+  reportUnhandledRejectionEvent,
+} from "../../surface/api/event/promise-rejection-reporting.js";
 import {
   clearAllTimers,
   nextTimerDelay,
@@ -1452,6 +1457,26 @@ export function observeEvaluationPromise(promise) {
 
 export function readEvaluationPromise(observerId) {
   return readPromiseObserver(observerId);
+}
+
+// Host-trusted input dispatch (isTrusted === true), the sandbox-side entry for
+// `sandbox.dispatchTrustedInput()`.
+export function dispatchTrustedInput(type, init) {
+  return dispatchTrustedInputEvent(type, init);
+}
+
+// Promise-rejection lifecycle: the host routes Node's unhandledRejection /
+// rejectionHandled events to the owning realm via these entries.
+export function ownsPromise(value) {
+  return value instanceof Promise;
+}
+
+export function reportUnhandledRejection(promise, reason) {
+  reportUnhandledRejectionEvent(promise, reason);
+}
+
+export function reportRejectionHandled(promise, reason) {
+  reportRejectionHandledEvent(promise, reason);
 }
 
 export function nextScheduledTaskDelay() {

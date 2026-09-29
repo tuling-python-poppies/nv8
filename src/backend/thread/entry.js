@@ -15,11 +15,27 @@ if (parentPort === null) {
 const handler = new RequestHandler();
 let reader = null;
 let queue = Promise.resolve();
+const rejectionReasons = new WeakMap();
 
-process.on("unhandledRejection", (reason) => {
-  // Match the child-process runtime: realm rejections do not kill the isolate,
-  // but they must remain visible to the host's stderr.
-  reportBackendDiagnostic("unhandled sandbox rejection", reason);
+process.on("unhandledRejection", (reason, promise) => {
+  // 与 child-process 运行时一致：先路由到拥有该 Promise 的 Realm 派发窗口
+  // `unhandledrejection` 事件；无 Realm 认领时保留 stderr 诊断。
+  if (promise !== null && typeof promise === "object") {
+    rejectionReasons.set(promise, reason);
+  }
+  if (!handler.handleUnhandledRejection(reason, promise)) {
+    reportBackendDiagnostic("unhandled sandbox rejection", reason);
+  }
+});
+
+process.on("rejectionHandled", (promise) => {
+  const reason = promise !== null && typeof promise === "object"
+    ? rejectionReasons.get(promise)
+    : undefined;
+  if (promise !== null && typeof promise === "object") {
+    rejectionReasons.delete(promise);
+  }
+  handler.handleRejectionHandled(promise, reason);
 });
 
 reader = new FrameReader({

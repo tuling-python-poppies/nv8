@@ -10,12 +10,28 @@ const handler = new RequestHandler();
 let reader = null;
 let queue = Promise.resolve();
 let closing = false;
+const rejectionReasons = new WeakMap();
 
-process.on("unhandledRejection", (reason) => {
-  // Browsers report an unhandled Promise rejection to the owning global; they
-  // do not terminate the entire renderer process. Keep the isolate alive but
-  // leave a diagnosable record instead of an empty handler.
-  reportBackendDiagnostic("unhandled sandbox rejection", reason);
+process.on("unhandledRejection", (reason, promise) => {
+  // 先路由到拥有该 Promise 的 Realm，派发窗口 `unhandledrejection` 事件；
+  // 没有任何 Realm 认领（宿主自身的 Promise）时保留 stderr 诊断，不静默。
+  // 浏览器把未处理拒绝报给所属全局，不会杀掉整个渲染进程——所以不终止 isolate。
+  if (promise !== null && typeof promise === "object") {
+    rejectionReasons.set(promise, reason);
+  }
+  if (!handler.handleUnhandledRejection(reason, promise)) {
+    reportBackendDiagnostic("unhandled sandbox rejection", reason);
+  }
+});
+
+process.on("rejectionHandled", (promise) => {
+  const reason = promise !== null && typeof promise === "object"
+    ? rejectionReasons.get(promise)
+    : undefined;
+  if (promise !== null && typeof promise === "object") {
+    rejectionReasons.delete(promise);
+  }
+  handler.handleRejectionHandled(promise, reason);
 });
 
 reader = new FrameReader({

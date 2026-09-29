@@ -166,6 +166,31 @@ export class EdgeSandbox {
     return this.controller.watchApis(normalizeWatchApis(list));
   }
 
+  /**
+   * 派发宿主可信输入事件（`isTrusted === true`）。真实 Edge 里只有用户 /
+   * 宿主输入是可信的，反爬脚本会据此区分脚本合成的 `dispatchEvent`。
+   *
+   * 支持的类型：`click` / `dblclick` / `mousedown` / `mouseup` / `mousemove`
+   * （PointerEvent）、`keydown` / `keyup`（KeyboardEvent）、`input` / `change`
+   * （Event）。其他类型抛 `TypeError`。可选 `init` 透传字段：
+   * `clientX`/`clientY`/`screenX`/`screenY`（鼠标）、`key`/`code`/`repeat`/
+   * 修饰键（键盘）。
+   *
+   * 事件目标是文档当前活动元素（退化到 `body` / `document`），会沿正常
+   * 冒泡路径到达 window 监听器。
+   *
+   * @returns {Promise<boolean>} dispatchEvent 的返回值（未 preventDefault 为 true）
+   */
+  dispatchTrustedInput(type, init = {}) {
+    if (typeof type !== "string" || type.length === 0) {
+      throw new TypeError("dispatchTrustedInput type must be a non-empty string");
+    }
+    if (init === null || typeof init !== "object" || Array.isArray(init)) {
+      throw new TypeError("dispatchTrustedInput init must be an object");
+    }
+    return this.controller.dispatchTrustedInput(type, init);
+  }
+
   close() {
     return this.controller.close();
   }
