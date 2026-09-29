@@ -327,6 +327,11 @@ export class RuntimePool {
         objectURLRecords.clear();
       },
     });
+    // 跨模块图 MessagePort 注册表：每个 Realm 是独立模块图，port 记录默认
+    // 只在创建图可见。这里以 port 对象为键共享一份，让所有 Realm 的
+    // structured clone 都能识别并 transfer 外图 port（window → iframe →
+    // worker 的 port 转手依赖它）。
+    this.messagePortRegistry = new WeakMap();
   }
 
   async initialize() {
@@ -615,6 +620,7 @@ export class RuntimePool {
       capabilitiesProfile: this.options.fingerprint.capabilities,
       nativeFunctionRegistry: this.nativeFunctionRegistry,
       objectURLRegistry: this.objectURLRegistry,
+      messagePortRegistry: this.messagePortRegistry,
     };
     // Use pre-warmed shell if available (saves ~170ms warm module loading).
     const shell = takePendingShell();
@@ -687,6 +693,7 @@ export class RuntimePool {
         capabilitiesProfile: this.options.fingerprint.capabilities,
         nativeFunctionRegistry: this.nativeFunctionRegistry,
         objectURLRegistry: this.objectURLRegistry,
+        messagePortRegistry: this.messagePortRegistry,
         frameElement: options.frameElement ?? null,
         onContext: context => {
           options.onContext?.(vm.runInContext("globalThis", context));
@@ -766,6 +773,7 @@ export class RuntimePool {
       renderingProfile: this.options.fingerprint.rendering,
       capabilitiesProfile: this.options.fingerprint.capabilities,
       objectURLRegistry: this.objectURLRegistry,
+      messagePortRegistry: this.messagePortRegistry,
       workerDepth: options.workerDepth,
     };
   }
@@ -1052,9 +1060,15 @@ export class RuntimePool {
         })();
         return activationPromise;
       },
-      deliverOwnerMessage(message, ports) {
+      deliverOwnerMessage(message, transferOptions, ports) {
         if (!realm.destroyed) {
-          realm.bootstrap.receiveOwnerMessageEvent(message, undefined, ports);
+          const actualPorts = Array.isArray(ports)
+            ? ports
+            : (Array.isArray(transferOptions) ? transferOptions : []);
+          const actualOptions = typeof transferOptions === "object" && !Array.isArray(transferOptions)
+            ? transferOptions
+            : undefined;
+          realm.bootstrap.receiveOwnerMessageEvent(message, actualOptions, actualPorts);
         }
       },
       terminate() {
@@ -1136,6 +1150,7 @@ export class RuntimePool {
         traceEnabled: this.traceEnabled,
         maxTraceEntries: this.options.proxyTrace.maxEntries,
         objectURLRegistry: this.objectURLRegistry,
+        messagePortRegistry: this.messagePortRegistry,
       });
     } finally {
       this.pendingRealmCreations -= 1;

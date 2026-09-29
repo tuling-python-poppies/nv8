@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 346,
-      "callSequenceSha256": "ffffbb2788874f7b54cb6fe74816036895c81904990e4946fa2f2f356013913e",
+      "callCount": 347,
+      "callSequenceSha256": "336184334a142b2e8d4086e80465dd6623990ad31d0d04463a40ff1f9541add5",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -15,6 +15,7 @@
         "configure:configureNativeFunctionRegistry",
         "configure:configureBlobRegistry",
         "configure:configureObjectURLRegistry",
+        "configure:configureMessagePortRegistry",
         "install:installNativeFunctionToString",
         "install:installErrorStackGuard",
         "install:installModernBuiltins",
@@ -357,16 +358,16 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "8b478b3966015d57856e0570f8972cbde498beca647c6cbb256679357bb6999e",
-        "functionStartLine": 855,
-        "functionEndLine": 1381
+        "sourceSha256": "ad182b112807e0c4fb8809f7387a241f663eb928ea11cc05caddba1b7a52fee1",
+        "functionStartLine": 856,
+        "functionEndLine": 1386
       }
     },
     "worker": {
       "file": "bootstrap/bootstrap-worker.js",
       "function": "bootstrapWorker",
-      "callCount": 111,
-      "callSequenceSha256": "3045d6ca7bb40b075e8855d83076800f7d5de7ff399c32d656b21ab1e162b98c",
+      "callCount": 112,
+      "callSequenceSha256": "80e82c1e3b86a8d8628840e27a46d95c321fad30eec5dd3c499a5a00927bb1c3",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWorkerSurfaceOrder",
       "sequence": [
@@ -374,6 +375,7 @@
         "configure:configureTimingProfile",
         "configure:configureBlobRegistry",
         "configure:configureObjectURLRegistry",
+        "configure:configureMessagePortRegistry",
         "install:installNativeFunctionToString",
         "install:installErrorStackGuard",
         "install:installModernBuiltins",
@@ -483,21 +485,22 @@
         "finalize:finalizeWorkerSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "215ac08a6524b82eb671031f4cb75cbe69405ec9b5d42d3dde78639b612c2d9f",
-        "functionStartLine": 207,
-        "functionEndLine": 392
+        "sourceSha256": "8644e9bc5f62033f9a9b376125b168e7307fbef6c86fe72594991ddeb8cfd992",
+        "functionStartLine": 208,
+        "functionEndLine": 396
       }
     },
     "worklet": {
       "file": "bootstrap/bootstrap-worklet.js",
       "function": "bootstrapWorklet",
-      "callCount": 13,
-      "callSequenceSha256": "da0bd8af6c10ce8973c2d85f6a09e0e4196fbb65c0c7dc703c4fae96a86b477b",
+      "callCount": 14,
+      "callSequenceSha256": "476a6cc714c3a3422ef51a2d058c9c804f276367f48c472995734c18e64f7f71",
       "firstCall": "hideNodeGlobals",
       "lastCall": "installRegistration",
       "sequence": [
         "bootstrap:hideNodeGlobals",
         "configure:configureObjectURLRegistry",
+        "configure:configureMessagePortRegistry",
         "install:installNativeFunctionToString",
         "install:installErrorStackGuard",
         "install:installModernBuiltins",
@@ -511,9 +514,9 @@
         "install:installRegistration"
       ],
       "informational": {
-        "sourceSha256": "45aa52cb1047f694e0a30877c6d172a2dcac5badc79ef1331d6f2c91d9d45f8d",
-        "functionStartLine": 31,
-        "functionEndLine": 76
+        "sourceSha256": "f61d06ddecdadb8ab298eae642d863b67ffbf306bf1be113e32ea883be37524f",
+        "functionStartLine": 34,
+        "functionEndLine": 81
       }
     }
   }

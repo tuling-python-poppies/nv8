@@ -12,6 +12,11 @@ export function performStructuredCloneDetailed(value, options) {
   const transfers = parseTransferList(options);
   const seen = new Map();
   const replacements = new Map(transfers.map(entry => [entry.source, entry.replacement]));
+  if (options?.replacements instanceof Map) {
+    for (const [source, replacement] of options.replacements) {
+      replacements.set(source, replacement);
+    }
+  }
   const cloned = cloneValue(value, seen, replacements);
   for (const entry of transfers) entry.commit();
   return {

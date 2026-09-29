@@ -9,6 +9,9 @@ import { installURL } from "../../surface/install/install-url.js";
 import {
   configureObjectURLRegistry,
 } from "../../surface/api/url/url-state.js";
+import {
+  configureMessagePortRegistry,
+} from "../../surface/api/messaging/messaging-runtime.js";
 import { installTextEncoding } from "../../surface/install/install-text-encoding.js";
 import {
   establishNativeFunctionContext,
@@ -33,9 +36,11 @@ export function bootstrapWorklet(
   traceEnabled,
   maxTraceEntries,
   objectURLRegistry,
+  messagePortRegistry = null,
 ) {
   hideNodeGlobals();
   configureObjectURLRegistry(objectURLRegistry);
+  configureMessagePortRegistry(messagePortRegistry);
   // 同 bootstrap-worker：worklet Realm 没有插件 activate 建立上下文，
   // 必须自行 establish（IKF39V(c)）。
   establishNativeFunctionContext();

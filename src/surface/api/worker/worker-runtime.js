@@ -3,7 +3,7 @@ import {
 } from "../clone/structured-clone-algorithm.js";
 import { Event } from "../event/event-constructor.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
-import { MessageEvent } from "../messaging/messaging-runtime.js";
+import { MessageEvent, localizeIncomingPorts } from "../messaging/messaging-runtime.js";
 import { DOMException } from "../event/dom-exception-constructor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 
@@ -156,12 +156,22 @@ export function terminateAllWorkers() {
 
 function deliverMessage(record, message, ports) {
   if (record.terminated) return;
-  const cloned = performStructuredCloneDetailed(message);
+  const rawPorts = Array.isArray(ports) ? ports : [];
+  const localPorts = localizeIncomingPorts(rawPorts);
+  const incomingReplacements = new Map();
+  for (let i = 0; i < rawPorts.length; i++) {
+    incomingReplacements.set(rawPorts[i], localPorts[i]);
+  }
+  const cloned = performStructuredCloneDetailed(message, {
+    replacements: incomingReplacements,
+  });
   Promise.resolve().then(() => {
     if (record.terminated) return;
     const event = new MessageEvent("message", {
       data: cloned.value,
-      ports,
+      // worker 方向的 transfer 在 worker 图里克隆，replacement 是外图原型；
+      // 派发给页面之前换成本图对象（记录跨图共享，只换门面）。
+      ports: localPorts,
     });
     record.worker.dispatchEvent(event);
     const handler = record.handlers.get("onmessage") ?? null;

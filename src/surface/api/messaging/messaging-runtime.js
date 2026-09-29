@@ -14,6 +14,52 @@ const portState = new WeakMap();
 const channelState = new WeakMap();
 const broadcastState = new WeakMap();
 
+// 跨模块图 port 注册表。
+//
+// 每个 Realm 有自己的模块图，因此有自己的 portState：在图 A 创建的 port，
+// 其记录只存在于图 A。结构化克隆可能运行在**另一个**图里（window.postMessage
+// 的克隆运行在接收方图，worker.postMessage 运行在发送方图），于是「要
+// transfer 的 port 的记录在另一个图」是常态——没有共享注册表时
+// canTransfer 直接落空，跨 Realm 的 port 转手（window → iframe → worker）
+// 整体抛 DataCloneError。
+//
+// Sandbox 宿主（runtime-pool / engine core）为每个 Sandbox 创建**一个**
+// 共享 WeakMap，注入到每个 Realm 的 messaging 模块。所有图都以 port 对象
+// 本身为键登记/查询记录：canTransfer 因此能识别外图 port，prepare 在本图
+// 创建**本图 MessagePort.prototype** 的 replacement，commit 时 detach 源
+// port（真实浏览器语义）。对象身份就是唯一凭证——伪造 brand 的对象不在
+// 任何注册表里，依旧抛 DataCloneError。未注入时保持 null，行为与单图
+// 完全一致。
+let sharedPortRegistry = null;
+
+export function configureMessagePortRegistry(registry) {
+  // 注意不能用 `instanceof WeakMap`：注册表由宿主 Realm 创建，跨 vm context
+  // 时 instanceof 恒为 false。鸭子类型即可——宿主只会传真正的 WeakMap。
+  sharedPortRegistry = registry !== null
+    && typeof registry === "object"
+    && typeof registry.get === "function"
+    && typeof registry.set === "function"
+    && typeof registry.has === "function"
+    ? registry
+    : null;
+}
+
+function lookupPort(value) {
+  return portState.get(value) ?? sharedPortRegistry?.get(value);
+}
+
+function registerPort(port, record) {
+  portState.set(port, record);
+  sharedPortRegistry?.set(port, record);
+}
+
+// record 的调度闭包绑定在**持有方**图上：跨图投递时由持有方图创建
+// MessageEvent 并 dispatch，避免把外图事件对象喂给本图 dispatchEvent
+// （event-state 按图隔离，外图事件会被 "is not of type 'Event'" 拒绝）。
+function bindRecordScheduler(record) {
+  record.schedule = () => schedulePort(record);
+}
+
 // BroadcastChannel 分组、存活集合和跨 Realm connector 原先是模块级状态，
 // 会让不同 Realm 共享广播频道拓扑。
 const messagingSlot = createRealmSlot(() => ({
@@ -132,7 +178,7 @@ export function messageHandler(target, name) {
 export function setMessageHandler(target, name, value) {
   const record = requireMessageTarget(target);
   record.handlers.set(name, typeof value === "function" ? value : null);
-  if (portState.has(target) && name === "onmessage" && typeof value === "function") {
+  if (lookupPort(target) !== undefined && name === "onmessage" && typeof value === "function") {
     portStart(target);
   }
 }
@@ -152,15 +198,28 @@ export function portPostMessage(port, message, transferOrOptions) {
   const cloned = performStructuredCloneDetailed(message, options);
   const peer = record.connection.states[1 - record.index];
   if (peer === undefined || peer.closed || peer.detached) return;
-  peer.queue.push(createMessageEvent(cloned.value, cloned.transferred.filter(value =>
-    portState.has(value))));
-  schedulePort(peer);
+  // 队列里放**原始条目**而不是 MessageEvent：事件必须在对端所属图里创建
+  // （event-state 按图隔离），由对端的调度闭包在 drain 时物化，ports 也在
+  // 那时才换成对图本地对象。
+  peer.queue.push({
+    data: cloned.value,
+    ports: cloned.transferred.filter(value =>
+      lookupPort(value) !== undefined),
+  });
+  // 经记录上的闭包调度：闭包绑定在 peer 的持有方图上。
+  if (typeof peer.schedule === "function") {
+    peer.schedule();
+  } else {
+    schedulePort(peer);
+  }
 }
 
 export function portStart(port) {
   const record = requirePort(port);
   if (record.closed || record.detached) return;
   record.started = true;
+  // start 的调用图通常就是持有方图；重绑闭包让后续跨图投递也走本图。
+  bindRecordScheduler(record);
   schedulePort(record);
 }
 
@@ -206,14 +265,17 @@ export function closeAllBroadcastChannels() {
 
 registerStructuredCloneTransferHandler({
   isTransferable(value) {
-    return portState.has(value);
+    return lookupPort(value) !== undefined;
   },
   canTransfer(value) {
-    const record = portState.get(value);
+    // 共享注册表兜底：记录可能由另一个模块图登记（跨 Realm 转手）。
+    const record = lookupPort(value);
     return record !== undefined && !record.closed && !record.detached;
   },
   prepare(value) {
     const original = requirePort(value);
+    // replacement 用**本图**的 MessagePort.prototype：克隆运行在哪个图，
+    // 接收方拿到的就是哪个图的本地对象，不泄漏外图原型。
     const replacement = Object.create(MessagePort.prototype);
     initializeEventTarget(replacement);
     const next = {
@@ -227,7 +289,8 @@ registerStructuredCloneTransferHandler({
       scheduled: false,
       handlers: new Map(),
     };
-    portState.set(replacement, next);
+    registerPort(replacement, next);
+    bindRecordScheduler(next);
     return {
       source: value,
       replacement,
@@ -240,6 +303,29 @@ registerStructuredCloneTransferHandler({
     };
   },
 });
+
+/**
+ * 把来自其他图的 port 对象换成**本图** MessagePort.prototype 的包装。
+ *
+ * worker 方向的 transfer 在发送方图里做结构化克隆，产出的 replacement 是
+ * 发送方图的原型；接收 Realm 在物化 MessageEvent 前经这里换成本图对象。
+ * 记录（连接、队列、handlers）跨图共享，包装只换「门面」；后续投递以
+ * record.port 为准，因此同步改指本图包装，调度闭包也重绑到本图。
+ * 本图 port 与未登记对象原样返回。
+ */
+export function localizeIncomingPorts(ports) {
+  return ports.map(port => {
+    if (portState.has(port)) return port;
+    const record = sharedPortRegistry?.get(port);
+    if (record === undefined) return port;
+    const local = Object.create(MessagePort.prototype);
+    initializeEventTarget(local);
+    registerPort(local, record);
+    record.port = local;
+    bindRecordScheduler(record);
+    return local;
+  });
+}
 
 function createPort(connection, index) {
   const port = Object.create(MessagePort.prototype);
@@ -255,7 +341,8 @@ function createPort(connection, index) {
     scheduled: false,
     handlers: new Map(),
   };
-  portState.set(port, record);
+  registerPort(port, record);
+  bindRecordScheduler(record);
   connection.states[index] = record;
   return port;
 }
@@ -266,7 +353,25 @@ function schedulePort(record) {
   Promise.resolve().then(() => {
     record.scheduled = false;
     if (record.closed || record.detached || !record.started) return;
-    while (record.queue.length > 0) deliver(record.port, record.queue.shift());
+    while (record.queue.length > 0) {
+      const entry = record.queue.shift();
+      const localPorts = localizeIncomingPorts(entry.ports);
+      let data = entry.data;
+      if (entry.ports.length > 0 && data !== null && typeof data === "object") {
+        const incomingReplacements = new Map();
+        for (let i = 0; i < entry.ports.length; i++) {
+          incomingReplacements.set(entry.ports[i], localPorts[i]);
+        }
+        data = performStructuredCloneDetailed(data, {
+          replacements: incomingReplacements,
+        }).value;
+      }
+      // 事件在本图（持有方图）物化；随行的 transfer port 也换成本图对象。
+      deliver(
+        record.port,
+        createMessageEvent(data, localPorts),
+      );
+    }
   });
 }
 
@@ -304,7 +409,7 @@ function requireMessageEvent(value) {
 }
 
 function requirePort(value) {
-  const record = portState.get(value);
+  const record = lookupPort(value);
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;
 }
@@ -316,7 +421,7 @@ function requireBroadcast(value) {
 }
 
 function requireMessageTarget(value) {
-  return portState.get(value) ?? broadcastState.get(value) ?? illegal();
+  return lookupPort(value) ?? broadcastState.get(value) ?? illegal();
 }
 
 function illegal() {

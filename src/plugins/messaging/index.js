@@ -32,6 +32,9 @@ export const messagingPlugin = {
     runtime.namespace.configureBroadcastConnector(
       context.runtime?.broadcastConnector ?? null,
     );
+    runtime.namespace.configureMessagePortRegistry?.(
+      context.globals?.messagePortRegistry ?? null,
+    );
     context.exports.messaging = true;
   },
 
