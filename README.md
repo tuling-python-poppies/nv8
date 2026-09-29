@@ -102,8 +102,8 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
 
 - **不做浏览器自动化。** 不点击、不截图、不等元素出现。需要真实渲染请用别的工具。
 - **不做完整渲染与布局。** 没有排版引擎，`offsetWidth`、`getBoundingClientRect`
-  这类几何值只是近似模型（显式尺寸 → 内联文本字体度量 → 后代最大值，其余为 0），
-  不是浏览器真值（见[已知边界](#已知边界)）。
+  这类几何值只是近似模型（显式尺寸 → 内联文本字体度量 → 后代最大值；
+  `documentElement`/`body` 按视口，其余为 0），不是浏览器真值（见[已知边界](#已知边界)）。
 - **运行时不联网。** 运行目标脚本时，所有网络访问走离线回放；回放未命中就在本地
   失败，**绝不回落真实网络**。真实网络只属于采集层。
 - **不内置数据库驱动。** 采集结果落地定义为接口，附内存与 NDJSON 两个实现，
@@ -1174,6 +1174,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 | `npm run build:bundle` | 生成 Realm 模块预打包缓存（本机产物） |
 | `npm run check:bundle` | 校验缓存是否属于本机 |
 | `npm run check:surface-order` | 校验 Window 全局顺序表与采集 fixture 一致 |
+| `node scripts/probe-intrinsics.mjs --self-check` | 内在函数自省探测（目标是否枚举 Window 表面，新目标适配用） |
 | `npm run build:css-defaults` | 从 fixture 重新生成 UA 默认样式表 |
 | `npm run agent:bridge` | 启动单会话 stdio JSON-RPC Agent 桥（见 [docs/agent-bridge.md](docs/agent-bridge.md)）|
 | `npm run fingerprint:*` | 见[指纹采集脚本](#指纹采集脚本) |
@@ -1183,7 +1184,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 ### 关于 `build:bundle`
 
-`RealmModuleLoader` 支持把 4026 个模块预打包成一个 JSON 以减少文件读取。
+`RealmModuleLoader` 支持把 4027 个模块预打包成一个 JSON 以减少文件读取。
 这个缓存**以绝对 `file://` URL 为键**，因此与生成它的机器路径绑定。
 
 仓库里曾提交过一份这样的包（3992 个键，全部以 `file:///D:/develop_software/Nv8/`
@@ -1343,7 +1344,8 @@ css-ua-defaults.js），现在都有了脚本。
 
 没有排版引擎，10 个布局相关属性与 `getBoundingClientRect` 返回**近似值**：
 显式尺寸/属性 → 收缩到内容的内联文本盒按字体度量估算（字体探测读取的
-`span.offsetWidth` 正是这一项）→ 后代最大尺寸，其余为 0。近似值不做排版保证——
+`span.offsetWidth` 正是这一项）→ 后代最大尺寸；`documentElement`/`body` 按视口
+（`innerWidth` 减滚动条）；其余为 0。近似值不做排版保证——
 不要用它做依赖真实布局的判断，但它足以通过字体枚举这类探测。
 
 ### iframe
@@ -1414,7 +1416,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1283 项全过；18/20 档 1283 项中 2 项按版本分支跳过。差异分两类处理：
+四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1284 项全过；18/20 档 1284 项中 2 项按版本分支跳过。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。
