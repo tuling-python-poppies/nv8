@@ -1,14 +1,13 @@
 import { traceCall } from "../../../infra/trace/trace-function.js";
 import { defineGlobalFunction } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
+import { requireArguments } from "../../../engine/webidl/conversions.js";
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 export const atob = {
   atob(data) {
-    if (arguments.length === 0) {
-      throw new TypeError("Failed to execute 'atob': 1 argument required.");
-    }
+    requireArguments(1, arguments.length, "atob", "Window");
     let input = `${data}`.replace(/[\t\n\f\r ]/gu, "");
     if (/[^A-Za-z0-9+/=]/u.test(input)) {
       invalid();
@@ -55,7 +54,7 @@ export function installAtob() {
 
 function invalid() {
   throw new DOMException(
-    "The string to be decoded is not correctly encoded.",
+    "Failed to execute 'atob' on 'Window': The string to be decoded is not correctly encoded.",
     "InvalidCharacterError",
   );
 }

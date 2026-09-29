@@ -1,21 +1,20 @@
 import { traceCall } from "../../../infra/trace/trace-function.js";
 import { defineGlobalFunction } from "../../../engine/webidl/descriptor.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
+import { requireArguments } from "../../../engine/webidl/conversions.js";
 
 const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 export const btoa = {
   btoa(data) {
-    if (arguments.length === 0) {
-      throw new TypeError("Failed to execute 'btoa': 1 argument required.");
-    }
+    requireArguments(1, arguments.length, "btoa", "Window");
     const input = `${data}`;
     const bytes = [];
     for (let index = 0; index < input.length; index += 1) {
       const unit = input.charCodeAt(index);
       if (unit > 0xff) {
         throw new DOMException(
-          "The string to be encoded contains characters outside of the Latin1 range.",
+          "Failed to execute 'btoa' on 'Window': The string to be encoded contains characters outside of the Latin1 range.",
           "InvalidCharacterError",
         );
       }
