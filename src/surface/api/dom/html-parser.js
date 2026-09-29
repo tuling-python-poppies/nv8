@@ -1,5 +1,8 @@
 import { currentDocument } from "./document-state.js";
 import { ensureEventTarget } from "../event/event-target-dispatch-event.js";
+import { replayRequest } from "../fetch/fetch-replay.js";
+import { Request, requireResponse } from "../fetch/request-response-runtime.js";
+import { decodeUtf8 } from "../file/blob-state.js";
 import {
   setCurrentScript,
   setDocumentParserInsertionPoint,
@@ -291,7 +294,7 @@ export function parsePageHTML(source) {
   const executor = requireDocument(document).parserScriptExecutor;
   const scriptRunner = typeof executor === "function"
     ? executor
-    : script => executeInlineScript(document, script);
+    : script => executeLegacyScript(document, script);
 
   parseFragment(document, source, null, scriptRunner, false, document);
 
@@ -376,12 +379,26 @@ function ensureHeadAndBody(document, html) {
   }
 }
 
-function executeInlineScript(document, script) {
-  if (script.getAttribute("src") !== null) return;
+function executeLegacyScript(document, script) {
+  const src = script.getAttribute("src");
+  const type = (script.getAttribute("type") ?? "").trim().toLowerCase();
+  // ponytail: only blocking classic scripts; async/defer/modules need a task queue.
+  if (type !== "" && type !== "text/javascript" && type !== "application/javascript") return;
+  if (src !== null && (script.async || script.defer)) return;
   setCurrentScript(document, script);
   setDocumentParserInsertionPoint(document, script);
   try {
-    globalThis.eval(script.textContent ?? "");
+    let source = script.textContent ?? "";
+    if (src !== null) {
+      if (src.trim() === "") throw new TypeError("Empty page script URL");
+      const url = new URL(src, document.baseURI).href;
+      const response = requireResponse(replayRequest(new Request(url), "script"));
+      if (response.status < 200 || response.status > 299) {
+        throw new Error(`Offline page script returned HTTP ${response.status}: ${url}`);
+      }
+      source = `${decodeUtf8(response.bytes)}\n//# sourceURL=${url}`;
+    }
+    globalThis.eval(source);
     dispatchScriptEvent(script, "load");
   } catch (error) {
     dispatchScriptEvent(script, "error", error);

@@ -1051,7 +1051,11 @@ function reorderPrototype(prototype, expected, name) {
   const actual = Reflect.ownKeys(prototype).filter((key) => typeof key === "string");
   if (JSON.stringify(actual) === JSON.stringify(expected)) return;
   if (actual.length !== expected.length || actual.some((key) => !expected.includes(key))) {
-    throw new Error("Cannot reorder incomplete prototype " + name);
+    // 页面脚本（如瑞数 RS6 反爬）可能把内建构造器整体替换成自己的函数，
+    // 此时 globalThis[name].prototype 已不是 NV8 装配的原生形状。真实 Edge 跑同一
+    // 段脚本也会看到同样的替换，规范顺序不再适用——跳过而非抛错，避免恶意页面
+    // 直接掀翻 finalize。NV8 自身装配是否完整由 trivial-page 重排测试保证。
+    return;
   }
 
   const descriptors = expected.map((key) => {

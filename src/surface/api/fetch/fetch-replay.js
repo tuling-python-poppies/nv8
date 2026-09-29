@@ -3,6 +3,7 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { traceCall } from "../../../infra/trace/trace-function.js";
 import { Request, createReplayResponse, requireRequest } from "./request-response-runtime.js";
 import { headersEntries } from "./headers-runtime.js";
+import { acceptSetCookieHeaders } from "../dom/cookie-state.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
 
 // replay entries、recorder、ServiceWorker 拦截器和 sequence 游标原先是模块级
@@ -18,6 +19,11 @@ const replaySlot = createRealmSlot(() => ({
 
 function replayState() {
   return replaySlot.get(globalThis);
+}
+
+function acceptReplayCookies(headers) {
+  const value = headers?.["set-cookie"] ?? headers?.["Set-Cookie"];
+  if (value !== undefined) acceptSetCookieHeaders(value);
 }
 
 export function configureFetchReplay(entries = [], recorder = null, options = {}) {
@@ -146,6 +152,7 @@ export function replayRequest(request, api = "fetch") {
   if (state.enforceSequence && match.record.sequence !== undefined) {
     state.sequenceCursor += 1;
   }
+  acceptReplayCookies(match.record.headers);
   return createReplayResponse(match.record.body, {
     status: match.record.status,
     statusText: match.record.statusText,

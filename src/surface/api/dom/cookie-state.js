@@ -12,6 +12,7 @@ const cookieSlot = createRealmSlot(() => ({
   cookies: null,
   cookieStoreInstance: null,
 }), "cookie-state");
+const COOKIE_ENCODING_V2 = "v2|";
 
 function cookieState() {
   const state = cookieSlot.get(globalThis);
@@ -32,10 +33,11 @@ export function configureCookies(encoded = "") {
   // `configureCookies("")` 不能把父页面已有的 cookie 清掉。
   if (created) {
     cookies.clear();
-    let offset = 0;
+    const versioned = encoded.startsWith(COOKIE_ENCODING_V2);
+    let offset = versioned ? COOKIE_ENCODING_V2.length : 0;
     while (offset < encoded.length) {
       const fields = [];
-      for (let index = 0; index < 8; index += 1) {
+      for (let index = 0; index < (versioned ? 9 : 8); index += 1) {
         const decoded = decodeString(encoded, offset);
         fields.push(decoded.value);
         offset = decoded.offset;
@@ -49,6 +51,7 @@ export function configureCookies(encoded = "") {
         secure,
         sameSite,
         partitioned,
+        httpOnly,
       ] = fields;
       const cookie = {
         name,
@@ -59,6 +62,7 @@ export function configureCookies(encoded = "") {
         secure: secure === "1",
         sameSite,
         partitioned: partitioned === "1",
+        httpOnly: versioned && httpOnly === "1",
       };
       cookies.set(cookieKey(name, domain, path), cookie);
     }
@@ -68,7 +72,7 @@ export function configureCookies(encoded = "") {
 
 export function encodeCookies() {
   purgeExpired();
-  let output = "";
+  let output = COOKIE_ENCODING_V2;
   for (const cookie of cookieState().cookies.values()) {
     output += encodeString(cookie.name);
     output += encodeString(cookie.value);
@@ -80,6 +84,7 @@ export function encodeCookies() {
     output += encodeString(cookie.secure ? "1" : "0");
     output += encodeString(cookie.sameSite);
     output += encodeString(cookie.partitioned ? "1" : "0");
+    output += encodeString(cookie.httpOnly ? "1" : "0");
   }
   return output;
 }
@@ -108,12 +113,21 @@ export function documentCookieString() {
   purgeExpired();
   const url = cookieUrl();
   return [...cookieState().cookies.values()]
-    .filter(cookie => visibleAt(cookie, url))
+    .filter(cookie => !cookie.httpOnly && visibleAt(cookie, url))
     .map(cookie => `${cookie.name}=${cookie.value}`)
     .join("; ");
 }
 
-export function setDocumentCookie(source) {
+export function cookieHeaderFor(url) {
+  purgeExpired();
+  const target = new URL(url);
+  return [...cookieState().cookies.values()]
+    .filter(cookie => visibleAt(cookie, target))
+    .map(cookie => `${cookie.name}=${cookie.value}`)
+    .join("; ");
+}
+
+export function setDocumentCookie(source, httpOnly = false) {
   const parts = `${source}`.split(";").map(part => part.trim());
   const first = parts.shift() ?? "";
   const equals = first.indexOf("=");
@@ -128,6 +142,7 @@ export function setDocumentCookie(source) {
     path: defaultPath(url.pathname),
     expires: null,
     secure: false,
+    httpOnly,
     sameSite: "strict",
     partitioned: false,
   };
@@ -153,6 +168,8 @@ export function setDocumentCookie(source) {
       }
     } else if (name === "secure") {
       cookie.secure = true;
+    } else if (name === "httponly") {
+      cookie.httpOnly = true;
     } else if (name === "samesite") {
       cookie.sameSite = value.toLowerCase();
     } else if (name === "partitioned") {
@@ -166,6 +183,22 @@ export function setDocumentCookie(source) {
     return;
   }
   storeCookie(cookie);
+}
+
+/** Apply replayed network Set-Cookie headers to this Realm's cookie jar. */
+export function acceptSetCookieHeaders(headers) {
+  const values = Array.isArray(headers) ? headers : [headers];
+  for (const value of values) {
+    if (typeof value !== "string") continue;
+    for (const header of value.split(/\r?\n/u)) {
+      if (header.trim() !== "") {
+        setDocumentCookie(
+          header,
+          /(?:^|;)\s*httponly(?:;|$)/iu.test(header),
+        );
+      }
+    }
+  }
 }
 
 export function cookieStoreGet(options) {
@@ -256,7 +289,9 @@ function notifyCookieChange(changed, deleted) {
 
 function visibleCookies() {
   const url = cookieUrl();
-  return [...cookieState().cookies.values()].filter(cookie => visibleAt(cookie, url)).map(publicCookie);
+  return [...cookieState().cookies.values()]
+    .filter(cookie => !cookie.httpOnly && visibleAt(cookie, url))
+    .map(publicCookie);
 }
 
 function visibleAt(cookie, url) {

@@ -2,6 +2,8 @@ import { registerNativeFunction } from "../../../engine/webidl/native-function.j
 import { createBlob, decodeUtf8, encodeUtf8, requireBlob } from "../file/blob-state.js";
 import { FormData, formDataAppend, requireFormData } from "./form-data-runtime.js";
 import { Headers, headersGet, headersHas, headersSet } from "./headers-runtime.js";
+import { cookieHeaderFor } from "../dom/cookie-state.js";
+import { currentOrigin } from "../../../infra/navigation/navigation-state.js";
 
 const requestState = new WeakMap();
 const responseState = new WeakMap();
@@ -24,6 +26,16 @@ export function Request(input) {
   }
   const headers = new Headers(init.headers ?? source?.headers);
   applyBodyContentType(headers, body.type);
+  if (!headersHas(headers, "cookie") && init.credentials !== "omit") {
+    try {
+      const cookie = new URL(url).origin === currentOrigin()
+        ? cookieHeaderFor(url)
+        : "";
+      if (cookie !== "") headersSet(headers, "cookie", cookie);
+    } catch {
+      // Invalid URLs are rejected by the normal Request URL path.
+    }
+  }
   const state = {
     method,
     url,
