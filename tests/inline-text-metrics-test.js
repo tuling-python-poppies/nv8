@@ -34,6 +34,8 @@ import {
 } from '../src/infra/fingerprint/font-metrics.js';
 
 // ---- 基准条件（16 字符、114px）下的真实 Chrome 度量 [宽, 高] ----
+// 2026-09-29 以真机 Edge 154 复测重校：补 19 个已装字体（缺失会让「已装」判成
+// 「未装」）、修正 tahoma/Georgia/Times New Roman 高度 +1。
 const EXPECTED = {
   mmllii: [1320, 165],           // 合法名但未装 → 默认
   SimHei: [912, 114],
@@ -42,11 +44,17 @@ const EXPECTED = {
   helvetica: [1171, 127],        // Chrome 把 helvetica 别名到 Arial
   Verdana: [1376, 139],
   verdana: [1376, 139],          // 大小写不敏感
-  tahoma: [1184, 137],
-  Georgia: [1270, 129],
-  'Times New Roman': [1134, 126],
+  tahoma: [1184, 138],
+  Georgia: [1270, 130],
+  'Times New Roman': [1134, 127],
   'Courier New': [1095, 129],
   'Microsoft Himalaya': [759, 114],
+  'Segoe UI': [1218, 152],
+  Consolas: [1003, 134],
+  Calibri: [1133, 140],
+  'Comic Sans MS': [1133, 159],
+  'Lucida Console': [1099, 114],
+  Wingdings: [1632, 126],
   serif: [1411, 164],
   monospace: [912, 114],
   cursive: [912, 114],
@@ -69,7 +77,9 @@ test('measureText reproduces the real-Chrome metric at the RS6 reference', () =>
 test('font-family lists resolve to the first available font', () => {
   // 第一个装了的胜出；都没装则默认
   assert.deepEqual(resolveFontMetric('NoSuchFont, Arial, serif'), [1171, 127]);
-  assert.deepEqual(resolveFontMetric('"Noto Sans SC", monospace'), [912, 114]);
+  // 2026-09-29 起 Noto Sans SC 已按真机实测入表（此前缺失会误判为未装）
+  assert.deepEqual(resolveFontMetric('"Noto Sans SC", monospace'), [1320, 165]);
+  assert.deepEqual(resolveFontMetric('"Not Installed Font", monospace'), [912, 114]);
   assert.deepEqual([...resolveFontMetric('NoSuchFont')], [...DEFAULT_METRIC]);
 });
 
