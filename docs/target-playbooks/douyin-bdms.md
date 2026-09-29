@@ -120,3 +120,14 @@ python client.py --signs 3        # 预热 + 连续 3 次签名
 
 对照原实现：在原案例目录执行 `node 1.douyin.js`
 （需要上级 `node_modules` 里有 jsdom）。
+
+## 7. 离线自证合集版（工作区 `抖音补环境/`）
+
+同一目标在 WSL 合集里的**纯离线**版本（不含 secsdk、不发真实请求）：
+
+- 验收：`signature`——`get_a_bogus(targetUrl)` 返回非空 192 字符签名（逐次不同属预期，
+  含时序与随机，验收看"是否产出合法签名"）。
+- bundle 原样不改：runner 只剥离三类 Node 专有内容（`require('./mod_jsdom')` 等补环境入口、
+  `__ENV_DEBUG__` 调试开关、演示 URL 与演示调用），剥离清单记入 `artifacts.stripped`。
+- 环境形态：原案例 Chrome 135 macOS → 配成同形态的 151（platform/hc/dm/screen 按原采集形态）。
+- 移植结论：原案例的 jsdom/vm2 三套手写补丁 → 一套真实环境；**未遇到 NV8 框架自身的问题**。
