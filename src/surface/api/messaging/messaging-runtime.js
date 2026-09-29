@@ -30,12 +30,12 @@ const broadcastState = new WeakMap();
 // port（真实浏览器语义）。对象身份就是唯一凭证——伪造 brand 的对象不在
 // 任何注册表里，依旧抛 DataCloneError。未注入时保持 null，行为与单图
 // 完全一致。
-let sharedPortRegistry = null;
-
 export function configureMessagePortRegistry(registry) {
   // 注意不能用 `instanceof WeakMap`：注册表由宿主 Realm 创建，跨 vm context
   // 时 instanceof 恒为 false。鸭子类型即可——宿主只会传真正的 WeakMap。
-  sharedPortRegistry = registry !== null
+  // 存储在 realm slot（与 broadcastConnector 同款）：宿主图副本永不被配置，
+  // 不构成进程级可变状态。
+  messagingState().sharedPortRegistry = registry !== null
     && typeof registry === "object"
     && typeof registry.get === "function"
     && typeof registry.set === "function"
@@ -45,12 +45,12 @@ export function configureMessagePortRegistry(registry) {
 }
 
 function lookupPort(value) {
-  return portState.get(value) ?? sharedPortRegistry?.get(value);
+  return portState.get(value) ?? messagingState().sharedPortRegistry?.get(value);
 }
 
 function registerPort(port, record) {
   portState.set(port, record);
-  sharedPortRegistry?.set(port, record);
+  messagingState().sharedPortRegistry?.set(port, record);
 }
 
 // record 的调度闭包绑定在**持有方**图上：跨图投递时由持有方图创建
@@ -66,6 +66,7 @@ const messagingSlot = createRealmSlot(() => ({
   broadcasts: new Map(),
   liveBroadcasts: new Set(),
   broadcastConnector: null,
+  sharedPortRegistry: null,
 }), "messaging-runtime");
 
 function messagingState() {
@@ -316,7 +317,7 @@ registerStructuredCloneTransferHandler({
 export function localizeIncomingPorts(ports) {
   return ports.map(port => {
     if (portState.has(port)) return port;
-    const record = sharedPortRegistry?.get(port);
+    const record = messagingState().sharedPortRegistry?.get(port);
     if (record === undefined) return port;
     const local = Object.create(MessagePort.prototype);
     initializeEventTarget(local);

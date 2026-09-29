@@ -13,6 +13,7 @@ import { createRealmSlot } from "../../../engine/core/state-scope.js";
 // WeakRef 跟踪，避免历史集合同样常驻并参与每次全量刷新。
 const allCollectionSlot = createRealmSlot(() => ({
   liveCollections: new Set(),
+  undetectableFactory: null,
 }), "allCollection");
 
 function allCollectionState() {
@@ -35,17 +36,19 @@ const collectionFinalization = new FinalizationRegistry((ref) => {
  * 注意：undetectable 对象对 typeof / 真值判断全部"说谎"（typeof 为
  * "undefined"、Boolean() 为 false），只能用与 null/undefined 的身份比较判断。
  */
-let undetectableFactory = null;
 
 /** 宿主注入的 undetectable 对象工厂（见 create-realm/ bootstrap-root）。 */
 export function configureHTMLAllCollectionFactory(factory) {
-  if (typeof factory === "function") undetectableFactory = factory;
+  if (typeof factory === "function") {
+    allCollectionState().undetectableFactory = factory;
+  }
 }
 
 function obtainUndetectableObject() {
-  if (undetectableFactory !== null) {
+  const factory = allCollectionState().undetectableFactory;
+  if (factory !== null) {
     try {
-      const hostCandidate = undetectableFactory();
+      const hostCandidate = factory();
       if (hostCandidate !== null && hostCandidate !== undefined) return hostCandidate;
     } catch (error) {
       // 继续尝试 realm 内路径
