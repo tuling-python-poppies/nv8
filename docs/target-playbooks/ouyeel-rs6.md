@@ -1,6 +1,6 @@
 # 目标 Playbook：欧冶 ouyeel（瑞数 RS6 *P）
 
-> 适配日期：2026-09-29 · 测试代码：`C:\Users\poppies\Desktop\瑞数测试\ouyeel\js_reverse_cache\recon\`
+> 适配日期：2026-09-29 · 测试代码：案例工作区 `ouyeel/`（harness 见其 `js_reverse_cache/recon/`）
 > 采集基准：有头 Edge 154.0.4258.37（CDP oracle）+ curl_cffi 重放
 
 ## 1. 目标画像

@@ -1,7 +1,7 @@
 # 目标 Playbook：抖音 BDMS（a_bogus）
 
-> 适配日期：2026-09-18 · 测试代码：`C:\Users\poppies\Desktop\nv8代码测试目录\douyin-bdms\`
-> 原始案例：`D:\code_repository\爬虫逆向\代码测试\抖音补环境\`（execjs + jsdom/vm2）
+> 适配日期：2026-09-18 · 测试代码：案例工作区 `douyin-bdms/`（脚本清单见 §6）
+> 原始案例：抖音补环境工作区（execjs + jsdom/vm2，原脚本 `1.douyin.js`）
 
 ## 1. 目标画像
 
@@ -83,7 +83,7 @@ a_bogus(196) + x-secsdk-web-signature + uifid → GET /aweme/v1/web/aweme/post/
 → HTTP 200，1.78MB 真实 aweme_list（两次独立运行均通过）
 ```
 
-对应实现：`C:\Users\poppies\Desktop\nv8代码测试目录\douyin-bdms\secsdk\sign-full.mjs`
+对应实现：案例工作区 `secsdk/sign-full.mjs`
 （BDMS 用 2025 版补环境脚本，secsdk 用当前线上 v1.0.40 runtime）。
 
 **结论（修正）**：抖音当前的双签名方案已可在 nv8 中完整离线复现；
@@ -113,10 +113,10 @@ a_bogus 算法未变，缺的是 secsdk 第二签名与环境一致性。
 ## 6. 复现
 
 ```bash
-# 测试目录（已含 node_modules 软链到 D:/develop_software/Nv8）
-cd C:\Users\poppies\Desktop\nv8代码测试目录\douyin-bdms
+# 测试目录（package.json 以 file: 依赖指向本地 nv8 根，npm install 后即软链）
+cd <案例工作区>/douyin-bdms
 python client.py --signs 3        # 预热 + 连续 3 次签名
 ```
 
-对照原实现：`cd D:\code_repository\爬虫逆向\代码测试\抖音补环境; node 1.douyin.js`
+对照原实现：在原案例目录执行 `node 1.douyin.js`
 （需要上级 `node_modules` 里有 jsdom）。
