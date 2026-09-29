@@ -20,6 +20,7 @@ import {
 } from "../canvas/offscreen-canvas-state.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
 import { defineGlobalFunction } from "../../../engine/webidl/descriptor.js";
+import { traceCall } from "../../../infra/trace/trace-function.js";
 
 const virtualWindows = new WeakMap();
 const fileSystems = new Map();
@@ -82,6 +83,8 @@ export function installCreateImageBitmapGlobal() {
 
 export function alert() {
   lastAlert = `${arguments[0]}`;
+  // 对话框是页面行为的重要信号（反爬/调试探测），进 proxy trace。
+  traceCall("window.alert", "Window", [...arguments], undefined);
 }
 
 export function blur() {}
@@ -94,6 +97,7 @@ export function close() {}
 
 export function confirm() {
   void `${arguments[0] ?? ""}`;
+  traceCall("window.confirm", "Window", [...arguments], false);
   return false;
 }
 
@@ -226,6 +230,7 @@ export function print() {}
 export function prompt() {
   void `${arguments[0] ?? ""}`;
   void `${arguments[1] ?? ""}`;
+  traceCall("window.prompt", "Window", [...arguments], null);
   return null;
 }
 
