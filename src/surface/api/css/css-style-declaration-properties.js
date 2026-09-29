@@ -96,8 +96,15 @@ export function installCSSPropertyAccessors(declaration, readonly = false) {
           // 而不是静默忽略。
           throw createNoModificationAllowedError(name);
         }
-        const declarations = readCSSDeclarations(this);
         const text = `${value}`.trim();
+        // 真实 Edge：非法的 font-family 值被 CSSOM 拒绝并**保留原值**（不清空）。
+        // RS6 字体枚举靠这个把 "Helvetica Neue LT Pro 35 Thin"（"35" 数字开头，
+        // 非法 custom-ident）测成上一个合法字体的度量——校验产生的「继承假象」。
+        // 少了这步这类值会落到默认字体，与真实浏览器对不上，直接露馅。
+        if (cssName === "font-family" && text !== "" && !isValidFontFamily(text)) {
+          return;
+        }
+        const declarations = readCSSDeclarations(this);
         if (text === "") declarations.delete(cssName);
         else declarations.set(cssName, { value: text, priority: "" });
         writeCSSDeclarations(this, declarations);
@@ -129,6 +136,37 @@ function createNoModificationAllowedError(name) {
   const error = new Error(message);
   error.name = "NoModificationAllowedError";
   return error;
+}
+
+/**
+ * 合法的 CSS-wide 关键字与未加引号的 `<custom-ident>`。
+ *
+ * font-family 的未加引号写法是若干空格分隔的 custom-ident，逗号分隔多个候选。
+ * custom-ident：可选前导 `-`，首字符 `[A-Za-z_]` 或非 ASCII，其后 `[A-Za-z0-9_-]`
+ * 或非 ASCII。不含 `.`、不许数字开头、不许其它标点——正是真实浏览器拒绝
+ * "Helvetica Neue LT Pro 35 Thin"（"35"）与 "LG-FZKaTong-M19-V2.2"（"."）的规则。
+ */
+const CSS_IDENT = /^-?[A-Za-z_\u0080-\uFFFF][A-Za-z0-9_\-\u0080-\uFFFF]*$/u;
+const CSS_WIDE_KEYWORD = /^(?:inherit|initial|unset|revert|revert-layer)$/iu;
+
+/**
+ * 判断一个 font-family 值是否合法（合法才写入，非法保留原值）。
+ *
+ * 加引号的字符串一律合法；CSS-wide 关键字合法；未加引号的每个候选必须是空格
+ * 分隔的合法 custom-ident 序列。
+ *
+ * @param {string} value 已 trim 的非空值
+ * @returns {boolean}
+ */
+function isValidFontFamily(value) {
+  if (CSS_WIDE_KEYWORD.test(value)) return true;
+  for (const segment of value.split(",")) {
+    const name = segment.trim();
+    if (name === "") return false;
+    if (/^"[^"]*"$/u.test(name) || /^'[^']*'$/u.test(name)) continue;
+    if (!name.split(/\s+/u).every(part => CSS_IDENT.test(part))) return false;
+  }
+  return true;
 }
 
 export { parseCSSDeclarations, serializeCSSDeclarations };

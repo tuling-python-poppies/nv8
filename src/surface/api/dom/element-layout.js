@@ -3,12 +3,17 @@ import {
   getAttributeValue,
   requireElement,
 } from "./element-state.js";
-import { descendants } from "./node-state.js";
+import { descendants, ELEMENT_NODE, requireNode, TEXT_NODE } from "./node-state.js";
 import { htmlStyleRecord } from "./html-element-state.js";
+import { measureText } from "../../../infra/fingerprint/font-metrics.js";
 
 export function elementLayoutRect(element) {
   const own = explicitLayout(element);
   if (own.width > 0 && own.height > 0) return own;
+
+  // 行内文本盒尺寸：只含文本、无显式宽高的收缩到内容元素（<span>text</span>）的
+  // offsetWidth 就是文本宽度。没有这一步这类元素全量成 0，正是 RS6 字体枚举抓的点。
+  const text = intrinsicTextSize(element);
 
   let descendantWidth = 0;
   let descendantHeight = 0;
@@ -21,9 +26,62 @@ export function elementLayoutRect(element) {
   return {
     x: own.x,
     y: own.y,
-    width: own.width || descendantWidth,
-    height: own.height || descendantHeight,
+    width: own.width || Math.max(text?.width ?? 0, descendantWidth),
+    height: own.height || Math.max(text?.height ?? 0, descendantHeight),
   };
+}
+
+// 收缩到内容（shrink-to-fit）的 display：这些盒子的宽度取决于内容而非容器。
+const SHRINK_TO_FIT_DISPLAYS = new Set([
+  "inline", "inline-block", "inline-flex", "inline-grid", "table-cell",
+]);
+
+// 无显式 display 时按标签默认判断行内。只收录常见行内标签——块级标签（div/p/…）
+// 的 offsetWidth 是容器宽度，不该按文本量，所以不进这张表。
+const INLINE_TAGS = new Set([
+  "span", "a", "b", "i", "em", "strong", "small", "label", "code",
+  "abbr", "cite", "q", "s", "u", "sub", "sup", "mark", "time", "big", "tt",
+]);
+
+function intrinsicTextSize(element) {
+  const state = requireElement(element);
+  const style = parseStyle(getAttributeValue(element, "style") ?? "");
+  if (!isShrinkToFit(state, style)) return null;
+  const text = directText(element);
+  if (text === "") return null;
+  return measureText(text, resolveInherited(element, "font-family"),
+    cssPixels(resolveInherited(element, "font-size")) ?? 16);
+}
+
+function isShrinkToFit(state, style) {
+  const display = (style.display ?? "").toLowerCase();
+  if (display !== "") {
+    if (display === "none") return false;
+    return SHRINK_TO_FIT_DISPLAYS.has(display);
+  }
+  return INLINE_TAGS.has(state.localName);
+}
+
+// 直接文本子节点拼接，按 CSS 折叠空白（连续空白合一、去首尾）。
+function directText(element) {
+  let text = "";
+  for (const child of requireNode(element).children) {
+    if (requireNode(child).nodeType === TEXT_NODE) {
+      text += requireNode(child).nodeValue ?? "";
+    }
+  }
+  return text.replace(/\s+/gu, " ").trim();
+}
+
+// font-size / font-family 沿祖先继承。命中第一个显式声明即止，否则用默认。
+function resolveInherited(element, property) {
+  let node = element;
+  while (node !== null && requireNode(node).nodeType === ELEMENT_NODE) {
+    const value = parseStyle(getAttributeValue(node, "style") ?? "")[property];
+    if (value !== undefined && value !== "") return value;
+    node = requireNode(node).parent;
+  }
+  return "";
 }
 
 function layoutDescendants(element) {
