@@ -46,3 +46,4 @@
 |---|---|---|
 | 荔枝网 gdtv（wasm 签名 + 请求头） | 见案例目录 `2026_9_14_wasm逆向 - 2/nv8_run/` | 已接入（含线上 200 验收） |
 | 抖音 BDMS（a_bogus） | [douyin-bdms.md](douyin-bdms.md) | 已接入（本地验证；线上受旧会话限制） |
+| 欧冶 ouyeel（瑞数 RS6 `*P`） | [ouyeel-rs6.md](ouyeel-rs6.md) | 已接入（线上真实业务数据验收） |
