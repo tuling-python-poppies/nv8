@@ -4,13 +4,14 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 345,
-      "callSequenceSha256": "50108c30a1cc576bb8979e6ff961b9d161be09131c91e765bff4b2dc0ce77a6a",
+      "callCount": 346,
+      "callSequenceSha256": "ffffbb2788874f7b54cb6fe74816036895c81904990e4946fa2f2f356013913e",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
         "bootstrap:hideNodeGlobals",
         "configure:configureTimingProfile",
+        "configure:configureHTMLAllCollectionFactory",
         "configure:configureNativeFunctionRegistry",
         "configure:configureBlobRegistry",
         "configure:configureObjectURLRegistry",
@@ -356,9 +357,9 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "7da1d1a8aaf5305aa5d6f534d91c6bbfb9a60b856f5eb7a161db947c4e4a413b",
-        "functionStartLine": 853,
-        "functionEndLine": 1329
+        "sourceSha256": "8b478b3966015d57856e0570f8972cbde498beca647c6cbb256679357bb6999e",
+        "functionStartLine": 855,
+        "functionEndLine": 1381
       }
     },
     "worker": {
@@ -482,9 +483,9 @@
         "finalize:finalizeWorkerSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "32e92766cd12ec519c2d6392f9b3327a59ab22d40bbdbc098a4026d3a6474b4b",
-        "functionStartLine": 204,
-        "functionEndLine": 381
+        "sourceSha256": "215ac08a6524b82eb671031f4cb75cbe69405ec9b5d42d3dde78639b612c2d9f",
+        "functionStartLine": 207,
+        "functionEndLine": 392
       }
     },
     "worklet": {
@@ -510,9 +511,9 @@
         "install:installRegistration"
       ],
       "informational": {
-        "sourceSha256": "e0eb9dd122331ff1cac94ee24bea776babeb9c54374e592981476e0beb41d7b7",
-        "functionStartLine": 30,
-        "functionEndLine": 72
+        "sourceSha256": "45aa52cb1047f694e0a30877c6d172a2dcac5badc79ef1331d6f2c91d9d45f8d",
+        "functionStartLine": 31,
+        "functionEndLine": 76
       }
     }
   }

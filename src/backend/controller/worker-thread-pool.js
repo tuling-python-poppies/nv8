@@ -128,7 +128,14 @@ export class PooledWorkerThreadConnection extends ConnectionBase {
     } else {
       worker = new Worker(THREAD_ENTRY, {
         name: "edge-sandbox-runtime",
-        execArgv: ["--experimental-vm-modules"],
+        execArgv: [
+          "--experimental-vm-modules",
+          // 父进程启用 --allow-natives-syntax 时继承（document.all 的
+          // undetectable 语义依赖宿主侧 %GetUndetectable()）。
+          ...(process.execArgv.includes("--allow-natives-syntax")
+            ? ["--allow-natives-syntax"]
+            : []),
+        ],
         resourceLimits: {
           maxOldGenerationSizeMb: this.heapMegabytes,
         },

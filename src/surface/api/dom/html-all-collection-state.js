@@ -24,12 +24,51 @@ const collectionFinalization = new FinalizationRegistry((ref) => {
   allCollectionState().liveCollections.delete(ref);
 });
 
+/**
+ * 获取 V8 的 undetectable 对象（真实浏览器 document.all 的引擎级语义）。
+ *
+ * 真实浏览器里 document.all 带 [[IsHTMLDDA]] 位：`typeof` 为 "undefined"、
+ * falsy、`document.all == null` 为 true，但属性访问正常。该位在 V8 中即
+ * "undetectable"，宿主以 --allow-natives-syntax 启动时可用 %GetUndetectable()
+ * 取到等价对象；未开启时返回 null，调用方回退到普通可调用对象。
+ *
+ * 注意：undetectable 对象对 typeof / 真值判断全部"说谎"（typeof 为
+ * "undefined"、Boolean() 为 false），只能用与 null/undefined 的身份比较判断。
+ */
+let undetectableFactory = null;
+
+/** 宿主注入的 undetectable 对象工厂（见 create-realm/ bootstrap-root）。 */
+export function configureHTMLAllCollectionFactory(factory) {
+  if (typeof factory === "function") undetectableFactory = factory;
+}
+
+function obtainUndetectableObject() {
+  if (undetectableFactory !== null) {
+    try {
+      const hostCandidate = undetectableFactory();
+      if (hostCandidate !== null && hostCandidate !== undefined) return hostCandidate;
+    } catch (error) {
+      // 继续尝试 realm 内路径
+    }
+  }
+  try {
+    const candidate = eval("%GetUndetectable()");
+    if (candidate !== null && candidate !== undefined) return candidate;
+  } catch (error) {
+    // 未开启 --allow-natives-syntax：语法解析被拒绝，回退
+  }
+  return null;
+}
+
 export function createHTMLAllCollection(document) {
-  const collection = (...arguments_) => callCollection(collection, arguments_);
-  delete collection.name;
-  delete collection.length;
+  let collection = obtainUndetectableObject();
+  if (collection === null) {
+    collection = (...arguments_) => callCollection(collection, arguments_);
+    delete collection.name;
+    delete collection.length;
+    registerNativeFunction(collection, "all");
+  }
   Object.setPrototypeOf(collection, HTMLAllCollection.prototype);
-  registerNativeFunction(collection, "all");
   collectionState.set(collection, {
     document,
     indexedLength: 0,

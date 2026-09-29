@@ -142,6 +142,20 @@ export function activateRealmShell(shell, options) {
     timezone,
     cryptoEntropy,
     () => performance.timeOrigin + performance.now(),
+    // document.all 的引擎级 undetectable 语义（真实浏览器 [[IsHTMLDDA]]：
+    // typeof 为 "undefined"、falsy、== null 为 true，但属性访问正常）。
+    // 宿主主上下文支持 --allow-natives-syntax 时通过 %GetUndetectable() 提供；
+    // 未开启返回 null，沙箱侧回退普通对象。对象跨 Realm 使用不受影响
+    // （typeof/真值位随对象走，只有与 null/undefined 的身份比较能"看穿"它）。
+    () => {
+      // 用 vm 独立编译：跨 Realm 调用时 eval 直连会被沙箱上下文吞掉 flag。
+      try {
+        const candidate = vm.runInThisContext("%GetUndetectable()");
+        return candidate === null || candidate === undefined ? null : candidate;
+      } catch (error) {
+        return null;
+      }
+    },
   );
   // API 访问断点列表不占 bootstrapRoot 的位置参数（已约 40 个），在其后单独下发。
   if (Array.isArray(watchApis) && typeof bootstrap.namespace.setProxyWatchApis === "function") {

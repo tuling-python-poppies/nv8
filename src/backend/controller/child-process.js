@@ -97,6 +97,11 @@ export class ChildProcessConnection extends ConnectionBase {
       args: [
         ...(inspectorArgument === null ? [] : [inspectorArgument]),
         "--experimental-vm-modules",
+        // 父进程启用 --allow-natives-syntax 时继承：document.all 的
+        // undetectable 语义依赖宿主侧 %GetUndetectable()（见 create-realm）。
+        ...(process.execArgv.includes("--allow-natives-syntax")
+          ? ["--allow-natives-syntax"]
+          : []),
         `--max-old-space-size=${heapMegabytes}`,
         CHILD_ENTRY,
       ],

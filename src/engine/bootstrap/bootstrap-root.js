@@ -79,6 +79,7 @@ import {
   runDueTimers,
 } from "../../infra/scheduler/timer-state.js";
 import { configureTimingProfile } from "../../infra/scheduler/monotonic-clock.js";
+import { configureHTMLAllCollectionFactory } from "../../surface/api/dom/html-all-collection-state.js";
 import { configureScreenProfile } from "../../surface/api/screen/screen-state.js";
 import { configureNavigation } from "../../infra/navigation/navigation-state.js";
 import {
@@ -911,6 +912,8 @@ export function bootstrapRoot(
   // 宿主高分辨率时钟：performance.now 的 0.1ms 量子需要亚毫秒时间源，
   // realm 内 Date.now() 只有整毫秒。未提供时退回旧行为。
   hostClock = null,
+  // 宿主提供的 undetectable 对象工厂（document.all 的 [[IsHTMLDDA]] 语义）。
+  htmlAllCollectionFactory = null,
 ) {
   // 必须**最先**建立原生函数上下文。
   //
@@ -933,6 +936,7 @@ export function bootstrapRoot(
   establishNativeFunctionContext();
   hideNodeGlobals();
   configureTimingProfile(timingProfile, hostClock);
+  configureHTMLAllCollectionFactory(htmlAllCollectionFactory);
   configureNativeFunctionRegistry(nativeFunctionRegistry);
   configureBlobRegistry(objectURLRegistry);
   configureObjectURLRegistry(objectURLRegistry);
