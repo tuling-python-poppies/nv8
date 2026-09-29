@@ -841,12 +841,16 @@ function getActiveInfo(context, args, kind) {
 function createPrecisionFormat(precisionType) {
   // 真机 D3D11/ANGLE（Edge 154 有头实测基准）：
   //   FLOAT 系列 {precision:23, rangeMin:127, rangeMax:127}
-  //   INT 系列   {precision:0,  rangeMin:31,  rangeMax:30}
-  //   HIGH_INT   真实浏览器返回 null
+  //   INT 系列（LOW/MEDIUM/HIGH）{precision:0, rangeMin:31, rangeMax:30}
+  //  非法枚举（0x8df6 等）返回 null。
   // 旧值 10/14/14 是移动端 GL 形态，与「宣称 D3D11 独立显卡」自相矛盾。
   if (precisionType === 0x8df6) return null;
   const object = Object.create(WebGLShaderPrecisionFormat.prototype);
-  const isInt = precisionType === 0x8df4 || precisionType === 0x8df5;
+  // 0x8df3/0x8df4/0x8df5 = LOW/MEDIUM/HIGH_INT。此前漏了 LOW_INT（0x8df3），
+  // 它掉进 float 分支返回 23,127,127，与真机 0,31,30 不符（RS 会读该值）。
+  const isInt = precisionType === 0x8df3
+    || precisionType === 0x8df4
+    || precisionType === 0x8df5;
   valueState.set(object, {
     kind: "precisionFormat",
     rangeMin: isInt ? 31 : 127,

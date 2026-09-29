@@ -46,8 +46,17 @@ export function mediaElementCanPlayTypeResult(input) {
   if (mimeType === "audio/ogg") {
     return supportsAnyAudio("opus", "vorbis") ? codecConfidence(codecs) : "";
   }
+  if (mimeType === "audio/x-m4a") {
+    // 真机 Edge：x-m4a 一律 maybe（M4A/AAC 容器识别）。
+    return "maybe";
+  }
   if (mimeType === "audio/wav") {
-    return codecState().audio.has("pcm") ? "maybe" : "";
+    if (!codecState().audio.has("pcm")) return "";
+    if (codecs.length === 0) return "maybe";
+    // 真机：codecs="1"（PCM）→ probably；未知 codec → 空串。
+    return codecs.every(codec => ["1", "pcm", "wav"].includes(codec.toLowerCase()))
+      ? "probably"
+      : "";
   }
   if (mimeType === "audio/webm") {
     return supportsAnyAudio("opus", "vorbis") ? codecConfidence(codecs) : "";

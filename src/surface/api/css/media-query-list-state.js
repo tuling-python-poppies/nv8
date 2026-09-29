@@ -11,7 +11,8 @@ export function createMediaQueryList(query) {
   const media = `${query}`;
   state.set(list, {
     media,
-    matches: evaluateMediaQuery(media, screen.width, screen.height, 1),
+    matches: evaluateMediaQuery(media, screen.width, screen.height,
+      Number(globalThis.devicePixelRatio) || 1),
     onchange: null,
   });
   return list;
@@ -63,17 +64,27 @@ function evaluateFeature(part, width, height, devicePixelRatio) {
   if (name === "max-height") return Number.isFinite(pixels) && height <= pixels;
   if (name === "height") return Number.isFinite(pixels) && height === pixels;
   if (name === "orientation") return value === (width >= height ? "landscape" : "portrait");
+  if (name === "device-pixel-ratio" || name === "-webkit-device-pixel-ratio") {
+    return Number.isFinite(pixels) && devicePixelRatio === pixels;
+  }
+  if (name === "min-device-pixel-ratio" || name === "-webkit-min-device-pixel-ratio") {
+    return Number.isFinite(pixels) && devicePixelRatio >= pixels;
+  }
+  if (name === "max-device-pixel-ratio" || name === "-webkit-max-device-pixel-ratio") {
+    return Number.isFinite(pixels) && devicePixelRatio <= pixels;
+  }
   if (name === "min-resolution") return devicePixelRatio >= resolutionDppx(value);
   if (name === "max-resolution") return devicePixelRatio <= resolutionDppx(value);
   if (name === "resolution") return devicePixelRatio === resolutionDppx(value);
   if (name === "prefers-color-scheme") return value === "light";
-  if (name === "color-gamut") return value === "srgb";
   if (name === "display-mode") return value === "browser";
   if (name === "prefers-reduced-motion") return value === "no-preference";
   if (name === "prefers-contrast") return value === "no-preference";
   if (name === "forced-colors") return value === "none";
-  if (name === "hover" || name === "any-hover") return value === "hover";
-  if (name === "pointer" || name === "any-pointer") return value === "fine";
+  // 布尔上下文查询（不带值）：特性存在且非零值即匹配（桌面 fine/hover、sRGB 可用）。
+  if (name === "hover" || name === "any-hover") return value === "" ? true : value === "hover";
+  if (name === "pointer" || name === "any-pointer") return value === "" ? true : value === "fine";
+  if (name === "color-gamut") return value === "" || value === "srgb";
   return false;
 }
 

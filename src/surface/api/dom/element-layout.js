@@ -8,6 +8,11 @@ import { htmlStyleRecord } from "./html-element-state.js";
 import { measureText } from "../../../infra/fingerprint/font-metrics.js";
 
 export function elementLayoutRect(element) {
+  // 视口盒：documentElement / body 的 client/offset 尺寸来自视口（真机为
+  // innerWidth 减去滚动条），不是文字/显式尺寸推导——返回 0 会被反爬识别为异常。
+  const viewport = viewportBox(element);
+  if (viewport !== null) return viewport;
+
   const own = explicitLayout(element);
   if (own.width > 0 && own.height > 0) return own;
 
@@ -28,6 +33,29 @@ export function elementLayoutRect(element) {
     y: own.y,
     width: own.width || Math.max(text?.width ?? 0, descendantWidth),
     height: own.height || Math.max(text?.height ?? 0, descendantHeight),
+  };
+}
+
+// Windows Chromium 经典滚动条宽（本机 Edge 实测：innerWidth 921 → clientWidth 906）。
+const SCROLLBAR_PX = 15;
+
+// documentElement / body 的布局盒 = 视口（真机语义）；拿不到视口时回退旧行为。
+function viewportBox(element) {
+  const document = requireNode(element).ownerDocument;
+  if (document === null || document === undefined
+    || (document.documentElement !== element && document.body !== element)) {
+    return null;
+  }
+  const width = Number(globalThis.innerWidth);
+  const height = Number(globalThis.innerHeight);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return null;
+  }
+  return {
+    x: 0,
+    y: 0,
+    width: Math.max(0, width - SCROLLBAR_PX),
+    height: Math.max(0, height - SCROLLBAR_PX),
   };
 }
 
