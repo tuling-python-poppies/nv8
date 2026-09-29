@@ -60,6 +60,21 @@ test('cookie path uses RFC6265 path-match rather than startsWith', async () => {
   assert.match(result.atAlpha, /a=1/, '/alpha 精确匹配 Path=/alpha');
 });
 
+test('cookie serialization order: longer path first, then creation time; overwrite keeps position', async () => {
+  const atSet = await withLegacySandbox('https://cookie.test/deep/page', async sandbox => (
+    sandbox.run(`(() => {
+      document.cookie = 'root=1; Path=/';
+      document.cookie = 'deep=2; Path=/deep';
+      document.cookie = 'later=3; Path=/';
+      document.cookie = 'root=9; Path=/';
+      return document.cookie;
+    })()`)
+  ));
+
+  // Chromium/RFC6265bis：路径长度降序 → 创建时间升序；同名重写保留原创建时间。
+  assert.equal(atSet, 'deep=2; root=9; later=3');
+});
+
 test('pushState does not change the document cookie scope', async () => {
   const result = await withLegacySandbox('https://cookie.test/base/page', async sandbox => {
     await sandbox.run(`(() => {

@@ -35,6 +35,7 @@ export function configureCookies(encoded = "") {
     cookies.clear();
     const versioned = encoded.startsWith(COOKIE_ENCODING_V2);
     let offset = versioned ? COOKIE_ENCODING_V2.length : 0;
+    let creation = 0;
     while (offset < encoded.length) {
       const fields = [];
       for (let index = 0; index < (versioned ? 9 : 8); index += 1) {
@@ -63,7 +64,9 @@ export function configureCookies(encoded = "") {
         sameSite,
         partitioned: partitioned === "1",
         httpOnly: versioned && httpOnly === "1",
+        createdAt: creation,
       };
+      creation += 1;
       cookies.set(cookieKey(name, domain, path), cookie);
     }
   }
@@ -112,17 +115,14 @@ function cookieUrl() {
 export function documentCookieString() {
   purgeExpired();
   const url = cookieUrl();
-  return [...cookieState().cookies.values()]
-    .filter(cookie => !cookie.httpOnly && visibleAt(cookie, url))
+  return sortedCookiesFor(url, false)
     .map(cookie => `${cookie.name}=${cookie.value}`)
     .join("; ");
 }
 
 export function cookieHeaderFor(url) {
   purgeExpired();
-  const target = new URL(url);
-  return [...cookieState().cookies.values()]
-    .filter(cookie => visibleAt(cookie, target))
+  return sortedCookiesFor(new URL(url), true)
     .map(cookie => `${cookie.name}=${cookie.value}`)
     .join("; ");
 }
@@ -259,8 +259,8 @@ export function setCookieStoreInstance(value) {
 
 function storeCookie(cookie) {
   const key = cookieKey(cookie.name, cookie.domain, cookie.path);
+  const state = cookieState();
   if (cookie.expires !== null && cookie.expires <= Date.now()) {
-    const state = cookieState();
     const deleted = state.cookies.get(key);
     state.cookies.delete(key);
     if (deleted !== undefined) {
@@ -268,7 +268,10 @@ function storeCookie(cookie) {
     }
     return;
   }
-  cookieState().cookies.set(key, cookie);
+  // RFC6265bis：同名同域同路径的更新保留原创建时间（顺序稳定）。
+  const existing = state.cookies.get(key);
+  cookie.createdAt = existing !== undefined ? existing.createdAt : nextCookieCreation();
+  state.cookies.set(key, cookie);
   notifyCookieChange([publicCookie(cookie)], []);
 }
 
@@ -350,6 +353,27 @@ function defaultPath(pathname) {
 
 function cookieKey(name, domain, path) {
   return `${name}\u0000${domain}\u0000${path}`;
+}
+
+/**
+ * Chromium/RFC6265bis 的 cookie 串顺序：路径长度降序 → 创建时间升序。
+ * 同名重写保留原创建时间（delete+set 会得到新创建时间，经 storeCookie 的
+ * 过期删除路径自然成立）。
+ */
+function cookieSortOrder(left, right) {
+  return (right.path.length - left.path.length) || (left.createdAt - right.createdAt);
+}
+
+function nextCookieCreation() {
+  const clock = originScopedState("cookieCreationClock", () => ({ next: 0 })).value;
+  clock.next += 1;
+  return clock.next;
+}
+
+function sortedCookiesFor(url, includeHttpOnly) {
+  return [...cookieState().cookies.values()]
+    .filter(cookie => (includeHttpOnly || !cookie.httpOnly) && visibleAt(cookie, url))
+    .sort(cookieSortOrder);
 }
 
 function encodeString(value) {
