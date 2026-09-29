@@ -120,16 +120,21 @@ test('frameElement keeps cross-realm instanceof semantics', async () => {
 
 test('a cross-origin iframe gets null, not the element', async () => {
   // 规范要求容器文档与本文档不同源时返回 null。泄露元素等于把跨源隔离打穿：
-  // 拿到元素就能顺着 ownerDocument 读父文档。
+  // 拿到元素就能顺着 ownerDocument 读父文档。对齐真实 Edge：读非白名单
+  // 命名属性（frameElement 不在跨源白名单里）抛 SecurityError。
   const observed = await probe(`(() => {
     const frame = document.getElementById('cross');
     try {
-      // 跨源 iframe 的 contentWindow 是门面，只暴露允许的成员
       return { frameElement: frame.contentWindow.frameElement ?? null };
     } catch (error) {
-      return { threw: error.name };
+      return { threw: error.name, message: error.message };
     }
   })()`);
 
   assert.equal(observed.frameElement ?? null, null);
+  assert.equal(observed.threw, 'SecurityError');
+  assert.match(
+    observed.message,
+    /Failed to read a named property 'frameElement' from 'Window'/,
+  );
 });

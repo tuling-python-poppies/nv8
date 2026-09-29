@@ -154,6 +154,7 @@ function navigate(element) {
     current.facade = createWindowFacade({
       window: () => current.handle?.window ?? current.pendingWindow,
       origin: () => childOrigin,
+      callerOrigin: () => parentOrigin,
       parent: () => globalThis,
       top: () => globalThis.top,
       closed: () => !element.isConnected,

@@ -137,6 +137,7 @@ export function configureWindowMessaging(
     state.parentFacade = createWindowFacade({
       window: () => parentWindow,
       origin: () => `${parentOrigin}`,
+      callerOrigin: () => state.localOrigin,
       parent: () => null,
       top: () => null,
       postMessage: parentPostMessage,
@@ -146,6 +147,7 @@ export function configureWindowMessaging(
       : createWindowFacade({
         window: () => topWindow,
         origin: () => `${parentOrigin}`,
+        callerOrigin: () => state.localOrigin,
         parent: () => null,
         top: () => null,
         postMessage: parentPostMessage,
@@ -190,49 +192,70 @@ export function notifyScheduledCallbackIncumbent(source = null) {
 }
 
 export function createWindowFacade(options) {
-  const facade = Object.create(null);
+  const target = Object.create(null);
   const record = {
-    facade,
+    facade: null,
     window: options.window,
     origin: options.origin,
+    // 读被拦属性时 SecurityError 文案里的「访问方 origin」：iframe 场景是父页面，
+    // `parent` 门面场景是当前子 Realm。
+    callerOrigin: options.callerOrigin ?? (() => "null"),
     parent: options.parent ?? (() => globalThis),
     top: options.top ?? (() => globalThis),
     postMessage: options.postMessage,
     closed: options.closed ?? (() => options.window() === null),
-    location: createCrossOriginLocation(),
+    location: null,
   };
-  facadeState.set(facade, record);
+  // 跨源 Window 的读取守卫：白名单成员之外的一切命名属性读取都要抛
+  // SecurityError（真实 Edge 语义）。Proxy 只加 get——符号键（then、
+  // Symbol.hasInstance 等）与 `in` / 属性枚举必须保持不抛，否则 Promise
+  // 解析、instanceof 这些内部机制会被误伤。
+  const proxy = new Proxy(target, {
+    get(facadeTarget, property) {
+      if (typeof property === "symbol") {
+        return Reflect.get(facadeTarget, property);
+      }
+      if (Object.prototype.hasOwnProperty.call(facadeTarget, property)) {
+        return Reflect.get(facadeTarget, property);
+      }
+      throw crossOriginReadError(property, "Window", record.callerOrigin);
+    },
+  });
+  record.facade = proxy;
+  record.location = createCrossOriginLocation(record.callerOrigin);
+  facadeState.set(target, record);
+  facadeState.set(proxy, record);
 
-  ownGetter(facade, facade, "window", () => facade);
-  ownGetter(facade, facade, "self", () => facade);
+  ownGetter(target, target, "window", () => record.facade);
+  ownGetter(target, target, "self", () => record.facade);
   ownAccessor(
-    facade,
-    facade,
+    target,
+    target,
     "location",
     () => record.location,
     () => undefined,
   );
-  ownGetter(facade, facade, "closed", () => Boolean(record.closed()));
-  ownGetter(facade, facade, "frames", () => facade);
+  ownGetter(target, target, "closed", () => Boolean(record.closed()));
+  ownGetter(target, target, "frames", () => record.facade);
   ownGetter(
-    facade,
-    facade,
+    target,
+    target,
     "length",
     () => Number(record.window()?.length ?? 0),
   );
-  ownGetter(facade, facade, "top", () => record.top() ?? facade);
-  ownGetter(facade, facade, "opener", () => null);
-  ownGetter(facade, facade, "parent", () => record.parent() ?? facade);
+  ownGetter(target, target, "top", () => record.top() ?? record.facade);
+  ownGetter(target, target, "opener", () => null);
+  ownGetter(target, target, "parent", () => record.parent() ?? record.facade);
 
   const blur = function blur() {};
   registerNativeFunction(blur, "blur");
-  defineCrossOriginMethod(facade, "blur", blur);
+  defineCrossOriginMethod(target, "blur", blur);
   const close = function close() {};
   registerNativeFunction(close, "close");
-  defineCrossOriginMethod(facade, "close", close);
+  defineCrossOriginMethod(target, "close", close);
   const focus = function focus() {};
   registerNativeFunction(focus, "focus");
-  defineCrossOriginMethod(facade, "focus", focus);
+  defineCrossOriginMethod(target, "focus", focus);
   const postMessage = function postMessage(message) {
     return record.postMessage(
       message,
@@ -241,32 +264,54 @@ export function createWindowFacade(options) {
     );
   };
   registerNativeFunction(postMessage, "postMessage");
-  defineCrossOriginMethod(facade, "postMessage", postMessage);
-  Object.defineProperty(facade, "then", {
+  defineCrossOriginMethod(target, "postMessage", postMessage);
+  Object.defineProperty(target, "then", {
     value: undefined,
     writable: false,
     enumerable: false,
     configurable: true,
   });
-  Object.defineProperty(facade, Symbol.toStringTag, {
+  Object.defineProperty(target, Symbol.toStringTag, {
     value: undefined,
     writable: false,
     enumerable: false,
     configurable: true,
   });
-  Object.defineProperty(facade, Symbol.hasInstance, {
+  Object.defineProperty(target, Symbol.hasInstance, {
     value: undefined,
     writable: false,
     enumerable: false,
     configurable: true,
   });
-  Object.defineProperty(facade, Symbol.isConcatSpreadable, {
+  Object.defineProperty(target, Symbol.isConcatSpreadable, {
     value: undefined,
     writable: false,
     enumerable: false,
     configurable: true,
   });
-  return facade;
+  return proxy;
+}
+
+/**
+ * 跨源读取的 SecurityError 文案与真实 Edge 一致：
+ * `Failed to read a named property 'document' from 'Window': Blocked a frame
+ * with origin "https://page.test" from accessing a cross-origin frame.`
+ */
+function crossOriginReadError(property, interfaceName, callerOrigin) {
+  return new DOMException(
+    `Failed to read a named property '${property}' from '${interfaceName}': `
+      + `Blocked a frame with origin "${callerOriginText(callerOrigin)}" `
+      + "from accessing a cross-origin frame.",
+    "SecurityError",
+  );
+}
+
+function callerOriginText(callerOrigin) {
+  try {
+    return `${callerOrigin?.() ?? "null"}`;
+  } catch {
+    return "null";
+  }
 }
 
 function defineCrossOriginMethod(target, name, callback) {
@@ -278,10 +323,10 @@ function defineCrossOriginMethod(target, name, callback) {
   });
 }
 
-function createCrossOriginLocation() {
+function createCrossOriginLocation(callerOrigin) {
   const location = {};
   const hrefGetter = function () {
-    securityError();
+    throw crossOriginReadError("href", "Location", callerOrigin);
   };
   registerNativeGetter(hrefGetter, "href");
   Object.defineProperty(location, "href", {
@@ -470,11 +515,4 @@ function requireFacade(value) {
   const record = facadeState.get(value);
   if (record === undefined) throw new TypeError("Illegal invocation");
   return record;
-}
-
-function securityError() {
-  throw new DOMException(
-    "Blocked a frame with a different origin from accessing this frame.",
-    "SecurityError",
-  );
 }

@@ -149,14 +149,29 @@ test('a cross-origin parent still gets the restricted facade', async () => {
     const inner = frame.contentWindow;
     return {
       contentDocumentIsNull: frame.contentDocument === null,
-      // 门面是 Object.create(null) + 白名单成员，所以 document 压根不存在
-      documentOnFacade: typeof inner.document,
+      // 白名单之外的一切命名属性读取都必须是 Edge 的 SecurityError，
+      // 而不是静默 undefined（undefined 会让 win.document 探测脚本
+      // 走进「拿到了一个没有 document 的 window」的错误分支）。
+      documentRead: (() => {
+        try { void inner.document; return 'readable'; }
+        catch (error) { return { name: error.name, message: error.message }; }
+      })(),
+      closedType: typeof inner.closed,
+      postMessageType: typeof inner.postMessage,
       protoIsNull: Object.getPrototypeOf(inner) === null,
     };
   })()`);
 
   assert.equal(observed.contentDocumentIsNull, true, 'cross-origin contentDocument must be null');
-  assert.equal(observed.documentOnFacade, 'undefined');
+  assert.equal(observed.documentRead.name, 'SecurityError');
+  assert.equal(
+    observed.documentRead.message,
+    'Failed to read a named property \'document\' from \'Window\': '
+      + 'Blocked a frame with origin "https://parent.test" '
+      + 'from accessing a cross-origin frame.',
+  );
+  assert.equal(observed.closedType, 'boolean');
+  assert.equal(observed.postMessageType, 'function');
   assert.equal(observed.protoIsNull, true, 'the cross-origin facade is a null-prototype object');
 });
 
