@@ -64,11 +64,24 @@ api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 2637
 用活素材跑 main.mjs：握手 4/4 全过（extraParamsReplied / executeSent / widgetRendered / workerConstructed）
 ```
 
-**submit 仍被挑战引擎阻塞**：挑战启动代码在 nv8 内抛
-`Uncaught TypeError: Cannot read properties of null (reading 'eval')`（挑战自身用
-Trusted Types 保护动态 eval；该异常在真实浏览器不复现），最终 `fail` / 300010。
-这是 nv8 保真度缺口，需要专项对齐后才能宣称线上 submit——本项目如实记录，
-不用握手冒充通过。原案例 8 月那次 `status: complete` 是碰上非交互放行，不可稳定复现。
+**本轮定位并修复的 NV8 保真度缺口**（详见 ADR-0004 修订与相关提交）：
+
+- 动态 iframe 的 `contentWindow` 同步为 null：挑战在 `appendChild` 后同表达式取
+  「干净窗口」并 `eval`，旧实现在 SDK 内部直接 `TypeError`。修复后已挂载 iframe 的
+  首次读取即拿到初始 `about:blank` 窗口（懒物化；预热池命中则同步），detached 才为
+  null；案例 runner 开 `limits.prewarmChildRealms: 3`。
+- api.js 改为页面 `<script>` 真加载（replay 供给，去 async/defer、对齐 302 后的
+  `/v0/b/<build>/api.js`）——`cs` 字段由此是**真实调用栈**，不再需要旧版硬编码伪造。
+- 抓取/转发出口统一 curl_cffi + 与运行时逐字一致的 Edge 151 UA / `sec-ch-ua` / `zh-CN`。
+
+**当前线上状态（如实）**：挑战在 NV8 内跑完全部检查（`init → extraParams →
+execute → food×4-5`，全程无脚本异常），最终仍是 `fail` / **300010**（官方语义：
+Bot behavior detected，服务端风控判定）。同一测试页在真实浏览器（Camoufox，同代
+理出口）可拿到 688 字符 token；NV8 侧 6 次全新轮次复测均为 300010（确定性判定，
+不是概率放行）。该判定属 Cloudflare 服务端风险模型、设计上用于拒绝非真实浏览器
+环境，不承诺可被本地保真度修复翻转；转发/回喂工具链已就绪（挑战一发出
+`chl_api_ni` POST 即可真实转发并回喂）。原案例 8 月那次 `status: complete` 是碰上
+非交互放行，不可稳定复现。
 
 ## 6. 边界
 

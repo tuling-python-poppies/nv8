@@ -50,6 +50,6 @@
 | 中文期刊 cqvip（瑞数 RS6 `*P`） | [cqvip-rs6.md](cqvip-rs6.md) | 已接入（线上真实检索数据验收） |
 | 加速乐（`__jsl_clearance_s`） | [jsl-clearance.md](jsl-clearance.md) | 已接入（线上真实页面 200 验收） |
 | 同花顺（`hexin-v`） | [10jqka-hexin-v.md](10jqka-hexin-v.md) | 已接入（线上真实行情验收） |
-| 五秒盾 Cloudflare Turnstile | [cloudflare-turnstile.md](cloudflare-turnstile.md) | 线上素材刷新 + 握手（submit 待 nv8 对齐，见文档） |
+| 五秒盾 Cloudflare Turnstile | [cloudflare-turnstile.md](cloudflare-turnstile.md) | 线上全流程复盘（iframe 同步窗口等保真度缺口已修；submit 为 CF 服务端风控判定，如实记录） |
 | 小红书（`x-s` / `x-s-common`） | [xiaohongshu-x-s.md](xiaohongshu-x-s.md) | 已接入（线上真实笔记验收） |
 | Akamai 阿迪达斯 HK | [adidas-hk-akamai.md](adidas-hk-akamai.md) | 已接入（线上真实商品验收，48 件） |
