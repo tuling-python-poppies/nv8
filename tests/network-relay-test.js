@@ -161,6 +161,29 @@ test('after dispose every request falls back without process leakage', async () 
   assert.equal(response, null);
 });
 
+test('a helper spewing a newline-less flood fails open (no memory blow-up)', async () => {
+  const relay = createNetworkRelay({
+    command: [
+      process.execPath,
+      '-e',
+      'process.stdin.once("data", () => { process.stdout.write(Buffer.alloc(20 * 1024 * 1024, 120)); });',
+    ],
+    origins: ['https://relay.test'],
+    timeoutMs: 5_000,
+  });
+  try {
+    const response = await relay.fetch({
+      method: 'GET',
+      url: 'https://relay.test/flood',
+      headers: {},
+      body: null,
+    });
+    assert.equal(response, null);
+  } finally {
+    relay.dispose();
+  }
+});
+
 // ------------------------------------------------------------ 沙箱端到端
 
 const PAGE_HTML = '<!doctype html><html><head></head><body></body></html>';

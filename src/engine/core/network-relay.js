@@ -24,6 +24,9 @@ export function createNetworkRelay(config) {
   let stdoutBuffer = "";
   let stderrTail = "";
   const pending = new Map();
+  // helper 是外部进程（信任边界）：协议行最大 16MB，超出即判协议溢出，
+  // 防止一个坏 helper 用无换行输出把子进程内存撑爆。
+  const MAX_STDOUT_BUFFER_BYTES = 16 * 1024 * 1024;
 
   function matches(url) {
     return config.origins.some(prefix => url.startsWith(prefix));
@@ -60,6 +63,11 @@ export function createNetworkRelay(config) {
     });
     child.stdout?.on("data", chunk => {
       stdoutBuffer += chunk;
+      if (stdoutBuffer.length > MAX_STDOUT_BUFFER_BYTES) {
+        stdoutBuffer = "";
+        failPending("helper protocol overflow (no newline within 16MB)");
+        return;
+      }
       let newline = stdoutBuffer.indexOf("\n");
       while (newline !== -1) {
         const line = stdoutBuffer.slice(0, newline);
