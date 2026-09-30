@@ -323,6 +323,102 @@ test('illegal replay matching values are rejected at the entrance', () => {
   }
 });
 
+test('urlPattern replay entries are preserved and validated at the entrance', () => {
+  const record = (entry) => replayOptions(entry).replay[0];
+  assert.equal(
+    record({ urlPattern: 'https://api.test/fo/**' }).urlPattern,
+    'https://api.test/fo/**',
+  );
+  // 只有 pattern、没有 url 也合法（url 为 null）。
+  const patternOnly = normalizeRuntimeOptions({
+    replay: [{ method: 'POST', urlPattern: 'https://api.test/**', body: 'x' }],
+  }).replay[0];
+  assert.equal(patternOnly.url, null);
+  assert.equal(patternOnly.urlPattern, 'https://api.test/**');
+  for (const urlPattern of ['', 42, true, {}]) {
+    assert.throws(
+      () => replayOptions({ urlPattern }),
+      TypeError,
+      `urlPattern = ${String(urlPattern)} must be rejected`,
+    );
+  }
+});
+
+test('latin1 replay bodies survive byte-for-byte (binary responses)', async () => {
+  // 二进制响应（加密载荷等）走 latin1 无损携带；UTF-8 转码会破坏内部字节。
+  const { createSandbox } = await import('../src/public/create-sandbox.js');
+  const latin1 = Array.from({ length: 256 }, (_, index) => String.fromCharCode(index)).join('');
+  const sandbox = await createSandbox('https://bin.test/', {
+    page: { html: '<!doctype html><body></body>' },
+    replay: [{
+      method: 'GET',
+      url: 'https://api.test/bin',
+      body: latin1,
+      bodyEncoding: 'latin1',
+      headers: { 'content-type': 'application/octet-stream' },
+    }],
+  });
+  try {
+    const observed = JSON.parse(await sandbox.run(`
+      fetch('https://api.test/bin').then(response => response.arrayBuffer()).then(buffer => {
+        const bytes = new Uint8Array(buffer);
+        let intact = bytes.length === 256;
+        for (let index = 0; index < bytes.length; index += 1) {
+          if (bytes[index] !== index) intact = false;
+        }
+        return JSON.stringify({ intact, length: bytes.length });
+      })
+    `));
+    assert.equal(observed.length, 256);
+    assert.equal(observed.intact, true);
+  } finally {
+    await sandbox.close();
+    createSandbox.drain();
+  }
+});
+
+test('illegal replay bodyEncoding values are rejected at the entrance', () => {
+  for (const bodyEncoding of ['latin-1', 'base64', 7, true, {}]) {
+    assert.throws(
+      () => replayOptions({ bodyEncoding }),
+      TypeError,
+      `bodyEncoding = ${String(bodyEncoding)} must be rejected`,
+    );
+  }
+  assert.equal(replayOptions({ bodyEncoding: 'latin1' }).replay[0].bodyEncoding, 'latin1');
+  assert.equal(replayOptions({}).replay[0].bodyEncoding, 'utf8');
+});
+
+test('urlPattern replay matches session-scoped URLs and still misses others (fetch)', async () => {
+  // 会话级 URL（路径里带每次运行都变的时间戳/票据）无法按精确 URL 回放；
+  // urlPattern 提供通配匹配，未命中仍走 replay-miss。
+  const { createSandbox } = await import('../src/public/create-sandbox.js');
+  const sandbox = await createSandbox('https://pat.test/', {
+    page: { html: '<!doctype html><body></body>' },
+    replay: [{
+      method: 'POST',
+      urlPattern: 'https://api.test/fo/**',
+      status: 200,
+      headers: { 'content-type': 'text/plain' },
+      body: 'pattern-hit',
+      repeat: 'unlimited',
+    }],
+  });
+  try {
+    const hit = await sandbox.run(
+      "fetch('https://api.test/fo/2048:1790/abc/def', { method: 'POST', body: 'x' }).then(response => response.text())",
+    );
+    assert.equal(hit, 'pattern-hit');
+    const miss = await sandbox.run(
+      "fetch('https://api.test/other/1', { method: 'POST', body: 'x' }).then(() => 'hit').catch(() => 'miss')",
+    );
+    assert.equal(miss, 'miss');
+  } finally {
+    await sandbox.close();
+    createSandbox.drain();
+  }
+});
+
 // ------------------------------------ EdgeSandbox.create cleanup (IKFD9M)
 
 test('EdgeSandbox.create closes the controller when start fails', async () => {

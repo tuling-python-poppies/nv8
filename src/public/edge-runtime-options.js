@@ -1335,6 +1335,10 @@ function normalizeFingerprint(fingerprint) {
  * replay 匹配策略。消费端（`surface/api/fetch/fetch-replay.js` 与
  * `collection/evidence/network-replay.js`）按字符串精确比较，未登记的字符串
  * 会让所有请求都匹配失败——静默的语义漂移，所以在入口就拒绝。
+ *
+ * `urlPattern` 是 URL 的补充匹配方式（`*`/`**` 通配），用于会话级 URL
+ * （路径里带每次运行都变的时间戳/票据）的离线回放；提供 `urlPattern` 时
+ * `url` 可省略。
  */
 const REPLAY_MATCH_STRATEGIES = Object.freeze([
   "method-url",
@@ -1387,12 +1391,21 @@ function normalizeReplay(replay, limits) {
       `replay[${index}].method`,
       64,
     ).toUpperCase();
-    const url = new URL(stringOption(
-      entry.url,
-      undefined,
-      `replay[${index}].url`,
-      64 * 1024,
-    )).href;
+    const urlPattern = entry.urlPattern === undefined || entry.urlPattern === null
+      ? null
+      : stringOption(entry.urlPattern, undefined, `replay[${index}].urlPattern`, 64 * 1024);
+    if (urlPattern !== null && urlPattern.length === 0) {
+      throw new TypeError(`replay[${index}].urlPattern must not be empty`);
+    }
+    let url = null;
+    if (urlPattern === null || entry.url !== undefined) {
+      url = new URL(stringOption(
+        entry.url,
+        undefined,
+        `replay[${index}].url`,
+        64 * 1024,
+      )).href;
+    }
     const status = finiteInteger(
       entry.status,
       200,
@@ -1412,6 +1425,13 @@ function normalizeReplay(replay, limits) {
       `replay[${index}].body`,
       limits.maxPayloadBytes,
     );
+    // 二进制响应按 latin1（1 char = 1 byte）无损携带；默认 utf8。
+    const bodyEncoding = entry.bodyEncoding === undefined || entry.bodyEncoding === null
+      ? "utf8"
+      : stringOption(entry.bodyEncoding, undefined, `replay[${index}].bodyEncoding`, 32);
+    if (bodyEncoding !== "utf8" && bodyEncoding !== "latin1") {
+      throw new TypeError(`replay[${index}].bodyEncoding must be "utf8" or "latin1"`);
+    }
     bodyBytes += Buffer.byteLength(body, "utf8");
     if (bodyBytes > limits.maxPayloadBytes) {
       throw new RangeError("replay bodies exceed limits.maxPayloadBytes");
@@ -1446,6 +1466,7 @@ function normalizeReplay(replay, limits) {
     return Object.freeze({
       method,
       url,
+      urlPattern,
       status,
       statusText,
       headers: Object.freeze(headers),
@@ -1456,6 +1477,7 @@ function normalizeReplay(replay, limits) {
       sequence: replaySequenceOption(entry.sequence, `replay[${index}].sequence`),
       matching: replayMatchingOption(entry.matching, `replay[${index}].matching`),
       body,
+      bodyEncoding,
       redirected: Boolean(entry.redirected),
       type: stringOption(entry.type, "basic", `replay[${index}].type`, 64),
     });

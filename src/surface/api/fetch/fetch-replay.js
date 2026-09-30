@@ -38,12 +38,16 @@ export function configureFetchReplay(entries = [], recorder = null, options = {}
   state.sequenceCursor = 0;
   state.records = [...entries].map(entry => ({
     method: `${entry.method ?? "GET"}`.toUpperCase(),
-    url: `${entry.url}`,
+    url: entry.url === null || entry.url === undefined ? null : `${entry.url}`,
+    urlPattern: typeof entry.urlPattern === "string" && entry.urlPattern !== ""
+      ? entry.urlPattern
+      : null,
     status: Number(entry.status ?? 200),
     statusText: `${entry.statusText ?? ""}`,
     headers: { ...(entry.headers ?? {}) },
     requestHeaders: entry.requestHeaders ?? null,
     body: `${entry.body ?? ""}`,
+    bodyEncoding: entry.bodyEncoding === "latin1" ? "latin1" : "utf8",
     requestBody: entry.requestBody ?? null,
     requestBodySha256: entry.requestBodySha256 ?? entry.bodySha256 ?? null,
     repeat: entry.repeat ?? "once",
@@ -153,12 +157,16 @@ export function replayRequest(request, api = "fetch") {
     state.sequenceCursor += 1;
   }
   acceptReplayCookies(match.record.headers);
-  return createReplayResponse(match.record.body, {
+  // latin1 编码的 body 用于二进制响应（1 char = 1 byte，无损回放）。
+  const replayBody = match.record.bodyEncoding === "latin1"
+    ? latin1Bytes(match.record.body)
+    : match.record.body;
+  return createReplayResponse(replayBody, {
     status: match.record.status,
     statusText: match.record.statusText,
     headers: match.record.headers,
   }, {
-    url: match.record.url,
+    url: match.record.url ?? requestRecord.url,
     redirected: match.record.redirected,
     type: match.record.type,
   });
@@ -167,7 +175,10 @@ export function replayRequest(request, api = "fetch") {
 function findReplayRecord(request) {
   const state = replayState();
   const candidates = state.records.filter(record => (
-    record.method === request.method && record.url === request.url
+    record.method === request.method
+    && (typeof record.urlPattern === "string" && record.urlPattern !== ""
+      ? matchesUrlPattern(record.urlPattern, request.url)
+      : record.url === request.url)
   ));
   if (candidates.length === 0) return null;
   let exhausted = true;
@@ -250,6 +261,33 @@ function isAvailable(record) {
   return Number.isSafeInteger(limit) && limit >= 0
     ? record.used < limit
     : record.used < 1;
+}
+
+/**
+ * latin1 字符串 → 字节（1 char = 1 byte）。二进制响应在 replay 里用 latin1
+ * 携带，避免 UTF-8 编解码破坏内部字节。
+ */
+function latin1Bytes(text) {
+  const bytes = new Uint8Array(text.length);
+  for (let index = 0; index < text.length; index += 1) {
+    bytes[index] = text.charCodeAt(index) & 0xff;
+  }
+  return bytes;
+}
+
+/**
+ * URL 通配匹配：`*` 匹配单段（不含 `/`），`**` 匹配任意字符（含 `/`）。
+ * 用于会话级 URL（路径里带每次运行都变的时间戳/票据）的离线回放。
+ */
+function matchesUrlPattern(pattern, url) {
+  const source = `${pattern}`
+    .split("**")
+    .map(segment => segment
+      .split("*")
+      .map(part => part.replace(/[.+^${}()|[\]\\]/gu, "\\$&"))
+      .join("[^/]*"))
+    .join(".*");
+  return new RegExp(`^${source}$`, "u").test(url);
 }
 
 function matchesRequest(request, record, strategy) {
