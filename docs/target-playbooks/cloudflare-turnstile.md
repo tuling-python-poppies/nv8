@@ -75,9 +75,11 @@ api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 2637
   `/v0/b/<build>/api.js`）——`cs` 字段由此是**真实调用栈**，不再需要旧版硬编码伪造。
 - 抓取/转发出口统一 curl_cffi + 与运行时逐字一致的 Edge 151 UA / `sec-ch-ua` / `zh-CN`。
 
-**当前线上状态（通过）**：纯无浏览器链路线上拿到 **773 字符真 token**（父页
-`cf-turnstile-response` 已填充、挑战发出 `complete` 事件），连续两轮复现一致
-（`submit` 级 / `complete` @ ~18s）。架构即「页面逻辑留在 NV8，网络交给外部传输」：
+**当前线上状态（通过）**：纯无浏览器链路线上拿到真 token（父页 `cf-turnstile-response`
+已填充、挑战发出 `complete` 事件，773/794 字符两档 @ ~17-18s）。单轮采样 13/16（~81%）；
+服务端 ~1/5 概率静默分支（第 2 轮 `/fo/` 不再发起、与中继时延无关——失败样本往返 4.0s
+与成功的 3.3-5.4s 同区间）由案例侧 `relay_solve.mjs` 自动重试兜底（场景内 3/3 端到端）。
+架构即「页面逻辑留在 NV8，网络交给外部传输」：
 
 - NV8 跑真挑战页 JS：Worker PoW、payload 构造、消息守卫（`isTrusted`/origin/source）、
   多轮服务端编排的流程控制；
@@ -88,9 +90,8 @@ api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 2637
 
 ```bash
 set TURNSTILE_PROXY=http://127.0.0.1:7890
-node --experimental-vm-modules live_refresh.mjs
-set TURNSTILE_RELAY=1 && set NV8_PROOF_CLEAN=1 && set TURNSTILE_NATIVE_SCRIPT=1
-node --experimental-vm-modules main.mjs
+node relay_solve.mjs        # live_refresh → main(TURNSTILE_RELAY=1)，含失败重试
+node sample_relay.mjs 6     # 稳定性采样（output/sample-summary.json）
 ```
 
 **本轮定位并修复的 NV8 缺口（均已提交、带测试）**：
