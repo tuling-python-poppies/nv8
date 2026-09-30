@@ -1732,6 +1732,60 @@ function normalizeNetworkCapture(inputNetworkCapture, limits) {
   });
 }
 
+/**
+ * 归一化 `networkRelay`。
+ *
+ * opt-in 的「外部传输中继」：Realm 发出的 fetch 交给外部 helper 进程真发网络
+ * 请求并把响应回喂页面（页面 JS 仍在本引擎里跑）。默认关闭；开启时必须同时
+ * 给出 `command`（helper 启动命令）与 `origins`（需要中继的 URL 前缀），
+ * 其余请求仍走 replay。
+ */
+function normalizeNetworkRelay(inputNetworkRelay) {
+  if (
+    inputNetworkRelay === null
+    || typeof inputNetworkRelay !== "object"
+    || Array.isArray(inputNetworkRelay)
+  ) {
+    throw new TypeError("networkRelay must be an object");
+  }
+  assertKnownNestedKeys(inputNetworkRelay, "networkRelay");
+  const enabled = inputNetworkRelay.enabled ?? false;
+  if (typeof enabled !== "boolean") {
+    throw new TypeError("networkRelay.enabled must be boolean");
+  }
+  const command = inputNetworkRelay.command ?? [];
+  if (
+    !Array.isArray(command)
+    || command.some(part => typeof part !== "string" || part === "")
+  ) {
+    throw new TypeError("networkRelay.command must be an array of non-empty strings");
+  }
+  const origins = inputNetworkRelay.origins ?? [];
+  if (
+    !Array.isArray(origins)
+    || origins.some(origin => typeof origin !== "string" || origin === "")
+  ) {
+    throw new TypeError("networkRelay.origins must be an array of non-empty strings");
+  }
+  if (enabled && (command.length === 0 || origins.length === 0)) {
+    throw new TypeError(
+      "networkRelay.enabled requires non-empty command and origins",
+    );
+  }
+  return Object.freeze({
+    enabled,
+    command: Object.freeze([...command]),
+    origins: Object.freeze([...origins]),
+    timeoutMs: finiteInteger(
+      inputNetworkRelay.timeoutMs,
+      30_000,
+      "networkRelay.timeoutMs",
+      1,
+      120_000,
+    ),
+  });
+}
+
 /** 归一化 `execution`（后端选择）。 */
 function normalizeExecution(inputExecution) {
   if (
@@ -1770,6 +1824,7 @@ export const RUNTIME_OPTION_KEYS = Object.freeze([
   "fingerprint",
   "proxyTrace",
   "networkCapture",
+  "networkRelay",
   "replay",
 ]);
 const RUNTIME_OPTION_KEY_SET = new Set(RUNTIME_OPTION_KEYS);
@@ -1798,6 +1853,7 @@ export const NESTED_OPTION_KEYS = Object.freeze({
   networkCapture: Object.freeze([
     "enabled", "maxEntries", "maxTotalBytes", "maxBodyBytes", "maxHeaderBytes",
   ]),
+  networkRelay: Object.freeze(["enabled", "command", "origins", "timeoutMs"]),
   execution: Object.freeze(["backend", "restart"]),
   page: Object.freeze(["url", "html", "referrer", "contentType"]),
   fingerprint: Object.freeze([
@@ -1850,6 +1906,7 @@ export function normalizeRuntimeOptions(options = {}) {
     fingerprint: normalizeFingerprint(options.fingerprint),
     proxyTrace,
     networkCapture: normalizedNetworkCapture,
+    networkRelay: normalizeNetworkRelay(options.networkRelay ?? {}),
     replay: normalizeReplay(options.replay, limits),
   });
 }

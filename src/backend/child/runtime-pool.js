@@ -601,6 +601,9 @@ export class RuntimePool {
       pageReferrer: this.page.referrer,
       pageContentType: this.page.contentType,
       replay: this.options.replay,
+      // networkRelay 中继（由 request-handler 组装后挂到 pool 选项上）；
+      // 未启用时为 null，行为与之前完全一致。
+      serviceWorkerFetch: this.options.serviceWorkerFetch ?? null,
       networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
         kind: "window",
         url: pageUrl.href,
@@ -671,6 +674,7 @@ export class RuntimePool {
         pageContentType: replayDocument?.contentType
           ?? `${options.pageContentType ?? "text/html"}`,
         replay: this.options.replay,
+        serviceWorkerFetch: this.options.serviceWorkerFetch ?? null,
         networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
           kind: "window",
           url: serviceWorkerPageUrl.href,

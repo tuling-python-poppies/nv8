@@ -58,6 +58,7 @@ export class RuntimeController {
         watchApis: this.watchApiList,
       },
       networkCapture: this.options.networkCapture,
+      networkRelay: this.options.networkRelay,
       replay: this.options.replay,
       evidence: this.options.evidence,
       limits: this.options.limits,

@@ -22,8 +22,28 @@ function replayState() {
 }
 
 function acceptReplayCookies(headers) {
-  const value = headers?.["set-cookie"] ?? headers?.["Set-Cookie"];
-  if (value !== undefined) acceptSetCookieHeaders(value);
+  const values = replaySetCookieValues(headers);
+  if (values.length > 0) acceptSetCookieHeaders(values);
+}
+
+/**
+ * 从响应头里取出 set-cookie 值。支持三种形态：普通对象（值可为字符串或
+ * 数组）、`[[name, value], ...]` 键值对列表（外部中继回喂的形态，能保留
+ * 多条 set-cookie）。
+ */
+function replaySetCookieValues(headers) {
+  if (headers === null || headers === undefined) return [];
+  if (Array.isArray(headers)) {
+    const values = [];
+    for (const pair of headers) {
+      if (!Array.isArray(pair) || pair.length < 2) continue;
+      if (`${pair[0]}`.toLowerCase() === "set-cookie") values.push(`${pair[1]}`);
+    }
+    return values;
+  }
+  const value = headers["set-cookie"] ?? headers["Set-Cookie"];
+  if (value === undefined || value === null) return [];
+  return Array.isArray(value) ? value.map(entry => `${entry}`) : [`${value}`];
 }
 
 export function configureFetchReplay(entries = [], recorder = null, options = {}) {
@@ -75,20 +95,28 @@ export function installFetch() {
             headers: Object.fromEntries(headersEntries(requestRecord.headers)),
             body: requestRecord.bytes,
           })).then(intercepted => {
-            if (intercepted === null || intercepted === undefined) {
-              resolve(replayRequest(request, "fetch"));
-              return;
+            // 拦截器返回 null 时落回 replay；replay miss 是同步抛出，必须在这里
+            // 转成 reject——否则拒绝只挂在本 then 链上，外层 fetch promise 永远
+            // 不 settle（页面侧表现为 fetch 挂起而不是 ERR_NV8_REPLAY_MISS）。
+            try {
+              if (intercepted === null || intercepted === undefined) {
+                resolve(replayRequest(request, "fetch"));
+                return;
+              }
+              captureRequest("fetch", requestRecord, "service-worker");
+              acceptReplayCookies(intercepted.headers);
+              resolve(createReplayResponse(intercepted.body, {
+                status: intercepted.status,
+                statusText: intercepted.statusText,
+                headers: intercepted.headers,
+              }, {
+                url: intercepted.url ?? requestRecord.url,
+                redirected: intercepted.redirected,
+                type: intercepted.type,
+              }));
+            } catch (interceptionError) {
+              reject(interceptionError);
             }
-            captureRequest("fetch", requestRecord, "service-worker");
-            resolve(createReplayResponse(intercepted.body, {
-              status: intercepted.status,
-              statusText: intercepted.statusText,
-              headers: intercepted.headers,
-            }, {
-              url: intercepted.url ?? requestRecord.url,
-              redirected: intercepted.redirected,
-              type: intercepted.type,
-            }));
           }, reject);
           return;
         }
@@ -119,6 +147,7 @@ export async function replayRequestWithServiceWorker(request, api = "fetch") {
     return replayRequest(request, api);
   }
   captureRequest(api, requestRecord, "service-worker");
+  acceptReplayCookies(intercepted.headers);
   return createReplayResponse(intercepted.body, {
     status: intercepted.status,
     statusText: intercepted.statusText,

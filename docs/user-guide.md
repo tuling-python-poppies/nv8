@@ -697,7 +697,7 @@ for (const request of requests) {
 | `bodyByteLength` | 原始完整 body 长度 |
 | `outcome` | `replayed`、`blocked` 或 `aborted` |
 
-`blocked` 表示没有匹配 replay，不表示发生了真实网络拒绝。沙箱始终不会打开 socket。捕获到的 header 只代表应用层 Request 数据，不虚构 TLS、代理、Chromium 网络进程自动添加的字段。
+`blocked` 表示没有匹配 replay，不表示发生了真实网络拒绝。沙箱进程始终不会打开 socket；需要真实网络出口时只能显式启用 `networkRelay` 外部中继（见 8.6），由独立 helper 进程完成。捕获到的 header 只代表应用层 Request 数据，不虚构 TLS、代理、Chromium 网络进程自动添加的字段。
 
 ### 8.5 捕获容量
 
@@ -712,6 +712,28 @@ networkCapture: {
 ```
 
 超出容量时按项目的有界记录策略处理。二进制请求必须使用 `body` 或 `bodyBase64`，不能把 `bodyText` 当作无损结果。
+
+### 8.6 外部传输中继（networkRelay）
+
+默认离线语义不变（引擎不打开 socket）。需要把 Realm 里的 `fetch`/XHR 换成真实网络出口时，可显式开启 `networkRelay`：命中 `origins` 前缀的请求交给外部 helper 进程真发，响应原样回喂页面；未命中的 URL 仍走 `replay`。
+
+```js
+networkRelay: {
+  enabled: true,
+  // helper 启动命令；引擎不解析 PATH，二进制请用绝对路径
+  command: ["C:\\Python313\\python.exe", "fetch_helper.py", "serve"],
+  // 只中继这些前缀的 URL，其余请求照旧走 replay
+  origins: ["https://challenges.cloudflare.com"],
+  timeoutMs: 30_000,
+}
+```
+
+helper 与引擎之间用 JSON Lines 协议（stdin/stdout）：请求为
+`{ id, method, url, headers: [[name, value]], body: base64|null }`，响应为
+`{ id, status, statusText, headers: [[name, value]], body: base64, url }` 或 `{ id, error }`。
+响应中的 `Set-Cookie` 会写入 Realm 的 cookie jar；helper 崩溃、超时或返回错误时该请求回退 replay（fail-open，不会把基础设施故障变成页面可见的网络错误）。
+
+适用场景：目标的多轮服务端编排无法用静态 replay 复现，而页面 JS（风控计算、Worker PoW、payload 构造）仍需在引擎里真实执行——页面逻辑留在 NV8，网络出口交给外部带真实 TLS 指纹/代理/cookie 会话的传输进程。
 
 ## 9. 浏览器指纹 profile
 

@@ -886,6 +886,7 @@ export function bootstrapRoot(
   pageContentType = "text/html",
   replay = [],
   networkRequestRecorder = null,
+  serviceWorkerFetch = null,
   childRealmFactory = null,
   parentWindow = null,
   topWindow = null,
@@ -1144,7 +1145,11 @@ export function bootstrapRoot(
     installBlob();
     installFileAndReader();
     installRequestResponse();
-    configureFetchReplay(replay, networkRequestRecorder);
+    configureFetchReplay(
+      replay,
+      networkRequestRecorder,
+      typeof serviceWorkerFetch === "function" ? { serviceWorkerFetch } : undefined,
+    );
     installFetch();
     installXMLHttpRequest();
     installImageBitmap();

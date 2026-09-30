@@ -4,12 +4,14 @@ import { resolveProtocolLimits } from "../protocol/limits.js";
 import { sanitizeErrorRecord } from "../../engine/bootstrap/sanitize-stack.js";
 import { RuntimePool } from "./runtime-pool.js";
 import { openInspector } from "./inspector-control.js";
+import { createNetworkRelay } from "../../engine/core/network-relay.js";
 
 export class RequestHandler {
   constructor() {
     this.runtime = null;
     this.options = null;
     this.protocolLimits = null;
+    this.relay = null;
   }
 
   async handle(opcode, payload) {
@@ -72,9 +74,21 @@ export class RequestHandler {
     // 与父侧 ConnectionBase.protocolLimits() 共用同一解析器：字符串/字节数
     // 等限制必须两边一致，否则合法请求会在子侧被打死（IKFD9N）。
     this.protocolLimits = resolveProtocolLimits(options?.limits);
-    this.runtime = new RuntimePool(options);
+    this.runtime = new RuntimePool(this.poolOptions(options));
     await this.runtime.initialize();
     return undefined;
+  }
+
+  /**
+   * 组装 RuntimePool 选项；`networkRelay.enabled` 时创建中继（只建一次，
+   * resetRealm 复用同一 helper——实时会话（cookie 等）跨重置换页保持连续）。
+   */
+  poolOptions(options) {
+    if (options?.networkRelay?.enabled !== true) return options;
+    if (this.relay === null) {
+      this.relay = createNetworkRelay(options.networkRelay);
+    }
+    return { ...options, serviceWorkerFetch: this.relay.fetch };
   }
 
   applyProtocolLimits(options) {
@@ -113,7 +127,7 @@ export class RequestHandler {
     };
     this.options = newOptions;
     this.protocolLimits = resolveProtocolLimits(newOptions.limits);
-    this.runtime = new RuntimePool(newOptions);
+    this.runtime = new RuntimePool(this.poolOptions(newOptions));
     await this.runtime.initialize();
     this.runtime.preWarmShell();
     return persistence;
@@ -122,6 +136,8 @@ export class RequestHandler {
   close() {
     this.runtime?.close();
     this.runtime = null;
+    this.relay?.dispose();
+    this.relay = null;
     // 池化线程重新租用时，下一次小握手不能受上一个租户的小字符串限制影响。
     this.protocolLimits = { ...DEFAULT_PROTOCOL_LIMITS };
     this.options = null;
