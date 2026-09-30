@@ -220,6 +220,7 @@ export function bootstrapWorker(
   navigatorDeviceMemory,
   replay,
   networkRequestRecorder,
+  serviceWorkerFetch = null,
   postMessage,
   close,
   nestedWorkerFactory,
@@ -311,7 +312,11 @@ export function bootstrapWorker(
   installBlob();
   installFileAndReader();
   installRequestResponse();
-  configureFetchReplay(replay, networkRequestRecorder);
+  configureFetchReplay(
+    replay,
+    networkRequestRecorder,
+    typeof serviceWorkerFetch === "function" ? { serviceWorkerFetch } : undefined,
+  );
   installFetch();
   installXMLHttpRequest();
   installPerformanceEntry(browserMajorVersion >= 151);

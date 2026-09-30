@@ -232,3 +232,28 @@ test('unmatched origins still fail as replay-miss (fallback path intact)', async
     assert.match(outcome.message, /replay miss/i);
   });
 });
+
+test('worker fetch is relayed too (dedicated Worker realm shares the relay)', async () => {
+  await withSandbox(async sandbox => {
+    const observed = JSON.parse(await sandbox.run(`(async () => {
+      const source = "self.onmessage = async () => {"
+        + " const response = await fetch('https://relay.test/from-worker', { method: 'POST', body: 'worker-body' });"
+        + " const payload = await response.json();"
+        + " self.postMessage(JSON.stringify(payload));"
+        + " };";
+      const url = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+      const worker = new Worker(url);
+      const echoed = await new Promise((resolve, reject) => {
+        worker.onmessage = event => resolve(event.data);
+        worker.onerror = event => reject(new Error(String(event.message || 'worker error')));
+        worker.postMessage('go');
+      });
+      worker.terminate();
+      URL.revokeObjectURL(url);
+      return echoed;
+    })()`));
+    assert.equal(observed.url, 'https://relay.test/from-worker');
+    assert.equal(observed.method, 'POST');
+    assert.equal(observed.body, Buffer.from('worker-body').toString('base64'));
+  });
+});

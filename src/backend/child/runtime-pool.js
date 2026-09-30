@@ -762,6 +762,7 @@ export class RuntimePool {
       maxTraceEntries: this.options.proxyTrace.maxEntries,
       navigatorProfile: this.options.fingerprint.navigator,
       replay: this.options.replay,
+      serviceWorkerFetch: this.options.serviceWorkerFetch ?? null,
       networkRequestRecorder: this.networkRequestCapture.scopedRecorder({
         kind: recorderKind,
         url: options.url,
