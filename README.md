@@ -1351,16 +1351,16 @@ css-ua-defaults.js），现在都有了脚本。
 
 ### iframe
 
-- **动态创建的 iframe，`contentWindow` 默认同步为 `null`**。子 Realm 引导需要
-  254ms，无法在 `appendChild` 内同步完成。
-  反爬脚本「从干净 iframe 取原生函数」的写法是同步的，所以这不是「指纹不对」而是
-  **「跑不起来」**——脚本在那一行抛 TypeError。
-  开 `limits.prewarmChildRealms`（0–8，默认 0）可以关掉这条：`create()` 会在页面
-  脚本**之前**建好 N 个空白子 Realm，`appendChild` 之后 `contentWindow` 同步可用，
-  `realm/identity-bundle` 的 16 个子项与真实 Edge 152 逐字相同。
-  默认关闭是刻意的（每个池位 254ms + 占一个子 Realm 的堆额度），且池深 N 只覆盖建
-  ≤N 个 iframe 的目标——**缓解不是根治**。
+- **已插入文档的 iframe，`contentWindow` 立即存在**，初始文档是 `about:blank`
+  （真实 Edge 语义）；`src` / `srcdoc` 导航完成后同一窗口换成目标文档。
+  实现上在首次读取时**懒物化**一个空白子 Realm：预热池命中则同步返回；未命中
+  异步就绪（**首次读取仍是 `null`**——尚未根治的时序近似）。
+  detached（未插入文档）的 iframe 与真实浏览器一致地返回 `null`。
+  反爬脚本「从干净 iframe 取原生函数」的写法依赖这条——Cloudflare Turnstile
+  实测会在 `appendChild` 后同步取窗口并 `eval`，旧实现直接 `TypeError` 打断流程。
+  开 `limits.prewarmChildRealms`（0–8，默认 0）可让首次读取也同步。
   实测依据与选项对比见 [ADR-0004](docs/adr/0004-dynamic-iframe-timing.md)。
+- `src="about:blank"` 是合法的空白导航，按空白 iframe 的同步窗口路径处理。
 - **空白 iframe 的 URL/origin 已解耦**：`location.href` 和 `document.URL` 为
   `about:blank`，`location.origin` 继承父页面；`srcdoc` 对应 `about:srcdoc`，
   同样继承父页面 origin。该行为已由 `tests/iframe-about-blank-test.js` 覆盖。

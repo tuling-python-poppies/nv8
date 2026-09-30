@@ -225,22 +225,82 @@ test('idle slots are reported separately from business realms', async () => {
   });
 });
 
-test('an iframe with srcdoc does not consume a prewarmed slot', async () => {
-  // 池位的文档是空白骨架。带 src / srcdoc 的 iframe 需要不同的文档，重建文档和
-  // 新建一个 Realm 没有区别，走池只会多一层复杂度还容易发错文档。
+test('an iframe with srcdoc exposes an about:blank window first, then the srcdoc document', async () => {
+  // 真实 Edge：已插入文档的 iframe 的 contentWindow **立即存在**，初始文档是
+  // about:blank；srcdoc 导航完成后同一窗口换成 srcdoc 文档。NV8 用预热池里的
+  // 空白 Realm 做这个初始窗口（同步可用），真实 Realm 就绪后切换过去。
   await withEdgeSandbox({ prewarmChildRealms: 1 }, async (sandbox) => {
     const observed = JSON.parse((await sandbox.evaluate(`JSON.stringify((() => {
       const frame = document.createElement('iframe');
       frame.srcdoc = '<!doctype html><html><body>x</body></html>';
       document.body.appendChild(frame);
-      return { syncAvailable: frame.contentWindow !== null };
+      const initial = frame.contentWindow;
+      return {
+        syncAvailable: initial !== null,
+        initialUrl: initial === null ? null : initial.location.href,
+        initialBody: initial === null ? null : initial.document.body.textContent,
+      };
     })())`)).value);
 
-    assert.equal(observed.syncAvailable, false, 'srcdoc must not take a slot');
-    assert.equal(
-      (await sandbox.resources()).idlePrewarmedRealms, 1,
-      'the slot is still idle',
-    );
+    assert.equal(observed.syncAvailable, true, 'a connected iframe exposes a window immediately');
+    assert.equal(observed.initialUrl, 'about:blank');
+    assert.equal(observed.initialBody, '');
+
+    // srcdoc 导航完成后 contentWindow 是真实文档的窗口。
+    const loaded = JSON.parse((await sandbox.evaluate(`new Promise(resolve => {
+      const frame = document.querySelector('iframe');
+      const check = () => {
+        const body = frame.contentWindow.document.body.textContent;
+        if (body === 'x') resolve(JSON.stringify({ body }));
+        else setTimeout(check, 1);
+      };
+      check();
+    })`)).value);
+    assert.equal(loaded.body, 'x', 'the srcdoc document replaces the initial window');
+  });
+});
+
+test('a connected iframe with src exposes a working initial about:blank window', async () => {
+  // 真实 Edge：contentWindow 立即存在、初始文档 about:blank、可在这个 Realm 里
+  // eval；src 导航完成后才替换。反爬 SDK（Turnstile 实测）就是靠这条同步取
+  // 「干净窗口」。detached（未插入文档）的 iframe 则没有窗口。
+  await withEdgeSandbox({ prewarmChildRealms: 1 }, async (sandbox) => {
+    const observed = JSON.parse((await sandbox.evaluate(`JSON.stringify((() => {
+      const detached = document.createElement('iframe');
+      const detachedWindow = detached.contentWindow;
+      const frame = document.createElement('iframe');
+      frame.src = 'https://pool.test/framed';
+      document.body.appendChild(frame);
+      const initial = frame.contentWindow;
+      return {
+        detachedWindow: detachedWindow === null,
+        syncAvailable: initial !== null,
+        initialUrl: initial === null ? null : initial.location.href,
+        evalResult: initial === null ? null : initial.eval('1 + 1'),
+      };
+    })())`)).value);
+
+    assert.equal(observed.detachedWindow, true, 'a detached iframe has no window');
+    assert.equal(observed.syncAvailable, true);
+    assert.equal(observed.initialUrl, 'about:blank');
+    assert.equal(observed.evalResult, 2, 'the initial window can eval in its own realm');
+  });
+});
+
+test('src="about:blank" is a valid blank navigation', async () => {
+  await withEdgeSandbox({ prewarmChildRealms: 1 }, async (sandbox) => {
+    const observed = JSON.parse((await sandbox.evaluate(`JSON.stringify((() => {
+      const frame = document.createElement('iframe');
+      frame.src = 'about:blank';
+      document.body.appendChild(frame);
+      return {
+        syncAvailable: frame.contentWindow !== null,
+        url: frame.contentWindow === null ? null : frame.contentWindow.location.href,
+      };
+    })())`)).value);
+
+    assert.equal(observed.syncAvailable, true);
+    assert.equal(observed.url, 'about:blank');
   });
 });
 

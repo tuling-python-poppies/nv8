@@ -40,7 +40,44 @@ export function iframeContentWindow(element) {
   const record = state.get(element);
   if (record === undefined) return null;
   if (record.sameOrigin) {
-    return record.handle?.window ?? record.pendingWindow ?? record.lastWindow;
+    const window = record.handle?.window ?? record.pendingWindow ?? record.lastWindow;
+    if (window !== null && window !== undefined) {
+      return window;
+    }
+    // 懒物化「初始 about:blank 窗口」：真实 Edge 里已插入文档的 iframe，
+    // contentWindow **立即存在**（初始文档 about:blank），src/srcdoc 导航完成后
+    // 才替换文档内容。NV8 原实现要等 Realm 异步建好，中间窗口是 null——真实反爬
+    // SDK（Cloudflare Turnstile 实测）会在此刻取干净窗口并 eval，null 直接打断流程。
+    // 预热池命中时工厂同步返回；detached iframe（未插入文档）保持 null，与真实
+    // 浏览器一致。
+    if (typeof record.createInitialWindow === "function" && element.isConnected) {
+      let interim = null;
+      try {
+        interim = record.createInitialWindow();
+      } catch {
+        interim = null;
+      }
+      if (interim !== null && interim !== undefined && typeof interim.then !== "function") {
+        record.handle = interim;
+        record.pendingWindow = interim.window;
+        record.lastWindow = interim.window;
+        return interim.window;
+      }
+      if (interim !== null && interim !== undefined) {
+        // 预热池未命中时工厂走异步：机会性使用，并必须吞掉 rejection
+        // （容量已满时是正常的宿主限制，不能变成 unhandledRejection）。
+        interim.then(handle => {
+          if (handle === null || handle === undefined) return;
+          if (record.handle === null && record.pendingWindow === null) {
+            record.pendingWindow = handle.window;
+            record.lastWindow = handle.window;
+          } else {
+            handle.close();
+          }
+        }, () => {});
+      }
+    }
+    return null;
   }
   return record.facade;
 }
@@ -98,13 +135,14 @@ function navigate(element) {
     sameOrigin: true,
     loading: null,
     clientId: null,
+    createInitialWindow: null,
   };
   const version = current.version + 1;
   const srcdoc = getAttributeValue(element, "srcdoc");
   const source = getAttributeValue(element, "src");
   const parentPageUrl = iframeScope().parentPageUrl;
   const parentOrigin = new URL(parentPageUrl).origin;
-  const isBlankDocument = srcdoc === null && source === null;
+  let isBlankDocument = srcdoc === null && source === null;
   let url = parentPageUrl;
   // 「解析不出来」与「scheme 不支持」在真实浏览器里行为**不同**，不能合并。
   //
@@ -118,11 +156,17 @@ function navigate(element) {
   // 的 iframe 在导航失败时从不派发 error。
   let malformedUrl = false;
   let unsupportedScheme = false;
+  let aboutBlankSource = false;
   if (srcdoc === null && source !== null && source.trim() !== "") {
     try {
       const parsed = new URL(source, iframeScope().parentPageUrl);
       if (parsed.protocol === "http:" || parsed.protocol === "https:") {
         url = parsed.href;
+      } else if (parsed.href === "about:blank") {
+        // 真实浏览器里 src="about:blank" 是合法的空白导航（窗口立即存在），
+        // 不是「坏 scheme」：按空白 iframe 的同步窗口路径处理。
+        url = "about:blank";
+        aboutBlankSource = true;
       } else {
         unsupportedScheme = true;
       }
@@ -130,6 +174,7 @@ function navigate(element) {
       malformedUrl = true;
     }
   }
+  isBlankDocument = isBlankDocument || aboutBlankSource;
   const childOrigin = isBlankDocument || srcdoc !== null || malformedUrl
     ? parentOrigin
     : new URL(url).origin;
@@ -252,6 +297,41 @@ function navigate(element) {
       }
     },
   });
+  // 懒物化的「初始 about:blank 窗口」工厂：真实 Edge 里已插入文档的 iframe 的
+  // contentWindow **立即存在**（初始文档 about:blank），src/srcdoc 导航完成后才
+  // 替换文档。这里只在真的读到 contentWindow 时才物化（预热池命中时工厂同步
+  // 返回）；未读取 / 未插入文档时保持 null（与真实浏览器一致，也不占资源计数）。
+  current.createInitialWindow = !isBlankDocument ? () => {
+    if (current.version !== version || !element.isConnected) return null;
+    return scope.createChildRealm({
+      pageUrl: "about:blank",
+      origin: parentOrigin,
+      documentBaseUrl: parentPageUrl,
+      serviceWorkerPageUrl: parentPageUrl,
+      pageHtml: "<!doctype html><html><head></head><body></body></html>",
+      navigationSource: "srcdoc",
+      blankDocument: true,
+      pageReferrer: parentPageUrl,
+      pageContentType: "text/html",
+      parentWindow: globalThis,
+      topWindow: globalThis.top,
+      parentOrigin,
+      parentPostMessage,
+      sameOrigin: true,
+      frameElement: element,
+      outerWindow: null,
+      clientId: current.clientId,
+      navigatePage(nextUrl) {
+        return navigateClient(element, nextUrl);
+      },
+      onContext(window) {
+        if (current.version === version) {
+          current.pendingWindow = window;
+          current.lastWindow = window;
+        }
+      },
+    });
+  } : null;
   // 非空白导航延迟到当前 JavaScript 任务结束后才创建 Realm。这样同一任务内
   // 连续的 src/srcdoc 修改会先完成版本淘汰，旧导航不会短暂创建一个必然被销毁的
   // 子 Realm；空白 iframe 仍保留预热池要求的同步 contentWindow 语义。
@@ -289,6 +369,11 @@ function navigate(element) {
     if (current.version !== version || !element.isConnected) {
       handle.close();
       return;
+    }
+    if (current.handle !== null && current.handle !== handle) {
+      // 真实文档就绪：关闭懒物化的初始 about:blank 窗口，contentWindow 切换到
+      // 真实 Realm（真实浏览器里是同一窗口换文档；这里以替换近似）。
+      current.handle.close();
     }
     current.handle = handle;
     current.clientId = handle.clientId ?? current.clientId;

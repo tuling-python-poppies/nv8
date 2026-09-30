@@ -267,11 +267,31 @@ nativeToString       function addEventListener() { [native code] }
 
 ## 残留
 
-- **池深 N 只覆盖建 ≤N 个 iframe 的目标**，超出退回原行为。这是缓解不是根治，
-  有专门断言把它写死——以为「iframe 已经修好了」比知道自己在赌更危险
-- 默认配置（0）下 `contentWindow` 仍同步为 `null`，
-  `edge-behavior-parity-test.js` 的两条登记差异保持不变
+- **池深 N 只覆盖前 N 个 iframe 的「首次同步读取」**，超出退回异步物化：首次读取
+  仍是 `null`，微任务后就绪（`pendingWindow` 路径）。这是尚未根治的时序近似，
+  不是缺失——有专门断言把它写死
+- `edge-behavior-parity-test.js` 的登记差异只剩「默认池 0 时首次读取为 null」
+  这一类（见下方修订）
 - 预热池深 N 只覆盖建不超过 N 个 iframe，超出后回到默认异步行为
+
+## 修订（2026-09）：初始 about:blank 窗口
+
+线下实测（Cloudflare Turnstile 活挑战在 NV8 内执行）暴露了本 ADR 决策的破坏面：
+反爬 SDK 在 `appendChild` 后**同步**读 `contentWindow` 并 `eval` 探测干净 intrinsics，
+旧实现此时返回 `null`，脚本直接 `TypeError: Cannot read properties of null` 打断
+整个挑战流程（换任何补丁都救不回，因为这个读取在 SDK 内部）。
+
+修订后的语义（对齐真实 Edge）：
+
+| 情形 | 行为 |
+| --- | --- |
+| 已插入文档、无 src/srcdoc、或 `src="about:blank"` | 预热池同步窗口（原行为，`src="about:blank"` 从「坏 scheme」修正为合法空白导航） |
+| 已插入文档、有 src/srcdoc | 首次读取 `contentWindow` 时**懒物化**空白子 Realm 作为初始窗口（初始文档 `about:blank`，可在其中 `eval`）；池命中则同步，未命中异步就绪；真实文档 Realm 就绪后切换并关闭初始窗口 |
+| detached（未插入文档） | `null`（与真实浏览器一致） |
+
+懒物化只在真的读取时发生，不读取的 iframe 不占资源计数（容量/池位测试不受影响）。
+`tests/iframe-prewarm-pool-test.js` 覆盖新语义（初始窗口可用、可 eval、detached 为
+null、srcdoc 就绪后切换）。
 
 ## 附：复现
 
