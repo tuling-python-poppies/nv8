@@ -37,7 +37,7 @@ export function configureIFrameRealms(factory, pageUrl) {
 
 export function iframeContentWindow(element) {
   requireIFrame(element);
-  const record = state.get(element);
+  const record = ensureRecord(element);
   if (record === undefined) return null;
   if (record.sameOrigin) {
     const window = record.handle?.window ?? record.pendingWindow ?? record.lastWindow;
@@ -82,9 +82,26 @@ export function iframeContentWindow(element) {
   return record.facade;
 }
 
+/**
+ * 追加后**同步**读取（反爬 SDK 的常见写法）时 mutation hook 还没跑，记录不存在。
+ * 这里就地补一次导航注册（幂等），让懒物化工厂立即可用。
+ */
+function ensureRecord(element) {
+  let record = state.get(element);
+  if (record === undefined && element.isConnected) {
+    try {
+      navigate(element);
+    } catch {
+      // 注册失败保持原行为（null），不影响后续正常路径。
+    }
+    record = state.get(element);
+  }
+  return record;
+}
+
 export function iframeContentDocument(element) {
   requireIFrame(element);
-  const record = state.get(element);
+  const record = ensureRecord(element);
   if (record === undefined || !record.sameOrigin) return null;
   const window = record.handle?.window
     ?? record.pendingWindow

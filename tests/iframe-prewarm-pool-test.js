@@ -304,6 +304,28 @@ test('src="about:blank" is a valid blank navigation', async () => {
   });
 });
 
+test('contentWindow is readable synchronously right after appendChild', async () => {
+  // 反爬 SDK 的典型写法：appendChild 之后**同一个表达式里**读 contentWindow。
+  // mutation hook 若不在当次同步执行，记录还不存在——补一次就地注册也必须拿到窗口。
+  await withEdgeSandbox({ prewarmChildRealms: 1 }, async (sandbox) => {
+    const observed = JSON.parse((await sandbox.evaluate(`JSON.stringify((() => {
+      const frame = document.createElement('iframe');
+      frame.srcdoc = '<!doctype html><html><body>sync</body></html>';
+      document.body.appendChild(frame);
+      const win = frame.contentWindow;
+      return {
+        available: win !== null,
+        url: win === null ? null : win.location.href,
+        eval: win === null ? null : win.eval('6 * 7'),
+      };
+    })())`)).value);
+
+    assert.equal(observed.available, true);
+    assert.equal(observed.url, 'about:blank');
+    assert.equal(observed.eval, 42);
+  });
+});
+
 test('the pool is exhausted rather than unbounded', async () => {
   // 池深 N 只覆盖建 ≤N 个 iframe 的目标，超出退回原行为。这条把「缓解不是根治」
   // 写成断言：以为「iframe 已经修好了」比知道自己在赌更危险。

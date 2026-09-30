@@ -290,8 +290,10 @@ nativeToString       function addEventListener() { [native code] }
 | detached（未插入文档） | `null`（与真实浏览器一致） |
 
 懒物化只在真的读取时发生，不读取的 iframe 不占资源计数（容量/池位测试不受影响）。
-`tests/iframe-prewarm-pool-test.js` 覆盖新语义（初始窗口可用、可 eval、detached 为
-null、srcdoc 就绪后切换）。
+追加后**同一表达式内同步读取**（mutation hook 尚未跑到、记录还不存在）时，
+`iframeContentWindow()` 会就地补一次注册再物化，保证「appendChild → 读 → eval」
+这条 SDK 写法成立。`tests/iframe-prewarm-pool-test.js` 覆盖新语义（初始窗口可用、
+可 eval、detached 为 null、srcdoc 就绪后切换、appendChild 后同步可读）。
 
 ## 附：复现
 
