@@ -400,11 +400,13 @@ export class RuntimePool {
     if (this.idlePrewarmedHandles.length === 0) return null;
     if (options.blankDocument !== true) return null;
     if (options.sameOrigin !== true) return null;
-    const parentOrigin = new URL(this.page.url).origin;
-    if ((options.origin ?? new URL(`${options.pageUrl}`).origin) !== parentOrigin) {
-      return null;
-    }
-
+    // 池位服务「任意页面的空白同源 iframe」：`reparentRealm` 会把池位的
+    // documentUrl/origin 重配到真实父页。旧实现额外要求
+    // `target origin === 根页 origin`，导致**嵌套 Realm**（如跨源挑战 iframe
+    // 内部）里的空白 iframe 永远 miss 池 → 同步读取拿到 null（Cloudflare
+    // Turnstile 在挑战 Realm 内创建干净窗口并立即 eval，实测的 null.eval 根因）。
+    // 池位不足时仍回退异步创建，行为不变。
+    //
     // 先弹后验会把「已销毁/重配失败」的池位直接丢掉却不补货（IKF39Z-5）。
     // 这里改为取到第一个可用池位为止：销毁的跳过，重配失败的销毁并继续。
     while (this.idlePrewarmedHandles.length > 0) {
@@ -419,7 +421,7 @@ export class RuntimePool {
           true,
           options.frameElement ?? null,
           options.pageUrl ?? "about:blank",
-          options.origin ?? parentOrigin,
+          options.origin || options.parentOrigin || new URL(this.page.url).origin,
         );
       } catch {
         this.destroyChildRealm(handle.realm);

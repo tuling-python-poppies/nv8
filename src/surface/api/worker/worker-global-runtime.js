@@ -2,6 +2,7 @@ import {
   performStructuredCloneDetailed,
 } from "../clone/structured-clone-algorithm.js";
 import { Event } from "../event/event-constructor.js";
+import { markEventTrusted } from "../event/event-state.js";
 import { EventTarget } from "../event/event-target-constructor.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
 import { MessageEvent, localizeIncomingPorts } from "../messaging/messaging-runtime.js";
@@ -249,6 +250,11 @@ export function receiveOwnerMessage(message, options, ports = []) {
         },
       }) : null,
     });
+    // owner 投递的消息是宿主输入，与窗口 message 一样是受信任事件
+    // （真实浏览器里 worker 的 message 事件 isTrusted === true）。反爬工件会
+    // 用 `e.isTrusted` 守卫决定是否执行投递的代码（Cloudflare Turnstile worker
+    // 实测：不标记则整个 PoW 不执行，挑战等 50 秒超时失败）。
+    markEventTrusted(event);
     globalThis.dispatchEvent(event);
     const handler = handlers.get("onmessage") ?? null;
     if (handler !== null) Reflect.apply(handler, globalThis, [event]);

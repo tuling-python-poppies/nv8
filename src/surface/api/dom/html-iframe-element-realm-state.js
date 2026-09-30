@@ -318,7 +318,12 @@ function navigate(element) {
   // contentWindow **立即存在**（初始文档 about:blank），src/srcdoc 导航完成后才
   // 替换文档。这里只在真的读到 contentWindow 时才物化（预热池命中时工厂同步
   // 返回）；未读取 / 未插入文档时保持 null（与真实浏览器一致，也不占资源计数）。
-  current.createInitialWindow = !isBlankDocument ? () => {
+  //
+  // 只对**同源**目标物化：跨源 iframe 的 contentWindow 必须从一开始就是门面，
+  // 且身份跨导航稳定（等价浏览器 WindowProxy）。若先给同源临时窗口、真实文档
+  // 就绪后再换成门面，父页保存的窗口引用会失配——Cloudflare Turnstile 实测：
+  // 挑战消息因 `event.source !== 保存的 contentWindow` 被整批丢弃。
+  current.createInitialWindow = (!isBlankDocument && current.sameOrigin) ? () => {
     if (current.version !== version || !element.isConnected) return null;
     return scope.createChildRealm({
       pageUrl: "about:blank",

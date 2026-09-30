@@ -2,6 +2,7 @@ import {
   performStructuredCloneDetailed,
 } from "../clone/structured-clone-algorithm.js";
 import { Event } from "../event/event-constructor.js";
+import { markEventTrusted } from "../event/event-state.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
 import { MessageEvent, localizeIncomingPorts } from "../messaging/messaging-runtime.js";
 import { DOMException } from "../event/dom-exception-constructor.js";
@@ -173,6 +174,10 @@ function deliverMessage(record, message, ports) {
       // 派发给页面之前换成本图对象（记录跨图共享，只换门面）。
       ports: localPorts,
     });
+    // worker → owner 的消息是宿主事件（真实浏览器里 isTrusted === true）：
+    // 反爬工件会检查这个守卫（Cloudflare Turnstile 的挑战侧忽略不可信回包，
+    // 导致 PoW 结果被丢弃、挑战空转到超时）。
+    markEventTrusted(event);
     record.worker.dispatchEvent(event);
     const handler = record.handlers.get("onmessage") ?? null;
     if (handler !== null) Reflect.apply(handler, record.worker, [event]);
