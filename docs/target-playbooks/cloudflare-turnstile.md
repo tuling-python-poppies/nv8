@@ -74,14 +74,16 @@ api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 2637
   `/v0/b/<build>/api.js`）——`cs` 字段由此是**真实调用栈**，不再需要旧版硬编码伪造。
 - 抓取/转发出口统一 curl_cffi + 与运行时逐字一致的 Edge 151 UA / `sec-ch-ua` / `zh-CN`。
 
-**当前线上状态（如实）**：挑战在 NV8 内跑完全部检查（`init → extraParams →
-execute → food×4-5`，全程无脚本异常），最终仍是 `fail` / **300010**（官方语义：
-Bot behavior detected，服务端风控判定）。同一测试页在真实浏览器（Camoufox，同代
-理出口）可拿到 688 字符 token；NV8 侧 6 次全新轮次复测均为 300010（确定性判定，
-不是概率放行）。该判定属 Cloudflare 服务端风险模型、设计上用于拒绝非真实浏览器
-环境，不承诺可被本地保真度修复翻转；转发/回喂工具链已就绪（挑战一发出
-`chl_api_ni` POST 即可真实转发并回喂）。原案例 8 月那次 `status: complete` 是碰上
-非交互放行，不可稳定复现。
+**当前线上状态（如实）**：NV8 纯无浏览器链路已能完成 Worker PoW 并发出**真实
+`/fo/` 提交**（`submit` 级，3671 字节、带 `cf-chl` 票据），引擎本地流程走到
+`interactiveEnd`；但引擎与 CF 服务端之间是多轮实时编排（真浏览器 ~2-3 秒内完成
+多个服务端往返），静态 replay 无法桥接完整实时序列，最终仍以 overrun 超时收场。
+**token 走浏览器（混合链）**——这是架构边界而非保真度缺口。本轮联调挖出并修复
+的 NV8 框架缺陷：Worker 消息事件未标记 `isTrusted`（挑战 worker 的防篡改守卫
+拒绝执行投递的 PoW，空转 ~50s 超时）、预热池只服务根页 origin（嵌套 Realm 的
+干净窗口同步读为 null）、跨源门面身份不稳定（`event.source` 失配整批丢消息）、
+replay 的 `urlPattern`/latin1 二进制支持。原案例 8 月那次 `status: complete`
+是碰上非交互放行，不可稳定复现。
 
 ### 混合链（线上通过路径）
 
