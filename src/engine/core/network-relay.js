@@ -153,6 +153,10 @@ export function createNetworkRelay(config) {
     }
   }
 
+  // 立即预热 helper（Python + curl_cffi 冷启动 1–2s），把启动开销移出首个命中
+  // 请求的关键路径；未命中 origin 的请求仍然直接回退 replay，不做中继。
+  start();
+
   return { fetch, dispose };
 }
 
