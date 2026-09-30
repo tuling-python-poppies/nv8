@@ -2,12 +2,13 @@
 
 > 案例工作区 `五秒盾/`（WSL 合集 `nv8代码测试/`）
 
-## 1. 验收模型（两级，如实记录）
+## 1. 验收模型（分级，如实记录）
 
 | 级别 | 条件 | 说明 |
 |---|---|---|
-| `submit` | 捕获 `/fo/` POST | 原案例目标。**离线不可复现**：api.js 只在 `event.isTrusted` 的交互下自动提交；实测真实 Camoufox 不点击时同样拿不到 token（`interactiveBegin → widgetStale → interactiveTimeout`，`cf-turnstile-response` 始终为空）。是否自动放行由服务端风险判定决定 |
-| `handshake` | 四条件同时成立（**当前可达上限**，exit 0 门槛） | `extraParamsReplied` + `executeSent` + `widgetRendered` + `workerConstructed` |
+| `token` | 父页 `cf-turnstile-response` 非空 + 挑战发出 `complete` | 新上限。需 `networkRelay` 实时网络（纯无浏览器实达 773 字符 token）；纯静态 replay 无法桥接多轮服务端编排 |
+| `submit` | 捕获 `/fo/` POST | 静态 replay 下也能捕获提交，但拿不到后续轮次响应 |
+| `handshake` | 四条件同时成立 | `extraParamsReplied` + `executeSent` + `widgetRendered` + `workerConstructed`；静态 replay 的可达上限（exit 0 门槛） |
 | `none` | 未达握手 | exit 1 |
 
 ## 2. 适配要点
@@ -74,18 +75,41 @@ api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 2637
   `/v0/b/<build>/api.js`）——`cs` 字段由此是**真实调用栈**，不再需要旧版硬编码伪造。
 - 抓取/转发出口统一 curl_cffi + 与运行时逐字一致的 Edge 151 UA / `sec-ch-ua` / `zh-CN`。
 
-**当前线上状态（如实）**：NV8 纯无浏览器链路已能完成 Worker PoW 并发出**真实
-`/fo/` 提交**（`submit` 级，3671 字节、带 `cf-chl` 票据），引擎本地流程走到
-`interactiveEnd`；但引擎与 CF 服务端之间是多轮实时编排（真浏览器 ~2-3 秒内完成
-多个服务端往返），静态 replay 无法桥接完整实时序列，最终仍以 overrun 超时收场。
-**token 走浏览器（混合链）**——这是架构边界而非保真度缺口。本轮联调挖出并修复
-的 NV8 框架缺陷：Worker 消息事件未标记 `isTrusted`（挑战 worker 的防篡改守卫
-拒绝执行投递的 PoW，空转 ~50s 超时）、预热池只服务根页 origin（嵌套 Realm 的
-干净窗口同步读为 null）、跨源门面身份不稳定（`event.source` 失配整批丢消息）、
-replay 的 `urlPattern`/latin1 二进制支持。原案例 8 月那次 `status: complete`
-是碰上非交互放行，不可稳定复现。
+**当前线上状态（通过）**：纯无浏览器链路线上拿到 **773 字符真 token**（父页
+`cf-turnstile-response` 已填充、挑战发出 `complete` 事件），连续两轮复现一致
+（`submit` 级 / `complete` @ ~18s）。架构即「页面逻辑留在 NV8，网络交给外部传输」：
 
-### 混合链（线上通过路径）
+- NV8 跑真挑战页 JS：Worker PoW、payload 构造、消息守卫（`isTrusted`/origin/source）、
+  多轮服务端编排的流程控制；
+- `networkRelay` 外部中继：页面 `fetch` 交给常驻 Python helper（curl_cffi 会话 +
+  代理，与素材刷新的 Edge 151 头逐字一致）真发请求、真响应回喂页面。
+
+运行（案例工作区）：
+
+```bash
+set TURNSTILE_PROXY=http://127.0.0.1:7890
+node --experimental-vm-modules live_refresh.mjs
+set TURNSTILE_RELAY=1 && set NV8_PROOF_CLEAN=1 && set TURNSTILE_NATIVE_SCRIPT=1
+node --experimental-vm-modules main.mjs
+```
+
+**本轮定位并修复的 NV8 缺口（均已提交、带测试）**：
+
+1. Worker 消息事件未标记 `isTrusted`：挑战 worker 用
+   `e.isTrusted && e.origin === '' && e.source === null` 守卫决定是否执行投递的 PoW
+   代码；不标记时 worker 收到消息但什么都不做，挑战空转 ~50s 超时。
+2. 预热池只服务根页 origin 的空白 iframe：嵌套 Realm（挑战 iframe 内部）的干净
+   窗口永远 miss 池、同步读取为 null（`null.eval` 根因之一）。
+3. 跨源 iframe 门面身份不稳定：先给同源临时窗口、后换门面会让父页保存的引用失配，
+   挑战消息因 `event.source` 不匹配被整批丢弃。
+4. replay 增强：`urlPattern` 通配 + `bodyEncoding: "latin1"` 二进制保真。
+5. 新增 `networkRelay` 外部传输中继（详见 `docs/user-guide.md` 8.6；含 fetch-replay
+   SW 分支 replay-miss 挂起修复、INIT 白名单漏字段修复）。
+
+混合链（`browser_solve.py`）保留为对照/兜底路径。原案例 8 月那次
+`status: complete` 是碰上非交互放行，与本轮的可复现链路无关。
+
+### 混合链（备选对照路径）
 
 浏览器压缩到**唯一一步**——过 CF 拿 token；素材刷新与挑战运行全部在 NV8（无浏览器）：
 
@@ -106,5 +130,8 @@ ok=true。对接真实站点时导出的 token / `cf_clearance` + cookies 由 cu
 
 ## 6. 边界
 
-- 离线只证明「捕获的 challenge 在 nv8 里能走到握手完成」，不代表线上通过；真实网络出口归 Python。
+- 原「离线只到握手、token 归浏览器」的边界已被 `networkRelay` 打通：页面 JS 与网络
+  传输显式分工（NV8 不实现真实网络栈，helper 不参与页面逻辑）。
+- token 真伪的最终校验需要站点 secret 走 siteverify；当前证据 = `complete` 事件 +
+  773 字符 token + 两轮复现一致。
 - 素材换轮需重新采集；`live_refresh.mjs` 已能无浏览器完成刷新。
