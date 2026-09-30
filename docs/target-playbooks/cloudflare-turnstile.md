@@ -76,10 +76,12 @@ api.js 86732 字节；发现挑战 URL（widgetId=l3gat）；真挑战 HTML 2637
 - 抓取/转发出口统一 curl_cffi + 与运行时逐字一致的 Edge 151 UA / `sec-ch-ua` / `zh-CN`。
 
 **当前线上状态（通过）**：纯无浏览器链路线上拿到真 token（父页 `cf-turnstile-response`
-已填充、挑战发出 `complete` 事件，773/794 字符两档 @ ~17-18s）。单轮采样 13/16（~81%）；
-服务端 ~1/5 概率静默分支（第 2 轮 `/fo/` 不再发起、与中继时延无关——失败样本往返 4.0s
-与成功的 3.3-5.4s 同区间）由案例侧 `relay_solve.mjs` 自动重试兜底（场景内 3/3 端到端）。
-架构即「页面逻辑留在 NV8，网络交给外部传输」：
+已填充、挑战发出 `complete` 事件，773/794 字符两档 @ ~15-18s）。历史采样（~25 轮）
+单轮通过 ~80%+；**失败轮 = 服务端分派交互变体**（`init` 消息的 `mode` 字段非
+`non-interactive`，需挑战 iframe 内真实点击，NV8 无法完成，以 `interactiveEnd` 收场），
+失败与中继时延无关（失败样本往返 4.0s 与成功的 3.3-5.4s 同区间）；runner 依
+`init.mode` 秒级早退，案例侧 `relay_solve.mjs` 自动重试兜底。架构即「页面逻辑留在
+NV8，网络交给外部传输」：
 
 - NV8 跑真挑战页 JS：Worker PoW、payload 构造、消息守卫（`isTrusted`/origin/source）、
   多轮服务端编排的流程控制；
@@ -106,6 +108,9 @@ node sample_relay.mjs 6     # 稳定性采样（output/sample-summary.json）
 4. replay 增强：`urlPattern` 通配 + `bodyEncoding: "latin1"` 二进制保真。
 5. 新增 `networkRelay` 外部传输中继（详见 `docs/user-guide.md` 8.6；含 fetch-replay
    SW 分支 replay-miss 挂起修复、INIT 白名单漏字段修复）。
+6. Worker Realm 未接中继缝：worker 发出的 fetch 永远静默 replay-miss（本案例的
+   `/pat/` 即来自 worker）。接线后经中继拿到真实 401（挑战优雅忽略）；brunhild 域名
+   的 telemetry GET 在当前代理下 SSL 握手被拒，fail-open 为 replay-miss，不影响 token。
 
 混合链（`browser_solve.py`）保留为对照/兜底路径。原案例 8 月那次
 `status: complete` 是碰上非交互放行，与本轮的可复现链路无关。
