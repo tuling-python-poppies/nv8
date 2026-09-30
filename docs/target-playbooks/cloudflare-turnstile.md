@@ -6,9 +6,9 @@
 
 | 级别 | 条件 | 说明 |
 |---|---|---|
-| `token` | 父页 `cf-turnstile-response` 非空 + 挑战发出 `complete` | 新上限。需 `networkRelay` 实时网络（纯无浏览器实达 773 字符 token）；纯静态 replay 无法桥接多轮服务端编排 |
-| `submit` | 捕获 `/fo/` POST | 静态 replay 下也能捕获提交，但拿不到后续轮次响应 |
-| `handshake` | 四条件同时成立 | `extraParamsReplied` + `executeSent` + `widgetRendered` + `workerConstructed`；静态 replay 的可达上限（exit 0 门槛） |
+| `token` | 父页 `cf-turnstile-response` 非空 + 挑战发出 `complete` | **线上通过级别（活中继达成）**：页面 fetch 走 `networkRelay` 实时出口，多轮服务端编排连续跑完（实测 773/794 字符） |
+| `submit` | 捕获 `/fo/` POST | **纯离线模式的中间观测档**：能看到提交发生并捕获请求体，但静态 replay 没有后续轮次（`/eb/`、第二轮 `/fo/`）的真实响应——响应由服务端当场生成、会话绑定的，缺一轮就静默到超时。活中继下提交由实时响应接续，直达 `token` |
+| `handshake` | 四条件同时成立 | **纯离线模式的稳定上限**（exit 0 门槛）：`extraParamsReplied` + `executeSent` + `widgetRendered` + `workerConstructed` |
 | `none` | 未达握手 | exit 1 |
 
 ## 2. 适配要点
