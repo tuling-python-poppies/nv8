@@ -83,6 +83,25 @@ Bot behavior detected，服务端风控判定）。同一测试页在真实浏�
 `chl_api_ni` POST 即可真实转发并回喂）。原案例 8 月那次 `status: complete` 是碰上
 非交互放行，不可稳定复现。
 
+### 混合链（线上通过路径）
+
+浏览器压缩到**唯一一步**——过 CF 拿 token；素材刷新与挑战运行全部在 NV8（无浏览器）：
+
+```bash
+set TURNSTILE_PROXY=http://127.0.0.1:7890
+node hybrid_solve.mjs      # live_refresh.mjs → main.mjs → browser_solve.py
+```
+
+| 步骤 | 执行者 | 说明 |
+| --- | --- | --- |
+| 素材刷新 | NV8 | 发现当轮挑战 URL、抓真 api.js / 挑战 HTML |
+| 挑战运行 | NV8 | 活挑战跑完全部检查（握手 4/4 证据） |
+| token | Camoufox（唯一浏览器步骤） | `cf-turnstile-response` 688 字符 |
+
+实测：`output/hybrid-result.json` → nv8 handshake 4/4 + browser `tokenLength=688`，
+ok=true。对接真实站点时导出的 token / `cf_clearance` + cookies 由 curl_cffi 出数，
+浏览器不参与业务请求。
+
 ## 6. 边界
 
 - 离线只证明「捕获的 challenge 在 nv8 里能走到握手完成」，不代表线上通过；真实网络出口归 Python。
