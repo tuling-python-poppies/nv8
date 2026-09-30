@@ -118,4 +118,4 @@ session.close
 
 ## 安全边界
 
-Agent Bridge 不读取 pi、Codex 或 OpenCode 的内部进程状态，也不根据伪造的环境变量授予高信任权限。`agentCapabilities` 只是审计元数据，不参与鉴权；真正的权限边界是 patchable 字段白名单。外部 Agent、页面脚本、Trace 和网络回放都属于不可信输入。真实网络仍只能由 Collector 层按 NetworkPolicy 和 origin-bound 凭据处理；EnvironmentPatch 不能绕过这些约束。
+Agent Bridge 不读取 pi、Codex 或 OpenCode 的内部进程状态，也不根据伪造的环境变量授予高信任权限。`agentCapabilities` 只是审计元数据，不参与鉴权；真正的权限边界是 patchable 字段白名单。外部 Agent、页面脚本、Trace 和网络回放都属于不可信输入。真实网络默认仍只能由 Collector 层按 NetworkPolicy 和 origin-bound 凭据处理（`networkRelay` 外部中继不在 Agent 补丁白名单内，Agent 无法启用）；EnvironmentPatch 不能绕过这些约束。

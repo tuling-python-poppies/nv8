@@ -21,7 +21,9 @@ Plugin 是宿主侧受信扩展，不在目标页面脚本的权限域内。
 | Core / Realm | 编排层 | 创建、销毁和 reset Realm，安装 surface，执行脚本，施加资源限制 | 不把 `vm.Context` 当作抗宿主逃逸的安全边界；不应向 Realm 注入宿主对象 |
 | Evidence | 外部输入 | 提供 HTML、脚本和网络 replay；Loader 可验证签名、schema 和策略 | Bundle 的签名不等于其中每个目标脚本自动获权；Core 不应绕过 EvidenceSource 契约读文件 |
 | Protocol | 受限纯变换 | 读取 request、artifact 和时间，生成声明式 RequestPlan/transform | 不能发起 IO、访问 Collector、读取文件或取得宿主凭据 |
-| Collector | 唯一网络出口 | 校验 RequestPlan、应用 origin/network policy、管理 cookie/credential、发送请求 | 不因代理错误绕过 allowlist；业务消息发送后不得默认重试以避免重复提交 |
+| Collector | 唯一网络出口（默认架构） | 校验 RequestPlan、应用 origin/network policy、管理 cookie/credential、发送请求 | 不因代理错误绕过 allowlist；业务消息发送后不得默认重试以避免重复提交 |
+
+> 显式例外：集成方可在创建沙箱时启用 `networkRelay`，把命中 origin 的页面 fetch/XHR 交给宿主配置的外部 helper 进程真发（默认关闭；页面脚本与 Agent 均不能启用）。引擎自身仍不打开 socket；未命中的请求照旧本地失败。详见 [user-guide](user-guide.md) 8.6。
 
 ## 目标脚本边界
 
@@ -66,7 +68,7 @@ Core 只接受 `EvidenceSource` duck-typed 契约（`has`、`readText`、`readBi
 
 Protocol adapter 是纯函数式声明层，只能看到 `request`、`artifacts` 和 `now`。它输出的计划仍需经过 RequestPlan 校验和 Collector policy；任何“签名脚本想直接 POST”的设计都违反分层。
 
-Collector 是唯一真实网络出口。发送前必须完成：绝对 URL、方法、header/body 限制、origin allowlist、credential 注入和代理策略校验。凭据对象的默认字符串化、JSON 和错误信息必须脱敏。连接/代理失败可以按 retry policy 重试；业务请求已经写出后，未知结果不得自动重放。
+Collector 是默认架构下唯一的真实网络出口（显式启用的 `networkRelay` 外部中继是集成方例外，页面脚本不可启用，见 user-guide 8.6）。发送前必须完成：绝对 URL、方法、header/body 限制、origin allowlist、credential 注入和代理策略校验。凭据对象的默认字符串化、JSON 和错误信息必须脱敏。连接/代理失败可以按 retry policy 重试；业务请求已经写出后，未知结果不得自动重放。
 
 ## 可验证的安全契约
 

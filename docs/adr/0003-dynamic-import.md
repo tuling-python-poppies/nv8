@@ -36,7 +36,7 @@
 ### 方案 B：完全支持，未命中时走真实网络
 
 违背整体离线原则。NV8 的 Fetch/XHR 都只能命中 replay fixture，模块加载没有
-理由例外。真实网络出口只属于 Collector（ADR-0001 及安全边界）。
+理由例外。真实网络出口只属于 Collector（ADR-0001 及安全边界）。（后注：`networkRelay` 外部中继为集成方显式例外，默认关闭，见 user-guide 8.6。）
 
 否决。
 

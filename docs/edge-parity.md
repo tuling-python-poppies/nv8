@@ -54,7 +54,7 @@ Intl / 时区、`performance.now` 精度、事件时序、跨 Realm 身份、URL
 |---|---|---|
 | 首轮 | 33 | 15 处不一致，已修完 |
 | CSSOM | 22 | 6 处，已修完 |
-| 跨 Realm | 14 | **全部同一根因**——动态 iframe 的 `contentWindow` 同步为 null（ADR-0004 **已修订**：初始 `about:blank` 窗口懒物化，detached 才为 null；`limits.prewarmChildRealms` 覆盖「首次读取也同步」）|
+| 跨 Realm | 14 | **全部同一根因**——动态 iframe 的 `contentWindow` 同步为 null（ADR-0004 **已修订**：初始 `about:blank` 窗口懒物化，detached 才为 null；`limits.prewarmChildRealms` 覆盖「首次读取也同步」；跨源 iframe 首次读取即返回稳定门面）|
 | 音频指纹 | 14 | **10 处**，含五处报错类型错、float32 极值被当 double 写死 |
 | Intl / 时区 + performance | 18 | 4 处，其中 2 处是宿主级（ICU 数据版本、V8 文案），已登记 |
 | Storage / Fetch / Crypto | 12 | 首批输入校验、默认值、生命周期行为全部一致 |

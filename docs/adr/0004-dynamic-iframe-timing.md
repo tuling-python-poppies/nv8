@@ -295,6 +295,21 @@ nativeToString       function addEventListener() { [native code] }
 这条 SDK 写法成立。`tests/iframe-prewarm-pool-test.js` 覆盖新语义（初始窗口可用、
 可 eval、detached 为 null、srcdoc 就绪后切换、appendChild 后同步可读）。
 
+## 修订二（2026-09·二期）：跨源门面身份与池位跨 Realm 服务
+
+反爬目标（Cloudflare Turnstile 活挑战）联调又暴露两处与本 ADR 语义相关的缺陷：
+
+1. **跨源 iframe 的窗口身份必须在首次读取即稳定**：一期修订的「懒物化初始窗口」
+   只适用于同源 iframe。跨源 iframe 若先返回临时窗口、真实文档就绪后再换成门面，
+   父页保存的引用会失配，挑战消息因 `event.source` 不匹配被整批丢弃。现改为跨源
+   目标**自始至终返回同一个门面**（等价浏览器 WindowProxy 的稳定身份）。
+2. **池位不再限制「父页 origin」**：原落地记录要求「空白且同源（URL 等于父页面）」
+   才领池位，导致**嵌套 Realm**（跨源挑战 iframe 内部）里的空白 iframe 永远 miss
+   池、同步读取拿到 null（挑战的干净窗口 `eval` 直接 TypeError）。现放宽为任意
+   父页 origin：池位由 `reparentRealm` 重配 documentUrl/origin，账目与清理规则不变。
+
+测试：`tests/iframe-prewarm-pool-test.js`（池位语义）与 iframe 身份/消息套件覆盖新语义；全量 1321 项在 Node 18/20/22/24 四档全绿（18/20 另有 2 项按版本分支跳过）。
+
 ## 附：复现
 
 ```

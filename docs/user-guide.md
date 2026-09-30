@@ -1313,7 +1313,7 @@ try {
 ### 15.2 宿主访问边界
 
 页面脚本只能使用兼容层和离线 replay；网络、文件、进程、GPU、媒体、传感器、外设
-和系统级 ServiceWorker 不会打开真实资源。真实 HTTP 只属于 Collector 层。
+和系统级 ServiceWorker 不会打开真实资源。真实 HTTP 默认只属于 Collector 层（显式启用的 `networkRelay` 外部中继除外，见 8.6）。
 本地 V8 的能力边界和不能替代真实 Chromium/Edge 的项目见 §19。
 
 ## 16. 调试沙箱子进程

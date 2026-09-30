@@ -13,7 +13,7 @@
 Evidence Bundle (离线证据)
   → Runtime        执行目标 JS，产出 Artifact
   → Protocol       Artifact → RequestPlan（纯变换，无 IO）
-  → Collector      执行 RequestPlan（唯一网络出口，受策略约束）
+  → Collector      执行 RequestPlan（默认架构唯一网络出口，受策略约束）
 ```
 
 每一层只能向下传递数据，不能向上索取能力。
@@ -137,7 +137,7 @@ registry.apply({ request, artifacts, allowConflicts: true });
 
 ## Collector
 
-Collector 是**唯一**拥有真实网络出口的组件。
+Collector 是**默认架构下唯一**拥有真实网络出口的组件。显式启用的 `networkRelay` 外部中继是集成方例外（默认关闭，页面脚本不可启用，见 user-guide 8.6）。
 
 ```js
 import { createCollector, createFetchTransport } from 'nv8/collector';

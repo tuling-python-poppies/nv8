@@ -12,7 +12,7 @@ NV8 分为两个相互配合但权限不同的部分：
   `process`、`require`、`fs`、真实网络或 Collector 句柄。
 - Protocol：把 Runtime 产出的 Artifact 转换为声明式 `RequestPlan`，只做数据变换，
   不拥有 socket、代理、凭据和重试能力。
-- Collector：唯一允许真实网络出口的层。每次请求都必须经过 NetworkPolicy；凭据由
+- Collector：默认架构下唯一允许真实网络出口的层（显式启用的 `networkRelay` 外部中继是集成方例外，见 [docs/user-guide.md](user-guide.md) 8.6）。每次请求都必须经过 NetworkPolicy；凭据由
   调用方配置，在策略通过后才注入，且不会返回给 Runtime 或 Protocol。
 
 Evidence、脚本策略和 Plugin Lock 是输入边界，不应把私钥、明文凭据或未审计的真实

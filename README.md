@@ -86,7 +86,7 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
   （仅 `page` / `fingerprint` / `replay`）、版本化 + 回滚 + 审计，
   `compareEnvironment()` 在隔离 Sandbox 里先验证假设再落地；附 stdio JSON-RPC 桥
   （`npm run agent:bridge`），见 [docs/agent-bridge.md](docs/agent-bridge.md)。
-- **离线回放与 Evidence**：运行目标脚本时不联网，回放未命中就在本地失败，绝不回落
+- **离线回放与 Evidence**：运行目标脚本时默认不联网（显式启用的 `networkRelay` 外部中继是唯一例外，见 [docs/user-guide.md](docs/user-guide.md) 8.6），回放未命中就在本地失败，绝不回落
   真实网络；采集产物可固化为可复现的 Evidence Bundle，见
   [Evidence 与离线回放](#evidence-与离线回放)。
 - **采集调度层**：分页、限流、熔断、代理轮换、断点续采、去重落库，把恢复出的协议
@@ -104,8 +104,8 @@ NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」�
 - **不做完整渲染与布局。** 没有排版引擎，`offsetWidth`、`getBoundingClientRect`
   这类几何值只是近似模型（显式尺寸 → 内联文本字体度量 → 后代最大值；
   `documentElement`/`body` 按视口，其余为 0），不是浏览器真值（见[已知边界](#已知边界)）。
-- **运行时不联网。** 运行目标脚本时，所有网络访问走离线回放；回放未命中就在本地
-  失败，**绝不回落真实网络**。真实网络只属于采集层。
+- **运行时不联网（默认）。** 运行目标脚本时，所有网络访问走离线回放；回放未命中就在本地
+  失败，**绝不回落真实网络**。真实网络默认只属于采集层（显式启用的 `networkRelay` 外部中继是唯一例外，见 [docs/user-guide.md](docs/user-guide.md) 8.6）。
 - **不内置数据库驱动。** 采集结果落地定义为接口，附内存与 NDJSON 两个实现，
   接 Postgres/SQLite 由调用方提供。
 - **不猜业务语义。** 分页游标怎么取、条目主键是哪个字段，都必须由调用方指定。
@@ -841,7 +841,7 @@ const sandbox = await EdgeSandbox.create({
 
 规则：
 
-- 回放未命中 → **本地失败**，不回落真实网络
+- 回放未命中 → **本地失败**，不回落真实网络（显式启用 `networkRelay` 时按配置中继命中 origin 的请求）
 - Worker / ServiceWorker 脚本只允许来自 `data:` URL 或离线回放
 - 动态 `import()` 同样走回放，允许列表作用于**解析后**的 URL
   （[ADR-0003](docs/adr/0003-dynamic-import.md)）
@@ -1417,7 +1417,7 @@ Realm 并重新执行文档生命周期；取消导航则保留原文档。
 
 ### Node 版本
 
-四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1303 项全过；18/20 档 1303 项中 2 项按版本分支跳过。差异分两类处理：
+四档（18 / 20 / 22 / 24）全绿，fail 0：22/24 档 1321 项全过；18/20 档 1321 项中 2 项按版本分支跳过。差异分两类处理：
 
 - **能补到与原生一致的就补**：`SuppressedError` / `DisposableStack` /
   `AsyncDisposableStack` / `Float16Array` 形状 / `DataView` 半精度。
