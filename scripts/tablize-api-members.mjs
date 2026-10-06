@@ -33,7 +33,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { maskSource } from './source-shape.mjs';
+import { maskSource, topLevelSpans } from './source-shape.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const API_DIR = path.join(ROOT, 'src', 'surface', 'api');
@@ -105,7 +105,13 @@ function splitStatements(body) {
   return body.slice(start).trim() === '' ? statements : null;
 }
 
-/** 解析一条 `工厂("名字", 其余参数)` 调用语句。 */
+/**
+ * 解析一条工厂调用语句，返回绑定名、工厂名与**完整参数列表**。
+ *
+ * 参数列表整份保留，是因为成员名不一定在第一个位置：`documentHandlerDescriptor("onabort")`
+ * 的名字是第 1 个参数，而 `stringReflection("HTMLAnchorElement", "href", "href")` 是第 2 个。
+ * 表里存全量参数、用 `factory(...args)` 调用，就不必猜位置。
+ */
 function parseFactoryCall(statement, allowPrivate) {
   const match = (allowPrivate
     ? /^const (\w+) = ([\w$]+)\(([\s\S]*)\);$/
@@ -113,11 +119,12 @@ function parseFactoryCall(statement, allowPrivate) {
   ).exec(statement);
   if (match === null) return null;
   const [, binding, factory, callArgs] = match;
-  const nameMatch = /^\s*"([^"]+)"/.exec(callArgs);
-  if (nameMatch === null) return null;
-  const rest = callArgs.slice(nameMatch[0].length).replace(/^\s*,\s*/, '').trim();
-  if (rest.includes(';') || rest.includes('export')) return null;
-  return { binding, factory, name: nameMatch[1], args: rest };
+  if (callArgs.includes(';') || callArgs.includes('export')) return null;
+  const argsList = topLevelSpans(maskSource(callArgs), 0, callArgs.length)
+    .map(([from, to]) => callArgs.slice(from, to).trim())
+    .filter((arg) => arg !== '');
+  if (argsList.length === 0) return null;
+  return { binding, factory, argsList };
 }
 
 /**
@@ -146,12 +153,13 @@ export async function readFamilyFile(file) {
       if (setMatch !== null && getMatch === null) return null;
       if (getMatch !== null && setMatch !== null) {
         if (setMatch[2] !== call.binding) return null;
+        if (!call.argsList.includes(`"${getMatch[1]}"`)) return null;
         if (factory === null) factory = call.factory;
         if (call.factory !== factory) return null;
         members.push({
-          name: call.name,
+          name: getMatch[1],
           factory,
-          args: call.args,
+          argsList: call.argsList,
           kind: 'pair',
           exports: [{ name: getMatch[1], slot: 'get' }, { name: setMatch[1], slot: 'set' }],
         });
@@ -159,12 +167,13 @@ export async function readFamilyFile(file) {
         continue;
       }
       if (getMatch !== null) {
+        if (!call.argsList.includes(`"${getMatch[1]}"`)) return null;
         if (factory === null) factory = call.factory;
         if (call.factory !== factory) return null;
         members.push({
-          name: call.name,
+          name: getMatch[1],
           factory,
-          args: call.args,
+          argsList: call.argsList,
           kind: 'readonly',
           exports: [{ name: getMatch[1], slot: 'get' }],
         });
@@ -175,12 +184,13 @@ export async function readFamilyFile(file) {
 
     const single = parseFactoryCall(statements[index], false);
     if (single === null) return null;
+    if (!single.argsList.includes(`"${single.binding}"`)) return null;
     if (factory === null) factory = single.factory;
     if (single.factory !== factory) return null;
     members.push({
-      name: single.name,
+      name: single.binding,
       factory,
-      args: single.args,
+      argsList: single.argsList,
       kind: 'single',
       exports: [{ name: single.binding, slot: null }],
     });
@@ -206,6 +216,10 @@ async function findTargetModule(dir, members) {
   }
   if (barrels.length === 1) return { file: barrels[0], existed: true };
   if (barrels.length > 1) return { ambiguous: barrels.map((file) => path.basename(file)) };
+  // 成员本来就都在同一个模块里（之前合并出来的多成员模块）——就地改写它。
+  // 若另起新文件，旧模块会被当成待删成员文件删掉，而安装器还 import 着它。
+  const uniqueFiles = [...new Set(members.map((member) => member.file))];
+  if (uniqueFiles.length === 1) return { file: uniqueFiles[0], existed: true };
   const created = path.join(dir, `${kebab(members[0].factory)}-members.js`);
   return { file: created, existed: existsSync(created) };
 }
@@ -219,7 +233,7 @@ async function findTargetModule(dir, members) {
 function buildTable(tableName, members) {
   const rowsName = `${tableName.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ROWS`;
   const rows = members
-    .map((member) => `  ["${member.name}"${member.args ? `, ${member.args}` : ''}],`)
+    .map((member) => `  ["${member.name}", ${member.argsList.join(', ')}],`)
     .join('\n');
   return [
     `const ${rowsName} = [`,
@@ -227,7 +241,7 @@ function buildTable(tableName, members) {
     '];',
     '',
     `export const ${tableName} = ${rowsName}.map(`,
-    `  ([name, ...args]) => [name, ${members[0].factory}(name, ...args)],`,
+    `  ([name, ...args]) => [name, ${members[0].factory}(...args)],`,
     ');',
     '',
   ].join('\n');
@@ -240,7 +254,7 @@ function buildTable(tableName, members) {
  * 都有，但它们 import 的是各自的 width 模块。所以归属必须由 **import 来源**决定：
  * 具名导入看导出名是从哪个文件导进来的，命名空间导入看 `import * as ns` 指向哪个模块。
  */
-function fileScope(source, filePath, families) {
+export function fileScope(source, filePath, families) {
   const { named, namespaces } = allImports(source);
   const resolve = (specifier) => path.resolve(path.dirname(filePath), specifier);
   const scoped = [];
@@ -370,7 +384,7 @@ function tidyImports(source) {
  *
  * 只有模板相同的**连续**语句才成环，因此安装顺序天然不变。
  */
-function findLoops(source, scoped) {
+export function findLoops(source, scoped) {
   const lines = source.split('\n');
   const loops = [];
   let index = 0;
@@ -571,6 +585,33 @@ async function main() {
   }
 
   if (!write) return;
+
+  // 写盘前审计：被删的成员文件不能再有别的引用者（桶的转发行会被改写，安装器会被改写）。
+  // 这是最后一道闸门——目标选错时，成员文件会被删掉而旧模块还 import 着它。
+  const beingRewritten = new Set([
+    ...fileEdits.keys(),
+    ...[...perPlan.keys()].map((plan) => plan.target.file),
+  ]);
+  const toDelete = new Set(
+    [...perPlan.keys()].flatMap((plan) => plan.members.map((member) => member.file)),
+  );
+  const dangling = [];
+  for (const file of await walk(path.join(ROOT, 'src'))) {
+    if (beingRewritten.has(file)) continue;
+    const source = await readFile(file, 'utf8');
+    for (const match of source.matchAll(/from\s+"([^"]+)"/g)) {
+      if (!match[1].startsWith('.')) continue;
+      const resolved = path.resolve(path.dirname(file), match[1]);
+      if (toDelete.has(resolved)) {
+        dangling.push(`${path.relative(ROOT, file)} -> ${match[1]}`);
+      }
+    }
+  }
+  if (dangling.length > 0) {
+    console.error(`\n审计未通过：${dangling.length} 处引用了将被删除的成员文件，拒绝写盘。`);
+    for (const entry of dangling.slice(0, 10)) console.error(`  ${entry}`);
+    process.exit(1);
+  }
 
   for (const plan of perPlan.keys()) {
     const memberFiles = [...new Set(plan.members.map((member) => member.file))];
