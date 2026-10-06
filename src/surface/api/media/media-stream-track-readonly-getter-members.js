@@ -1,10 +1,17 @@
-// media 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// media 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { mediaStreamTrackReadonlyGetter } from "./media-stream-track-readonly-getter.js";
 
-export const id = mediaStreamTrackReadonlyGetter("id");
-export const kind = mediaStreamTrackReadonlyGetter("kind");
-export const label = mediaStreamTrackReadonlyGetter("label");
-export const muted = mediaStreamTrackReadonlyGetter("muted");
-export const readyState = mediaStreamTrackReadonlyGetter("readyState");
-export const stats = mediaStreamTrackReadonlyGetter("stats");
+const MEDIA_STREAM_TRACK_READONLY_GETTER_TABLE_ROWS = [
+  ["id", "id"],
+  ["kind", "kind"],
+  ["label", "label"],
+  ["muted", "muted"],
+  ["readyState", "readyState"],
+  ["stats", "stats"],
+];
+
+export const mediaStreamTrackReadonlyGetterTable = MEDIA_STREAM_TRACK_READONLY_GETTER_TABLE_ROWS.map(
+  ([name, ...args]) => [name, mediaStreamTrackReadonlyGetter(...args)],
+);
+

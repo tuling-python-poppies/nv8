@@ -1,12 +1,19 @@
-// geometry 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// geometry 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { rectGetter } from "./dom-rect-property.js";
 
-export const bottom = rectGetter("bottom", s => Math.max(s.y, s.y + s.height));
-export const height = rectGetter("height");
-export const left = rectGetter("left", s => Math.min(s.x, s.x + s.width));
-export const right = rectGetter("right", s => Math.max(s.x, s.x + s.width));
-export const top = rectGetter("top", s => Math.min(s.y, s.y + s.height));
-export const width = rectGetter("width");
-export const x = rectGetter("x");
-export const y = rectGetter("y");
+const RECT_GETTER_TABLE_ROWS = [
+  ["bottom", "bottom", s => Math.max(s.y, s.y + s.height)],
+  ["height", "height"],
+  ["left", "left", s => Math.min(s.x, s.x + s.width)],
+  ["right", "right", s => Math.max(s.x, s.x + s.width)],
+  ["top", "top", s => Math.min(s.y, s.y + s.height)],
+  ["width", "width"],
+  ["x", "x"],
+  ["y", "y"],
+];
+
+export const rectGetterTable = RECT_GETTER_TABLE_ROWS.map(
+  ([name, ...args]) => [name, rectGetter(...args)],
+);
+

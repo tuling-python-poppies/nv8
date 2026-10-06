@@ -1,56 +1,63 @@
-// dom 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { elementInternalsARIAProperty } from "./element-internals-property.js";
 
-export const ariaActionsElements = elementInternalsARIAProperty("ariaActionsElements", true);
-export const ariaActiveDescendantElement = elementInternalsARIAProperty("ariaActiveDescendantElement", true);
-export const ariaAtomic = elementInternalsARIAProperty("ariaAtomic", false);
-export const ariaAutoComplete = elementInternalsARIAProperty("ariaAutoComplete", false);
-export const ariaBrailleLabel = elementInternalsARIAProperty("ariaBrailleLabel", false);
-export const ariaBrailleRoleDescription = elementInternalsARIAProperty("ariaBrailleRoleDescription", false);
-export const ariaBusy = elementInternalsARIAProperty("ariaBusy", false);
-export const ariaChecked = elementInternalsARIAProperty("ariaChecked", false);
-export const ariaColCount = elementInternalsARIAProperty("ariaColCount", false);
-export const ariaColIndex = elementInternalsARIAProperty("ariaColIndex", false);
-export const ariaColIndexText = elementInternalsARIAProperty("ariaColIndexText", false);
-export const ariaColSpan = elementInternalsARIAProperty("ariaColSpan", false);
-export const ariaControlsElements = elementInternalsARIAProperty("ariaControlsElements", true);
-export const ariaCurrent = elementInternalsARIAProperty("ariaCurrent", false);
-export const ariaDescribedByElements = elementInternalsARIAProperty("ariaDescribedByElements", true);
-export const ariaDescription = elementInternalsARIAProperty("ariaDescription", false);
-export const ariaDetailsElements = elementInternalsARIAProperty("ariaDetailsElements", true);
-export const ariaDisabled = elementInternalsARIAProperty("ariaDisabled", false);
-export const ariaErrorMessageElements = elementInternalsARIAProperty("ariaErrorMessageElements", true);
-export const ariaExpanded = elementInternalsARIAProperty("ariaExpanded", false);
-export const ariaFlowToElements = elementInternalsARIAProperty("ariaFlowToElements", true);
-export const ariaHasPopup = elementInternalsARIAProperty("ariaHasPopup", false);
-export const ariaHidden = elementInternalsARIAProperty("ariaHidden", false);
-export const ariaInvalid = elementInternalsARIAProperty("ariaInvalid", false);
-export const ariaKeyShortcuts = elementInternalsARIAProperty("ariaKeyShortcuts", false);
-export const ariaLabel = elementInternalsARIAProperty("ariaLabel", false);
-export const ariaLabelledByElements = elementInternalsARIAProperty("ariaLabelledByElements", true);
-export const ariaLevel = elementInternalsARIAProperty("ariaLevel", false);
-export const ariaLive = elementInternalsARIAProperty("ariaLive", false);
-export const ariaModal = elementInternalsARIAProperty("ariaModal", false);
-export const ariaMultiLine = elementInternalsARIAProperty("ariaMultiLine", false);
-export const ariaMultiSelectable = elementInternalsARIAProperty("ariaMultiSelectable", false);
-export const ariaOrientation = elementInternalsARIAProperty("ariaOrientation", false);
-export const ariaPlaceholder = elementInternalsARIAProperty("ariaPlaceholder", false);
-export const ariaPosInSet = elementInternalsARIAProperty("ariaPosInSet", false);
-export const ariaPressed = elementInternalsARIAProperty("ariaPressed", false);
-export const ariaReadOnly = elementInternalsARIAProperty("ariaReadOnly", false);
-export const ariaRelevant = elementInternalsARIAProperty("ariaRelevant", false);
-export const ariaRequired = elementInternalsARIAProperty("ariaRequired", false);
-export const ariaRoleDescription = elementInternalsARIAProperty("ariaRoleDescription", false);
-export const ariaRowCount = elementInternalsARIAProperty("ariaRowCount", false);
-export const ariaRowIndex = elementInternalsARIAProperty("ariaRowIndex", false);
-export const ariaRowIndexText = elementInternalsARIAProperty("ariaRowIndexText", false);
-export const ariaRowSpan = elementInternalsARIAProperty("ariaRowSpan", false);
-export const ariaSelected = elementInternalsARIAProperty("ariaSelected", false);
-export const ariaSetSize = elementInternalsARIAProperty("ariaSetSize", false);
-export const ariaSort = elementInternalsARIAProperty("ariaSort", false);
-export const ariaValueMax = elementInternalsARIAProperty("ariaValueMax", false);
-export const ariaValueMin = elementInternalsARIAProperty("ariaValueMin", false);
-export const ariaValueNow = elementInternalsARIAProperty("ariaValueNow", false);
-export const ariaValueText = elementInternalsARIAProperty("ariaValueText", false);
-export const role = elementInternalsARIAProperty("role", false);
+const ELEMENT_INTERNALS_ARIAPROPERTY_TABLE_ROWS = [
+  ["ariaActionsElements", "ariaActionsElements", true],
+  ["ariaActiveDescendantElement", "ariaActiveDescendantElement", true],
+  ["ariaAtomic", "ariaAtomic", false],
+  ["ariaAutoComplete", "ariaAutoComplete", false],
+  ["ariaBrailleLabel", "ariaBrailleLabel", false],
+  ["ariaBrailleRoleDescription", "ariaBrailleRoleDescription", false],
+  ["ariaBusy", "ariaBusy", false],
+  ["ariaChecked", "ariaChecked", false],
+  ["ariaColCount", "ariaColCount", false],
+  ["ariaColIndex", "ariaColIndex", false],
+  ["ariaColIndexText", "ariaColIndexText", false],
+  ["ariaColSpan", "ariaColSpan", false],
+  ["ariaControlsElements", "ariaControlsElements", true],
+  ["ariaCurrent", "ariaCurrent", false],
+  ["ariaDescribedByElements", "ariaDescribedByElements", true],
+  ["ariaDescription", "ariaDescription", false],
+  ["ariaDetailsElements", "ariaDetailsElements", true],
+  ["ariaDisabled", "ariaDisabled", false],
+  ["ariaErrorMessageElements", "ariaErrorMessageElements", true],
+  ["ariaExpanded", "ariaExpanded", false],
+  ["ariaFlowToElements", "ariaFlowToElements", true],
+  ["ariaHasPopup", "ariaHasPopup", false],
+  ["ariaHidden", "ariaHidden", false],
+  ["ariaInvalid", "ariaInvalid", false],
+  ["ariaKeyShortcuts", "ariaKeyShortcuts", false],
+  ["ariaLabel", "ariaLabel", false],
+  ["ariaLabelledByElements", "ariaLabelledByElements", true],
+  ["ariaLevel", "ariaLevel", false],
+  ["ariaLive", "ariaLive", false],
+  ["ariaModal", "ariaModal", false],
+  ["ariaMultiLine", "ariaMultiLine", false],
+  ["ariaMultiSelectable", "ariaMultiSelectable", false],
+  ["ariaOrientation", "ariaOrientation", false],
+  ["ariaPlaceholder", "ariaPlaceholder", false],
+  ["ariaPosInSet", "ariaPosInSet", false],
+  ["ariaPressed", "ariaPressed", false],
+  ["ariaReadOnly", "ariaReadOnly", false],
+  ["ariaRelevant", "ariaRelevant", false],
+  ["ariaRequired", "ariaRequired", false],
+  ["ariaRoleDescription", "ariaRoleDescription", false],
+  ["ariaRowCount", "ariaRowCount", false],
+  ["ariaRowIndex", "ariaRowIndex", false],
+  ["ariaRowIndexText", "ariaRowIndexText", false],
+  ["ariaRowSpan", "ariaRowSpan", false],
+  ["ariaSelected", "ariaSelected", false],
+  ["ariaSetSize", "ariaSetSize", false],
+  ["ariaSort", "ariaSort", false],
+  ["ariaValueMax", "ariaValueMax", false],
+  ["ariaValueMin", "ariaValueMin", false],
+  ["ariaValueNow", "ariaValueNow", false],
+  ["ariaValueText", "ariaValueText", false],
+  ["role", "role", false],
+];
+
+export const elementInternalsARIAPropertyTable = ELEMENT_INTERNALS_ARIAPROPERTY_TABLE_ROWS.map(
+  ([name, ...args]) => [name, elementInternalsARIAProperty(...args)],
+);
+

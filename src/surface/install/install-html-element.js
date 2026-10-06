@@ -15,7 +15,6 @@ import { accessKey, setAccessKey } from "../api/dom/html-element-access-key-prop
 import { draggable, setDraggable } from "../api/dom/html-element-draggable-property.js";
 import { spellcheck, setSpellcheck } from "../api/dom/html-element-spellcheck-property.js";
 import { autocapitalize, setAutocapitalize } from "../api/dom/html-element-autocapitalize-property.js";
-import { editContext, setEditContext } from "../api/dom/html-element-edit-context-property.js";
 import { contentEditable, setContentEditable } from "../api/dom/html-element-content-editable-property.js";
 import { enterKeyHint, setEnterKeyHint } from "../api/dom/html-element-enter-key-hint-property.js";
 import { isContentEditable } from "../api/dom/html-element-is-content-editable-getter.js";
@@ -41,17 +40,14 @@ import { autofocus, setAutofocus } from "../api/dom/html-element-autofocus-prope
 import { tabIndex, setTabIndex } from "../api/dom/html-element-tab-index-property.js";
 import { style } from "../api/dom/html-element-style-getter.js";
 import { attributeStyleMap } from "../api/dom/html-element-attribute-style-map-getter.js";
-import {
-  attachInternals,
-  hidePopover,
-  showPopover,
-} from "../api/dom/html-element-method-members.js";
 import { blur } from "../api/dom/html-element-blur.js";
 import { click } from "../api/dom/html-element-click.js";
 import { focus } from "../api/dom/html-element-focus.js";
 import { togglePopover } from "../api/dom/html-element-toggle-popover.js";
 import { focusGroup, setFocusGroup } from "../api/dom/html-element-focus-group-property.js";
 import { focusGroupStart, setFocusGroupStart } from "../api/dom/html-element-focus-group-start-property.js";
+import { htmlStateDescriptorTable } from "../api/dom/html-element-edit-context-property.js";
+import { htmlElementMethodTable } from "../api/dom/html-element-method-members.js";
 
 export function installHTMLElement() {
   installHTMLElementConstructor();
@@ -65,7 +61,7 @@ export function installHTMLElement() {
   accessor("draggable", draggable, setDraggable);
   accessor("spellcheck", spellcheck, setSpellcheck);
   accessor("autocapitalize", autocapitalize, setAutocapitalize);
-  accessor("editContext", editContext, setEditContext);
+  for (const [name, entry] of htmlStateDescriptorTable) accessor(name, entry.get, entry.set);
   accessor("contentEditable", contentEditable, setContentEditable);
   accessor("enterKeyHint", enterKeyHint, setEnterKeyHint);
   getter("isContentEditable", isContentEditable);
@@ -87,12 +83,10 @@ export function installHTMLElement() {
   accessor("tabIndex", tabIndex, setTabIndex);
   getter("style", style);
   getter("attributeStyleMap", attributeStyleMap);
-  method("attachInternals", attachInternals);
+  for (const [name, entry] of htmlElementMethodTable) method(name, entry);
   method("blur", blur);
   method("click", click);
   method("focus", focus);
-  method("hidePopover", hidePopover);
-  method("showPopover", showPopover);
   method("togglePopover", togglePopover);
   installHTMLElementLateEventMembers(accessor);
   accessor("focusGroup", focusGroup, setFocusGroup);

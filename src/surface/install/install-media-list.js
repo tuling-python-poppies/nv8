@@ -7,7 +7,6 @@ import {
 } from "../../engine/webidl/descriptor.js";
 import { installMediaListConstructor, MediaList } from "../api/css/media-list-constructor.js";
 import { length } from "../api/css/media-list-length-getter.js";
-import { mediaText } from "../api/css/media-list-accessor-descriptor-members.js";
 import { appendMedium } from "../api/css/media-list-append-medium.js";
 import { deleteMedium } from "../api/css/media-list-delete-medium.js";
 import {
@@ -15,11 +14,12 @@ import {
   toString,
   values,
 } from "../api/css/media-list-method-members.js";
+import { mediaListAccessorDescriptorTable } from "../api/css/media-list-accessor-descriptor-members.js";
 
 export function installMediaList() {
   installMediaListConstructor();
   definePrototypeGetter(MediaList.prototype, "length", length);
-  definePrototypeAccessor(MediaList.prototype, "mediaText", mediaText.get, mediaText.set);
+  for (const [name, entry] of mediaListAccessorDescriptorTable) definePrototypeAccessor(MediaList.prototype, name, entry.get, entry.set);
   definePrototypeMethod(MediaList.prototype, "appendMedium", appendMedium);
   definePrototypeMethod(MediaList.prototype, "deleteMedium", deleteMedium);
   definePrototypeMethod(MediaList.prototype, "item", item);

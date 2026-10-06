@@ -26,14 +26,11 @@ import { form } from "../api/dom/html-input-element-form-getter.js";
 import { formMethod, setFormMethod } from "../api/dom/html-input-element-form-method-property.js";
 import { formNoValidate, setFormNoValidate } from "../api/dom/html-input-element-form-no-validate-property.js";
 import { formTarget, setFormTarget } from "../api/dom/html-input-element-form-target-property.js";
-import { height, setHeight } from "../api/dom/html-input-element-height-property.js";
 import { incremental, setIncremental } from "../api/dom/html-input-element-incremental-property.js";
 import { indeterminate, setIndeterminate } from "../api/dom/html-input-element-indeterminate-property.js";
 import { labels } from "../api/dom/html-input-element-labels-getter.js";
 import { list } from "../api/dom/html-input-element-list-getter.js";
-import { maxLength, setMaxLength } from "../api/dom/html-input-element-max-length-property.js";
 import { max, setMax } from "../api/dom/html-input-element-max-property.js";
-import { minLength, setMinLength } from "../api/dom/html-input-element-min-length-property.js";
 import { min, setMin } from "../api/dom/html-input-element-min-property.js";
 import { multiple, setMultiple } from "../api/dom/html-input-element-multiple-property.js";
 import { name, setName } from "../api/dom/html-input-element-name-property.js";
@@ -52,7 +49,6 @@ import { setCustomValidity } from "../api/dom/html-input-element-set-custom-vali
 import { setRangeText } from "../api/dom/html-input-element-set-range-text.js";
 import { setSelectionRange } from "../api/dom/html-input-element-set-selection-range.js";
 import { showPicker } from "../api/dom/html-input-element-show-picker.js";
-import { size, setSize } from "../api/dom/html-input-element-size-property.js";
 import { src, setSrc } from "../api/dom/html-input-element-src-property.js";
 import { stepDown } from "../api/dom/html-input-element-step-down.js";
 import { step, setStep } from "../api/dom/html-input-element-step-property.js";
@@ -66,8 +62,8 @@ import { valueAsNumber, setValueAsNumber } from "../api/dom/html-input-element-v
 import { value, setValue } from "../api/dom/html-input-element-value-property.js";
 import { webkitEntries } from "../api/dom/html-input-element-webkit-entries-getter.js";
 import { webkitdirectory, setWebkitdirectory } from "../api/dom/html-input-element-webkitdirectory-property.js";
-import { width, setWidth } from "../api/dom/html-input-element-width-property.js";
 import { willValidate } from "../api/dom/html-input-element-will-validate-getter.js";
+import { inputNumberReflectionTable } from "../api/dom/input-number-reflection-members.js";
 
 export function installHTMLInputElement() {
   installHTMLInputElementConstructor();
@@ -85,20 +81,17 @@ export function installHTMLInputElement() {
   accessor("formMethod", formMethod, setFormMethod);
   accessor("formNoValidate", formNoValidate, setFormNoValidate);
   accessor("formTarget", formTarget, setFormTarget);
-  accessor("height", height, setHeight);
+  for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);
   accessor("indeterminate", indeterminate, setIndeterminate);
   getter("list", list);
   accessor("max", max, setMax);
-  accessor("maxLength", maxLength, setMaxLength);
   accessor("min", min, setMin);
-  accessor("minLength", minLength, setMinLength);
   accessor("multiple", multiple, setMultiple);
   accessor("name", name, setName);
   accessor("pattern", pattern, setPattern);
   accessor("placeholder", placeholder, setPlaceholder);
   accessor("readOnly", readOnly, setReadOnly);
   accessor("required", required, setRequired);
-  accessor("size", size, setSize);
   accessor("src", src, setSrc);
   accessor("step", step, setStep);
   accessor("type", type, setType);
@@ -106,7 +99,6 @@ export function installHTMLInputElement() {
   accessor("value", value, setValue);
   accessor("valueAsDate", valueAsDate, setValueAsDate);
   accessor("valueAsNumber", valueAsNumber, setValueAsNumber);
-  accessor("width", width, setWidth);
   getter("willValidate", willValidate);
   getter("validity", validity);
   getter("validationMessage", validationMessage);

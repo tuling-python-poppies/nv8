@@ -7,19 +7,11 @@ import {
   VideoPlaybackQuality,
   installVideoPlaybackQualityConstructor,
 } from "../api/media/video-playback-quality-constructor.js";
-import {
-  creationTime,
-  totalVideoFrames,
-  droppedVideoFrames,
-  corruptedVideoFrames,
-} from "../api/media/quality-number-getter-members.js";
+import { qualityNumberGetterTable } from "../api/media/quality-number-getter-members.js";
 
 export function installVideoPlaybackQuality() {
   installVideoPlaybackQualityConstructor();
-  definePrototypeGetter(VideoPlaybackQuality.prototype, "creationTime", creationTime);
-  definePrototypeGetter(VideoPlaybackQuality.prototype, "totalVideoFrames", totalVideoFrames);
-  definePrototypeGetter(VideoPlaybackQuality.prototype, "droppedVideoFrames", droppedVideoFrames);
-  definePrototypeGetter(VideoPlaybackQuality.prototype, "corruptedVideoFrames", corruptedVideoFrames);
+  for (const [name, entry] of qualityNumberGetterTable) definePrototypeGetter(VideoPlaybackQuality.prototype, name, entry);
   defineConstructorBacklink(VideoPlaybackQuality.prototype, VideoPlaybackQuality);
   defineToStringTag(VideoPlaybackQuality.prototype, "VideoPlaybackQuality");
 }

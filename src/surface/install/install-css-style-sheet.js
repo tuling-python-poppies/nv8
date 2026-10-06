@@ -12,13 +12,8 @@ import { ownerRule } from "../api/css/css-style-sheet-owner-rule-getter.js";
 import { cssRules } from "../api/css/css-style-sheet-css-rules-getter.js";
 import { rules } from "../api/css/css-style-sheet-rules-getter.js";
 import { addRule } from "../api/css/css-style-sheet-add-rule.js";
-import {
-  deleteRule,
-  insertRule,
-  removeRule,
-  replaceSync,
-} from "../api/css/css-style-sheet-method-members.js";
 import { replace } from "../api/css/css-style-sheet-replace.js";
+import { cssStyleSheetMethodTable } from "../api/css/css-style-sheet-method-members.js";
 
 export function installCSSStyleSheet() {
   installCSSStyleSheetConstructor();
@@ -26,11 +21,8 @@ export function installCSSStyleSheet() {
   definePrototypeGetter(CSSStyleSheet.prototype, "cssRules", cssRules);
   definePrototypeGetter(CSSStyleSheet.prototype, "rules", rules);
   definePrototypeMethod(CSSStyleSheet.prototype, "addRule", addRule);
-  definePrototypeMethod(CSSStyleSheet.prototype, "deleteRule", deleteRule);
-  definePrototypeMethod(CSSStyleSheet.prototype, "insertRule", insertRule);
-  definePrototypeMethod(CSSStyleSheet.prototype, "removeRule", removeRule);
+  for (const [name, entry] of cssStyleSheetMethodTable) definePrototypeMethod(CSSStyleSheet.prototype, name, entry);
   definePrototypeMethod(CSSStyleSheet.prototype, "replace", replace);
-  definePrototypeMethod(CSSStyleSheet.prototype, "replaceSync", replaceSync);
   defineConstructorBacklink(CSSStyleSheet.prototype, CSSStyleSheet);
   defineToStringTag(CSSStyleSheet.prototype, "CSSStyleSheet");
 }

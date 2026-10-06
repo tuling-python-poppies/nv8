@@ -733,6 +733,14 @@ async function main() {
         referenced += references;
         covered += loopLines;
         if (references !== loopLines) clean = false;
+        // 等价性不变量：**每个消费者都必须安装该家族的全部成员**。只有这时「整表循环」才与
+        // 原语句逐条等价；只要有一个文件只装了子集，循环就会把别的成员也装上去（过装，
+        // 而 finalizePrototypeSurfaceOrder 不会按表面表清掉多余的原型成员）。
+        if (loopLines !== plan.members.length) {
+          skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
+            + `（${path.basename(file)} 只装了 ${loopLines}/${plan.members.length} 个成员，整表循环会过装）`);
+          clean = false;
+        }
         // 还要确认：被摘掉的导出名没有在别处（比如当值用）继续出现
         const droppedNames = plan.members.flatMap((member) => member.exports.map((entry) => entry.name));
         const stillUsed = stillReferencesDroppedNames(source, loops, droppedNames);

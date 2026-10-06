@@ -1,6 +1,13 @@
-// animation 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// animation 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { animationTimelineGetter } from "./animation-timeline-property.js";
 
-export const currentTime = animationTimelineGetter("currentTime");
-export const duration = animationTimelineGetter("duration");
+const ANIMATION_TIMELINE_GETTER_TABLE_ROWS = [
+  ["currentTime", "currentTime"],
+  ["duration", "duration"],
+];
+
+export const animationTimelineGetterTable = ANIMATION_TIMELINE_GETTER_TABLE_ROWS.map(
+  ([name, ...args]) => [name, animationTimelineGetter(...args)],
+);
+
