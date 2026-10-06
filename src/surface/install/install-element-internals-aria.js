@@ -1,55 +1,57 @@
-import { role } from "../api/dom/element-internals-role-property.js";
-import { ariaAtomic } from "../api/dom/element-internals-aria-atomic-property.js";
-import { ariaAutoComplete } from "../api/dom/element-internals-aria-auto-complete-property.js";
-import { ariaBusy } from "../api/dom/element-internals-aria-busy-property.js";
-import { ariaBrailleLabel } from "../api/dom/element-internals-aria-braille-label-property.js";
-import { ariaBrailleRoleDescription } from "../api/dom/element-internals-aria-braille-role-description-property.js";
-import { ariaChecked } from "../api/dom/element-internals-aria-checked-property.js";
-import { ariaColCount } from "../api/dom/element-internals-aria-col-count-property.js";
-import { ariaColIndex } from "../api/dom/element-internals-aria-col-index-property.js";
-import { ariaColSpan } from "../api/dom/element-internals-aria-col-span-property.js";
-import { ariaCurrent } from "../api/dom/element-internals-aria-current-property.js";
-import { ariaDescription } from "../api/dom/element-internals-aria-description-property.js";
-import { ariaDisabled } from "../api/dom/element-internals-aria-disabled-property.js";
-import { ariaExpanded } from "../api/dom/element-internals-aria-expanded-property.js";
-import { ariaHasPopup } from "../api/dom/element-internals-aria-has-popup-property.js";
-import { ariaHidden } from "../api/dom/element-internals-aria-hidden-property.js";
-import { ariaInvalid } from "../api/dom/element-internals-aria-invalid-property.js";
-import { ariaKeyShortcuts } from "../api/dom/element-internals-aria-key-shortcuts-property.js";
-import { ariaLabel } from "../api/dom/element-internals-aria-label-property.js";
-import { ariaLevel } from "../api/dom/element-internals-aria-level-property.js";
-import { ariaLive } from "../api/dom/element-internals-aria-live-property.js";
-import { ariaModal } from "../api/dom/element-internals-aria-modal-property.js";
-import { ariaMultiLine } from "../api/dom/element-internals-aria-multi-line-property.js";
-import { ariaMultiSelectable } from "../api/dom/element-internals-aria-multi-selectable-property.js";
-import { ariaOrientation } from "../api/dom/element-internals-aria-orientation-property.js";
-import { ariaPlaceholder } from "../api/dom/element-internals-aria-placeholder-property.js";
-import { ariaPosInSet } from "../api/dom/element-internals-aria-pos-in-set-property.js";
-import { ariaPressed } from "../api/dom/element-internals-aria-pressed-property.js";
-import { ariaReadOnly } from "../api/dom/element-internals-aria-read-only-property.js";
-import { ariaRelevant } from "../api/dom/element-internals-aria-relevant-property.js";
-import { ariaRequired } from "../api/dom/element-internals-aria-required-property.js";
-import { ariaRoleDescription } from "../api/dom/element-internals-aria-role-description-property.js";
-import { ariaRowCount } from "../api/dom/element-internals-aria-row-count-property.js";
-import { ariaRowIndex } from "../api/dom/element-internals-aria-row-index-property.js";
-import { ariaRowSpan } from "../api/dom/element-internals-aria-row-span-property.js";
-import { ariaSelected } from "../api/dom/element-internals-aria-selected-property.js";
-import { ariaSetSize } from "../api/dom/element-internals-aria-set-size-property.js";
-import { ariaSort } from "../api/dom/element-internals-aria-sort-property.js";
-import { ariaValueMax } from "../api/dom/element-internals-aria-value-max-property.js";
-import { ariaValueMin } from "../api/dom/element-internals-aria-value-min-property.js";
-import { ariaValueNow } from "../api/dom/element-internals-aria-value-now-property.js";
-import { ariaValueText } from "../api/dom/element-internals-aria-value-text-property.js";
-import { ariaColIndexText } from "../api/dom/element-internals-aria-col-index-text-property.js";
-import { ariaRowIndexText } from "../api/dom/element-internals-aria-row-index-text-property.js";
-import { ariaActiveDescendantElement } from "../api/dom/element-internals-aria-active-descendant-element-property.js";
-import { ariaActionsElements } from "../api/dom/element-internals-aria-actions-elements-property.js";
-import { ariaControlsElements } from "../api/dom/element-internals-aria-controls-elements-property.js";
-import { ariaDescribedByElements } from "../api/dom/element-internals-aria-described-by-elements-property.js";
-import { ariaDetailsElements } from "../api/dom/element-internals-aria-details-elements-property.js";
-import { ariaErrorMessageElements } from "../api/dom/element-internals-aria-error-message-elements-property.js";
-import { ariaFlowToElements } from "../api/dom/element-internals-aria-flow-to-elements-property.js";
-import { ariaLabelledByElements } from "../api/dom/element-internals-aria-labelled-by-elements-property.js";
+import {
+  role,
+  ariaAtomic,
+  ariaAutoComplete,
+  ariaBusy,
+  ariaBrailleLabel,
+  ariaBrailleRoleDescription,
+  ariaChecked,
+  ariaColCount,
+  ariaColIndex,
+  ariaColSpan,
+  ariaCurrent,
+  ariaDescription,
+  ariaDisabled,
+  ariaExpanded,
+  ariaHasPopup,
+  ariaHidden,
+  ariaInvalid,
+  ariaKeyShortcuts,
+  ariaLabel,
+  ariaLevel,
+  ariaLive,
+  ariaModal,
+  ariaMultiLine,
+  ariaMultiSelectable,
+  ariaOrientation,
+  ariaPlaceholder,
+  ariaPosInSet,
+  ariaPressed,
+  ariaReadOnly,
+  ariaRelevant,
+  ariaRequired,
+  ariaRoleDescription,
+  ariaRowCount,
+  ariaRowIndex,
+  ariaRowSpan,
+  ariaSelected,
+  ariaSetSize,
+  ariaSort,
+  ariaValueMax,
+  ariaValueMin,
+  ariaValueNow,
+  ariaValueText,
+  ariaColIndexText,
+  ariaRowIndexText,
+  ariaActiveDescendantElement,
+  ariaActionsElements,
+  ariaControlsElements,
+  ariaDescribedByElements,
+  ariaDetailsElements,
+  ariaErrorMessageElements,
+  ariaFlowToElements,
+  ariaLabelledByElements,
+} from "../api/dom/element-internals-ariaproperty-members.js";
 
 export function installElementInternalsARIABeforeMethods(accessor) {
   accessor("role", role);

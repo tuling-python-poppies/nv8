@@ -10,10 +10,12 @@ import {
 } from "../api/geometry/dom-point-read-only-constructor.js";
 import { matrixTransform } from "../api/geometry/dom-point-read-only-matrix-transform.js";
 import { toJSON } from "../api/geometry/dom-point-read-only-to-json.js";
-import { w } from "../api/geometry/dom-point-read-only-w-getter.js";
-import { x } from "../api/geometry/dom-point-read-only-x-getter.js";
-import { y } from "../api/geometry/dom-point-read-only-y-getter.js";
-import { z } from "../api/geometry/dom-point-read-only-z-getter.js";
+import {
+  w,
+  x,
+  y,
+  z,
+} from "../api/geometry/point-getter-members.js";
 
 export function installDOMPointReadOnly() {
   installDOMPointReadOnlyConstructor();

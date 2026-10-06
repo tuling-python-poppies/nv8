@@ -1,42 +1,81 @@
-export { append } from "./document-append-extended-method.js";
-export { captureEvents } from "./document-capture-events-extended-method.js";
-export { caretPositionFromPoint } from "./document-caret-position-from-point-extended-method.js";
-export { caretRangeFromPoint } from "./document-caret-range-from-point-extended-method.js";
-export { clear } from "./document-clear-extended-method.js";
-export { close } from "./document-close-extended-method.js";
-export { createExpression } from "./document-create-expression-extended-method.js";
-export { createNSResolver } from "./document-create-n-s-resolver-extended-method.js";
-export { elementFromPoint } from "./document-element-from-point-extended-method.js";
-export { elementsFromPoint } from "./document-elements-from-point-extended-method.js";
-export { evaluate } from "./document-evaluate-extended-method.js";
-export { execCommand } from "./document-exec-command-extended-method.js";
-export { exitFullscreen } from "./document-exit-fullscreen-extended-method.js";
-export { exitPictureInPicture } from "./document-exit-picture-in-picture-extended-method.js";
-export { exitPointerLock } from "./document-exit-pointer-lock-extended-method.js";
-export { getAnimations } from "./document-get-animations-extended-method.js";
-export { getElementsByName } from "./document-get-elements-by-name-extended-method.js";
-export { getElementsByTagNameNS } from "./document-get-elements-by-tag-name-n-s-extended-method.js";
-export { hasFocus } from "./document-has-focus-extended-method.js";
-export { hasStorageAccess } from "./document-has-storage-access-extended-method.js";
-export { hasUnpartitionedCookieAccess } from "./document-has-unpartitioned-cookie-access-extended-method.js";
-export { moveBefore } from "./document-move-before-extended-method.js";
-export { open } from "./document-open-extended-method.js";
-export { prepend } from "./document-prepend-extended-method.js";
-export { queryCommandEnabled } from "./document-query-command-enabled-extended-method.js";
-export { queryCommandIndeterm } from "./document-query-command-indeterm-extended-method.js";
-export { queryCommandState } from "./document-query-command-state-extended-method.js";
-export { queryCommandSupported } from "./document-query-command-supported-extended-method.js";
-export { queryCommandValue } from "./document-query-command-value-extended-method.js";
-export { releaseEvents } from "./document-release-events-extended-method.js";
-export { replaceChildren } from "./document-replace-children-extended-method.js";
-export { requestStorageAccess } from "./document-request-storage-access-extended-method.js";
-export { requestStorageAccessFor } from "./document-request-storage-access-for-extended-method.js";
-export { startViewTransition } from "./document-start-view-transition-extended-method.js";
-export { webkitCancelFullScreen } from "./document-webkit-cancel-full-screen-extended-method.js";
-export { webkitExitFullscreen } from "./document-webkit-exit-fullscreen-extended-method.js";
-export { write } from "./document-write-extended-method.js";
-export { writeln } from "./document-writeln-extended-method.js";
-export { browsingTopics } from "./document-browsing-topics-extended-method.js";
-export { hasPrivateToken } from "./document-has-private-token-extended-method.js";
-export { hasRedemptionRecord } from "./document-has-redemption-record-extended-method.js";
-export { ariaNotify } from "./document-aria-notify-extended-method.js";
+
+import { documentMethod } from "./document-method.js";
+import {
+  appendOperation,
+  ariaNotifyOperation,
+  browsingTopicsOperation,
+  noResultOperation,
+  caretPositionOperation,
+  caretRangeOperation,
+  clearOperation,
+  closeOperation,
+  createExpressionOperation,
+  createNSResolverOperation,
+  elementFromPointOperation,
+  elementsFromPointOperation,
+  evaluateOperation,
+  execCommandOperation,
+  exitFullscreenOperation,
+  exitPictureInPictureOperation,
+  exitPointerLockOperation,
+  getAnimationsOperation,
+  getElementsByNameOperation,
+  getElementsByTagNameNSOperation,
+  hasFocusOperation,
+  resolvedFalseOperation,
+  resolvedTrueOperation,
+  moveBeforeDocumentOperation,
+  openOperation,
+  prependOperation,
+  queryCommandEnabledOperation,
+  falseOperation,
+  queryCommandSupportedOperation,
+  emptyStringOperation,
+  replaceChildrenOperation,
+  startViewTransitionOperation,
+  writeOperation,
+  writelnOperation,
+} from "./document-extended-method-operations.js";
+
+export const append = documentMethod("append", 0, appendOperation);
+export const ariaNotify = documentMethod("ariaNotify", 1, ariaNotifyOperation);
+export const browsingTopics = documentMethod("browsingTopics", 0, browsingTopicsOperation);
+export const captureEvents = documentMethod("captureEvents", 0, noResultOperation);
+export const caretPositionFromPoint = documentMethod("caretPositionFromPoint", 2, caretPositionOperation);
+export const caretRangeFromPoint = documentMethod("caretRangeFromPoint", 0, caretRangeOperation);
+export const clear = documentMethod("clear", 0, clearOperation);
+export const close = documentMethod("close", 0, closeOperation);
+export const createExpression = documentMethod("createExpression", 1, createExpressionOperation);
+export const createNSResolver = documentMethod("createNSResolver", 1, createNSResolverOperation);
+export const elementFromPoint = documentMethod("elementFromPoint", 2, elementFromPointOperation);
+export const elementsFromPoint = documentMethod("elementsFromPoint", 2, elementsFromPointOperation);
+export const evaluate = documentMethod("evaluate", 2, evaluateOperation);
+export const execCommand = documentMethod("execCommand", 1, execCommandOperation);
+export const exitFullscreen = documentMethod("exitFullscreen", 0, exitFullscreenOperation);
+export const exitPictureInPicture = documentMethod("exitPictureInPicture", 0, exitPictureInPictureOperation);
+export const exitPointerLock = documentMethod("exitPointerLock", 0, exitPointerLockOperation);
+export const getAnimations = documentMethod("getAnimations", 0, getAnimationsOperation);
+export const getElementsByName = documentMethod("getElementsByName", 1, getElementsByNameOperation);
+export const getElementsByTagNameNS = documentMethod("getElementsByTagNameNS", 2, getElementsByTagNameNSOperation);
+export const hasFocus = documentMethod("hasFocus", 0, hasFocusOperation);
+export const hasPrivateToken = documentMethod("hasPrivateToken", 1, resolvedFalseOperation);
+export const hasRedemptionRecord = documentMethod("hasRedemptionRecord", 1, resolvedFalseOperation);
+export const hasStorageAccess = documentMethod("hasStorageAccess", 0, resolvedTrueOperation);
+export const hasUnpartitionedCookieAccess = documentMethod("hasUnpartitionedCookieAccess", 0, resolvedTrueOperation);
+export const moveBefore = documentMethod("moveBefore", 2, moveBeforeDocumentOperation);
+export const open = documentMethod("open", 0, openOperation);
+export const prepend = documentMethod("prepend", 0, prependOperation);
+export const queryCommandEnabled = documentMethod("queryCommandEnabled", 1, queryCommandEnabledOperation);
+export const queryCommandIndeterm = documentMethod("queryCommandIndeterm", 1, falseOperation);
+export const queryCommandState = documentMethod("queryCommandState", 1, falseOperation);
+export const queryCommandSupported = documentMethod("queryCommandSupported", 1, queryCommandSupportedOperation);
+export const queryCommandValue = documentMethod("queryCommandValue", 1, emptyStringOperation);
+export const releaseEvents = documentMethod("releaseEvents", 0, noResultOperation);
+export const replaceChildren = documentMethod("replaceChildren", 0, replaceChildrenOperation);
+export const requestStorageAccess = documentMethod("requestStorageAccess", 0, resolvedTrueOperation);
+export const requestStorageAccessFor = documentMethod("requestStorageAccessFor", 1, resolvedTrueOperation);
+export const startViewTransition = documentMethod("startViewTransition", 0, startViewTransitionOperation);
+export const webkitCancelFullScreen = documentMethod("webkitCancelFullScreen", 0, exitFullscreenOperation);
+export const webkitExitFullscreen = documentMethod("webkitExitFullscreen", 0, exitFullscreenOperation);
+export const write = documentMethod("write", 0, writeOperation);
+export const writeln = documentMethod("writeln", 0, writelnOperation);

@@ -8,8 +8,11 @@ import {
   OffscreenCanvas,
   installOffscreenCanvasConstructor,
 } from "../api/canvas/offscreen-canvas-constructor.js";
-import { convertToBlob } from "../api/canvas/offscreen-canvas-convert-to-blob.js";
-import { getContext } from "../api/canvas/offscreen-canvas-get-context.js";
+import {
+  convertToBlob,
+  getContext,
+  transferToImageBitmap,
+} from "../api/canvas/offscreen-canvas-method-members.js";
 import {
   height,
   setHeight,
@@ -22,9 +25,6 @@ import {
   oncontextrestored,
   setOncontextrestored,
 } from "../api/canvas/offscreen-canvas-oncontextrestored-property.js";
-import {
-  transferToImageBitmap,
-} from "../api/canvas/offscreen-canvas-transfer-to-image-bitmap.js";
 import {
   width,
   setWidth,

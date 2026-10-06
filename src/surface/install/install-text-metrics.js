@@ -14,9 +14,11 @@ import {
 } from "../api/canvas/text-metrics-constructor.js";
 import { fontBoundingBoxAscent } from "../api/canvas/text-metrics-font-bounding-box-ascent-getter.js";
 import { fontBoundingBoxDescent } from "../api/canvas/text-metrics-font-bounding-box-descent-getter.js";
-import { hangingBaseline } from "../api/canvas/text-metrics-hanging-baseline-getter.js";
+import {
+  hangingBaseline,
+  width,
+} from "../api/canvas/text-metrics-number-getter-members.js";
 import { ideographicBaseline } from "../api/canvas/text-metrics-ideographic-baseline-getter.js";
-import { width } from "../api/canvas/text-metrics-width-getter.js";
 
 export function installTextMetrics() {
   installTextMetricsConstructor();

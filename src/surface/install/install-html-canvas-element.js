@@ -4,21 +4,21 @@ import {
   definePrototypeMethod,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
-import { captureStream } from "../api/canvas/html-canvas-element-capture-stream.js";
+import {
+  captureStream,
+  getContext,
+  transferControlToOffscreen,
+} from "../api/canvas/html-canvas-method-members.js";
 import {
   HTMLCanvasElement,
   installHTMLCanvasElementConstructor,
 } from "../api/canvas/html-canvas-element-constructor.js";
-import { getContext } from "../api/canvas/html-canvas-element-get-context.js";
 import {
   height,
   setHeight,
 } from "../api/canvas/html-canvas-element-height-property.js";
 import { toBlob } from "../api/canvas/html-canvas-element-to-blob.js";
 import { toDataURL } from "../api/canvas/html-canvas-element-to-data-url.js";
-import {
-  transferControlToOffscreen,
-} from "../api/canvas/html-canvas-element-transfer-control-to-offscreen.js";
 import {
   width,
   setWidth,

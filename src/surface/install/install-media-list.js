@@ -7,12 +7,14 @@ import {
 } from "../../engine/webidl/descriptor.js";
 import { installMediaListConstructor, MediaList } from "../api/css/media-list-constructor.js";
 import { length } from "../api/css/media-list-length-getter.js";
-import { mediaText } from "../api/css/media-list-media-text-property.js";
+import { mediaText } from "../api/css/media-list-accessor-descriptor-members.js";
 import { appendMedium } from "../api/css/media-list-append-medium.js";
 import { deleteMedium } from "../api/css/media-list-delete-medium.js";
-import { item } from "../api/css/media-list-item.js";
-import { toString } from "../api/css/media-list-to-string.js";
-import { values } from "../api/css/media-list-values.js";
+import {
+  item,
+  toString,
+  values,
+} from "../api/css/media-list-method-members.js";
 
 export function installMediaList() {
   installMediaListConstructor();

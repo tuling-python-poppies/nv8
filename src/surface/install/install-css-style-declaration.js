@@ -13,8 +13,10 @@ import { cssText } from "../api/css/css-style-declaration-css-text-property.js";
 import { length } from "../api/css/css-style-declaration-length-getter.js";
 import { parentRule } from "../api/css/css-style-declaration-parent-rule-getter.js";
 import { cssFloat } from "../api/css/css-style-declaration-css-float-property.js";
-import { getPropertyPriority } from "../api/css/css-style-declaration-get-property-priority.js";
-import { getPropertyValue } from "../api/css/css-style-declaration-get-property-value.js";
+import {
+  getPropertyPriority,
+  getPropertyValue,
+} from "../api/css/css-style-method-members.js";
 import { item } from "../api/css/css-style-declaration-item.js";
 import { removeProperty } from "../api/css/css-style-declaration-remove-property.js";
 import { setProperty } from "../api/css/css-style-declaration-set-property.js";

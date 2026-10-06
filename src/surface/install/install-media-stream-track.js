@@ -17,17 +17,20 @@ import { getCapabilities } from "../api/media/media-stream-track-get-capabilitie
 import { getCaptureHandle } from "../api/media/media-stream-track-get-capture-handle.js";
 import { getConstraints } from "../api/media/media-stream-track-get-constraints.js";
 import { getSettings } from "../api/media/media-stream-track-get-settings.js";
-import { id } from "../api/media/media-stream-track-id-getter.js";
-import { kind } from "../api/media/media-stream-track-kind-getter.js";
-import { label } from "../api/media/media-stream-track-label-getter.js";
-import { muted } from "../api/media/media-stream-track-muted-getter.js";
+import {
+  id,
+  kind,
+  label,
+  muted,
+  readyState,
+  stats,
+} from "../api/media/media-stream-track-readonly-getter-members.js";
 import { oncapturehandlechange, setOncapturehandlechange } from "../api/media/media-stream-track-oncapturehandlechange-property.js";
 import { onended, setOnended } from "../api/media/media-stream-track-onended-property.js";
 import { onmute, setOnmute } from "../api/media/media-stream-track-onmute-property.js";
 import { onunmute, setOnunmute } from "../api/media/media-stream-track-onunmute-property.js";
-import { readyState } from "../api/media/media-stream-track-ready-state-getter.js";
-import { stats } from "../api/media/media-stream-track-stats-getter.js";
 import { stop } from "../api/media/media-stream-track-stop.js";
+
 export function installMediaStreamTrack() {
   installMediaStreamTrackConstructor();
   getter("kind", kind);

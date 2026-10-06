@@ -1,6 +1,8 @@
 import { AnimationTimeline, installAnimationTimelineConstructor } from "../api/animation/animation-timeline-constructor.js";
-import { currentTime } from "../api/animation/animation-timeline-current-time-getter.js";
-import { duration } from "../api/animation/animation-timeline-duration-getter.js";
+import {
+  currentTime,
+  duration,
+} from "../api/animation/animation-timeline-getter-members.js";
 import { defineConstructorBacklink, definePrototypeGetter, defineToStringTag } from "../../engine/webidl/descriptor.js";
 
 export function installAnimationTimeline() {

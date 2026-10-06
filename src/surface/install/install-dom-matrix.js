@@ -17,7 +17,15 @@ import { f, setF } from "../api/geometry/dom-matrix-f-property.js";
 import { fromFloat32Array } from "../api/geometry/dom-matrix-from-float-32-array.js";
 import { fromFloat64Array } from "../api/geometry/dom-matrix-from-float-64-array.js";
 import { fromMatrix } from "../api/geometry/dom-matrix-from-matrix.js";
-import { invertSelf } from "../api/geometry/dom-matrix-invert-self.js";
+import {
+  invertSelf,
+  multiplySelf,
+  preMultiplySelf,
+  rotateAxisAngleSelf,
+  rotateFromVectorSelf,
+  rotateSelf,
+  translateSelf,
+} from "../api/geometry/matrix-self-operation-members.js";
 import { m11, setM11 } from "../api/geometry/dom-matrix-m11-property.js";
 import { m12, setM12 } from "../api/geometry/dom-matrix-m12-property.js";
 import { m13, setM13 } from "../api/geometry/dom-matrix-m13-property.js";
@@ -34,17 +42,11 @@ import { m41, setM41 } from "../api/geometry/dom-matrix-m41-property.js";
 import { m42, setM42 } from "../api/geometry/dom-matrix-m42-property.js";
 import { m43, setM43 } from "../api/geometry/dom-matrix-m43-property.js";
 import { m44, setM44 } from "../api/geometry/dom-matrix-m44-property.js";
-import { multiplySelf } from "../api/geometry/dom-matrix-multiply-self.js";
-import { preMultiplySelf } from "../api/geometry/dom-matrix-pre-multiply-self.js";
-import { rotateAxisAngleSelf } from "../api/geometry/dom-matrix-rotate-axis-angle-self.js";
-import { rotateFromVectorSelf } from "../api/geometry/dom-matrix-rotate-from-vector-self.js";
-import { rotateSelf } from "../api/geometry/dom-matrix-rotate-self.js";
 import { scale3dSelf } from "../api/geometry/dom-matrix-scale-3d-self.js";
 import { scaleSelf } from "../api/geometry/dom-matrix-scale-self.js";
 import { setMatrixValue } from "../api/geometry/dom-matrix-set-matrix-value.js";
 import { skewXSelf } from "../api/geometry/dom-matrix-skew-x-self.js";
 import { skewYSelf } from "../api/geometry/dom-matrix-skew-y-self.js";
-import { translateSelf } from "../api/geometry/dom-matrix-translate-self.js";
 
 export function installDOMMatrix() {
   installDOMMatrixConstructor();

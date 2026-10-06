@@ -26,6 +26,7 @@ import {
 import {
   finishElementConstructor,
   installElementConstructor,
+  Element,
 } from "../api/dom/element-constructor.js";
 import {
   installElementFirstElementChild,
@@ -130,7 +131,6 @@ import {
   definePrototypeGetter,
   definePrototypeMethod,
 } from "../../engine/webidl/descriptor.js";
-import { Element } from "../api/dom/element-constructor.js";
 import { slot, setSlot } from "../api/dom/element-slot-property.js";
 import { part } from "../api/dom/element-part-getter.js";
 import { scrollTop, setScrollTop } from "../api/dom/element-scroll-top-property.js";
@@ -153,33 +153,35 @@ import { onwebkitfullscreenerror, setOnwebkitfullscreenerror } from "../api/dom/
 import * as aria from "../api/dom/element-aria-members.js";
 import { previousElementSibling } from "../api/dom/element-previous-element-sibling-getter.js";
 import { nextElementSibling } from "../api/dom/element-next-element-sibling-getter.js";
-import { checkVisibility } from "../api/dom/element-check-visibility.js";
-import { getAnimations } from "../api/dom/element-get-animations.js";
+import {
+  checkVisibility,
+  getAnimations,
+  getElementsByTagNameNS,
+  getHTML,
+  hasPointerCapture,
+  insertAdjacentElement,
+  insertAdjacentHTML,
+  insertAdjacentText,
+  moveBefore,
+  releasePointerCapture,
+  scroll,
+  scrollBy,
+  scrollIntoView,
+  scrollIntoViewIfNeeded,
+  scrollTo,
+  setHTMLUnsafe,
+  setPointerCapture,
+  webkitMatchesSelector,
+  ariaNotify,
+  setHTML,
+} from "../api/dom/element-extended-method-members.js";
 import { getBoundingClientRect } from "../api/dom/element-get-bounding-client-rect.js";
 import { getClientRects } from "../api/dom/element-get-client-rects.js";
 import { computedStyleMap } from "../api/dom/element-computed-style-map.js";
-import { getElementsByTagNameNS } from "../api/dom/element-get-elements-by-tag-name-ns.js";
-import { getHTML } from "../api/dom/element-get-html.js";
-import { hasPointerCapture } from "../api/dom/element-has-pointer-capture.js";
-import { insertAdjacentElement } from "../api/dom/element-insert-adjacent-element.js";
-import { insertAdjacentHTML } from "../api/dom/element-insert-adjacent-html.js";
-import { insertAdjacentText } from "../api/dom/element-insert-adjacent-text.js";
-import { moveBefore } from "../api/dom/element-move-before.js";
-import { releasePointerCapture } from "../api/dom/element-release-pointer-capture.js";
 import { requestFullscreen } from "../api/dom/element-request-fullscreen.js";
 import { requestPointerLock } from "../api/dom/element-request-pointer-lock.js";
-import { scroll } from "../api/dom/element-scroll.js";
-import { scrollBy } from "../api/dom/element-scroll-by.js";
-import { scrollIntoView } from "../api/dom/element-scroll-into-view.js";
-import { scrollIntoViewIfNeeded } from "../api/dom/element-scroll-into-view-if-needed.js";
-import { scrollTo } from "../api/dom/element-scroll-to.js";
-import { setHTMLUnsafe } from "../api/dom/element-set-html-unsafe.js";
-import { setPointerCapture } from "../api/dom/element-set-pointer-capture.js";
-import { webkitMatchesSelector } from "../api/dom/element-webkit-matches-selector.js";
 import { webkitRequestFullScreen } from "../api/dom/element-webkit-request-full-screen.js";
 import { webkitRequestFullscreen } from "../api/dom/element-webkit-request-fullscreen.js";
-import { ariaNotify } from "../api/dom/element-aria-notify.js";
-import { setHTML } from "../api/dom/element-set-html.js";
 import { pseudo } from "../api/dom/element-pseudo.js";
 import { currentCSSZoom } from "../api/dom/element-current-css-zoom-getter.js";
 import { customElementRegistry } from "../api/dom/element-custom-element-registry-getter.js";

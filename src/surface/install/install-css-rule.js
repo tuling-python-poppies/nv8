@@ -6,7 +6,7 @@ import {
 } from "../../engine/webidl/descriptor.js";
 import { CSSRule, installCSSRuleConstructor } from "../api/css/css-rule-constructor.js";
 import { type } from "../api/css/css-rule-type-getter.js";
-import { cssText } from "../api/css/css-rule-css-text-property.js";
+import { cssText } from "../api/css/css-rule-accessor-descriptor-members.js";
 import { parentRule } from "../api/css/css-rule-parent-rule-getter.js";
 import { parentStyleSheet } from "../api/css/css-rule-parent-style-sheet-getter.js";
 

@@ -41,12 +41,14 @@ import { autofocus, setAutofocus } from "../api/dom/html-element-autofocus-prope
 import { tabIndex, setTabIndex } from "../api/dom/html-element-tab-index-property.js";
 import { style } from "../api/dom/html-element-style-getter.js";
 import { attributeStyleMap } from "../api/dom/html-element-attribute-style-map-getter.js";
-import { attachInternals } from "../api/dom/html-element-attach-internals.js";
+import {
+  attachInternals,
+  hidePopover,
+  showPopover,
+} from "../api/dom/html-element-method-members.js";
 import { blur } from "../api/dom/html-element-blur.js";
 import { click } from "../api/dom/html-element-click.js";
 import { focus } from "../api/dom/html-element-focus.js";
-import { hidePopover } from "../api/dom/html-element-hide-popover.js";
-import { showPopover } from "../api/dom/html-element-show-popover.js";
 import { togglePopover } from "../api/dom/html-element-toggle-popover.js";
 import { focusGroup, setFocusGroup } from "../api/dom/html-element-focus-group-property.js";
 import { focusGroupStart, setFocusGroupStart } from "../api/dom/html-element-focus-group-start-property.js";

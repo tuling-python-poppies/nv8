@@ -21,8 +21,10 @@ import { playsInline, setPlaysInline } from "../api/media/html-video-element-pla
 import { poster, setPoster } from "../api/media/html-video-element-poster-property.js";
 import { requestPictureInPicture } from "../api/media/html-video-element-request-picture-in-picture.js";
 import { requestVideoFrameCallback } from "../api/media/html-video-element-request-video-frame-callback.js";
-import { videoHeight } from "../api/media/html-video-element-video-height-getter.js";
-import { videoWidth } from "../api/media/html-video-element-video-width-getter.js";
+import {
+  videoHeight,
+  videoWidth,
+} from "../api/media/video-readonly-property-members.js";
 import { webkitDecodedFrameCount } from "../api/media/html-video-element-webkit-decoded-frame-count-getter.js";
 import { webkitDroppedFrameCount } from "../api/media/html-video-element-webkit-dropped-frame-count-getter.js";
 import { width, setWidth } from "../api/media/html-video-element-width-property.js";

@@ -10,13 +10,15 @@ import {
 } from "../api/dom/custom-state-set-constructor.js";
 import { size } from "../api/dom/custom-state-set-size-getter.js";
 import { add } from "../api/dom/custom-state-set-add.js";
-import { clear } from "../api/dom/custom-state-set-clear.js";
-import { deleteState } from "../api/dom/custom-state-set-delete.js";
-import { entries } from "../api/dom/custom-state-set-entries.js";
+import {
+  clear,
+  deleteState,
+  entries,
+  has,
+  keys,
+  values,
+} from "../api/dom/custom-state-set-method-members.js";
 import { forEach } from "../api/dom/custom-state-set-for-each.js";
-import { has } from "../api/dom/custom-state-set-has.js";
-import { keys } from "../api/dom/custom-state-set-keys.js";
-import { values } from "../api/dom/custom-state-set-values.js";
 
 export function installCustomStateSet() {
   installCustomStateSetConstructor();

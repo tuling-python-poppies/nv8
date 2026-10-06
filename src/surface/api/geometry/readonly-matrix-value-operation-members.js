@@ -1,0 +1,50 @@
+// geometry 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+
+import { readonlyMatrixValueOperation } from "./dom-matrix-read-only-operation.js";
+import {
+  is2DMatrix,
+  isIdentityMatrix,
+} from "./dom-matrix-state.js";
+
+export const toFloat32Array = readonlyMatrixValueOperation(
+  "toFloat32Array",
+  matrix => new Float32Array(matrix),
+);
+export const toFloat64Array = readonlyMatrixValueOperation(
+  "toFloat64Array",
+  matrix => new Float64Array(matrix),
+);
+export const toJSON = readonlyMatrixValueOperation("toJSON", matrix => ({
+  a: matrix[0],
+  b: matrix[1],
+  c: matrix[4],
+  d: matrix[5],
+  e: matrix[12],
+  f: matrix[13],
+  m11: matrix[0],
+  m12: matrix[1],
+  m13: matrix[2],
+  m14: matrix[3],
+  m21: matrix[4],
+  m22: matrix[5],
+  m23: matrix[6],
+  m24: matrix[7],
+  m31: matrix[8],
+  m32: matrix[9],
+  m33: matrix[10],
+  m34: matrix[11],
+  m41: matrix[12],
+  m42: matrix[13],
+  m43: matrix[14],
+  m44: matrix[15],
+  is2D: is2DMatrix(matrix),
+  isIdentity: isIdentityMatrix(matrix),
+}));
+export const toString = readonlyMatrixValueOperation(
+  "toString",
+  matrix => is2DMatrix(matrix)
+    ? `matrix(${[
+        matrix[0], matrix[1], matrix[4], matrix[5], matrix[12], matrix[13],
+      ].join(", ")})`
+    : `matrix3d(${matrix.join(", ")})`,
+);

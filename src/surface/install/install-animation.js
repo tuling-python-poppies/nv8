@@ -15,14 +15,16 @@ import { oncancel, setOncancel } from "../api/animation/animation-oncancel-prope
 import { onremove, setOnremove } from "../api/animation/animation-onremove-property.js";
 import { finished } from "../api/animation/animation-finished-getter.js";
 import { ready } from "../api/animation/animation-ready-getter.js";
-import { cancel } from "../api/animation/animation-cancel.js";
-import { commitStyles } from "../api/animation/animation-commit-styles.js";
-import { finish } from "../api/animation/animation-finish.js";
-import { pause } from "../api/animation/animation-pause.js";
-import { persist } from "../api/animation/animation-persist.js";
-import { play } from "../api/animation/animation-play.js";
-import { reverse } from "../api/animation/animation-reverse.js";
-import { updatePlaybackRate } from "../api/animation/animation-update-playback-rate.js";
+import {
+  cancel,
+  commitStyles,
+  finish,
+  pause,
+  persist,
+  play,
+  reverse,
+  updatePlaybackRate,
+} from "../api/animation/animation-method-members.js";
 import { overallProgress } from "../api/animation/animation-overall-progress-getter.js";
 import { defineConstructorBacklink, definePrototypeAccessor, definePrototypeGetter, definePrototypeMethod, defineToStringTag } from "../../engine/webidl/descriptor.js";
 
