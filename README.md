@@ -1175,6 +1175,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 | `npm run build:bundle` | 生成 Realm 模块预打包缓存（本机产物） |
 | `npm run check:bundle` | 校验缓存是否属于本机 |
 | `npm run check:surface-order` | 校验 Window 全局顺序表与采集 fixture 一致 |
+| `npm run check:code-shape` | 代码形态护栏：空转循环与「内联数组 + 常量下标」两类摊平残留 |
 | `node scripts/probe-intrinsics.mjs --self-check` | 内在函数自省探测（目标是否枚举 Window 表面，新目标适配用） |
 | `npm run build:css-defaults` | 从 fixture 重新生成 UA 默认样式表 |
 | `npm run agent:bridge` | 启动单会话 stdio JSON-RPC Agent 桥（见 [docs/agent-bridge.md](docs/agent-bridge.md)）|
