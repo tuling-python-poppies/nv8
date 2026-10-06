@@ -48,6 +48,11 @@ const ALLOWED = [
     token: 'src/engine/realm/module-bundle.json',
     reason: '该文件是 gitignore 的本机产物，默认不生成；文档是在描述它的位置与体积，不是引用已提交文件',
   },
+  {
+    file: 'README.md',
+    token: 'src/engine/realm/module-bundle.json',
+    reason: '同上；README 里这条是在提醒「跑验证前先删掉它」，本来就不该存在',
+  },
 ];
 
 const SKIP_DIRS = new Set(['.git', 'node_modules']);
