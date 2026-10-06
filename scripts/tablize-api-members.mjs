@@ -28,14 +28,37 @@
  *
  * ## 还没跨过去的坎（要用这个工具前先读）
  *
- * 生成的循环是「把整张表装到当前接口」，这对**成员全属于同一个接口**的家族是对的，
- * 对跨接口的家族会过装——而 `finalizePrototypeSurfaceOrder()` **不会**按表面表清掉多余的
- * 原型成员（实测 `HTMLAreaElement` 25 → 50、`HTMLButtonElement` 23 → 43，被
- * `capture-full-surface` 逐项抓到）。
+ * ### 1. 语句扫描范围只有 `src/surface/install/**`
  *
- * 所以下一步要么按接口分表（表里带接口名，安装时筛选），要么只对单接口家族启用。
- * 与之配套的还有两道已实现的闸门：「桶 + 安装器混合体」整族跳过、
- * 「摘掉的导出名不得在别处继续出现」整族跳过。
+ * 两个 handler 家族的安装函数写在 **api 目录的桶文件**里（`document-event-members.js`
+ * 的 6 个 `install*EventMembers`、`html-element-event-members.js` 同理）。扫描不到它们，
+ * 于是桶的 import 被 `stripForwarding` 摘掉、里面的语句没人改写 → 运行时
+ * `onabort is not defined`。`targetReusesMembers()` 这道闸门就是为它设的。
+ *
+ * 要解掉：把每个 plan 的**目标文件**也纳入消费者扫描。注意写入顺序——目标既是表的
+ * 所有者又是消费者，得先按循环改写它的正文、再追加表，否则「先写表、后按原文改写正文」
+ * 会把刚写的表冲掉；目标文件里的表引用也不要再补 import（会自引用）。
+ *
+ * ### 2. 还有一处「漏装」没定位
+ *
+ * 关掉闸门放开最后 2 个家族后，实测 `HTMLElement` 143 → 130、`MathMLElement` 113 → 110
+ * （成员变少＝漏装）。怀疑仍有 scope 的语句没被匹配上，需要把「没匹配的语句」清单打出来看。
+ * 漏装比过装隐蔽，`capture-full-surface` 的成员摘要是唯一能抓它的地方。
+ *
+ * ### 3. 成员被当值用 / 被别的模块直接 import
+ *
+ * 前者（`mediaListMethod` 的 `values` 作 `Symbol.iterator`）在表旁补一个具名导出即可：
+ * `export const values = new Map(mediaListMethodTable).get("values");`。
+ * 后者（`urlReflection` 的 anchor/image）按接口分表后名字唯一，审计应从「整族跳过」
+ * 改为「把这个消费者一起改写」。两处都已经能**检测**（`stillReferencesDroppedNames`、
+ * `audit`），只差改写。
+ *
+ * ### 4. 已经解决的：过装
+ *
+ * 表按安装作用域切之后（一个 (文件, 外层函数) 一张表，表里正好是那段语句装的成员），
+ * 整表循环与原语句严格等价，过装从原理上不可能再发生——这也是为什么
+ * `finalizePrototypeSurfaceOrder()` 不再需要承担「裁剪」职责（它本来也不裁）
+ * 这个假设可以彻底丢掉了。
  *
  * ## 验证时务必先删掉本机缓存
  *
