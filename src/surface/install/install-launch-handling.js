@@ -21,79 +21,66 @@ const constructors = Object.freeze({
 
 export function installLaunchHandling() {
   runtime.resetLaunchQueue();
-  do {
-    delete (((runtime.launchHandlingConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.launchHandlingConstructors)[0])).name, (((runtime.launchHandlingConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.launchHandlingConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.launchHandlingConstructors)[1])).name, (((runtime.launchHandlingConstructors)[1])));
-  } while (false);
-  do {
-    {
-  do {
-    {
+
+    delete runtime.launchHandlingConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.launchHandlingConstructors[0].name, runtime.launchHandlingConstructors[0]);
+
+    delete runtime.launchHandlingConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.launchHandlingConstructors[1].name, runtime.launchHandlingConstructors[1]);
+
+  {
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("targetURL")]() {
-          return runtime.launchHandlingProperty(this, ("targetURL"));
+        get ["targetURL"]() {
+          return runtime.launchHandlingProperty(this, "targetURL");
         },
-      }, ("targetURL")).get;
-      registerNativeGetter(getter, ("targetURL"));
-      definePrototypeGetter((constructors[("LaunchParams")]).prototype, ("targetURL"), getter);
+      }, "targetURL").get;
+      registerNativeGetter(getter, "targetURL");
+      definePrototypeGetter(constructors["LaunchParams"].prototype, "targetURL", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("files")]() {
-          return runtime.launchHandlingProperty(this, ("files"));
+        get ["files"]() {
+          return runtime.launchHandlingProperty(this, "files");
         },
-      }, ("files")).get;
-      registerNativeGetter(getter, ("files"));
-      definePrototypeGetter((constructors[("LaunchParams")]).prototype, ("files"), getter);
+      }, "files").get;
+      registerNativeGetter(getter, "files");
+      definePrototypeGetter(constructors["LaunchParams"].prototype, "files", getter);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("LaunchParams")]).prototype, (constructors[("LaunchParams")]));
+      defineConstructorBacklink(constructors["LaunchParams"].prototype, constructors["LaunchParams"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("LaunchParams")]).prototype, (constructors[("LaunchParams")]).name);
+      defineToStringTag(constructors["LaunchParams"].prototype, constructors["LaunchParams"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const callback = {
-        [("setConsumer")](...args) {
-          return runtime.launchHandlingOperation(this, ("setConsumer"), args);
+        ["setConsumer"](...args) {
+          return runtime.launchHandlingOperation(this, "setConsumer", args);
         },
-      }[("setConsumer")];
+      }["setConsumer"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("setConsumer"));
-      definePrototypeMethod((constructors[("LaunchQueue")]).prototype, ("setConsumer"), callback);
+      registerNativeFunction(callback, "setConsumer");
+      definePrototypeMethod(constructors["LaunchQueue"].prototype, "setConsumer", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("LaunchQueue")]).prototype, (constructors[("LaunchQueue")]));
+      defineConstructorBacklink(constructors["LaunchQueue"].prototype, constructors["LaunchQueue"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("LaunchQueue")]).prototype, (constructors[("LaunchQueue")]).name);
+      defineToStringTag(constructors["LaunchQueue"].prototype, constructors["LaunchQueue"].name);
     }
-  } while (false);
+
 }
-  } while (false);
   const getter = Object.getOwnPropertyDescriptor({
     get launchQueue() {
       return runtime.launchQueueGlobal();
@@ -106,5 +93,3 @@ do {
     configurable: true,
   });
 }
-
-

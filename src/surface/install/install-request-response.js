@@ -35,35 +35,34 @@ import {
 } from "../../engine/webidl/native-function.js";
 
 export function installRequestResponse() {
-  do {
-    delete ((([Request, Response])[0])).prototype.constructor;
-    defineGlobalConstructor(((([Request, Response])[0])).name, ((([Request, Response])[0])));
-  } while (false);
-do {
-    delete ((([Request, Response])[1])).prototype.constructor;
-    defineGlobalConstructor(((([Request, Response])[1])).name, ((([Request, Response])[1])));
-  } while (false);
+
+    delete Request.prototype.constructor;
+    defineGlobalConstructor(Request.name, Request);
+
+    delete Response.prototype.constructor;
+    defineGlobalConstructor(Response.name, Response);
+
   installRequest();
   installResponse();
 }
 
 function installRequest() {
-  do {getter(Request, ("method"), requestProperty);} while (false);
-do {getter(Request, ("url"), requestProperty);} while (false);
-do {getter(Request, ("headers"), requestProperty);} while (false);
-do {getter(Request, ("destination"), requestProperty);} while (false);
-do {getter(Request, ("referrer"), requestProperty);} while (false);
-do {getter(Request, ("referrerPolicy"), requestProperty);} while (false);
-do {getter(Request, ("mode"), requestProperty);} while (false);
-do {getter(Request, ("credentials"), requestProperty);} while (false);
-do {getter(Request, ("cache"), requestProperty);} while (false);
-do {getter(Request, ("redirect"), requestProperty);} while (false);
-do {getter(Request, ("integrity"), requestProperty);} while (false);
-do {getter(Request, ("keepalive"), requestProperty);} while (false);
-do {getter(Request, ("signal"), requestProperty);} while (false);
-do {getter(Request, ("duplex"), requestProperty);} while (false);
-do {getter(Request, ("isHistoryNavigation"), requestProperty);} while (false);
-do {getter(Request, ("bodyUsed"), requestProperty);} while (false);
+  getter(Request, "method", requestProperty);
+getter(Request, "url", requestProperty);
+getter(Request, "headers", requestProperty);
+getter(Request, "destination", requestProperty);
+getter(Request, "referrer", requestProperty);
+getter(Request, "referrerPolicy", requestProperty);
+getter(Request, "mode", requestProperty);
+getter(Request, "credentials", requestProperty);
+getter(Request, "cache", requestProperty);
+getter(Request, "redirect", requestProperty);
+getter(Request, "integrity", requestProperty);
+getter(Request, "keepalive", requestProperty);
+getter(Request, "signal", requestProperty);
+getter(Request, "duplex", requestProperty);
+getter(Request, "isHistoryNavigation", requestProperty);
+getter(Request, "bodyUsed", requestProperty);
   method(Request, "arrayBuffer", 0, requestArrayBuffer);
   method(Request, "blob", 0, requestBlob);
   method(Request, "clone", 0, requestClone);
@@ -79,15 +78,15 @@ do {getter(Request, ("bodyUsed"), requestProperty);} while (false);
 }
 
 function installResponse() {
-  do {getter(Response, ("type"), responseProperty);} while (false);
-do {getter(Response, ("url"), responseProperty);} while (false);
-do {getter(Response, ("redirected"), responseProperty);} while (false);
-do {getter(Response, ("status"), responseProperty);} while (false);
-do {getter(Response, ("ok"), responseProperty);} while (false);
-do {getter(Response, ("statusText"), responseProperty);} while (false);
-do {getter(Response, ("headers"), responseProperty);} while (false);
-do {getter(Response, ("body"), responseProperty);} while (false);
-do {getter(Response, ("bodyUsed"), responseProperty);} while (false);
+  getter(Response, "type", responseProperty);
+getter(Response, "url", responseProperty);
+getter(Response, "redirected", responseProperty);
+getter(Response, "status", responseProperty);
+getter(Response, "ok", responseProperty);
+getter(Response, "statusText", responseProperty);
+getter(Response, "headers", responseProperty);
+getter(Response, "body", responseProperty);
+getter(Response, "bodyUsed", responseProperty);
   method(Response, "arrayBuffer", 0, responseArrayBuffer);
   method(Response, "blob", 0, responseBlob);
   method(Response, "clone", 0, responseClone);

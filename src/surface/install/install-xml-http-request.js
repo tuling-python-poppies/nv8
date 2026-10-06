@@ -50,141 +50,103 @@ function installConstructors() {
     XMLHttpRequestEventTarget.prototype,
   );
   Object.setPrototypeOf(XMLHttpRequest, XMLHttpRequestEventTarget);
-  do {
-    delete ((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[0])).prototype.constructor;
-    defineGlobalConstructor(((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[0])).name, ((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[0])));
-  } while (false);
-do {
-    delete ((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[1])).prototype.constructor;
-    defineGlobalConstructor(((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[1])).name, ((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[1])));
-  } while (false);
-do {
-    delete ((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[2])).prototype.constructor;
-    defineGlobalConstructor(((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[2])).name, ((([
-    XMLHttpRequestEventTarget,
-    XMLHttpRequestUpload,
-    XMLHttpRequest,
-  ])[2])));
-  } while (false);
+
+    delete XMLHttpRequestEventTarget.prototype.constructor;
+    defineGlobalConstructor(XMLHttpRequestEventTarget.name, XMLHttpRequestEventTarget);
+
+    delete XMLHttpRequestUpload.prototype.constructor;
+    defineGlobalConstructor(XMLHttpRequestUpload.name, XMLHttpRequestUpload);
+
+    delete XMLHttpRequest.prototype.constructor;
+    defineGlobalConstructor(XMLHttpRequest.name, XMLHttpRequest);
+
 }
 
 function installTarget() {
-  do {
+  {
     const getter = function () {
-      return xhrTargetHandler(this, ("onloadstart"));
+      return xhrTargetHandler(this, "onloadstart");
     };
-    registerNativeGetter(getter, ("onloadstart"));
+    registerNativeGetter(getter, "onloadstart");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("onloadstart"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("onloadstart"), value); },
+      function (value) { setXHRTargetHandler(this, "onloadstart", value); },
     );
-  } while (false);
-do {
+  }
+{
     const getter = function () {
-      return xhrTargetHandler(this, ("onprogress"));
+      return xhrTargetHandler(this, "onprogress");
     };
-    registerNativeGetter(getter, ("onprogress"));
+    registerNativeGetter(getter, "onprogress");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("onprogress"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("onprogress"), value); },
+      function (value) { setXHRTargetHandler(this, "onprogress", value); },
     );
-  } while (false);
-do {
+  }
+{
     const getter = function () {
-      return xhrTargetHandler(this, ("onabort"));
+      return xhrTargetHandler(this, "onabort");
     };
-    registerNativeGetter(getter, ("onabort"));
+    registerNativeGetter(getter, "onabort");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("onabort"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("onabort"), value); },
+      function (value) { setXHRTargetHandler(this, "onabort", value); },
     );
-  } while (false);
-do {
+  }
+{
     const getter = function () {
-      return xhrTargetHandler(this, ("onerror"));
+      return xhrTargetHandler(this, "onerror");
     };
-    registerNativeGetter(getter, ("onerror"));
+    registerNativeGetter(getter, "onerror");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("onerror"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("onerror"), value); },
+      function (value) { setXHRTargetHandler(this, "onerror", value); },
     );
-  } while (false);
-do {
+  }
+{
     const getter = function () {
-      return xhrTargetHandler(this, ("onload"));
+      return xhrTargetHandler(this, "onload");
     };
-    registerNativeGetter(getter, ("onload"));
+    registerNativeGetter(getter, "onload");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("onload"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("onload"), value); },
+      function (value) { setXHRTargetHandler(this, "onload", value); },
     );
-  } while (false);
-do {
+  }
+{
     const getter = function () {
-      return xhrTargetHandler(this, ("ontimeout"));
+      return xhrTargetHandler(this, "ontimeout");
     };
-    registerNativeGetter(getter, ("ontimeout"));
+    registerNativeGetter(getter, "ontimeout");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("ontimeout"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("ontimeout"), value); },
+      function (value) { setXHRTargetHandler(this, "ontimeout", value); },
     );
-  } while (false);
-do {
+  }
+{
     const getter = function () {
-      return xhrTargetHandler(this, ("onloadend"));
+      return xhrTargetHandler(this, "onloadend");
     };
-    registerNativeGetter(getter, ("onloadend"));
+    registerNativeGetter(getter, "onloadend");
     definePrototypeAccessor(
       XMLHttpRequestEventTarget.prototype,
       ("onloadend"),
       getter,
-      function (value) { setXHRTargetHandler(this, ("onloadend"), value); },
+      function (value) { setXHRTargetHandler(this, "onloadend", value); },
     );
-  } while (false);
+  }
   finish(XMLHttpRequestEventTarget);
 }
 
@@ -200,11 +162,11 @@ function installRequest() {
   accessor("responseType");
   getter("response");
   getter("responseText");
-  do {constant(("UNSENT"), (0));} while (false);
-do {constant(("OPENED"), (1));} while (false);
-do {constant(("HEADERS_RECEIVED"), (2));} while (false);
-do {constant(("LOADING"), (3));} while (false);
-do {constant(("DONE"), (4));} while (false);
+  constant("UNSENT", 0);
+constant("OPENED", 1);
+constant("HEADERS_RECEIVED", 2);
+constant("LOADING", 3);
+constant("DONE", 4);
   method("abort", 0, xhrAbort);
   method("getAllResponseHeaders", 0, xhrGetAllResponseHeaders);
   method("getResponseHeader", 1, xhrGetResponseHeader);
@@ -250,22 +212,21 @@ function method(name, length, operation) {
 }
 
 function constant(name, value) {
-  do {
-    Object.defineProperty(((([XMLHttpRequest.prototype, XMLHttpRequest])[0])), name, {
+
+    Object.defineProperty(XMLHttpRequest.prototype, name, {
       value,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
-do {
-    Object.defineProperty(((([XMLHttpRequest.prototype, XMLHttpRequest])[1])), name, {
+
+    Object.defineProperty(XMLHttpRequest, name, {
       value,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
+
 }
 
 function finish(constructor) {

@@ -24,217 +24,188 @@ const constructors = Object.freeze(Object.fromEntries(
 ));
 
 export function installBackgroundFetch() {
-  do {
-    delete (((runtime.backgroundFetchConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.backgroundFetchConstructors)[0])).name, (((runtime.backgroundFetchConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.backgroundFetchConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.backgroundFetchConstructors)[1])).name, (((runtime.backgroundFetchConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.backgroundFetchConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.backgroundFetchConstructors)[2])).name, (((runtime.backgroundFetchConstructors)[2])));
-  } while (false);
-  do {
-    const Constructor = constructors[("BackgroundFetchManager")];
-    
+
+    delete runtime.backgroundFetchConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.backgroundFetchConstructors[0].name, runtime.backgroundFetchConstructors[0]);
+
+    delete runtime.backgroundFetchConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.backgroundFetchConstructors[1].name, runtime.backgroundFetchConstructors[1]);
+
+    delete runtime.backgroundFetchConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.backgroundFetchConstructors[2].name, runtime.backgroundFetchConstructors[2]);
+
+  {
+    const Constructor = constructors["BackgroundFetchManager"];
+
     {
-  do {
-    {
+  {
       const callback = {
-        [("fetch")](...args) {
-          return runtime.backgroundFetchOperation(this, ("fetch"), args);
+        ["fetch"](...args) {
+          return runtime.backgroundFetchOperation(this, "fetch", args);
         },
-      }[("fetch")];
+      }["fetch"];
       Object.defineProperty(callback, "length", {
-        value: (2),
+        value: 2,
         configurable: true,
       });
-      registerNativeFunction(callback, ("fetch"));
-      definePrototypeMethod((Constructor).prototype, ("fetch"), callback);
+      registerNativeFunction(callback, "fetch");
+      definePrototypeMethod(Constructor.prototype, "fetch", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("get")](...args) {
-          return runtime.backgroundFetchOperation(this, ("get"), args);
+        ["get"](...args) {
+          return runtime.backgroundFetchOperation(this, "get", args);
         },
-      }[("get")];
+      }["get"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("get"));
-      definePrototypeMethod((Constructor).prototype, ("get"), callback);
+      registerNativeFunction(callback, "get");
+      definePrototypeMethod(Constructor.prototype, "get", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("getIds")](...args) {
-          return runtime.backgroundFetchOperation(this, ("getIds"), args);
+        ["getIds"](...args) {
+          return runtime.backgroundFetchOperation(this, "getIds", args);
         },
-      }[("getIds")];
+      }["getIds"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getIds"));
-      definePrototypeMethod((Constructor).prototype, ("getIds"), callback);
+      registerNativeFunction(callback, "getIds");
+      definePrototypeMethod(Constructor.prototype, "getIds", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((Constructor).prototype, (Constructor));
+      defineConstructorBacklink(Constructor.prototype, Constructor);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((Constructor).prototype, (Constructor).name);
+      defineToStringTag(Constructor.prototype, Constructor.name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    const Constructor = constructors[("BackgroundFetchRecord")];
-    
+  }
+{
+    const Constructor = constructors["BackgroundFetchRecord"];
+
     {
-  do {
+
     {
-      installAccessor((Constructor), ("request"));
+      installAccessor(Constructor, "request");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((Constructor), ("responseReady"));
+      installAccessor(Constructor, "responseReady");
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((Constructor).prototype, (Constructor));
+      defineConstructorBacklink(Constructor.prototype, Constructor);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((Constructor).prototype, (Constructor).name);
+      defineToStringTag(Constructor.prototype, Constructor.name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    const Constructor = constructors[("BackgroundFetchRegistration")];
+  }
+{
+    const Constructor = constructors["BackgroundFetchRegistration"];
     {
       Object.setPrototypeOf(Constructor.prototype, EventTarget.prototype);
       Object.setPrototypeOf(Constructor, EventTarget);
     }
     {
-  do {
-    {
-      installAccessor((Constructor), ("id"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("uploadTotal"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("uploaded"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("downloadTotal"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("downloaded"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("result"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("failureReason"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("recordsAvailable"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((Constructor), ("onprogress"));
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("abort")](...args) {
-          return runtime.backgroundFetchOperation(this, ("abort"), args);
-        },
-      }[("abort")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("abort"));
-      definePrototypeMethod((Constructor).prototype, ("abort"), callback);
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("match")](...args) {
-          return runtime.backgroundFetchOperation(this, ("match"), args);
-        },
-      }[("match")];
-      Object.defineProperty(callback, "length", {
-        value: (1),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("match"));
-      definePrototypeMethod((Constructor).prototype, ("match"), callback);
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("matchAll")](...args) {
-          return runtime.backgroundFetchOperation(this, ("matchAll"), args);
-        },
-      }[("matchAll")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("matchAll"));
-      definePrototypeMethod((Constructor).prototype, ("matchAll"), callback);
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((Constructor).prototype, (Constructor));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((Constructor).prototype, (Constructor).name);
-    }
-  } while (false);
-}
-  } while (false);
-}
 
+    {
+      installAccessor(Constructor, "id");
+    }
 
+    {
+      installAccessor(Constructor, "uploadTotal");
+    }
+
+    {
+      installAccessor(Constructor, "uploaded");
+    }
+
+    {
+      installAccessor(Constructor, "downloadTotal");
+    }
+
+    {
+      installAccessor(Constructor, "downloaded");
+    }
+
+    {
+      installAccessor(Constructor, "result");
+    }
+
+    {
+      installAccessor(Constructor, "failureReason");
+    }
+
+    {
+      installAccessor(Constructor, "recordsAvailable");
+    }
+
+    {
+      installAccessor(Constructor, "onprogress");
+    }
+
+{
+      const callback = {
+        ["abort"](...args) {
+          return runtime.backgroundFetchOperation(this, "abort", args);
+        },
+      }["abort"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "abort");
+      definePrototypeMethod(Constructor.prototype, "abort", callback);
+    }
+{
+      const callback = {
+        ["match"](...args) {
+          return runtime.backgroundFetchOperation(this, "match", args);
+        },
+      }["match"];
+      Object.defineProperty(callback, "length", {
+        value: 1,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "match");
+      definePrototypeMethod(Constructor.prototype, "match", callback);
+    }
+{
+      const callback = {
+        ["matchAll"](...args) {
+          return runtime.backgroundFetchOperation(this, "matchAll", args);
+        },
+      }["matchAll"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "matchAll");
+      definePrototypeMethod(Constructor.prototype, "matchAll", callback);
+    }
+
+    {
+      defineConstructorBacklink(Constructor.prototype, Constructor);
+    }
+
+    {
+      defineToStringTag(Constructor.prototype, Constructor.name);
+    }
+
+}
+  }
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

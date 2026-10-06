@@ -29,96 +29,87 @@ export function installFeaturePolicy(edge152Surface = false) {
   if (edge152Surface) {
     defineGlobalConstructor("PermissionsPolicy", runtime.FeaturePolicy);
   }
-  do {
-    {
+  {
       const callback = {
-        [("allowedFeatures")](...args) {
-          return runtime.featurePolicyOperation(this, ("allowedFeatures"), args);
+        ["allowedFeatures"](...args) {
+          return runtime.featurePolicyOperation(this, "allowedFeatures", args);
         },
-      }[("allowedFeatures")];
+      }["allowedFeatures"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("allowedFeatures"));
+      registerNativeFunction(callback, "allowedFeatures");
       definePrototypeMethod(
         runtime.FeaturePolicy.prototype,
         ("allowedFeatures"),
         callback,
       );
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("allowsFeature")](...args) {
-          return runtime.featurePolicyOperation(this, ("allowsFeature"), args);
+        ["allowsFeature"](...args) {
+          return runtime.featurePolicyOperation(this, "allowsFeature", args);
         },
-      }[("allowsFeature")];
+      }["allowsFeature"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("allowsFeature"));
+      registerNativeFunction(callback, "allowsFeature");
       definePrototypeMethod(
         runtime.FeaturePolicy.prototype,
         ("allowsFeature"),
         callback,
       );
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("features")](...args) {
-          return runtime.featurePolicyOperation(this, ("features"), args);
+        ["features"](...args) {
+          return runtime.featurePolicyOperation(this, "features", args);
         },
-      }[("features")];
+      }["features"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("features"));
+      registerNativeFunction(callback, "features");
       definePrototypeMethod(
         runtime.FeaturePolicy.prototype,
         ("features"),
         callback,
       );
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("getAllowlistForFeature")](...args) {
-          return runtime.featurePolicyOperation(this, ("getAllowlistForFeature"), args);
+        ["getAllowlistForFeature"](...args) {
+          return runtime.featurePolicyOperation(this, "getAllowlistForFeature", args);
         },
-      }[("getAllowlistForFeature")];
+      }["getAllowlistForFeature"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getAllowlistForFeature"));
+      registerNativeFunction(callback, "getAllowlistForFeature");
       definePrototypeMethod(
         runtime.FeaturePolicy.prototype,
         ("getAllowlistForFeature"),
         callback,
       );
     }
-  } while (false);
-do {
+
     {
       defineConstructorBacklink(
         runtime.FeaturePolicy.prototype,
         runtime.FeaturePolicy,
       );
     }
-  } while (false);
-do {
+
     {
       defineToStringTag(
         runtime.FeaturePolicy.prototype,
         edge152Surface ? "PermissionsPolicy" : "FeaturePolicy",
       );
     }
-  } while (false);
+
 }

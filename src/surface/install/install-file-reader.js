@@ -30,73 +30,69 @@ export function installFileAndReader() {
   installFileInheritance();
   delete File.prototype.constructor;
   defineGlobalConstructor("File", File);
-  do {getter(File, ("name"), fileProperty);} while (false);
-do {getter(File, ("lastModified"), fileProperty);} while (false);
-do {getter(File, ("lastModifiedDate"), fileProperty);} while (false);
-do {getter(File, ("webkitRelativePath"), fileProperty);} while (false);
+  getter(File, "name", fileProperty);
+getter(File, "lastModified", fileProperty);
+getter(File, "lastModifiedDate", fileProperty);
+getter(File, "webkitRelativePath", fileProperty);
   finish(File);
 
   Object.setPrototypeOf(FileReader.prototype, EventTarget.prototype);
   Object.setPrototypeOf(FileReader, EventTarget);
   delete FileReader.prototype.constructor;
   defineGlobalConstructor("FileReader", FileReader);
-  do {
-    getter(FileReader, ("readyState"), readerProperty);
-  } while (false);
-do {
-    getter(FileReader, ("result"), readerProperty);
-  } while (false);
-do {
-    getter(FileReader, ("error"), readerProperty);
-  } while (false);
-  do {handler(("onloadstart"));} while (false);
-do {handler(("onprogress"));} while (false);
-do {handler(("onload"));} while (false);
-do {handler(("onabort"));} while (false);
-do {handler(("onerror"));} while (false);
-do {handler(("onloadend"));} while (false);
-  do {
-    Object.defineProperty(FileReader.prototype, ("EMPTY"), {
-      value: (0),
+
+    getter(FileReader, "readyState", readerProperty);
+
+    getter(FileReader, "result", readerProperty);
+
+    getter(FileReader, "error", readerProperty);
+
+  handler("onloadstart");
+handler("onprogress");
+handler("onload");
+handler("onabort");
+handler("onerror");
+handler("onloadend");
+
+    Object.defineProperty(FileReader.prototype, "EMPTY", {
+      value: 0,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-    Object.defineProperty(FileReader, ("EMPTY"), {
-      value: (0),
+    Object.defineProperty(FileReader, "EMPTY", {
+      value: 0,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
-do {
-    Object.defineProperty(FileReader.prototype, ("LOADING"), {
-      value: (1),
+
+    Object.defineProperty(FileReader.prototype, "LOADING", {
+      value: 1,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-    Object.defineProperty(FileReader, ("LOADING"), {
-      value: (1),
+    Object.defineProperty(FileReader, "LOADING", {
+      value: 1,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
-do {
-    Object.defineProperty(FileReader.prototype, ("DONE"), {
-      value: (2),
+
+    Object.defineProperty(FileReader.prototype, "DONE", {
+      value: 2,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-    Object.defineProperty(FileReader, ("DONE"), {
-      value: (2),
+    Object.defineProperty(FileReader, "DONE", {
+      value: 2,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
+
   method(FileReader, "abort", 0, readerAbort);
   method(FileReader, "readAsArrayBuffer", 1, readerReadAsArrayBuffer);
   method(FileReader, "readAsBinaryString", 1, readerReadAsBinaryString);

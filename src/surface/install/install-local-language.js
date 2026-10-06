@@ -22,368 +22,309 @@ const constructors = Object.freeze(Object.fromEntries(
 ));
 
 export function installLocalLanguage() {
-  do {
-    delete (((runtime.localLanguageConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.localLanguageConstructors)[0])).name, (((runtime.localLanguageConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.localLanguageConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.localLanguageConstructors)[1])).name, (((runtime.localLanguageConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.localLanguageConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.localLanguageConstructors)[2])).name, (((runtime.localLanguageConstructors)[2])));
-  } while (false);
-  do {
-    {
-  do {
-    {
+
+    delete runtime.localLanguageConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.localLanguageConstructors[0].name, runtime.localLanguageConstructors[0]);
+
+    delete runtime.localLanguageConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.localLanguageConstructors[1].name, runtime.localLanguageConstructors[1]);
+
+    delete runtime.localLanguageConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.localLanguageConstructors[2].name, runtime.localLanguageConstructors[2]);
+
+  {
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("expectedInputLanguages")]() {
-          return runtime.localLanguageProperty(this, ("expectedInputLanguages"));
+        get ["expectedInputLanguages"]() {
+          return runtime.localLanguageProperty(this, "expectedInputLanguages");
         },
-      }, ("expectedInputLanguages")).get;
-      registerNativeGetter(getter, ("expectedInputLanguages"));
-      definePrototypeGetter((constructors[("LanguageDetector")]).prototype, ("expectedInputLanguages"), getter);
+      }, "expectedInputLanguages").get;
+      registerNativeGetter(getter, "expectedInputLanguages");
+      definePrototypeGetter(constructors["LanguageDetector"].prototype, "expectedInputLanguages", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("inputQuota")]() {
-          return runtime.localLanguageProperty(this, ("inputQuota"));
+        get ["inputQuota"]() {
+          return runtime.localLanguageProperty(this, "inputQuota");
         },
-      }, ("inputQuota")).get;
-      registerNativeGetter(getter, ("inputQuota"));
-      definePrototypeGetter((constructors[("LanguageDetector")]).prototype, ("inputQuota"), getter);
+      }, "inputQuota").get;
+      registerNativeGetter(getter, "inputQuota");
+      definePrototypeGetter(constructors["LanguageDetector"].prototype, "inputQuota", getter);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("destroy")](...args) {
-          return runtime.localLanguageOperation(this, ("destroy"), args);
+        ["destroy"](...args) {
+          return runtime.localLanguageOperation(this, "destroy", args);
         },
-      }[("destroy")];
+      }["destroy"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("destroy"));
-      definePrototypeMethod((constructors[("LanguageDetector")]).prototype, ("destroy"), callback);
+      registerNativeFunction(callback, "destroy");
+      definePrototypeMethod(constructors["LanguageDetector"].prototype, "destroy", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("detect")](...args) {
-          return runtime.localLanguageOperation(this, ("detect"), args);
+        ["detect"](...args) {
+          return runtime.localLanguageOperation(this, "detect", args);
         },
-      }[("detect")];
+      }["detect"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("detect"));
-      definePrototypeMethod((constructors[("LanguageDetector")]).prototype, ("detect"), callback);
+      registerNativeFunction(callback, "detect");
+      definePrototypeMethod(constructors["LanguageDetector"].prototype, "detect", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("measureInputUsage")](...args) {
-          return runtime.localLanguageOperation(this, ("measureInputUsage"), args);
+        ["measureInputUsage"](...args) {
+          return runtime.localLanguageOperation(this, "measureInputUsage", args);
         },
-      }[("measureInputUsage")];
+      }["measureInputUsage"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("measureInputUsage"));
-      definePrototypeMethod((constructors[("LanguageDetector")]).prototype, ("measureInputUsage"), callback);
+      registerNativeFunction(callback, "measureInputUsage");
+      definePrototypeMethod(constructors["LanguageDetector"].prototype, "measureInputUsage", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("LanguageDetector")]).prototype, (constructors[("LanguageDetector")]));
+      defineConstructorBacklink(constructors["LanguageDetector"].prototype, constructors["LanguageDetector"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("LanguageDetector")]).prototype, (constructors[("LanguageDetector")]).name);
+      defineToStringTag(constructors["LanguageDetector"].prototype, constructors["LanguageDetector"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("sharedContext")]() {
-          return runtime.localLanguageProperty(this, ("sharedContext"));
+        get ["sharedContext"]() {
+          return runtime.localLanguageProperty(this, "sharedContext");
         },
-      }, ("sharedContext")).get;
-      registerNativeGetter(getter, ("sharedContext"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("sharedContext"), getter);
+      }, "sharedContext").get;
+      registerNativeGetter(getter, "sharedContext");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "sharedContext", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("type")]() {
-          return runtime.localLanguageProperty(this, ("type"));
+        get ["type"]() {
+          return runtime.localLanguageProperty(this, "type");
         },
-      }, ("type")).get;
-      registerNativeGetter(getter, ("type"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("type"), getter);
+      }, "type").get;
+      registerNativeGetter(getter, "type");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "type", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("format")]() {
-          return runtime.localLanguageProperty(this, ("format"));
+        get ["format"]() {
+          return runtime.localLanguageProperty(this, "format");
         },
-      }, ("format")).get;
-      registerNativeGetter(getter, ("format"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("format"), getter);
+      }, "format").get;
+      registerNativeGetter(getter, "format");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "format", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("length")]() {
-          return runtime.localLanguageProperty(this, ("length"));
+        get ["length"]() {
+          return runtime.localLanguageProperty(this, "length");
         },
-      }, ("length")).get;
-      registerNativeGetter(getter, ("length"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("length"), getter);
+      }, "length").get;
+      registerNativeGetter(getter, "length");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "length", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("expectedInputLanguages")]() {
-          return runtime.localLanguageProperty(this, ("expectedInputLanguages"));
+        get ["expectedInputLanguages"]() {
+          return runtime.localLanguageProperty(this, "expectedInputLanguages");
         },
-      }, ("expectedInputLanguages")).get;
-      registerNativeGetter(getter, ("expectedInputLanguages"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("expectedInputLanguages"), getter);
+      }, "expectedInputLanguages").get;
+      registerNativeGetter(getter, "expectedInputLanguages");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "expectedInputLanguages", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("expectedContextLanguages")]() {
-          return runtime.localLanguageProperty(this, ("expectedContextLanguages"));
+        get ["expectedContextLanguages"]() {
+          return runtime.localLanguageProperty(this, "expectedContextLanguages");
         },
-      }, ("expectedContextLanguages")).get;
-      registerNativeGetter(getter, ("expectedContextLanguages"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("expectedContextLanguages"), getter);
+      }, "expectedContextLanguages").get;
+      registerNativeGetter(getter, "expectedContextLanguages");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "expectedContextLanguages", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("outputLanguage")]() {
-          return runtime.localLanguageProperty(this, ("outputLanguage"));
+        get ["outputLanguage"]() {
+          return runtime.localLanguageProperty(this, "outputLanguage");
         },
-      }, ("outputLanguage")).get;
-      registerNativeGetter(getter, ("outputLanguage"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("outputLanguage"), getter);
+      }, "outputLanguage").get;
+      registerNativeGetter(getter, "outputLanguage");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "outputLanguage", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("inputQuota")]() {
-          return runtime.localLanguageProperty(this, ("inputQuota"));
+        get ["inputQuota"]() {
+          return runtime.localLanguageProperty(this, "inputQuota");
         },
-      }, ("inputQuota")).get;
-      registerNativeGetter(getter, ("inputQuota"));
-      definePrototypeGetter((constructors[("Summarizer")]).prototype, ("inputQuota"), getter);
+      }, "inputQuota").get;
+      registerNativeGetter(getter, "inputQuota");
+      definePrototypeGetter(constructors["Summarizer"].prototype, "inputQuota", getter);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("destroy")](...args) {
-          return runtime.localLanguageOperation(this, ("destroy"), args);
+        ["destroy"](...args) {
+          return runtime.localLanguageOperation(this, "destroy", args);
         },
-      }[("destroy")];
+      }["destroy"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("destroy"));
-      definePrototypeMethod((constructors[("Summarizer")]).prototype, ("destroy"), callback);
+      registerNativeFunction(callback, "destroy");
+      definePrototypeMethod(constructors["Summarizer"].prototype, "destroy", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("measureInputUsage")](...args) {
-          return runtime.localLanguageOperation(this, ("measureInputUsage"), args);
+        ["measureInputUsage"](...args) {
+          return runtime.localLanguageOperation(this, "measureInputUsage", args);
         },
-      }[("measureInputUsage")];
+      }["measureInputUsage"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("measureInputUsage"));
-      definePrototypeMethod((constructors[("Summarizer")]).prototype, ("measureInputUsage"), callback);
+      registerNativeFunction(callback, "measureInputUsage");
+      definePrototypeMethod(constructors["Summarizer"].prototype, "measureInputUsage", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("summarize")](...args) {
-          return runtime.localLanguageOperation(this, ("summarize"), args);
+        ["summarize"](...args) {
+          return runtime.localLanguageOperation(this, "summarize", args);
         },
-      }[("summarize")];
+      }["summarize"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("summarize"));
-      definePrototypeMethod((constructors[("Summarizer")]).prototype, ("summarize"), callback);
+      registerNativeFunction(callback, "summarize");
+      definePrototypeMethod(constructors["Summarizer"].prototype, "summarize", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("summarizeStreaming")](...args) {
-          return runtime.localLanguageOperation(this, ("summarizeStreaming"), args);
+        ["summarizeStreaming"](...args) {
+          return runtime.localLanguageOperation(this, "summarizeStreaming", args);
         },
-      }[("summarizeStreaming")];
+      }["summarizeStreaming"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("summarizeStreaming"));
-      definePrototypeMethod((constructors[("Summarizer")]).prototype, ("summarizeStreaming"), callback);
+      registerNativeFunction(callback, "summarizeStreaming");
+      definePrototypeMethod(constructors["Summarizer"].prototype, "summarizeStreaming", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("Summarizer")]).prototype, (constructors[("Summarizer")]));
+      defineConstructorBacklink(constructors["Summarizer"].prototype, constructors["Summarizer"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("Summarizer")]).prototype, (constructors[("Summarizer")]).name);
+      defineToStringTag(constructors["Summarizer"].prototype, constructors["Summarizer"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("inputQuota")]() {
-          return runtime.localLanguageProperty(this, ("inputQuota"));
+        get ["inputQuota"]() {
+          return runtime.localLanguageProperty(this, "inputQuota");
         },
-      }, ("inputQuota")).get;
-      registerNativeGetter(getter, ("inputQuota"));
-      definePrototypeGetter((constructors[("Translator")]).prototype, ("inputQuota"), getter);
+      }, "inputQuota").get;
+      registerNativeGetter(getter, "inputQuota");
+      definePrototypeGetter(constructors["Translator"].prototype, "inputQuota", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("sourceLanguage")]() {
-          return runtime.localLanguageProperty(this, ("sourceLanguage"));
+        get ["sourceLanguage"]() {
+          return runtime.localLanguageProperty(this, "sourceLanguage");
         },
-      }, ("sourceLanguage")).get;
-      registerNativeGetter(getter, ("sourceLanguage"));
-      definePrototypeGetter((constructors[("Translator")]).prototype, ("sourceLanguage"), getter);
+      }, "sourceLanguage").get;
+      registerNativeGetter(getter, "sourceLanguage");
+      definePrototypeGetter(constructors["Translator"].prototype, "sourceLanguage", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("targetLanguage")]() {
-          return runtime.localLanguageProperty(this, ("targetLanguage"));
+        get ["targetLanguage"]() {
+          return runtime.localLanguageProperty(this, "targetLanguage");
         },
-      }, ("targetLanguage")).get;
-      registerNativeGetter(getter, ("targetLanguage"));
-      definePrototypeGetter((constructors[("Translator")]).prototype, ("targetLanguage"), getter);
+      }, "targetLanguage").get;
+      registerNativeGetter(getter, "targetLanguage");
+      definePrototypeGetter(constructors["Translator"].prototype, "targetLanguage", getter);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("destroy")](...args) {
-          return runtime.localLanguageOperation(this, ("destroy"), args);
+        ["destroy"](...args) {
+          return runtime.localLanguageOperation(this, "destroy", args);
         },
-      }[("destroy")];
+      }["destroy"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("destroy"));
-      definePrototypeMethod((constructors[("Translator")]).prototype, ("destroy"), callback);
+      registerNativeFunction(callback, "destroy");
+      definePrototypeMethod(constructors["Translator"].prototype, "destroy", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("measureInputUsage")](...args) {
-          return runtime.localLanguageOperation(this, ("measureInputUsage"), args);
+        ["measureInputUsage"](...args) {
+          return runtime.localLanguageOperation(this, "measureInputUsage", args);
         },
-      }[("measureInputUsage")];
+      }["measureInputUsage"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("measureInputUsage"));
-      definePrototypeMethod((constructors[("Translator")]).prototype, ("measureInputUsage"), callback);
+      registerNativeFunction(callback, "measureInputUsage");
+      definePrototypeMethod(constructors["Translator"].prototype, "measureInputUsage", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("translate")](...args) {
-          return runtime.localLanguageOperation(this, ("translate"), args);
+        ["translate"](...args) {
+          return runtime.localLanguageOperation(this, "translate", args);
         },
-      }[("translate")];
+      }["translate"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("translate"));
-      definePrototypeMethod((constructors[("Translator")]).prototype, ("translate"), callback);
+      registerNativeFunction(callback, "translate");
+      definePrototypeMethod(constructors["Translator"].prototype, "translate", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("translateStreaming")](...args) {
-          return runtime.localLanguageOperation(this, ("translateStreaming"), args);
+        ["translateStreaming"](...args) {
+          return runtime.localLanguageOperation(this, "translateStreaming", args);
         },
-      }[("translateStreaming")];
+      }["translateStreaming"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("translateStreaming"));
-      definePrototypeMethod((constructors[("Translator")]).prototype, ("translateStreaming"), callback);
+      registerNativeFunction(callback, "translateStreaming");
+      definePrototypeMethod(constructors["Translator"].prototype, "translateStreaming", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("Translator")]).prototype, (constructors[("Translator")]));
+      defineConstructorBacklink(constructors["Translator"].prototype, constructors["Translator"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("Translator")]).prototype, (constructors[("Translator")]).name);
+      defineToStringTag(constructors["Translator"].prototype, constructors["Translator"].name);
     }
-  } while (false);
+
 }
-  } while (false);
   installStatic(runtime.LanguageDetector, "availability", 0,
     runtime.localLanguageAvailability);
   installStatic(runtime.LanguageDetector, "create", 0,
@@ -397,8 +338,6 @@ do {
   installStatic(runtime.Translator, "create", 1,
     runtime.createTranslator);
 }
-
-
 
 function installStatic(Constructor, name, length, operation) {
   const callback = {

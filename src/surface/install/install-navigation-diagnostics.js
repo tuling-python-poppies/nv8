@@ -21,90 +21,71 @@ const constructors = Object.freeze({
 });
 
 export function installNavigationDiagnostics() {
-  do {
-    delete (((runtime.navigationDiagnosticConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.navigationDiagnosticConstructors)[0])).name, (((runtime.navigationDiagnosticConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.navigationDiagnosticConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.navigationDiagnosticConstructors)[1])).name, (((runtime.navigationDiagnosticConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.navigationDiagnosticConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.navigationDiagnosticConstructors)[2])).name, (((runtime.navigationDiagnosticConstructors)[2])));
-  } while (false);
-  do {
+
+    delete runtime.navigationDiagnosticConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.navigationDiagnosticConstructors[0].name, runtime.navigationDiagnosticConstructors[0]);
+
+    delete runtime.navigationDiagnosticConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.navigationDiagnosticConstructors[1].name, runtime.navigationDiagnosticConstructors[1]);
+
+    delete runtime.navigationDiagnosticConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.navigationDiagnosticConstructors[2].name, runtime.navigationDiagnosticConstructors[2]);
+
     {
-  do {
+
     {
-      defineConstructorBacklink((constructors[("FragmentDirective")]).prototype, (constructors[("FragmentDirective")]));
+      defineConstructorBacklink(constructors["FragmentDirective"].prototype, constructors["FragmentDirective"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("FragmentDirective")]).prototype, (constructors[("FragmentDirective")]).name);
+      defineToStringTag(constructors["FragmentDirective"].prototype, constructors["FragmentDirective"].name);
     }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("NotRestoredReasonDetails")]), ("reason"));
-  } while (false);
-do {
-    installMethod((constructors[("NotRestoredReasonDetails")]), ("toJSON"), (0));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("NotRestoredReasonDetails")]).prototype, (constructors[("NotRestoredReasonDetails")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("NotRestoredReasonDetails")]).prototype, (constructors[("NotRestoredReasonDetails")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("NotRestoredReasons")]), ("src"));
-  } while (false);
-do {
-    installAccessor((constructors[("NotRestoredReasons")]), ("id"));
-  } while (false);
-do {
-    installAccessor((constructors[("NotRestoredReasons")]), ("name"));
-  } while (false);
-do {
-    installAccessor((constructors[("NotRestoredReasons")]), ("url"));
-  } while (false);
-do {
-    installAccessor((constructors[("NotRestoredReasons")]), ("reasons"));
-  } while (false);
-do {
-    installAccessor((constructors[("NotRestoredReasons")]), ("children"));
-  } while (false);
-do {
-    installMethod((constructors[("NotRestoredReasons")]), ("toJSON"), (0));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("NotRestoredReasons")]).prototype, (constructors[("NotRestoredReasons")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("NotRestoredReasons")]).prototype, (constructors[("NotRestoredReasons")]).name);
-    }
-  } while (false);
-}
-  } while (false);
+
 }
 
+    {
 
+    installAccessor(constructors["NotRestoredReasonDetails"], "reason");
+
+    installMethod(constructors["NotRestoredReasonDetails"], "toJSON", 0);
+
+    {
+      defineConstructorBacklink(constructors["NotRestoredReasonDetails"].prototype, constructors["NotRestoredReasonDetails"]);
+    }
+
+    {
+      defineToStringTag(constructors["NotRestoredReasonDetails"].prototype, constructors["NotRestoredReasonDetails"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["NotRestoredReasons"], "src");
+
+    installAccessor(constructors["NotRestoredReasons"], "id");
+
+    installAccessor(constructors["NotRestoredReasons"], "name");
+
+    installAccessor(constructors["NotRestoredReasons"], "url");
+
+    installAccessor(constructors["NotRestoredReasons"], "reasons");
+
+    installAccessor(constructors["NotRestoredReasons"], "children");
+
+    installMethod(constructors["NotRestoredReasons"], "toJSON", 0);
+
+    {
+      defineConstructorBacklink(constructors["NotRestoredReasons"].prototype, constructors["NotRestoredReasons"]);
+    }
+
+    {
+      defineToStringTag(constructors["NotRestoredReasons"].prototype, constructors["NotRestoredReasons"].name);
+    }
+
+}
+
+}
 
 function installAccessor(Constructor, name) {
   const getter = Object.getOwnPropertyDescriptor({

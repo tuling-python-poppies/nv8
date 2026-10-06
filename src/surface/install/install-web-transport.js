@@ -33,223 +33,186 @@ const settable = new Set([
 ]);
 
 export function installWebTransport() {
-  do {
-    delete (((runtime.webTransportConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.webTransportConstructors)[0])).name, (((runtime.webTransportConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.webTransportConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.webTransportConstructors)[1])).name, (((runtime.webTransportConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.webTransportConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.webTransportConstructors)[2])).name, (((runtime.webTransportConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.webTransportConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.webTransportConstructors)[3])).name, (((runtime.webTransportConstructors)[3])));
-  } while (false);
+
+    delete runtime.webTransportConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.webTransportConstructors[0].name, runtime.webTransportConstructors[0]);
+
+    delete runtime.webTransportConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.webTransportConstructors[1].name, runtime.webTransportConstructors[1]);
+
+    delete runtime.webTransportConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.webTransportConstructors[2].name, runtime.webTransportConstructors[2]);
+
+    delete runtime.webTransportConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.webTransportConstructors[3].name, runtime.webTransportConstructors[3]);
+
   Object.setPrototypeOf(runtime.WebTransportError.prototype, DOMException.prototype);
   Object.setPrototypeOf(runtime.WebTransportError, DOMException);
-  do {
+  {
+
     {
-  do {
-    {
-      installAccessor((constructors[("WebTransport")]), ("incomingUnidirectionalStreams"));
+      installAccessor(constructors["WebTransport"], "incomingUnidirectionalStreams");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("WebTransport")]), ("incomingBidirectionalStreams"));
+      installAccessor(constructors["WebTransport"], "incomingBidirectionalStreams");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("WebTransport")]), ("datagrams"));
+      installAccessor(constructors["WebTransport"], "datagrams");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("WebTransport")]), ("ready"));
+      installAccessor(constructors["WebTransport"], "ready");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("WebTransport")]), ("closed"));
+      installAccessor(constructors["WebTransport"], "closed");
     }
-  } while (false);
-do {
-    {
+
+{
       const callback = {
-        [("close")](...args) {
-          return runtime.webTransportOperation(this, ("close"), args);
+        ["close"](...args) {
+          return runtime.webTransportOperation(this, "close", args);
         },
-      }[("close")];
+      }["close"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("close"));
-      definePrototypeMethod((constructors[("WebTransport")]).prototype, ("close"), callback);
+      registerNativeFunction(callback, "close");
+      definePrototypeMethod(constructors["WebTransport"].prototype, "close", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("createBidirectionalStream")](...args) {
-          return runtime.webTransportOperation(this, ("createBidirectionalStream"), args);
+        ["createBidirectionalStream"](...args) {
+          return runtime.webTransportOperation(this, "createBidirectionalStream", args);
         },
-      }[("createBidirectionalStream")];
+      }["createBidirectionalStream"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("createBidirectionalStream"));
-      definePrototypeMethod((constructors[("WebTransport")]).prototype, ("createBidirectionalStream"), callback);
+      registerNativeFunction(callback, "createBidirectionalStream");
+      definePrototypeMethod(constructors["WebTransport"].prototype, "createBidirectionalStream", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("createUnidirectionalStream")](...args) {
-          return runtime.webTransportOperation(this, ("createUnidirectionalStream"), args);
+        ["createUnidirectionalStream"](...args) {
+          return runtime.webTransportOperation(this, "createUnidirectionalStream", args);
         },
-      }[("createUnidirectionalStream")];
+      }["createUnidirectionalStream"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("createUnidirectionalStream"));
-      definePrototypeMethod((constructors[("WebTransport")]).prototype, ("createUnidirectionalStream"), callback);
+      registerNativeFunction(callback, "createUnidirectionalStream");
+      definePrototypeMethod(constructors["WebTransport"].prototype, "createUnidirectionalStream", callback);
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("WebTransport")]), ("protocol"));
+      installAccessor(constructors["WebTransport"], "protocol");
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("WebTransport")]).prototype, (constructors[("WebTransport")]));
+      defineConstructorBacklink(constructors["WebTransport"].prototype, constructors["WebTransport"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("WebTransport")]).prototype, (constructors[("WebTransport")]).name);
+      defineToStringTag(constructors["WebTransport"].prototype, constructors["WebTransport"].name);
     }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      installAccessor((constructors[("WebTransportBidirectionalStream")]), ("readable"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportBidirectionalStream")]), ("writable"));
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("WebTransportBidirectionalStream")]).prototype, (constructors[("WebTransportBidirectionalStream")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("WebTransportBidirectionalStream")]).prototype, (constructors[("WebTransportBidirectionalStream")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("readable"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("writable"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("maxDatagramSize"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("incomingMaxAge"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("outgoingMaxAge"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("incomingHighWaterMark"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("outgoingHighWaterMark"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("incomingMaxBufferedDatagrams"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportDatagramDuplexStream")]), ("outgoingMaxBufferedDatagrams"));
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("WebTransportDatagramDuplexStream")]).prototype, (constructors[("WebTransportDatagramDuplexStream")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("WebTransportDatagramDuplexStream")]).prototype, (constructors[("WebTransportDatagramDuplexStream")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      installAccessor((constructors[("WebTransportError")]), ("streamErrorCode"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("WebTransportError")]), ("source"));
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("WebTransportError")]).prototype, (constructors[("WebTransportError")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("WebTransportError")]).prototype, (constructors[("WebTransportError")]).name);
-    }
-  } while (false);
-}
-  } while (false);
+
 }
 
+    {
 
+    {
+      installAccessor(constructors["WebTransportBidirectionalStream"], "readable");
+    }
+
+    {
+      installAccessor(constructors["WebTransportBidirectionalStream"], "writable");
+    }
+
+    {
+      defineConstructorBacklink(constructors["WebTransportBidirectionalStream"].prototype, constructors["WebTransportBidirectionalStream"]);
+    }
+
+    {
+      defineToStringTag(constructors["WebTransportBidirectionalStream"].prototype, constructors["WebTransportBidirectionalStream"].name);
+    }
+
+}
+
+    {
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "readable");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "writable");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "maxDatagramSize");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "incomingMaxAge");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "outgoingMaxAge");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "incomingHighWaterMark");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "outgoingHighWaterMark");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "incomingMaxBufferedDatagrams");
+    }
+
+    {
+      installAccessor(constructors["WebTransportDatagramDuplexStream"], "outgoingMaxBufferedDatagrams");
+    }
+
+    {
+      defineConstructorBacklink(constructors["WebTransportDatagramDuplexStream"].prototype, constructors["WebTransportDatagramDuplexStream"]);
+    }
+
+    {
+      defineToStringTag(constructors["WebTransportDatagramDuplexStream"].prototype, constructors["WebTransportDatagramDuplexStream"].name);
+    }
+
+}
+
+    {
+
+    {
+      installAccessor(constructors["WebTransportError"], "streamErrorCode");
+    }
+
+    {
+      installAccessor(constructors["WebTransportError"], "source");
+    }
+
+    {
+      defineConstructorBacklink(constructors["WebTransportError"].prototype, constructors["WebTransportError"]);
+    }
+
+    {
+      defineToStringTag(constructors["WebTransportError"].prototype, constructors["WebTransportError"].name);
+    }
+
+}
+
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

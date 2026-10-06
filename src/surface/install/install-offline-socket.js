@@ -34,24 +34,21 @@ const constants = Object.freeze({
 });
 
 export function installOfflineSocket() {
-  do {
-    delete (((runtime.offlineSocketConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.offlineSocketConstructors)[0])).name, (((runtime.offlineSocketConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.offlineSocketConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.offlineSocketConstructors)[1])).name, (((runtime.offlineSocketConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.offlineSocketConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.offlineSocketConstructors)[2])).name, (((runtime.offlineSocketConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.offlineSocketConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.offlineSocketConstructors)[3])).name, (((runtime.offlineSocketConstructors)[3])));
-  } while (false);
-  do {
-    const Constructor = constructors[("WebSocket")];
+
+    delete runtime.offlineSocketConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.offlineSocketConstructors[0].name, runtime.offlineSocketConstructors[0]);
+
+    delete runtime.offlineSocketConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.offlineSocketConstructors[1].name, runtime.offlineSocketConstructors[1]);
+
+    delete runtime.offlineSocketConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.offlineSocketConstructors[2].name, runtime.offlineSocketConstructors[2]);
+
+    delete runtime.offlineSocketConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.offlineSocketConstructors[3].name, runtime.offlineSocketConstructors[3]);
+
+  {
+    const Constructor = constructors["WebSocket"];
     const parent = (((((Object.entries(OFFLINE_SOCKET_SURFACES))[0]))[1])).prototypeParent === "EventTarget"
       ? EventTarget
       : (((((Object.entries(OFFLINE_SOCKET_SURFACES))[0]))[1])).prototypeParent === "DOMException"
@@ -61,9 +58,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("EventSource")];
+  }
+{
+    const Constructor = constructors["EventSource"];
     const parent = (((((Object.entries(OFFLINE_SOCKET_SURFACES))[1]))[1])).prototypeParent === "EventTarget"
       ? EventTarget
       : (((((Object.entries(OFFLINE_SOCKET_SURFACES))[1]))[1])).prototypeParent === "DOMException"
@@ -73,9 +70,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("WebSocketError")];
+  }
+{
+    const Constructor = constructors["WebSocketError"];
     const parent = (((((Object.entries(OFFLINE_SOCKET_SURFACES))[2]))[1])).prototypeParent === "EventTarget"
       ? EventTarget
       : (((((Object.entries(OFFLINE_SOCKET_SURFACES))[2]))[1])).prototypeParent === "DOMException"
@@ -85,9 +82,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("WebSocketStream")];
+  }
+{
+    const Constructor = constructors["WebSocketStream"];
     const parent = (((((Object.entries(OFFLINE_SOCKET_SURFACES))[3]))[1])).prototypeParent === "EventTarget"
       ? EventTarget
       : (((((Object.entries(OFFLINE_SOCKET_SURFACES))[3]))[1])).prototypeParent === "DOMException"
@@ -97,162 +94,121 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-  do {
+  }
+
     {
-  do {
-    installAccessor((constructors[("WebSocket")]), ("url"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("readyState"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("bufferedAmount"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("onopen"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("onerror"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("onclose"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("extensions"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("protocol"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("onmessage"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocket")]), ("binaryType"));
-  } while (false);
-do {
-    installConstant((constructors[("WebSocket")]), ("CONNECTING"));
-  } while (false);
-do {
-    installConstant((constructors[("WebSocket")]), ("OPEN"));
-  } while (false);
-do {
-    installConstant((constructors[("WebSocket")]), ("CLOSING"));
-  } while (false);
-do {
-    installConstant((constructors[("WebSocket")]), ("CLOSED"));
-  } while (false);
-do {
-    installMethod((constructors[("WebSocket")]), ("close"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("WebSocket")]), ("send"), (1));
-  } while (false);
-do {
+
+    installAccessor(constructors["WebSocket"], "url");
+
+    installAccessor(constructors["WebSocket"], "readyState");
+
+    installAccessor(constructors["WebSocket"], "bufferedAmount");
+
+    installAccessor(constructors["WebSocket"], "onopen");
+
+    installAccessor(constructors["WebSocket"], "onerror");
+
+    installAccessor(constructors["WebSocket"], "onclose");
+
+    installAccessor(constructors["WebSocket"], "extensions");
+
+    installAccessor(constructors["WebSocket"], "protocol");
+
+    installAccessor(constructors["WebSocket"], "onmessage");
+
+    installAccessor(constructors["WebSocket"], "binaryType");
+
+    installConstant(constructors["WebSocket"], "CONNECTING");
+
+    installConstant(constructors["WebSocket"], "OPEN");
+
+    installConstant(constructors["WebSocket"], "CLOSING");
+
+    installConstant(constructors["WebSocket"], "CLOSED");
+
+    installMethod(constructors["WebSocket"], "close", 0);
+
+    installMethod(constructors["WebSocket"], "send", 1);
+
     {
-      defineConstructorBacklink((constructors[("WebSocket")]).prototype, (constructors[("WebSocket")]));
+      defineConstructorBacklink(constructors["WebSocket"].prototype, constructors["WebSocket"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("WebSocket")]).prototype, (constructors[("WebSocket")]).name);
+      defineToStringTag(constructors["WebSocket"].prototype, constructors["WebSocket"].name);
     }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("EventSource")]), ("url"));
-  } while (false);
-do {
-    installAccessor((constructors[("EventSource")]), ("withCredentials"));
-  } while (false);
-do {
-    installAccessor((constructors[("EventSource")]), ("readyState"));
-  } while (false);
-do {
-    installAccessor((constructors[("EventSource")]), ("onopen"));
-  } while (false);
-do {
-    installAccessor((constructors[("EventSource")]), ("onmessage"));
-  } while (false);
-do {
-    installAccessor((constructors[("EventSource")]), ("onerror"));
-  } while (false);
-do {
-    installConstant((constructors[("EventSource")]), ("CONNECTING"));
-  } while (false);
-do {
-    installConstant((constructors[("EventSource")]), ("OPEN"));
-  } while (false);
-do {
-    installConstant((constructors[("EventSource")]), ("CLOSED"));
-  } while (false);
-do {
-    installMethod((constructors[("EventSource")]), ("close"), (0));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("EventSource")]).prototype, (constructors[("EventSource")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("EventSource")]).prototype, (constructors[("EventSource")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("WebSocketError")]), ("closeCode"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocketError")]), ("reason"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("WebSocketError")]).prototype, (constructors[("WebSocketError")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("WebSocketError")]).prototype, (constructors[("WebSocketError")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("WebSocketStream")]), ("url"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocketStream")]), ("opened"));
-  } while (false);
-do {
-    installAccessor((constructors[("WebSocketStream")]), ("closed"));
-  } while (false);
-do {
-    installMethod((constructors[("WebSocketStream")]), ("close"), (0));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("WebSocketStream")]).prototype, (constructors[("WebSocketStream")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("WebSocketStream")]).prototype, (constructors[("WebSocketStream")]).name);
-    }
-  } while (false);
-}
-  } while (false);
+
 }
 
+    {
 
+    installAccessor(constructors["EventSource"], "url");
+
+    installAccessor(constructors["EventSource"], "withCredentials");
+
+    installAccessor(constructors["EventSource"], "readyState");
+
+    installAccessor(constructors["EventSource"], "onopen");
+
+    installAccessor(constructors["EventSource"], "onmessage");
+
+    installAccessor(constructors["EventSource"], "onerror");
+
+    installConstant(constructors["EventSource"], "CONNECTING");
+
+    installConstant(constructors["EventSource"], "OPEN");
+
+    installConstant(constructors["EventSource"], "CLOSED");
+
+    installMethod(constructors["EventSource"], "close", 0);
+
+    {
+      defineConstructorBacklink(constructors["EventSource"].prototype, constructors["EventSource"]);
+    }
+
+    {
+      defineToStringTag(constructors["EventSource"].prototype, constructors["EventSource"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["WebSocketError"], "closeCode");
+
+    installAccessor(constructors["WebSocketError"], "reason");
+
+    {
+      defineConstructorBacklink(constructors["WebSocketError"].prototype, constructors["WebSocketError"]);
+    }
+
+    {
+      defineToStringTag(constructors["WebSocketError"].prototype, constructors["WebSocketError"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["WebSocketStream"], "url");
+
+    installAccessor(constructors["WebSocketStream"], "opened");
+
+    installAccessor(constructors["WebSocketStream"], "closed");
+
+    installMethod(constructors["WebSocketStream"], "close", 0);
+
+    {
+      defineConstructorBacklink(constructors["WebSocketStream"].prototype, constructors["WebSocketStream"]);
+    }
+
+    {
+      defineToStringTag(constructors["WebSocketStream"].prototype, constructors["WebSocketStream"].name);
+    }
+
+}
+
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({
@@ -295,20 +251,19 @@ function installConstant(Constructor, name) {
   const value = Constructor === runtime.EventSource && name === "CLOSED"
     ? 2
     : constants[name];
-  do {
-    Object.defineProperty(((([Constructor, Constructor.prototype])[0])), name, {
+
+    Object.defineProperty(Constructor, name, {
       value,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
-do {
-    Object.defineProperty(((([Constructor, Constructor.prototype])[1])), name, {
+
+    Object.defineProperty(Constructor.prototype, name, {
       value,
       writable: false,
       enumerable: true,
       configurable: false,
     });
-  } while (false);
+
 }

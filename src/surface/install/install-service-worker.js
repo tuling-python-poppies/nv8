@@ -30,84 +30,22 @@ import {
 } from "../../engine/webidl/native-function.js";
 
 export function installServiceWorker() {
-  do {
-    Object.setPrototypeOf(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[0])).prototype, EventTarget.prototype);
-    Object.setPrototypeOf(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[0])), EventTarget);
-    delete ((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[0])).prototype.constructor;
-    defineGlobalConstructor(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[0])).name, ((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[0])));
-  } while (false);
-do {
-    Object.setPrototypeOf(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[1])).prototype, EventTarget.prototype);
-    Object.setPrototypeOf(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[1])), EventTarget);
-    delete ((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[1])).prototype.constructor;
-    defineGlobalConstructor(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[1])).name, ((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[1])));
-  } while (false);
-do {
-    Object.setPrototypeOf(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[2])).prototype, EventTarget.prototype);
-    Object.setPrototypeOf(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[2])), EventTarget);
-    delete ((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[2])).prototype.constructor;
-    defineGlobalConstructor(((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[2])).name, ((([
-    ServiceWorker,
-    ServiceWorkerRegistration,
-    ServiceWorkerContainer,
-  ])[2])));
-  } while (false);
+
+    Object.setPrototypeOf(ServiceWorker.prototype, EventTarget.prototype);
+    Object.setPrototypeOf(ServiceWorker, EventTarget);
+    delete ServiceWorker.prototype.constructor;
+    defineGlobalConstructor(ServiceWorker.name, ServiceWorker);
+
+    Object.setPrototypeOf(ServiceWorkerRegistration.prototype, EventTarget.prototype);
+    Object.setPrototypeOf(ServiceWorkerRegistration, EventTarget);
+    delete ServiceWorkerRegistration.prototype.constructor;
+    defineGlobalConstructor(ServiceWorkerRegistration.name, ServiceWorkerRegistration);
+
+    Object.setPrototypeOf(ServiceWorkerContainer.prototype, EventTarget.prototype);
+    Object.setPrototypeOf(ServiceWorkerContainer, EventTarget);
+    delete ServiceWorkerContainer.prototype.constructor;
+    defineGlobalConstructor(ServiceWorkerContainer.name, ServiceWorkerContainer);
+
   installServiceWorkerInstance();
   installRegistration();
   installContainer();
@@ -124,12 +62,12 @@ function installServiceWorkerInstance() {
 }
 
 function installRegistration() {
-  do {getter(ServiceWorkerRegistration, ("installing"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("waiting"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("active"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("navigationPreload"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("scope"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("updateViaCache"), registrationProperty);} while (false);
+  getter(ServiceWorkerRegistration, "installing", registrationProperty);
+getter(ServiceWorkerRegistration, "waiting", registrationProperty);
+getter(ServiceWorkerRegistration, "active", registrationProperty);
+getter(ServiceWorkerRegistration, "navigationPreload", registrationProperty);
+getter(ServiceWorkerRegistration, "scope", registrationProperty);
+getter(ServiceWorkerRegistration, "updateViaCache", registrationProperty);
   handler(ServiceWorkerRegistration, "onupdatefound");
   method(
     ServiceWorkerRegistration,
@@ -138,16 +76,16 @@ do {getter(ServiceWorkerRegistration, ("updateViaCache"), registrationProperty);
     registrationUnregister,
   );
   method(ServiceWorkerRegistration, "update", 0, registrationUpdate);
-  do {getter(ServiceWorkerRegistration, ("paymentManager"), registrationProperty);} while (false);
+  getter(ServiceWorkerRegistration, "paymentManager", registrationProperty);
   defineConstructorBacklink(
     ServiceWorkerRegistration.prototype,
     ServiceWorkerRegistration,
   );
-  do {getter(ServiceWorkerRegistration, ("backgroundFetch"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("periodicSync"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("sync"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("cookies"), registrationProperty);} while (false);
-do {getter(ServiceWorkerRegistration, ("pushManager"), registrationProperty);} while (false);
+  getter(ServiceWorkerRegistration, "backgroundFetch", registrationProperty);
+getter(ServiceWorkerRegistration, "periodicSync", registrationProperty);
+getter(ServiceWorkerRegistration, "sync", registrationProperty);
+getter(ServiceWorkerRegistration, "cookies", registrationProperty);
+getter(ServiceWorkerRegistration, "pushManager", registrationProperty);
   method(
     ServiceWorkerRegistration,
     "getNotifications",

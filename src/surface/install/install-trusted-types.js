@@ -20,136 +20,102 @@ const constructors = Object.freeze(Object.fromEntries(
 
 export function installTrustedTypes() {
   installTrustedEval();
-  do {
-    delete (((runtime.trustedTypeConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.trustedTypeConstructors)[0])).name, (((runtime.trustedTypeConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.trustedTypeConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.trustedTypeConstructors)[1])).name, (((runtime.trustedTypeConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.trustedTypeConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.trustedTypeConstructors)[2])).name, (((runtime.trustedTypeConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.trustedTypeConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.trustedTypeConstructors)[3])).name, (((runtime.trustedTypeConstructors)[3])));
-  } while (false);
-do {
-    delete (((runtime.trustedTypeConstructors)[4])).prototype.constructor;
-    defineGlobalConstructor((((runtime.trustedTypeConstructors)[4])).name, (((runtime.trustedTypeConstructors)[4])));
-  } while (false);
-  do {
+
+    delete runtime.trustedTypeConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.trustedTypeConstructors[0].name, runtime.trustedTypeConstructors[0]);
+
+    delete runtime.trustedTypeConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.trustedTypeConstructors[1].name, runtime.trustedTypeConstructors[1]);
+
+    delete runtime.trustedTypeConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.trustedTypeConstructors[2].name, runtime.trustedTypeConstructors[2]);
+
+    delete runtime.trustedTypeConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.trustedTypeConstructors[3].name, runtime.trustedTypeConstructors[3]);
+
+    delete runtime.trustedTypeConstructors[4].prototype.constructor;
+    defineGlobalConstructor(runtime.trustedTypeConstructors[4].name, runtime.trustedTypeConstructors[4]);
+
     {
-  do {
-    installAccessor((constructors[("TrustedTypePolicyFactory")]), ("emptyHTML"));
-  } while (false);
-do {
-    installAccessor((constructors[("TrustedTypePolicyFactory")]), ("emptyScript"));
-  } while (false);
-do {
-    installAccessor((constructors[("TrustedTypePolicyFactory")]), ("defaultPolicy"));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("createPolicy"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("getAttributeType"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("getPropertyType"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("getTypeMapping"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("isHTML"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("isScript"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicyFactory")]), ("isScriptURL"), (1));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TrustedTypePolicyFactory")]).prototype, (constructors[("TrustedTypePolicyFactory")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TrustedTypePolicyFactory")]).prototype, (constructors[("TrustedTypePolicyFactory")]).name);
-  } while (false);
+
+    installAccessor(constructors["TrustedTypePolicyFactory"], "emptyHTML");
+
+    installAccessor(constructors["TrustedTypePolicyFactory"], "emptyScript");
+
+    installAccessor(constructors["TrustedTypePolicyFactory"], "defaultPolicy");
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "createPolicy", 1);
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "getAttributeType", 2);
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "getPropertyType", 2);
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "getTypeMapping", 0);
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "isHTML", 1);
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "isScript", 1);
+
+    installMethod(constructors["TrustedTypePolicyFactory"], "isScriptURL", 1);
+
+    defineConstructorBacklink(constructors["TrustedTypePolicyFactory"].prototype, constructors["TrustedTypePolicyFactory"]);
+
+    defineToStringTag(constructors["TrustedTypePolicyFactory"].prototype, constructors["TrustedTypePolicyFactory"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("TrustedTypePolicy")]), ("name"));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicy")]), ("createHTML"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicy")]), ("createScript"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedTypePolicy")]), ("createScriptURL"), (1));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TrustedTypePolicy")]).prototype, (constructors[("TrustedTypePolicy")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TrustedTypePolicy")]).prototype, (constructors[("TrustedTypePolicy")]).name);
-  } while (false);
+
+    installAccessor(constructors["TrustedTypePolicy"], "name");
+
+    installMethod(constructors["TrustedTypePolicy"], "createHTML", 1);
+
+    installMethod(constructors["TrustedTypePolicy"], "createScript", 1);
+
+    installMethod(constructors["TrustedTypePolicy"], "createScriptURL", 1);
+
+    defineConstructorBacklink(constructors["TrustedTypePolicy"].prototype, constructors["TrustedTypePolicy"]);
+
+    defineToStringTag(constructors["TrustedTypePolicy"].prototype, constructors["TrustedTypePolicy"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("TrustedHTML")]), ("toJSON"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedHTML")]), ("toString"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TrustedHTML")]).prototype, (constructors[("TrustedHTML")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TrustedHTML")]).prototype, (constructors[("TrustedHTML")]).name);
-  } while (false);
+
+    installMethod(constructors["TrustedHTML"], "toJSON", 0);
+
+    installMethod(constructors["TrustedHTML"], "toString", 0);
+
+    defineConstructorBacklink(constructors["TrustedHTML"].prototype, constructors["TrustedHTML"]);
+
+    defineToStringTag(constructors["TrustedHTML"].prototype, constructors["TrustedHTML"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("TrustedScript")]), ("toJSON"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedScript")]), ("toString"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TrustedScript")]).prototype, (constructors[("TrustedScript")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TrustedScript")]).prototype, (constructors[("TrustedScript")]).name);
-  } while (false);
+
+    installMethod(constructors["TrustedScript"], "toJSON", 0);
+
+    installMethod(constructors["TrustedScript"], "toString", 0);
+
+    defineConstructorBacklink(constructors["TrustedScript"].prototype, constructors["TrustedScript"]);
+
+    defineToStringTag(constructors["TrustedScript"].prototype, constructors["TrustedScript"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("TrustedScriptURL")]), ("toJSON"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("TrustedScriptURL")]), ("toString"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TrustedScriptURL")]).prototype, (constructors[("TrustedScriptURL")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TrustedScriptURL")]).prototype, (constructors[("TrustedScriptURL")]).name);
-  } while (false);
+
+    installMethod(constructors["TrustedScriptURL"], "toJSON", 0);
+
+    installMethod(constructors["TrustedScriptURL"], "toString", 0);
+
+    defineConstructorBacklink(constructors["TrustedScriptURL"].prototype, constructors["TrustedScriptURL"]);
+
+    defineToStringTag(constructors["TrustedScriptURL"].prototype, constructors["TrustedScriptURL"].name);
+
 }
-  } while (false);
+
   const descriptor = Object.getOwnPropertyDescriptor({
     get trustedTypes() {
       return runtime.createTrustedTypePolicyFactory();
@@ -162,8 +128,6 @@ do {
     configurable: true,
   });
 }
-
-
 
 function installTrustedEval() {
   const realmEval = globalThis.eval;

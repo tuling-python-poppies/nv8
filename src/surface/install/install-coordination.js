@@ -14,94 +14,73 @@ const constructors = Object.freeze(Object.fromEntries(
 ));
 
 export function installCoordination() {
-  do {
-    delete (((runtime.coordinationConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.coordinationConstructors)[0])).name, (((runtime.coordinationConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.coordinationConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.coordinationConstructors)[1])).name, (((runtime.coordinationConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.coordinationConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.coordinationConstructors)[2])).name, (((runtime.coordinationConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.coordinationConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.coordinationConstructors)[3])).name, (((runtime.coordinationConstructors)[3])));
-  } while (false);
+
+    delete runtime.coordinationConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.coordinationConstructors[0].name, runtime.coordinationConstructors[0]);
+
+    delete runtime.coordinationConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.coordinationConstructors[1].name, runtime.coordinationConstructors[1]);
+
+    delete runtime.coordinationConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.coordinationConstructors[2].name, runtime.coordinationConstructors[2]);
+
+    delete runtime.coordinationConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.coordinationConstructors[3].name, runtime.coordinationConstructors[3]);
+
   Object.setPrototypeOf(runtime.WakeLockSentinel.prototype, EventTarget.prototype);
   Object.setPrototypeOf(runtime.WakeLockSentinel, EventTarget);
-  do {
+
     {
-  do {
-    installAccessor((constructors[("Lock")]), ("name"));
-  } while (false);
-do {
-    installAccessor((constructors[("Lock")]), ("mode"));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("Lock")]).prototype, (constructors[("Lock")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("Lock")]).prototype, (constructors[("Lock")]).name);
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installMethod((constructors[("LockManager")]), ("query"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("LockManager")]), ("request"), (2));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("LockManager")]).prototype, (constructors[("LockManager")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("LockManager")]).prototype, (constructors[("LockManager")]).name);
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installMethod((constructors[("WakeLock")]), ("request"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("WakeLock")]).prototype, (constructors[("WakeLock")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("WakeLock")]).prototype, (constructors[("WakeLock")]).name);
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("WakeLockSentinel")]), ("onrelease"));
-  } while (false);
-do {
-    installAccessor((constructors[("WakeLockSentinel")]), ("released"));
-  } while (false);
-do {
-    installAccessor((constructors[("WakeLockSentinel")]), ("type"));
-  } while (false);
-do {
-    installMethod((constructors[("WakeLockSentinel")]), ("release"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("WakeLockSentinel")]).prototype, (constructors[("WakeLockSentinel")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("WakeLockSentinel")]).prototype, (constructors[("WakeLockSentinel")]).name);
-  } while (false);
-}
-  } while (false);
+
+    installAccessor(constructors["Lock"], "name");
+
+    installAccessor(constructors["Lock"], "mode");
+
+    defineConstructorBacklink(constructors["Lock"].prototype, constructors["Lock"]);
+
+    defineToStringTag(constructors["Lock"].prototype, constructors["Lock"].name);
+
 }
 
+    {
 
+    installMethod(constructors["LockManager"], "query", 0);
+
+    installMethod(constructors["LockManager"], "request", 2);
+
+    defineConstructorBacklink(constructors["LockManager"].prototype, constructors["LockManager"]);
+
+    defineToStringTag(constructors["LockManager"].prototype, constructors["LockManager"].name);
+
+}
+
+    {
+
+    installMethod(constructors["WakeLock"], "request", 0);
+
+    defineConstructorBacklink(constructors["WakeLock"].prototype, constructors["WakeLock"]);
+
+    defineToStringTag(constructors["WakeLock"].prototype, constructors["WakeLock"].name);
+
+}
+
+    {
+
+    installAccessor(constructors["WakeLockSentinel"], "onrelease");
+
+    installAccessor(constructors["WakeLockSentinel"], "released");
+
+    installAccessor(constructors["WakeLockSentinel"], "type");
+
+    installMethod(constructors["WakeLockSentinel"], "release", 0);
+
+    defineConstructorBacklink(constructors["WakeLockSentinel"].prototype, constructors["WakeLockSentinel"]);
+
+    defineToStringTag(constructors["WakeLockSentinel"].prototype, constructors["WakeLockSentinel"].name);
+
+}
+
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

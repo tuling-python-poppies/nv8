@@ -35,72 +35,57 @@ const settable = new Set([
 ]);
 
 export function installXRCore() {
-  do {
-    delete (((runtime.xrCoreConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[0])).name, (((runtime.xrCoreConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[1])).name, (((runtime.xrCoreConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[2])).name, (((runtime.xrCoreConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[3])).name, (((runtime.xrCoreConstructors)[3])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[4])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[4])).name, (((runtime.xrCoreConstructors)[4])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[5])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[5])).name, (((runtime.xrCoreConstructors)[5])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[6])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[6])).name, (((runtime.xrCoreConstructors)[6])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[7])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[7])).name, (((runtime.xrCoreConstructors)[7])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[8])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[8])).name, (((runtime.xrCoreConstructors)[8])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[9])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[9])).name, (((runtime.xrCoreConstructors)[9])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[10])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[10])).name, (((runtime.xrCoreConstructors)[10])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[11])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[11])).name, (((runtime.xrCoreConstructors)[11])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[12])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[12])).name, (((runtime.xrCoreConstructors)[12])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[13])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[13])).name, (((runtime.xrCoreConstructors)[13])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[14])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[14])).name, (((runtime.xrCoreConstructors)[14])));
-  } while (false);
-do {
-    delete (((runtime.xrCoreConstructors)[15])).prototype.constructor;
-    defineGlobalConstructor((((runtime.xrCoreConstructors)[15])).name, (((runtime.xrCoreConstructors)[15])));
-  } while (false);
-  do {
-    const Constructor = constructors[("XRBoundedReferenceSpace")];
+
+    delete runtime.xrCoreConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[0].name, runtime.xrCoreConstructors[0]);
+
+    delete runtime.xrCoreConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[1].name, runtime.xrCoreConstructors[1]);
+
+    delete runtime.xrCoreConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[2].name, runtime.xrCoreConstructors[2]);
+
+    delete runtime.xrCoreConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[3].name, runtime.xrCoreConstructors[3]);
+
+    delete runtime.xrCoreConstructors[4].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[4].name, runtime.xrCoreConstructors[4]);
+
+    delete runtime.xrCoreConstructors[5].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[5].name, runtime.xrCoreConstructors[5]);
+
+    delete runtime.xrCoreConstructors[6].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[6].name, runtime.xrCoreConstructors[6]);
+
+    delete runtime.xrCoreConstructors[7].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[7].name, runtime.xrCoreConstructors[7]);
+
+    delete runtime.xrCoreConstructors[8].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[8].name, runtime.xrCoreConstructors[8]);
+
+    delete runtime.xrCoreConstructors[9].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[9].name, runtime.xrCoreConstructors[9]);
+
+    delete runtime.xrCoreConstructors[10].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[10].name, runtime.xrCoreConstructors[10]);
+
+    delete runtime.xrCoreConstructors[11].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[11].name, runtime.xrCoreConstructors[11]);
+
+    delete runtime.xrCoreConstructors[12].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[12].name, runtime.xrCoreConstructors[12]);
+
+    delete runtime.xrCoreConstructors[13].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[13].name, runtime.xrCoreConstructors[13]);
+
+    delete runtime.xrCoreConstructors[14].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[14].name, runtime.xrCoreConstructors[14]);
+
+    delete runtime.xrCoreConstructors[15].prototype.constructor;
+    defineGlobalConstructor(runtime.xrCoreConstructors[15].name, runtime.xrCoreConstructors[15]);
+
+  {
+    const Constructor = constructors["XRBoundedReferenceSpace"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[0]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[0]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[0]))[1])).prototypeParent === "Event" ? Event : null);
@@ -108,9 +93,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRFrame")];
+  }
+{
+    const Constructor = constructors["XRFrame"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[1]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[1]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[1]))[1])).prototypeParent === "Event" ? Event : null);
@@ -118,9 +103,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRInputSourceArray")];
+  }
+{
+    const Constructor = constructors["XRInputSourceArray"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[2]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[2]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[2]))[1])).prototypeParent === "Event" ? Event : null);
@@ -128,9 +113,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRPose")];
+  }
+{
+    const Constructor = constructors["XRPose"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[3]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[3]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[3]))[1])).prototypeParent === "Event" ? Event : null);
@@ -138,9 +123,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRRay")];
+  }
+{
+    const Constructor = constructors["XRRay"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[4]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[4]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[4]))[1])).prototypeParent === "Event" ? Event : null);
@@ -148,9 +133,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRReferenceSpace")];
+  }
+{
+    const Constructor = constructors["XRReferenceSpace"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[5]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[5]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[5]))[1])).prototypeParent === "Event" ? Event : null);
@@ -158,9 +143,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRReferenceSpaceEvent")];
+  }
+{
+    const Constructor = constructors["XRReferenceSpaceEvent"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[6]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[6]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[6]))[1])).prototypeParent === "Event" ? Event : null);
@@ -168,9 +153,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRRenderState")];
+  }
+{
+    const Constructor = constructors["XRRenderState"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[7]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[7]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[7]))[1])).prototypeParent === "Event" ? Event : null);
@@ -178,9 +163,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRRigidTransform")];
+  }
+{
+    const Constructor = constructors["XRRigidTransform"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[8]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[8]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[8]))[1])).prototypeParent === "Event" ? Event : null);
@@ -188,9 +173,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRSession")];
+  }
+{
+    const Constructor = constructors["XRSession"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[9]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[9]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[9]))[1])).prototypeParent === "Event" ? Event : null);
@@ -198,9 +183,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRSessionEvent")];
+  }
+{
+    const Constructor = constructors["XRSessionEvent"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[10]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[10]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[10]))[1])).prototypeParent === "Event" ? Event : null);
@@ -208,9 +193,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRSpace")];
+  }
+{
+    const Constructor = constructors["XRSpace"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[11]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[11]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[11]))[1])).prototypeParent === "Event" ? Event : null);
@@ -218,9 +203,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRSystem")];
+  }
+{
+    const Constructor = constructors["XRSystem"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[12]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[12]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[12]))[1])).prototypeParent === "Event" ? Event : null);
@@ -228,9 +213,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRView")];
+  }
+{
+    const Constructor = constructors["XRView"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[13]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[13]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[13]))[1])).prototypeParent === "Event" ? Event : null);
@@ -238,9 +223,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRViewerPose")];
+  }
+{
+    const Constructor = constructors["XRViewerPose"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[14]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[14]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[14]))[1])).prototypeParent === "Event" ? Event : null);
@@ -248,9 +233,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("XRViewport")];
+  }
+{
+    const Constructor = constructors["XRViewport"];
     const parent = constructors[(((((Object.entries(XR_CORE_SURFACES))[15]))[1])).prototypeParent]
       ?? ((((((Object.entries(XR_CORE_SURFACES))[15]))[1])).prototypeParent === "EventTarget" ? EventTarget : null)
       ?? ((((((Object.entries(XR_CORE_SURFACES))[15]))[1])).prototypeParent === "Event" ? Event : null);
@@ -258,513 +243,390 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-  do {
+  }
+
     {
-  do {
-    installAccessor((constructors[("XRBoundedReferenceSpace")]), ("boundsGeometry"));
-  } while (false);
-do {
+
+    installAccessor(constructors["XRBoundedReferenceSpace"], "boundsGeometry");
+
     {
-      defineConstructorBacklink((constructors[("XRBoundedReferenceSpace")]).prototype, (constructors[("XRBoundedReferenceSpace")]));
+      defineConstructorBacklink(constructors["XRBoundedReferenceSpace"].prototype, constructors["XRBoundedReferenceSpace"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("XRBoundedReferenceSpace")]).prototype, (constructors[("XRBoundedReferenceSpace")]).name);
+      defineToStringTag(constructors["XRBoundedReferenceSpace"].prototype, constructors["XRBoundedReferenceSpace"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("XRFrame")]), ("session"));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getPose"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getViewerPose"), (1));
-  } while (false);
-do {
-    installAccessor((constructors[("XRFrame")]), ("trackedAnchors"));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("createAnchor"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("fillJointRadii"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("fillPoses"), (3));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getDepthInformation"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getHitTestResults"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getHitTestResultsForTransientInput"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getJointPose"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("XRFrame")]), ("getLightEstimate"), (1));
-  } while (false);
-do {
+
+    installAccessor(constructors["XRFrame"], "session");
+
+    installMethod(constructors["XRFrame"], "getPose", 2);
+
+    installMethod(constructors["XRFrame"], "getViewerPose", 1);
+
+    installAccessor(constructors["XRFrame"], "trackedAnchors");
+
+    installMethod(constructors["XRFrame"], "createAnchor", 2);
+
+    installMethod(constructors["XRFrame"], "fillJointRadii", 2);
+
+    installMethod(constructors["XRFrame"], "fillPoses", 3);
+
+    installMethod(constructors["XRFrame"], "getDepthInformation", 1);
+
+    installMethod(constructors["XRFrame"], "getHitTestResults", 1);
+
+    installMethod(constructors["XRFrame"], "getHitTestResultsForTransientInput", 1);
+
+    installMethod(constructors["XRFrame"], "getJointPose", 2);
+
+    installMethod(constructors["XRFrame"], "getLightEstimate", 1);
+
     {
-      defineConstructorBacklink((constructors[("XRFrame")]).prototype, (constructors[("XRFrame")]));
+      defineConstructorBacklink(constructors["XRFrame"].prototype, constructors["XRFrame"]);
     }
-  } while (false);
-do {
-    installAccessor((constructors[("XRFrame")]), ("detectedPlanes"));
-  } while (false);
-do {
+
+    installAccessor(constructors["XRFrame"], "detectedPlanes");
+
     {
-      defineToStringTag((constructors[("XRFrame")]).prototype, (constructors[("XRFrame")]).name);
+      defineToStringTag(constructors["XRFrame"].prototype, constructors["XRFrame"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
+{
+
+    installMethod(constructors["XRInputSourceArray"], "entries", 0);
+
+    installMethod(constructors["XRInputSourceArray"], "keys", 0);
+
+    installMethod(constructors["XRInputSourceArray"], "values", 0);
+
+    installMethod(constructors["XRInputSourceArray"], "forEach", 1);
+
+    installAccessor(constructors["XRInputSourceArray"], "length");
+
     {
-  do {
-    installMethod((constructors[("XRInputSourceArray")]), ("entries"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRInputSourceArray")]), ("keys"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRInputSourceArray")]), ("values"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRInputSourceArray")]), ("forEach"), (1));
-  } while (false);
-do {
-    installAccessor((constructors[("XRInputSourceArray")]), ("length"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRInputSourceArray")]).prototype, (constructors[("XRInputSourceArray")]));
+      defineConstructorBacklink(constructors["XRInputSourceArray"].prototype, constructors["XRInputSourceArray"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("XRInputSourceArray")]).prototype, (constructors[("XRInputSourceArray")]).name);
+      defineToStringTag(constructors["XRInputSourceArray"].prototype, constructors["XRInputSourceArray"].name);
     }
-  } while (false);
-do {
-    {
+
+{
       function values() {
         return runtime.xrIterator(this);
       }
       registerNativeFunction(values, "values");
       definePrototypeMethod(
-        (constructors[("XRInputSourceArray")]).prototype,
+        (constructors["XRInputSourceArray"]).prototype,
         Symbol.iterator,
         values,
         "values",
         false,
       );
     }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRPose")]), ("transform"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRPose")]), ("emulatedPosition"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRPose")]).prototype, (constructors[("XRPose")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRPose")]).prototype, (constructors[("XRPose")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRRay")]), ("origin"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRay")]), ("direction"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRay")]), ("matrix"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRRay")]).prototype, (constructors[("XRRay")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRRay")]).prototype, (constructors[("XRRay")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRReferenceSpace")]), ("onreset"));
-  } while (false);
-do {
-    installMethod((constructors[("XRReferenceSpace")]), ("getOffsetReferenceSpace"), (1));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRReferenceSpace")]).prototype, (constructors[("XRReferenceSpace")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRReferenceSpace")]).prototype, (constructors[("XRReferenceSpace")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRReferenceSpaceEvent")]), ("referenceSpace"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRReferenceSpaceEvent")]), ("transform"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRReferenceSpaceEvent")]).prototype, (constructors[("XRReferenceSpaceEvent")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRReferenceSpaceEvent")]).prototype, (constructors[("XRReferenceSpaceEvent")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRRenderState")]), ("depthNear"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRenderState")]), ("depthFar"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRenderState")]), ("inlineVerticalFieldOfView"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRenderState")]), ("baseLayer"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRenderState")]), ("layers"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRRenderState")]).prototype, (constructors[("XRRenderState")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRRenderState")]).prototype, (constructors[("XRRenderState")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRRigidTransform")]), ("position"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRigidTransform")]), ("orientation"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRigidTransform")]), ("matrix"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRRigidTransform")]), ("inverse"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRRigidTransform")]).prototype, (constructors[("XRRigidTransform")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRRigidTransform")]).prototype, (constructors[("XRRigidTransform")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRSession")]), ("environmentBlendMode"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("interactionMode"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("visibilityState"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("renderState"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("inputSources"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("domOverlayState"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("preferredReflectionFormat"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onend"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onselect"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("oninputsourceschange"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onselectstart"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onselectend"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onvisibilitychange"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onsqueeze"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onsqueezestart"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onsqueezeend"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("depthUsage"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("depthDataFormat"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("depthType"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("depthActive"));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("cancelAnimationFrame"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("end"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("pauseDepthSensing"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("requestAnimationFrame"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("requestHitTestSource"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("requestHitTestSourceForTransientInput"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("requestLightProbe"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("requestReferenceSpace"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("resumeDepthSensing"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("updateRenderState"), (0));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("enabledFeatures"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("maxRenderLayers"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRSession")]), ("onvisibilitymaskchange"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRSession")]).prototype, (constructors[("XRSession")]));
-    }
-  } while (false);
-do {
-    installMethod((constructors[("XRSession")]), ("initiateRoomCapture"), (0));
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRSession")]).prototype, (constructors[("XRSession")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRSessionEvent")]), ("session"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRSessionEvent")]).prototype, (constructors[("XRSessionEvent")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRSessionEvent")]).prototype, (constructors[("XRSessionEvent")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      defineConstructorBacklink((constructors[("XRSpace")]).prototype, (constructors[("XRSpace")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRSpace")]).prototype, (constructors[("XRSpace")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRSystem")]), ("ondevicechange"));
-  } while (false);
-do {
-    installMethod((constructors[("XRSystem")]), ("isSessionSupported"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("XRSystem")]), ("requestSession"), (1));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRSystem")]).prototype, (constructors[("XRSystem")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRSystem")]).prototype, (constructors[("XRSystem")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRView")]), ("eye"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRView")]), ("recommendedViewportScale"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRView")]), ("isFirstPersonObserver"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRView")]), ("camera"));
-  } while (false);
-do {
-    installMethod((constructors[("XRView")]), ("requestViewportScale"), (1));
-  } while (false);
-do {
-    installAccessor((constructors[("XRView")]), ("index"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRView")]).prototype, (constructors[("XRView")]));
-    }
-  } while (false);
-do {
-    installAccessor((constructors[("XRView")]), ("projectionMatrix"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRView")]), ("transform"));
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRView")]).prototype, (constructors[("XRView")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRViewerPose")]), ("views"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRViewerPose")]).prototype, (constructors[("XRViewerPose")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRViewerPose")]).prototype, (constructors[("XRViewerPose")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("XRViewport")]), ("x"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRViewport")]), ("y"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRViewport")]), ("width"));
-  } while (false);
-do {
-    installAccessor((constructors[("XRViewport")]), ("height"));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("XRViewport")]).prototype, (constructors[("XRViewport")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("XRViewport")]).prototype, (constructors[("XRViewport")]).name);
-    }
-  } while (false);
-}
-  } while (false);
 }
 
+    {
 
+    installAccessor(constructors["XRPose"], "transform");
+
+    installAccessor(constructors["XRPose"], "emulatedPosition");
+
+    {
+      defineConstructorBacklink(constructors["XRPose"].prototype, constructors["XRPose"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRPose"].prototype, constructors["XRPose"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRRay"], "origin");
+
+    installAccessor(constructors["XRRay"], "direction");
+
+    installAccessor(constructors["XRRay"], "matrix");
+
+    {
+      defineConstructorBacklink(constructors["XRRay"].prototype, constructors["XRRay"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRRay"].prototype, constructors["XRRay"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRReferenceSpace"], "onreset");
+
+    installMethod(constructors["XRReferenceSpace"], "getOffsetReferenceSpace", 1);
+
+    {
+      defineConstructorBacklink(constructors["XRReferenceSpace"].prototype, constructors["XRReferenceSpace"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRReferenceSpace"].prototype, constructors["XRReferenceSpace"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRReferenceSpaceEvent"], "referenceSpace");
+
+    installAccessor(constructors["XRReferenceSpaceEvent"], "transform");
+
+    {
+      defineConstructorBacklink(constructors["XRReferenceSpaceEvent"].prototype, constructors["XRReferenceSpaceEvent"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRReferenceSpaceEvent"].prototype, constructors["XRReferenceSpaceEvent"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRRenderState"], "depthNear");
+
+    installAccessor(constructors["XRRenderState"], "depthFar");
+
+    installAccessor(constructors["XRRenderState"], "inlineVerticalFieldOfView");
+
+    installAccessor(constructors["XRRenderState"], "baseLayer");
+
+    installAccessor(constructors["XRRenderState"], "layers");
+
+    {
+      defineConstructorBacklink(constructors["XRRenderState"].prototype, constructors["XRRenderState"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRRenderState"].prototype, constructors["XRRenderState"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRRigidTransform"], "position");
+
+    installAccessor(constructors["XRRigidTransform"], "orientation");
+
+    installAccessor(constructors["XRRigidTransform"], "matrix");
+
+    installAccessor(constructors["XRRigidTransform"], "inverse");
+
+    {
+      defineConstructorBacklink(constructors["XRRigidTransform"].prototype, constructors["XRRigidTransform"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRRigidTransform"].prototype, constructors["XRRigidTransform"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRSession"], "environmentBlendMode");
+
+    installAccessor(constructors["XRSession"], "interactionMode");
+
+    installAccessor(constructors["XRSession"], "visibilityState");
+
+    installAccessor(constructors["XRSession"], "renderState");
+
+    installAccessor(constructors["XRSession"], "inputSources");
+
+    installAccessor(constructors["XRSession"], "domOverlayState");
+
+    installAccessor(constructors["XRSession"], "preferredReflectionFormat");
+
+    installAccessor(constructors["XRSession"], "onend");
+
+    installAccessor(constructors["XRSession"], "onselect");
+
+    installAccessor(constructors["XRSession"], "oninputsourceschange");
+
+    installAccessor(constructors["XRSession"], "onselectstart");
+
+    installAccessor(constructors["XRSession"], "onselectend");
+
+    installAccessor(constructors["XRSession"], "onvisibilitychange");
+
+    installAccessor(constructors["XRSession"], "onsqueeze");
+
+    installAccessor(constructors["XRSession"], "onsqueezestart");
+
+    installAccessor(constructors["XRSession"], "onsqueezeend");
+
+    installAccessor(constructors["XRSession"], "depthUsage");
+
+    installAccessor(constructors["XRSession"], "depthDataFormat");
+
+    installAccessor(constructors["XRSession"], "depthType");
+
+    installAccessor(constructors["XRSession"], "depthActive");
+
+    installMethod(constructors["XRSession"], "cancelAnimationFrame", 1);
+
+    installMethod(constructors["XRSession"], "end", 0);
+
+    installMethod(constructors["XRSession"], "pauseDepthSensing", 0);
+
+    installMethod(constructors["XRSession"], "requestAnimationFrame", 1);
+
+    installMethod(constructors["XRSession"], "requestHitTestSource", 1);
+
+    installMethod(constructors["XRSession"], "requestHitTestSourceForTransientInput", 1);
+
+    installMethod(constructors["XRSession"], "requestLightProbe", 0);
+
+    installMethod(constructors["XRSession"], "requestReferenceSpace", 1);
+
+    installMethod(constructors["XRSession"], "resumeDepthSensing", 0);
+
+    installMethod(constructors["XRSession"], "updateRenderState", 0);
+
+    installAccessor(constructors["XRSession"], "enabledFeatures");
+
+    installAccessor(constructors["XRSession"], "maxRenderLayers");
+
+    installAccessor(constructors["XRSession"], "onvisibilitymaskchange");
+
+    {
+      defineConstructorBacklink(constructors["XRSession"].prototype, constructors["XRSession"]);
+    }
+
+    installMethod(constructors["XRSession"], "initiateRoomCapture", 0);
+
+    {
+      defineToStringTag(constructors["XRSession"].prototype, constructors["XRSession"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRSessionEvent"], "session");
+
+    {
+      defineConstructorBacklink(constructors["XRSessionEvent"].prototype, constructors["XRSessionEvent"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRSessionEvent"].prototype, constructors["XRSessionEvent"].name);
+    }
+
+}
+
+    {
+
+    {
+      defineConstructorBacklink(constructors["XRSpace"].prototype, constructors["XRSpace"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRSpace"].prototype, constructors["XRSpace"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRSystem"], "ondevicechange");
+
+    installMethod(constructors["XRSystem"], "isSessionSupported", 1);
+
+    installMethod(constructors["XRSystem"], "requestSession", 1);
+
+    {
+      defineConstructorBacklink(constructors["XRSystem"].prototype, constructors["XRSystem"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRSystem"].prototype, constructors["XRSystem"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRView"], "eye");
+
+    installAccessor(constructors["XRView"], "recommendedViewportScale");
+
+    installAccessor(constructors["XRView"], "isFirstPersonObserver");
+
+    installAccessor(constructors["XRView"], "camera");
+
+    installMethod(constructors["XRView"], "requestViewportScale", 1);
+
+    installAccessor(constructors["XRView"], "index");
+
+    {
+      defineConstructorBacklink(constructors["XRView"].prototype, constructors["XRView"]);
+    }
+
+    installAccessor(constructors["XRView"], "projectionMatrix");
+
+    installAccessor(constructors["XRView"], "transform");
+
+    {
+      defineToStringTag(constructors["XRView"].prototype, constructors["XRView"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRViewerPose"], "views");
+
+    {
+      defineConstructorBacklink(constructors["XRViewerPose"].prototype, constructors["XRViewerPose"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRViewerPose"].prototype, constructors["XRViewerPose"].name);
+    }
+
+}
+
+    {
+
+    installAccessor(constructors["XRViewport"], "x");
+
+    installAccessor(constructors["XRViewport"], "y");
+
+    installAccessor(constructors["XRViewport"], "width");
+
+    installAccessor(constructors["XRViewport"], "height");
+
+    {
+      defineConstructorBacklink(constructors["XRViewport"].prototype, constructors["XRViewport"]);
+    }
+
+    {
+      defineToStringTag(constructors["XRViewport"].prototype, constructors["XRViewport"].name);
+    }
+
+}
+
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

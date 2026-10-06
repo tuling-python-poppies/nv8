@@ -21,121 +21,89 @@ const constructors = Object.freeze({
 });
 
 export function installObservable() {
-  do {
-    delete (((runtime.observableConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observableConstructors)[0])).name, (((runtime.observableConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.observableConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observableConstructors)[1])).name, (((runtime.observableConstructors)[1])));
-  } while (false);
-  do {
+
+    delete runtime.observableConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.observableConstructors[0].name, runtime.observableConstructors[0]);
+
+    delete runtime.observableConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.observableConstructors[1].name, runtime.observableConstructors[1]);
+
     {
-  do {
-    installAccessor((constructors[("Subscriber")]), ("active"));
-  } while (false);
-do {
-    installAccessor((constructors[("Subscriber")]), ("signal"));
-  } while (false);
-do {
-    installMethod((constructors[("Subscriber")]), ("addTeardown"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Subscriber")]), ("complete"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("Subscriber")]), ("error"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Subscriber")]), ("next"), (1));
-  } while (false);
-do {
+
+    installAccessor(constructors["Subscriber"], "active");
+
+    installAccessor(constructors["Subscriber"], "signal");
+
+    installMethod(constructors["Subscriber"], "addTeardown", 1);
+
+    installMethod(constructors["Subscriber"], "complete", 0);
+
+    installMethod(constructors["Subscriber"], "error", 1);
+
+    installMethod(constructors["Subscriber"], "next", 1);
+
     {
-      defineConstructorBacklink((constructors[("Subscriber")]).prototype, (constructors[("Subscriber")]));
+      defineConstructorBacklink(constructors["Subscriber"].prototype, constructors["Subscriber"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("Subscriber")]).prototype, (constructors[("Subscriber")]).name);
+      defineToStringTag(constructors["Subscriber"].prototype, constructors["Subscriber"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("Observable")]), ("catch"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("drop"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("every"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("filter"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("finally"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("find"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("first"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("flatMap"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("forEach"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("inspect"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("last"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("map"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("reduce"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("some"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("subscribe"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("switchMap"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("take"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("takeUntil"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Observable")]), ("toArray"), (0));
-  } while (false);
-do {
+
+    installMethod(constructors["Observable"], "catch", 1);
+
+    installMethod(constructors["Observable"], "drop", 1);
+
+    installMethod(constructors["Observable"], "every", 1);
+
+    installMethod(constructors["Observable"], "filter", 1);
+
+    installMethod(constructors["Observable"], "finally", 1);
+
+    installMethod(constructors["Observable"], "find", 1);
+
+    installMethod(constructors["Observable"], "first", 0);
+
+    installMethod(constructors["Observable"], "flatMap", 1);
+
+    installMethod(constructors["Observable"], "forEach", 1);
+
+    installMethod(constructors["Observable"], "inspect", 0);
+
+    installMethod(constructors["Observable"], "last", 0);
+
+    installMethod(constructors["Observable"], "map", 1);
+
+    installMethod(constructors["Observable"], "reduce", 1);
+
+    installMethod(constructors["Observable"], "some", 1);
+
+    installMethod(constructors["Observable"], "subscribe", 0);
+
+    installMethod(constructors["Observable"], "switchMap", 1);
+
+    installMethod(constructors["Observable"], "take", 1);
+
+    installMethod(constructors["Observable"], "takeUntil", 1);
+
+    installMethod(constructors["Observable"], "toArray", 0);
+
     {
-      defineConstructorBacklink((constructors[("Observable")]).prototype, (constructors[("Observable")]));
+      defineConstructorBacklink(constructors["Observable"].prototype, constructors["Observable"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("Observable")]).prototype, (constructors[("Observable")]).name);
+      defineToStringTag(constructors["Observable"].prototype, constructors["Observable"].name);
     }
-  } while (false);
+
 }
-  } while (false);
+
   defineStaticMethod(runtime.Observable, "from", runtime.observableFrom, 1);
 }
-
-
 
 function installAccessor(Constructor, name) {
   const getter = Object.getOwnPropertyDescriptor({

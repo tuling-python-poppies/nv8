@@ -33,18 +33,16 @@ import {
 } from "../../engine/webidl/native-function.js";
 
 export function installCrypto(realm = globalThis, entropy = null) {
-  do {
-    delete ((([Crypto, SubtleCrypto, CryptoKey])[0])).prototype.constructor;
-    defineGlobalConstructor(((([Crypto, SubtleCrypto, CryptoKey])[0])).name, ((([Crypto, SubtleCrypto, CryptoKey])[0])));
-  } while (false);
-do {
-    delete ((([Crypto, SubtleCrypto, CryptoKey])[1])).prototype.constructor;
-    defineGlobalConstructor(((([Crypto, SubtleCrypto, CryptoKey])[1])).name, ((([Crypto, SubtleCrypto, CryptoKey])[1])));
-  } while (false);
-do {
-    delete ((([Crypto, SubtleCrypto, CryptoKey])[2])).prototype.constructor;
-    defineGlobalConstructor(((([Crypto, SubtleCrypto, CryptoKey])[2])).name, ((([Crypto, SubtleCrypto, CryptoKey])[2])));
-  } while (false);
+
+    delete Crypto.prototype.constructor;
+    defineGlobalConstructor(Crypto.name, Crypto);
+
+    delete SubtleCrypto.prototype.constructor;
+    defineGlobalConstructor(SubtleCrypto.name, SubtleCrypto);
+
+    delete CryptoKey.prototype.constructor;
+    defineGlobalConstructor(CryptoKey.name, CryptoKey);
+
   const { crypto, subtle } = createCryptoObjects(realm, entropy);
   method(Crypto, "getRandomValues", 1, cryptoGetRandomValues);
   defineConstructorBacklink(Crypto.prototype, Crypto);
@@ -52,188 +50,28 @@ do {
   method(Crypto, "randomUUID", 0, cryptoRandomUUID);
   defineToStringTag(Crypto.prototype, "Crypto");
 
-  do {method(SubtleCrypto, ("decrypt"), (3), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[0]))[2])));} while (false);
-do {method(SubtleCrypto, ("deriveBits"), (2), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[1]))[2])));} while (false);
-do {method(SubtleCrypto, ("deriveKey"), (5), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[2]))[2])));} while (false);
-do {method(SubtleCrypto, ("digest"), (2), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[3]))[2])));} while (false);
-do {method(SubtleCrypto, ("encrypt"), (3), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[4]))[2])));} while (false);
-do {method(SubtleCrypto, ("exportKey"), (2), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[5]))[2])));} while (false);
-do {method(SubtleCrypto, ("generateKey"), (3), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[6]))[2])));} while (false);
-do {method(SubtleCrypto, ("importKey"), (5), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[7]))[2])));} while (false);
-do {method(SubtleCrypto, ("sign"), (3), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[8]))[2])));} while (false);
-do {method(SubtleCrypto, ("unwrapKey"), (7), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[9]))[2])));} while (false);
-do {method(SubtleCrypto, ("verify"), (4), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[10]))[2])));} while (false);
-do {method(SubtleCrypto, ("wrapKey"), (4), ((((([
-    ["decrypt", 3, subtleDecrypt],
-    ["deriveBits", 2, subtleDeriveBits],
-    ["deriveKey", 5, subtleDeriveKey],
-    ["digest", 2, subtleDigest],
-    ["encrypt", 3, subtleEncrypt],
-    ["exportKey", 2, subtleExportKey],
-    ["generateKey", 3, subtleGenerateKey],
-    ["importKey", 5, subtleImportKey],
-    ["sign", 3, subtleSign],
-    ["unwrapKey", 7, subtleUnwrapKey],
-    ["verify", 4, subtleVerify],
-    ["wrapKey", 4, subtleWrapKey],
-  ])[11]))[2])));} while (false);
+  method(SubtleCrypto, "decrypt", 3, ((((["decrypt", 3, subtleDecrypt]))[2])));
+method(SubtleCrypto, "deriveBits", 2, ((((["deriveBits", 2, subtleDeriveBits]))[2])));
+method(SubtleCrypto, "deriveKey", 5, ((((["deriveKey", 5, subtleDeriveKey]))[2])));
+method(SubtleCrypto, "digest", 2, ((((["digest", 2, subtleDigest]))[2])));
+method(SubtleCrypto, "encrypt", 3, ((((["encrypt", 3, subtleEncrypt]))[2])));
+method(SubtleCrypto, "exportKey", 2, ((((["exportKey", 2, subtleExportKey]))[2])));
+method(SubtleCrypto, "generateKey", 3, ((((["generateKey", 3, subtleGenerateKey]))[2])));
+method(SubtleCrypto, "importKey", 5, ((((["importKey", 5, subtleImportKey]))[2])));
+method(SubtleCrypto, "sign", 3, ((((["sign", 3, subtleSign]))[2])));
+method(SubtleCrypto, "unwrapKey", 7, ((((["unwrapKey", 7, subtleUnwrapKey]))[2])));
+method(SubtleCrypto, "verify", 4, ((((["verify", 4, subtleVerify]))[2])));
+method(SubtleCrypto, "wrapKey", 4, ((((["wrapKey", 4, subtleWrapKey]))[2])));
   finish(SubtleCrypto);
 
-  do {
-    getter(CryptoKey, ("type"), value => cryptoKeyProperty(value, ("type")));
-  } while (false);
-do {
-    getter(CryptoKey, ("extractable"), value => cryptoKeyProperty(value, ("extractable")));
-  } while (false);
-do {
-    getter(CryptoKey, ("algorithm"), value => cryptoKeyProperty(value, ("algorithm")));
-  } while (false);
-do {
-    getter(CryptoKey, ("usages"), value => cryptoKeyProperty(value, ("usages")));
-  } while (false);
+    getter(CryptoKey, "type", value => cryptoKeyProperty(value, "type"));
+
+    getter(CryptoKey, "extractable", value => cryptoKeyProperty(value, "extractable"));
+
+    getter(CryptoKey, "algorithm", value => cryptoKeyProperty(value, "algorithm"));
+
+    getter(CryptoKey, "usages", value => cryptoKeyProperty(value, "usages"));
+
   finish(CryptoKey);
 
   const cryptoGetter = Object.getOwnPropertyDescriptor({

@@ -24,457 +24,384 @@ const constructors = Object.freeze(Object.fromEntries(
 ));
 
 export function installServiceWorkerManagers() {
-  do {
-    delete (((runtime.serviceWorkerManagerConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[0])).name, (((runtime.serviceWorkerManagerConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.serviceWorkerManagerConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[1])).name, (((runtime.serviceWorkerManagerConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.serviceWorkerManagerConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[2])).name, (((runtime.serviceWorkerManagerConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.serviceWorkerManagerConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[3])).name, (((runtime.serviceWorkerManagerConstructors)[3])));
-  } while (false);
-do {
-    delete (((runtime.serviceWorkerManagerConstructors)[4])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[4])).name, (((runtime.serviceWorkerManagerConstructors)[4])));
-  } while (false);
-do {
-    delete (((runtime.serviceWorkerManagerConstructors)[5])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[5])).name, (((runtime.serviceWorkerManagerConstructors)[5])));
-  } while (false);
-do {
-    delete (((runtime.serviceWorkerManagerConstructors)[6])).prototype.constructor;
-    defineGlobalConstructor((((runtime.serviceWorkerManagerConstructors)[6])).name, (((runtime.serviceWorkerManagerConstructors)[6])));
-  } while (false);
-  do {
-    {
-  do {
-    {
+
+    delete runtime.serviceWorkerManagerConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[0].name, runtime.serviceWorkerManagerConstructors[0]);
+
+    delete runtime.serviceWorkerManagerConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[1].name, runtime.serviceWorkerManagerConstructors[1]);
+
+    delete runtime.serviceWorkerManagerConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[2].name, runtime.serviceWorkerManagerConstructors[2]);
+
+    delete runtime.serviceWorkerManagerConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[3].name, runtime.serviceWorkerManagerConstructors[3]);
+
+    delete runtime.serviceWorkerManagerConstructors[4].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[4].name, runtime.serviceWorkerManagerConstructors[4]);
+
+    delete runtime.serviceWorkerManagerConstructors[5].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[5].name, runtime.serviceWorkerManagerConstructors[5]);
+
+    delete runtime.serviceWorkerManagerConstructors[6].prototype.constructor;
+    defineGlobalConstructor(runtime.serviceWorkerManagerConstructors[6].name, runtime.serviceWorkerManagerConstructors[6]);
+
+  {
+  {
       const callback = {
-        [("getSubscriptions")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("getSubscriptions"), args);
+        ["getSubscriptions"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "getSubscriptions", args);
         },
-      }[("getSubscriptions")];
+      }["getSubscriptions"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getSubscriptions"));
-      definePrototypeMethod((constructors[("CookieStoreManager")]).prototype, ("getSubscriptions"), callback);
+      registerNativeFunction(callback, "getSubscriptions");
+      definePrototypeMethod(constructors["CookieStoreManager"].prototype, "getSubscriptions", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("subscribe")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("subscribe"), args);
+        ["subscribe"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "subscribe", args);
         },
-      }[("subscribe")];
+      }["subscribe"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("subscribe"));
-      definePrototypeMethod((constructors[("CookieStoreManager")]).prototype, ("subscribe"), callback);
+      registerNativeFunction(callback, "subscribe");
+      definePrototypeMethod(constructors["CookieStoreManager"].prototype, "subscribe", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("unsubscribe")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("unsubscribe"), args);
+        ["unsubscribe"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "unsubscribe", args);
         },
-      }[("unsubscribe")];
+      }["unsubscribe"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("unsubscribe"));
-      definePrototypeMethod((constructors[("CookieStoreManager")]).prototype, ("unsubscribe"), callback);
+      registerNativeFunction(callback, "unsubscribe");
+      definePrototypeMethod(constructors["CookieStoreManager"].prototype, "unsubscribe", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("CookieStoreManager")]).prototype, (constructors[("CookieStoreManager")]));
+      defineConstructorBacklink(constructors["CookieStoreManager"].prototype, constructors["CookieStoreManager"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("CookieStoreManager")]).prototype, (constructors[("CookieStoreManager")]).name);
+      defineToStringTag(constructors["CookieStoreManager"].prototype, constructors["CookieStoreManager"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const callback = {
-        [("disable")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("disable"), args);
+        ["disable"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "disable", args);
         },
-      }[("disable")];
+      }["disable"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("disable"));
-      definePrototypeMethod((constructors[("NavigationPreloadManager")]).prototype, ("disable"), callback);
+      registerNativeFunction(callback, "disable");
+      definePrototypeMethod(constructors["NavigationPreloadManager"].prototype, "disable", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("enable")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("enable"), args);
+        ["enable"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "enable", args);
         },
-      }[("enable")];
+      }["enable"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("enable"));
-      definePrototypeMethod((constructors[("NavigationPreloadManager")]).prototype, ("enable"), callback);
+      registerNativeFunction(callback, "enable");
+      definePrototypeMethod(constructors["NavigationPreloadManager"].prototype, "enable", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("getState")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("getState"), args);
+        ["getState"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "getState", args);
         },
-      }[("getState")];
+      }["getState"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getState"));
-      definePrototypeMethod((constructors[("NavigationPreloadManager")]).prototype, ("getState"), callback);
+      registerNativeFunction(callback, "getState");
+      definePrototypeMethod(constructors["NavigationPreloadManager"].prototype, "getState", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("setHeaderValue")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("setHeaderValue"), args);
+        ["setHeaderValue"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "setHeaderValue", args);
         },
-      }[("setHeaderValue")];
+      }["setHeaderValue"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("setHeaderValue"));
-      definePrototypeMethod((constructors[("NavigationPreloadManager")]).prototype, ("setHeaderValue"), callback);
+      registerNativeFunction(callback, "setHeaderValue");
+      definePrototypeMethod(constructors["NavigationPreloadManager"].prototype, "setHeaderValue", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("NavigationPreloadManager")]).prototype, (constructors[("NavigationPreloadManager")]));
+      defineConstructorBacklink(constructors["NavigationPreloadManager"].prototype, constructors["NavigationPreloadManager"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("NavigationPreloadManager")]).prototype, (constructors[("NavigationPreloadManager")]).name);
+      defineToStringTag(constructors["NavigationPreloadManager"].prototype, constructors["NavigationPreloadManager"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const callback = {
-        [("getTags")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("getTags"), args);
+        ["getTags"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "getTags", args);
         },
-      }[("getTags")];
+      }["getTags"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getTags"));
-      definePrototypeMethod((constructors[("PeriodicSyncManager")]).prototype, ("getTags"), callback);
+      registerNativeFunction(callback, "getTags");
+      definePrototypeMethod(constructors["PeriodicSyncManager"].prototype, "getTags", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("register")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("register"), args);
+        ["register"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "register", args);
         },
-      }[("register")];
+      }["register"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("register"));
-      definePrototypeMethod((constructors[("PeriodicSyncManager")]).prototype, ("register"), callback);
+      registerNativeFunction(callback, "register");
+      definePrototypeMethod(constructors["PeriodicSyncManager"].prototype, "register", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("unregister")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("unregister"), args);
+        ["unregister"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "unregister", args);
         },
-      }[("unregister")];
+      }["unregister"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("unregister"));
-      definePrototypeMethod((constructors[("PeriodicSyncManager")]).prototype, ("unregister"), callback);
+      registerNativeFunction(callback, "unregister");
+      definePrototypeMethod(constructors["PeriodicSyncManager"].prototype, "unregister", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("PeriodicSyncManager")]).prototype, (constructors[("PeriodicSyncManager")]));
+      defineConstructorBacklink(constructors["PeriodicSyncManager"].prototype, constructors["PeriodicSyncManager"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("PeriodicSyncManager")]).prototype, (constructors[("PeriodicSyncManager")]).name);
+      defineToStringTag(constructors["PeriodicSyncManager"].prototype, constructors["PeriodicSyncManager"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const callback = {
-        [("getSubscription")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("getSubscription"), args);
+        ["getSubscription"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "getSubscription", args);
         },
-      }[("getSubscription")];
+      }["getSubscription"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getSubscription"));
-      definePrototypeMethod((constructors[("PushManager")]).prototype, ("getSubscription"), callback);
+      registerNativeFunction(callback, "getSubscription");
+      definePrototypeMethod(constructors["PushManager"].prototype, "getSubscription", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("permissionState")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("permissionState"), args);
+        ["permissionState"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "permissionState", args);
         },
-      }[("permissionState")];
+      }["permissionState"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("permissionState"));
-      definePrototypeMethod((constructors[("PushManager")]).prototype, ("permissionState"), callback);
+      registerNativeFunction(callback, "permissionState");
+      definePrototypeMethod(constructors["PushManager"].prototype, "permissionState", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("subscribe")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("subscribe"), args);
+        ["subscribe"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "subscribe", args);
         },
-      }[("subscribe")];
+      }["subscribe"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("subscribe"));
-      definePrototypeMethod((constructors[("PushManager")]).prototype, ("subscribe"), callback);
+      registerNativeFunction(callback, "subscribe");
+      definePrototypeMethod(constructors["PushManager"].prototype, "subscribe", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("PushManager")]).prototype, (constructors[("PushManager")]));
+      defineConstructorBacklink(constructors["PushManager"].prototype, constructors["PushManager"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("PushManager")]).prototype, (constructors[("PushManager")]).name);
+      defineToStringTag(constructors["PushManager"].prototype, constructors["PushManager"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("endpoint")]() {
-          return runtime.serviceWorkerManagerProperty(this, ("endpoint"));
+        get ["endpoint"]() {
+          return runtime.serviceWorkerManagerProperty(this, "endpoint");
         },
-      }, ("endpoint")).get;
-      registerNativeGetter(getter, ("endpoint"));
-      definePrototypeGetter((constructors[("PushSubscription")]).prototype, ("endpoint"), getter);
+      }, "endpoint").get;
+      registerNativeGetter(getter, "endpoint");
+      definePrototypeGetter(constructors["PushSubscription"].prototype, "endpoint", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("expirationTime")]() {
-          return runtime.serviceWorkerManagerProperty(this, ("expirationTime"));
+        get ["expirationTime"]() {
+          return runtime.serviceWorkerManagerProperty(this, "expirationTime");
         },
-      }, ("expirationTime")).get;
-      registerNativeGetter(getter, ("expirationTime"));
-      definePrototypeGetter((constructors[("PushSubscription")]).prototype, ("expirationTime"), getter);
+      }, "expirationTime").get;
+      registerNativeGetter(getter, "expirationTime");
+      definePrototypeGetter(constructors["PushSubscription"].prototype, "expirationTime", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("options")]() {
-          return runtime.serviceWorkerManagerProperty(this, ("options"));
+        get ["options"]() {
+          return runtime.serviceWorkerManagerProperty(this, "options");
         },
-      }, ("options")).get;
-      registerNativeGetter(getter, ("options"));
-      definePrototypeGetter((constructors[("PushSubscription")]).prototype, ("options"), getter);
+      }, "options").get;
+      registerNativeGetter(getter, "options");
+      definePrototypeGetter(constructors["PushSubscription"].prototype, "options", getter);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("getKey")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("getKey"), args);
+        ["getKey"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "getKey", args);
         },
-      }[("getKey")];
+      }["getKey"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getKey"));
-      definePrototypeMethod((constructors[("PushSubscription")]).prototype, ("getKey"), callback);
+      registerNativeFunction(callback, "getKey");
+      definePrototypeMethod(constructors["PushSubscription"].prototype, "getKey", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("toJSON")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("toJSON"), args);
+        ["toJSON"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "toJSON", args);
         },
-      }[("toJSON")];
+      }["toJSON"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("toJSON"));
-      definePrototypeMethod((constructors[("PushSubscription")]).prototype, ("toJSON"), callback);
+      registerNativeFunction(callback, "toJSON");
+      definePrototypeMethod(constructors["PushSubscription"].prototype, "toJSON", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("unsubscribe")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("unsubscribe"), args);
+        ["unsubscribe"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "unsubscribe", args);
         },
-      }[("unsubscribe")];
+      }["unsubscribe"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("unsubscribe"));
-      definePrototypeMethod((constructors[("PushSubscription")]).prototype, ("unsubscribe"), callback);
+      registerNativeFunction(callback, "unsubscribe");
+      definePrototypeMethod(constructors["PushSubscription"].prototype, "unsubscribe", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("PushSubscription")]).prototype, (constructors[("PushSubscription")]));
+      defineConstructorBacklink(constructors["PushSubscription"].prototype, constructors["PushSubscription"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("PushSubscription")]).prototype, (constructors[("PushSubscription")]).name);
+      defineToStringTag(constructors["PushSubscription"].prototype, constructors["PushSubscription"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("userVisibleOnly")]() {
-          return runtime.serviceWorkerManagerProperty(this, ("userVisibleOnly"));
+        get ["userVisibleOnly"]() {
+          return runtime.serviceWorkerManagerProperty(this, "userVisibleOnly");
         },
-      }, ("userVisibleOnly")).get;
-      registerNativeGetter(getter, ("userVisibleOnly"));
-      definePrototypeGetter((constructors[("PushSubscriptionOptions")]).prototype, ("userVisibleOnly"), getter);
+      }, "userVisibleOnly").get;
+      registerNativeGetter(getter, "userVisibleOnly");
+      definePrototypeGetter(constructors["PushSubscriptionOptions"].prototype, "userVisibleOnly", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("applicationServerKey")]() {
-          return runtime.serviceWorkerManagerProperty(this, ("applicationServerKey"));
+        get ["applicationServerKey"]() {
+          return runtime.serviceWorkerManagerProperty(this, "applicationServerKey");
         },
-      }, ("applicationServerKey")).get;
-      registerNativeGetter(getter, ("applicationServerKey"));
-      definePrototypeGetter((constructors[("PushSubscriptionOptions")]).prototype, ("applicationServerKey"), getter);
+      }, "applicationServerKey").get;
+      registerNativeGetter(getter, "applicationServerKey");
+      definePrototypeGetter(constructors["PushSubscriptionOptions"].prototype, "applicationServerKey", getter);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("PushSubscriptionOptions")]).prototype, (constructors[("PushSubscriptionOptions")]));
+      defineConstructorBacklink(constructors["PushSubscriptionOptions"].prototype, constructors["PushSubscriptionOptions"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("PushSubscriptionOptions")]).prototype, (constructors[("PushSubscriptionOptions")]).name);
+      defineToStringTag(constructors["PushSubscriptionOptions"].prototype, constructors["PushSubscriptionOptions"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
-    {
-  do {
-    {
+{
+  {
       const callback = {
-        [("getTags")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("getTags"), args);
+        ["getTags"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "getTags", args);
         },
-      }[("getTags")];
+      }["getTags"];
       Object.defineProperty(callback, "length", {
-        value: (0),
+        value: 0,
         configurable: true,
       });
-      registerNativeFunction(callback, ("getTags"));
-      definePrototypeMethod((constructors[("SyncManager")]).prototype, ("getTags"), callback);
+      registerNativeFunction(callback, "getTags");
+      definePrototypeMethod(constructors["SyncManager"].prototype, "getTags", callback);
     }
-  } while (false);
-do {
-    {
+{
       const callback = {
-        [("register")](...args) {
-          return runtime.serviceWorkerManagerOperation(this, ("register"), args);
+        ["register"](...args) {
+          return runtime.serviceWorkerManagerOperation(this, "register", args);
         },
-      }[("register")];
+      }["register"];
       Object.defineProperty(callback, "length", {
-        value: (1),
+        value: 1,
         configurable: true,
       });
-      registerNativeFunction(callback, ("register"));
-      definePrototypeMethod((constructors[("SyncManager")]).prototype, ("register"), callback);
+      registerNativeFunction(callback, "register");
+      definePrototypeMethod(constructors["SyncManager"].prototype, "register", callback);
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("SyncManager")]).prototype, (constructors[("SyncManager")]));
+      defineConstructorBacklink(constructors["SyncManager"].prototype, constructors["SyncManager"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("SyncManager")]).prototype, (constructors[("SyncManager")]).name);
+      defineToStringTag(constructors["SyncManager"].prototype, constructors["SyncManager"].name);
     }
-  } while (false);
+
 }
-  } while (false);
   const getter = Object.getOwnPropertyDescriptor({
     get supportedContentEncodings() {
       return ["aes128gcm", "aesgcm"];
@@ -487,5 +414,3 @@ do {
     configurable: true,
   });
 }
-
-

@@ -1048,9 +1048,9 @@ export function finalizePrototypeSurfaceOrder(browserMajorVersion = 150) {
 }
 
 function reorderPrototype(prototype, expected, name) {
-  const actual = Reflect.ownKeys(prototype).filter((key) => typeof key === "string");
+  const actual = Reflect.ownKeys(prototype).filter(key => typeof key === "string");
   if (JSON.stringify(actual) === JSON.stringify(expected)) return;
-  if (actual.length !== expected.length || actual.some((key) => !expected.includes(key))) {
+  if (actual.length !== expected.length || actual.some(key => !expected.includes(key))) {
     // 页面脚本（如瑞数 RS6 反爬）可能把内建构造器整体替换成自己的函数，
     // 此时 globalThis[name].prototype 已不是 NV8 装配的原生形状。真实 Edge 跑同一
     // 段脚本也会看到同样的替换，规范顺序不再适用——跳过而非抛错，避免恶意页面
@@ -1058,7 +1058,7 @@ function reorderPrototype(prototype, expected, name) {
     return;
   }
 
-  const descriptors = expected.map((key) => {
+  const descriptors = expected.map(key => {
     const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
     if (descriptor === undefined) throw new Error("Missing prototype member " + name + "." + key);
     if (descriptor.configurable !== true) {

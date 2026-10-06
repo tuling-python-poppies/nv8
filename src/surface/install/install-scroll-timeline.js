@@ -17,14 +17,13 @@ const constructors = Object.freeze({
 });
 
 export function installScrollTimeline() {
-  do {
-    delete (((runtime.scrollTimelineConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.scrollTimelineConstructors)[0])).name, (((runtime.scrollTimelineConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.scrollTimelineConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.scrollTimelineConstructors)[1])).name, (((runtime.scrollTimelineConstructors)[1])));
-  } while (false);
+
+    delete runtime.scrollTimelineConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.scrollTimelineConstructors[0].name, runtime.scrollTimelineConstructors[0]);
+
+    delete runtime.scrollTimelineConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.scrollTimelineConstructors[1].name, runtime.scrollTimelineConstructors[1]);
+
   Object.setPrototypeOf(
     runtime.ScrollTimeline.prototype,
     AnimationTimeline.prototype,
@@ -35,79 +34,61 @@ do {
     runtime.ScrollTimeline.prototype,
   );
   Object.setPrototypeOf(runtime.ViewTimeline, runtime.ScrollTimeline);
-  do {
-    {
-  do {
-    {
+  {
+  {
       const getter = Object.getOwnPropertyDescriptor({
-        get [("source")]() { return runtime.scrollTimelineProperty(this, ("source")); },
-      }, ("source")).get;
-      registerNativeGetter(getter, ("source"));
-      definePrototypeGetter((constructors[("ScrollTimeline")]).prototype, ("source"), getter);
+        get ["source"]() { return runtime.scrollTimelineProperty(this, "source"); },
+      }, "source").get;
+      registerNativeGetter(getter, "source");
+      definePrototypeGetter(constructors["ScrollTimeline"].prototype, "source", getter);
     }
-  } while (false);
-do {
-    {
+{
       const getter = Object.getOwnPropertyDescriptor({
-        get [("axis")]() { return runtime.scrollTimelineProperty(this, ("axis")); },
-      }, ("axis")).get;
-      registerNativeGetter(getter, ("axis"));
-      definePrototypeGetter((constructors[("ScrollTimeline")]).prototype, ("axis"), getter);
+        get ["axis"]() { return runtime.scrollTimelineProperty(this, "axis"); },
+      }, "axis").get;
+      registerNativeGetter(getter, "axis");
+      definePrototypeGetter(constructors["ScrollTimeline"].prototype, "axis", getter);
     }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("ScrollTimeline")]).prototype, (constructors[("ScrollTimeline")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("ScrollTimeline")]).prototype, (constructors[("ScrollTimeline")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      const getter = Object.getOwnPropertyDescriptor({
-        get [("subject")]() { return runtime.scrollTimelineProperty(this, ("subject")); },
-      }, ("subject")).get;
-      registerNativeGetter(getter, ("subject"));
-      definePrototypeGetter((constructors[("ViewTimeline")]).prototype, ("subject"), getter);
-    }
-  } while (false);
-do {
-    {
-      const getter = Object.getOwnPropertyDescriptor({
-        get [("startOffset")]() { return runtime.scrollTimelineProperty(this, ("startOffset")); },
-      }, ("startOffset")).get;
-      registerNativeGetter(getter, ("startOffset"));
-      definePrototypeGetter((constructors[("ViewTimeline")]).prototype, ("startOffset"), getter);
-    }
-  } while (false);
-do {
-    {
-      const getter = Object.getOwnPropertyDescriptor({
-        get [("endOffset")]() { return runtime.scrollTimelineProperty(this, ("endOffset")); },
-      }, ("endOffset")).get;
-      registerNativeGetter(getter, ("endOffset"));
-      definePrototypeGetter((constructors[("ViewTimeline")]).prototype, ("endOffset"), getter);
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("ViewTimeline")]).prototype, (constructors[("ViewTimeline")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("ViewTimeline")]).prototype, (constructors[("ViewTimeline")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-}
 
+    {
+      defineConstructorBacklink(constructors["ScrollTimeline"].prototype, constructors["ScrollTimeline"]);
+    }
 
+    {
+      defineToStringTag(constructors["ScrollTimeline"].prototype, constructors["ScrollTimeline"].name);
+    }
+
+}
+{
+  {
+      const getter = Object.getOwnPropertyDescriptor({
+        get ["subject"]() { return runtime.scrollTimelineProperty(this, "subject"); },
+      }, "subject").get;
+      registerNativeGetter(getter, "subject");
+      definePrototypeGetter(constructors["ViewTimeline"].prototype, "subject", getter);
+    }
+{
+      const getter = Object.getOwnPropertyDescriptor({
+        get ["startOffset"]() { return runtime.scrollTimelineProperty(this, "startOffset"); },
+      }, "startOffset").get;
+      registerNativeGetter(getter, "startOffset");
+      definePrototypeGetter(constructors["ViewTimeline"].prototype, "startOffset", getter);
+    }
+{
+      const getter = Object.getOwnPropertyDescriptor({
+        get ["endOffset"]() { return runtime.scrollTimelineProperty(this, "endOffset"); },
+      }, "endOffset").get;
+      registerNativeGetter(getter, "endOffset");
+      definePrototypeGetter(constructors["ViewTimeline"].prototype, "endOffset", getter);
+    }
+
+    {
+      defineConstructorBacklink(constructors["ViewTimeline"].prototype, constructors["ViewTimeline"]);
+    }
+
+    {
+      defineToStringTag(constructors["ViewTimeline"].prototype, constructors["ViewTimeline"].name);
+    }
+
+}
+}

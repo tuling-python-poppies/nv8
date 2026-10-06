@@ -340,3697 +340,3433 @@ const definitions = [
 ];
 
 export function installSVGBasicAttributeElementMembers() {
-  do {
-    reopenPrototype((((((definitions)[0]))[0])));
-    do {
+
+    reopenPrototype(definitions[0][0]);
+
       definePrototypeGetter(
-        (((((definitions)[0]))[0])).prototype,
+        (definitions[0][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[0]))[0])).name,
+          (definitions[0][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[0]))[0])));
-    installSpecialMethods((((((definitions)[0]))[0])));
-    closePrototype((((((definitions)[0]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[1]))[0])));
-    do {
+
+    installConstants(definitions[0][0]);
+    installSpecialMethods(definitions[0][0]);
+    closePrototype(definitions[0][0]);
+
+    reopenPrototype(definitions[1][0]);
+
       definePrototypeGetter(
-        (((((definitions)[1]))[0])).prototype,
+        (definitions[1][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[1]))[0])).name,
+          (definitions[1][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[1]))[0])));
-    installSpecialMethods((((((definitions)[1]))[0])));
-    closePrototype((((((definitions)[1]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[2]))[0])));
-    do {
+
+    installConstants(definitions[1][0]);
+    installSpecialMethods(definitions[1][0]);
+    closePrototype(definitions[1][0]);
+
+    reopenPrototype(definitions[2][0]);
+
       definePrototypeGetter(
-        (((((definitions)[2]))[0])).prototype,
+        (definitions[2][0]).prototype,
         ("offset"),
         createSVGAttributeGetter(
-          (((((definitions)[2]))[0])).name,
+          (definitions[2][0]).name,
           ("offset"),
           ("number"),
-          (("offset")),
+          ("offset"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[2]))[0])));
-    installSpecialMethods((((((definitions)[2]))[0])));
-    closePrototype((((((definitions)[2]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[3]))[0])));
-    do {
+
+    installConstants(definitions[2][0]);
+    installSpecialMethods(definitions[2][0]);
+    closePrototype(definitions[2][0]);
+
+    reopenPrototype(definitions[3][0]);
+
       definePrototypeGetter(
-        (((((definitions)[3]))[0])).prototype,
+        (definitions[3][0]).prototype,
         ("clipPathUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[3]))[0])).name,
+          (definitions[3][0]).name,
           ("clipPathUnits"),
           ("enumeration"),
-          (("clipPathUnits")),
+          ("clipPathUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[3]))[0])).prototype,
+        (definitions[3][0]).prototype,
         ("transform"),
         createSVGAttributeGetter(
-          (((((definitions)[3]))[0])).name,
+          (definitions[3][0]).name,
           ("transform"),
           ("transform"),
-          (("transform")),
+          ("transform"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[3]))[0])));
-    installSpecialMethods((((((definitions)[3]))[0])));
-    closePrototype((((((definitions)[3]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[4]))[0])));
-    do {
+
+    installConstants(definitions[3][0]);
+    installSpecialMethods(definitions[3][0]);
+    closePrototype(definitions[3][0]);
+
+    reopenPrototype(definitions[4][0]);
+
       definePrototypeGetter(
-        (((((definitions)[4]))[0])).prototype,
+        (definitions[4][0]).prototype,
         ("azimuth"),
         createSVGAttributeGetter(
-          (((((definitions)[4]))[0])).name,
+          (definitions[4][0]).name,
           ("azimuth"),
           ("number"),
-          (("azimuth")),
+          ("azimuth"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[4]))[0])).prototype,
+        (definitions[4][0]).prototype,
         ("elevation"),
         createSVGAttributeGetter(
-          (((((definitions)[4]))[0])).name,
+          (definitions[4][0]).name,
           ("elevation"),
           ("number"),
-          (("elevation")),
+          ("elevation"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[4]))[0])));
-    installSpecialMethods((((((definitions)[4]))[0])));
-    closePrototype((((((definitions)[4]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[5]))[0])));
-    do {
+
+    installConstants(definitions[4][0]);
+    installSpecialMethods(definitions[4][0]);
+    closePrototype(definitions[4][0]);
+
+    reopenPrototype(definitions[5][0]);
+
       definePrototypeGetter(
-        (((((definitions)[5]))[0])).prototype,
+        (definitions[5][0]).prototype,
         ("viewBox"),
         createSVGAttributeGetter(
-          (((((definitions)[5]))[0])).name,
+          (definitions[5][0]).name,
           ("viewBox"),
           ("rect"),
-          (("viewBox")),
+          ("viewBox"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[5]))[0])).prototype,
+        (definitions[5][0]).prototype,
         ("preserveAspectRatio"),
         createSVGAttributeGetter(
-          (((((definitions)[5]))[0])).name,
+          (definitions[5][0]).name,
           ("preserveAspectRatio"),
           ("aspectRatio"),
-          (("preserveAspectRatio")),
+          ("preserveAspectRatio"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[5]))[0])));
-    installSpecialMethods((((((definitions)[5]))[0])));
-    closePrototype((((((definitions)[5]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[6]))[0])));
-    do {
+
+    installConstants(definitions[5][0]);
+    installSpecialMethods(definitions[5][0]);
+    closePrototype(definitions[5][0]);
+
+    reopenPrototype(definitions[6][0]);
+
       definePrototypeGetter(
-        (((((definitions)[6]))[0])).prototype,
+        (definitions[6][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[6]))[0])).name,
+          (definitions[6][0]).name,
           ("x"),
           ("number"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[6]))[0])).prototype,
+        (definitions[6][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[6]))[0])).name,
+          (definitions[6][0]).name,
           ("y"),
           ("number"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[6]))[0])).prototype,
+        (definitions[6][0]).prototype,
         ("z"),
         createSVGAttributeGetter(
-          (((((definitions)[6]))[0])).name,
+          (definitions[6][0]).name,
           ("z"),
           ("number"),
-          (("z")),
+          ("z"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[6]))[0])));
-    installSpecialMethods((((((definitions)[6]))[0])));
-    closePrototype((((((definitions)[6]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[7]))[0])));
-    do {
+
+    installConstants(definitions[6][0]);
+    installSpecialMethods(definitions[6][0]);
+    closePrototype(definitions[6][0]);
+
+    reopenPrototype(definitions[7][0]);
+
       definePrototypeGetter(
-        (((((definitions)[7]))[0])).prototype,
+        (definitions[7][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[7]))[0])).name,
+          (definitions[7][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[7]))[0])).prototype,
+        (definitions[7][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[7]))[0])).name,
+          (definitions[7][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[7]))[0])).prototype,
+        (definitions[7][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[7]))[0])).name,
+          (definitions[7][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[7]))[0])).prototype,
+        (definitions[7][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[7]))[0])).name,
+          (definitions[7][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[7]))[0])));
-    installSpecialMethods((((((definitions)[7]))[0])));
-    closePrototype((((((definitions)[7]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[8]))[0])));
-    do {
+
+    installConstants(definitions[7][0]);
+    installSpecialMethods(definitions[7][0]);
+    closePrototype(definitions[7][0]);
+
+    reopenPrototype(definitions[8][0]);
+
       definePrototypeGetter(
-        (((((definitions)[8]))[0])).prototype,
+        (definitions[8][0]).prototype,
         ("x1"),
         createSVGAttributeGetter(
-          (((((definitions)[8]))[0])).name,
+          (definitions[8][0]).name,
           ("x1"),
           ("length"),
-          (("x1")),
+          ("x1"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[8]))[0])).prototype,
+        (definitions[8][0]).prototype,
         ("y1"),
         createSVGAttributeGetter(
-          (((((definitions)[8]))[0])).name,
+          (definitions[8][0]).name,
           ("y1"),
           ("length"),
-          (("y1")),
+          ("y1"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[8]))[0])).prototype,
+        (definitions[8][0]).prototype,
         ("x2"),
         createSVGAttributeGetter(
-          (((((definitions)[8]))[0])).name,
+          (definitions[8][0]).name,
           ("x2"),
           ("length"),
-          (("x2")),
+          ("x2"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[8]))[0])).prototype,
+        (definitions[8][0]).prototype,
         ("y2"),
         createSVGAttributeGetter(
-          (((((definitions)[8]))[0])).name,
+          (definitions[8][0]).name,
           ("y2"),
           ("length"),
-          (("y2")),
+          ("y2"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[8]))[0])));
-    installSpecialMethods((((((definitions)[8]))[0])));
-    closePrototype((((((definitions)[8]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[9]))[0])));
-    do {
+
+    installConstants(definitions[8][0]);
+    installSpecialMethods(definitions[8][0]);
+    closePrototype(definitions[8][0]);
+
+    reopenPrototype(definitions[9][0]);
+
       definePrototypeGetter(
-        (((((definitions)[9]))[0])).prototype,
+        (definitions[9][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[9]))[0])).name,
+          (definitions[9][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[9]))[0])).prototype,
+        (definitions[9][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[9]))[0])).name,
+          (definitions[9][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[9]))[0])).prototype,
+        (definitions[9][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[9]))[0])).name,
+          (definitions[9][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[9]))[0])).prototype,
+        (definitions[9][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[9]))[0])).name,
+          (definitions[9][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[9]))[0])).prototype,
+        (definitions[9][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[9]))[0])).name,
+          (definitions[9][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[9]))[0])));
-    installSpecialMethods((((((definitions)[9]))[0])));
-    closePrototype((((((definitions)[9]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[10]))[0])));
-    do {
+
+    installConstants(definitions[9][0]);
+    installSpecialMethods(definitions[9][0]);
+    closePrototype(definitions[9][0]);
+
+    reopenPrototype(definitions[10][0]);
+
       definePrototypeGetter(
-        (((((definitions)[10]))[0])).prototype,
+        (definitions[10][0]).prototype,
         ("cx"),
         createSVGAttributeGetter(
-          (((((definitions)[10]))[0])).name,
+          (definitions[10][0]).name,
           ("cx"),
           ("length"),
-          (("cx")),
+          ("cx"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[10]))[0])).prototype,
+        (definitions[10][0]).prototype,
         ("cy"),
         createSVGAttributeGetter(
-          (((((definitions)[10]))[0])).name,
+          (definitions[10][0]).name,
           ("cy"),
           ("length"),
-          (("cy")),
+          ("cy"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[10]))[0])).prototype,
+        (definitions[10][0]).prototype,
         ("r"),
         createSVGAttributeGetter(
-          (((((definitions)[10]))[0])).name,
+          (definitions[10][0]).name,
           ("r"),
           ("length"),
-          (("r")),
+          ("r"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[10]))[0])).prototype,
+        (definitions[10][0]).prototype,
         ("fx"),
         createSVGAttributeGetter(
-          (((((definitions)[10]))[0])).name,
+          (definitions[10][0]).name,
           ("fx"),
           ("length"),
-          (("fx")),
+          ("fx"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[10]))[0])).prototype,
+        (definitions[10][0]).prototype,
         ("fy"),
         createSVGAttributeGetter(
-          (((((definitions)[10]))[0])).name,
+          (definitions[10][0]).name,
           ("fy"),
           ("length"),
-          (("fy")),
+          ("fy"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[10]))[0])).prototype,
+        (definitions[10][0]).prototype,
         ("fr"),
         createSVGAttributeGetter(
-          (((((definitions)[10]))[0])).name,
+          (definitions[10][0]).name,
           ("fr"),
           ("length"),
-          (("fr")),
+          ("fr"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[10]))[0])));
-    installSpecialMethods((((((definitions)[10]))[0])));
-    closePrototype((((((definitions)[10]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[11]))[0])));
-    do {
+
+    installConstants(definitions[10][0]);
+    installSpecialMethods(definitions[10][0]);
+    closePrototype(definitions[10][0]);
+
+    reopenPrototype(definitions[11][0]);
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("filterUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("filterUnits"),
           ("enumeration"),
-          (("filterUnits")),
+          ("filterUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("primitiveUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("primitiveUnits"),
           ("enumeration"),
-          (("primitiveUnits")),
+          ("primitiveUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[11]))[0])).prototype,
+        (definitions[11][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[11]))[0])).name,
+          (definitions[11][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[11]))[0])));
-    installSpecialMethods((((((definitions)[11]))[0])));
-    closePrototype((((((definitions)[11]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[12]))[0])));
-    do {
+
+    installConstants(definitions[11][0]);
+    installSpecialMethods(definitions[11][0]);
+    closePrototype(definitions[11][0]);
+
+    reopenPrototype(definitions[12][0]);
+
       definePrototypeGetter(
-        (((((definitions)[12]))[0])).prototype,
+        (definitions[12][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[12]))[0])).name,
+          (definitions[12][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[12]))[0])).prototype,
+        (definitions[12][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[12]))[0])).name,
+          (definitions[12][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[12]))[0])).prototype,
+        (definitions[12][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[12]))[0])).name,
+          (definitions[12][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[12]))[0])).prototype,
+        (definitions[12][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[12]))[0])).name,
+          (definitions[12][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[12]))[0])).prototype,
+        (definitions[12][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[12]))[0])).name,
+          (definitions[12][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[12]))[0])).prototype,
+        (definitions[12][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[12]))[0])).name,
+          (definitions[12][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[12]))[0])));
-    installSpecialMethods((((((definitions)[12]))[0])));
-    closePrototype((((((definitions)[12]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[13]))[0])));
-    do {
+
+    installConstants(definitions[12][0]);
+    installSpecialMethods(definitions[12][0]);
+    closePrototype(definitions[12][0]);
+
+    reopenPrototype(definitions[13][0]);
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("dx"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("dx"),
           ("number"),
-          (("dx")),
+          ("dx"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("dy"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("dy"),
           ("number"),
-          (("dy")),
+          ("dy"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[13]))[0])).prototype,
+        (definitions[13][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[13]))[0])).name,
+          (definitions[13][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[13]))[0])));
-    installSpecialMethods((((((definitions)[13]))[0])));
-    closePrototype((((((definitions)[13]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[14]))[0])));
-    do {
+
+    installConstants(definitions[13][0]);
+    installSpecialMethods(definitions[13][0]);
+    closePrototype(definitions[13][0]);
+
+    reopenPrototype(definitions[14][0]);
+
       definePrototypeGetter(
-        (((((definitions)[14]))[0])).prototype,
+        (definitions[14][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[14]))[0])).name,
+          (definitions[14][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[14]))[0])).prototype,
+        (definitions[14][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[14]))[0])).name,
+          (definitions[14][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[14]))[0])).prototype,
+        (definitions[14][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[14]))[0])).name,
+          (definitions[14][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[14]))[0])).prototype,
+        (definitions[14][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[14]))[0])).name,
+          (definitions[14][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[14]))[0])).prototype,
+        (definitions[14][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[14]))[0])).name,
+          (definitions[14][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[14]))[0])));
-    installSpecialMethods((((((definitions)[14]))[0])));
-    closePrototype((((((definitions)[14]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[15]))[0])));
-    do {
+
+    installConstants(definitions[14][0]);
+    installSpecialMethods(definitions[14][0]);
+    closePrototype(definitions[14][0]);
+
+    reopenPrototype(definitions[15][0]);
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("preserveAspectRatio"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("preserveAspectRatio"),
           ("aspectRatio"),
-          (("preserveAspectRatio")),
+          ("preserveAspectRatio"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[15]))[0])).prototype,
+        (definitions[15][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[15]))[0])).name,
+          (definitions[15][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[15]))[0])));
-    installSpecialMethods((((((definitions)[15]))[0])));
-    closePrototype((((((definitions)[15]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[16]))[0])));
-    do {
+
+    installConstants(definitions[15][0]);
+    installSpecialMethods(definitions[15][0]);
+    closePrototype(definitions[15][0]);
+
+    reopenPrototype(definitions[16][0]);
+
       definePrototypeGetter(
-        (((((definitions)[16]))[0])).prototype,
+        (definitions[16][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[16]))[0])).name,
+          (definitions[16][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[16]))[0])).prototype,
+        (definitions[16][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[16]))[0])).name,
+          (definitions[16][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[16]))[0])).prototype,
+        (definitions[16][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[16]))[0])).name,
+          (definitions[16][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[16]))[0])).prototype,
+        (definitions[16][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[16]))[0])).name,
+          (definitions[16][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[16]))[0])).prototype,
+        (definitions[16][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[16]))[0])).name,
+          (definitions[16][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[16]))[0])));
-    installSpecialMethods((((((definitions)[16]))[0])));
-    closePrototype((((((definitions)[16]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[17]))[0])));
-    do {
+
+    installConstants(definitions[16][0]);
+    installSpecialMethods(definitions[16][0]);
+    closePrototype(definitions[16][0]);
+
+    reopenPrototype(definitions[17][0]);
+
       definePrototypeGetter(
-        (((((definitions)[17]))[0])).prototype,
+        (definitions[17][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[17]))[0])).name,
+          (definitions[17][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[17]))[0])).prototype,
+        (definitions[17][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[17]))[0])).name,
+          (definitions[17][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[17]))[0])).prototype,
+        (definitions[17][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[17]))[0])).name,
+          (definitions[17][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[17]))[0])).prototype,
+        (definitions[17][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[17]))[0])).name,
+          (definitions[17][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[17]))[0])).prototype,
+        (definitions[17][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[17]))[0])).name,
+          (definitions[17][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[17]))[0])).prototype,
+        (definitions[17][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[17]))[0])).name,
+          (definitions[17][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[17]))[0])));
-    installSpecialMethods((((((definitions)[17]))[0])));
-    closePrototype((((((definitions)[17]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[18]))[0])));
-    do {
+
+    installConstants(definitions[17][0]);
+    installSpecialMethods(definitions[17][0]);
+    closePrototype(definitions[17][0]);
+
+    reopenPrototype(definitions[18][0]);
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("x"),
           ("number"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("y"),
           ("number"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("z"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("z"),
           ("number"),
-          (("z")),
+          ("z"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("pointsAtX"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("pointsAtX"),
           ("number"),
           ("pointsAtX"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("pointsAtY"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("pointsAtY"),
           ("number"),
           ("pointsAtY"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("pointsAtZ"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("pointsAtZ"),
           ("number"),
           ("pointsAtZ"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("specularExponent"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("specularExponent"),
           ("number"),
-          (("specularExponent")),
+          ("specularExponent"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[18]))[0])).prototype,
+        (definitions[18][0]).prototype,
         ("limitingConeAngle"),
         createSVGAttributeGetter(
-          (((((definitions)[18]))[0])).name,
+          (definitions[18][0]).name,
           ("limitingConeAngle"),
           ("number"),
-          (("limitingConeAngle")),
+          ("limitingConeAngle"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[18]))[0])));
-    installSpecialMethods((((((definitions)[18]))[0])));
-    closePrototype((((((definitions)[18]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[19]))[0])));
-    do {
+
+    installConstants(definitions[18][0]);
+    installSpecialMethods(definitions[18][0]);
+    closePrototype(definitions[18][0]);
+
+    reopenPrototype(definitions[19][0]);
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("surfaceScale"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("surfaceScale"),
           ("number"),
-          (("surfaceScale")),
+          ("surfaceScale"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("specularConstant"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("specularConstant"),
           ("number"),
-          (("specularConstant")),
+          ("specularConstant"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("specularExponent"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("specularExponent"),
           ("number"),
-          (("specularExponent")),
+          ("specularExponent"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("kernelUnitLengthX"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("kernelUnitLengthX"),
           ("numberFirst"),
           ("kernelUnitLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("kernelUnitLengthY"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("kernelUnitLengthY"),
           ("numberSecond"),
           ("kernelUnitLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[19]))[0])).prototype,
+        (definitions[19][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[19]))[0])).name,
+          (definitions[19][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[19]))[0])));
-    installSpecialMethods((((((definitions)[19]))[0])));
-    closePrototype((((((definitions)[19]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[20]))[0])));
-    do {
+
+    installConstants(definitions[19][0]);
+    installSpecialMethods(definitions[19][0]);
+    closePrototype(definitions[19][0]);
+
+    reopenPrototype(definitions[20][0]);
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("operator"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("operator"),
           ("enumeration"),
-          (("operator")),
+          ("operator"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("radiusX"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("radiusX"),
           ("numberFirst"),
           ("radius"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("radiusY"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("radiusY"),
           ("numberSecond"),
           ("radius"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[20]))[0])).prototype,
+        (definitions[20][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[20]))[0])).name,
+          (definitions[20][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[20]))[0])));
-    installSpecialMethods((((((definitions)[20]))[0])));
-    closePrototype((((((definitions)[20]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[21]))[0])));
-    do {
+
+    installConstants(definitions[20][0]);
+    installSpecialMethods(definitions[20][0]);
+    closePrototype(definitions[20][0]);
+
+    reopenPrototype(definitions[21][0]);
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("stdDeviationX"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("stdDeviationX"),
           ("numberFirst"),
           ("stdDeviation"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("stdDeviationY"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("stdDeviationY"),
           ("numberSecond"),
           ("stdDeviation"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[21]))[0])).prototype,
+        (definitions[21][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[21]))[0])).name,
+          (definitions[21][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[21]))[0])));
-    installSpecialMethods((((((definitions)[21]))[0])));
-    closePrototype((((((definitions)[21]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[22]))[0])));
-    do {
+
+    installConstants(definitions[21][0]);
+    installSpecialMethods(definitions[21][0]);
+    closePrototype(definitions[21][0]);
+
+    reopenPrototype(definitions[22][0]);
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("dx"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("dx"),
           ("number"),
-          (("dx")),
+          ("dx"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("dy"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("dy"),
           ("number"),
-          (("dy")),
+          ("dy"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("stdDeviationX"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("stdDeviationX"),
           ("numberFirst"),
           ("stdDeviation"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("stdDeviationY"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("stdDeviationY"),
           ("numberSecond"),
           ("stdDeviation"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[22]))[0])).prototype,
+        (definitions[22][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[22]))[0])).name,
+          (definitions[22][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[22]))[0])));
-    installSpecialMethods((((((definitions)[22]))[0])));
-    closePrototype((((((definitions)[22]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[23]))[0])));
-    do {
+
+    installConstants(definitions[22][0]);
+    installSpecialMethods(definitions[22][0]);
+    closePrototype(definitions[22][0]);
+
+    reopenPrototype(definitions[23][0]);
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("surfaceScale"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("surfaceScale"),
           ("number"),
-          (("surfaceScale")),
+          ("surfaceScale"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("diffuseConstant"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("diffuseConstant"),
           ("number"),
-          (("diffuseConstant")),
+          ("diffuseConstant"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("kernelUnitLengthX"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("kernelUnitLengthX"),
           ("numberFirst"),
           ("kernelUnitLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("kernelUnitLengthY"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("kernelUnitLengthY"),
           ("numberSecond"),
           ("kernelUnitLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[23]))[0])).prototype,
+        (definitions[23][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[23]))[0])).name,
+          (definitions[23][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[23]))[0])));
-    installSpecialMethods((((((definitions)[23]))[0])));
-    closePrototype((((((definitions)[23]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[24]))[0])));
-    do {
+
+    installConstants(definitions[23][0]);
+    installSpecialMethods(definitions[23][0]);
+    closePrototype(definitions[23][0]);
+
+    reopenPrototype(definitions[24][0]);
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("type"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("type"),
           ("enumeration"),
-          (("type")),
+          ("type"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("values"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("values"),
           ("numberList"),
-          (("values")),
+          ("values"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[24]))[0])).prototype,
+        (definitions[24][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[24]))[0])).name,
+          (definitions[24][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[24]))[0])));
-    installSpecialMethods((((((definitions)[24]))[0])));
-    closePrototype((((((definitions)[24]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[25]))[0])));
-    do {
+
+    installConstants(definitions[24][0]);
+    installSpecialMethods(definitions[24][0]);
+    closePrototype(definitions[24][0]);
+
+    reopenPrototype(definitions[25][0]);
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("type"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("type"),
           ("enumeration"),
-          (("type")),
+          ("type"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("tableValues"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("tableValues"),
           ("numberList"),
-          (("tableValues")),
+          ("tableValues"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("slope"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("slope"),
           ("number"),
-          (("slope")),
+          ("slope"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("intercept"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("intercept"),
           ("number"),
-          (("intercept")),
+          ("intercept"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("amplitude"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("amplitude"),
           ("number"),
-          (("amplitude")),
+          ("amplitude"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("exponent"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("exponent"),
           ("number"),
-          (("exponent")),
+          ("exponent"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[25]))[0])).prototype,
+        (definitions[25][0]).prototype,
         ("offset"),
         createSVGAttributeGetter(
-          (((((definitions)[25]))[0])).name,
+          (definitions[25][0]).name,
           ("offset"),
           ("number"),
-          (("offset")),
+          ("offset"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[25]))[0])));
-    installSpecialMethods((((((definitions)[25]))[0])));
-    closePrototype((((((definitions)[25]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[26]))[0])));
-    do {
+
+    installConstants(definitions[25][0]);
+    installSpecialMethods(definitions[25][0]);
+    closePrototype(definitions[25][0]);
+
+    reopenPrototype(definitions[26][0]);
+
       definePrototypeGetter(
-        (((((definitions)[26]))[0])).prototype,
+        (definitions[26][0]).prototype,
         ("gradientUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[26]))[0])).name,
+          (definitions[26][0]).name,
           ("gradientUnits"),
           ("enumeration"),
-          (("gradientUnits")),
+          ("gradientUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[26]))[0])).prototype,
+        (definitions[26][0]).prototype,
         ("gradientTransform"),
         createSVGAttributeGetter(
-          (((((definitions)[26]))[0])).name,
+          (definitions[26][0]).name,
           ("gradientTransform"),
           ("transform"),
-          (("gradientTransform")),
+          ("gradientTransform"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[26]))[0])).prototype,
+        (definitions[26][0]).prototype,
         ("spreadMethod"),
         createSVGAttributeGetter(
-          (((((definitions)[26]))[0])).name,
+          (definitions[26][0]).name,
           ("spreadMethod"),
           ("enumeration"),
-          (("spreadMethod")),
+          ("spreadMethod"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[26]))[0])).prototype,
+        (definitions[26][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[26]))[0])).name,
+          (definitions[26][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[26]))[0])));
-    installSpecialMethods((((((definitions)[26]))[0])));
-    closePrototype((((((definitions)[26]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[27]))[0])));
-    do {
+
+    installConstants(definitions[26][0]);
+    installSpecialMethods(definitions[26][0]);
+    closePrototype(definitions[26][0]);
+
+    reopenPrototype(definitions[27][0]);
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("in2"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("in2"),
           ("string"),
           ("in2"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("scale"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("scale"),
           ("number"),
-          (("scale")),
+          ("scale"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("xChannelSelector"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("xChannelSelector"),
           ("enumeration"),
-          (("xChannelSelector")),
+          ("xChannelSelector"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("yChannelSelector"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("yChannelSelector"),
           ("enumeration"),
-          (("yChannelSelector")),
+          ("yChannelSelector"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[27]))[0])).prototype,
+        (definitions[27][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[27]))[0])).name,
+          (definitions[27][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[27]))[0])));
-    installSpecialMethods((((((definitions)[27]))[0])));
-    closePrototype((((((definitions)[27]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[28]))[0])));
-    do {
+
+    installConstants(definitions[27][0]);
+    installSpecialMethods(definitions[27][0]);
+    closePrototype(definitions[27][0]);
+
+    reopenPrototype(definitions[28][0]);
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("baseFrequencyX"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("baseFrequencyX"),
           ("numberFirst"),
           ("baseFrequency"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("baseFrequencyY"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("baseFrequencyY"),
           ("numberSecond"),
           ("baseFrequency"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("numOctaves"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("numOctaves"),
           ("integer"),
-          (("numOctaves")),
+          ("numOctaves"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("seed"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("seed"),
           ("number"),
-          (("seed")),
+          ("seed"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("stitchTiles"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("stitchTiles"),
           ("enumeration"),
-          (("stitchTiles")),
+          ("stitchTiles"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("type"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("type"),
           ("enumeration"),
-          (("type")),
+          ("type"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[28]))[0])).prototype,
+        (definitions[28][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[28]))[0])).name,
+          (definitions[28][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[28]))[0])));
-    installSpecialMethods((((((definitions)[28]))[0])));
-    closePrototype((((((definitions)[28]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[29]))[0])));
-    do {
+
+    installConstants(definitions[28][0]);
+    installSpecialMethods(definitions[28][0]);
+    closePrototype(definitions[28][0]);
+
+    reopenPrototype(definitions[29][0]);
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("orderX"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("orderX"),
           ("integer"),
           ("order"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("orderY"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("orderY"),
           ("integer"),
           ("order"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("kernelMatrix"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("kernelMatrix"),
           ("numberList"),
           ("kernelMatrix"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("divisor"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("divisor"),
           ("number"),
-          (("divisor")),
+          ("divisor"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("bias"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("bias"),
           ("number"),
-          (("bias")),
+          ("bias"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("targetX"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("targetX"),
           ("integer"),
-          (("targetX")),
+          ("targetX"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("targetY"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("targetY"),
           ("integer"),
-          (("targetY")),
+          ("targetY"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("edgeMode"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("edgeMode"),
           ("enumeration"),
-          (("edgeMode")),
+          ("edgeMode"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("kernelUnitLengthX"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("kernelUnitLengthX"),
           ("numberFirst"),
           ("kernelUnitLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("kernelUnitLengthY"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("kernelUnitLengthY"),
           ("numberSecond"),
           ("kernelUnitLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("preserveAlpha"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("preserveAlpha"),
           ("boolean"),
-          (("preserveAlpha")),
+          ("preserveAlpha"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[29]))[0])).prototype,
+        (definitions[29][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[29]))[0])).name,
+          (definitions[29][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[29]))[0])));
-    installSpecialMethods((((((definitions)[29]))[0])));
-    closePrototype((((((definitions)[29]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[30]))[0])));
-    do {
+
+    installConstants(definitions[29][0]);
+    installSpecialMethods(definitions[29][0]);
+    closePrototype(definitions[29][0]);
+
+    reopenPrototype(definitions[30][0]);
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("in2"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("in2"),
           ("string"),
           ("in2"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("operator"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("operator"),
           ("enumeration"),
-          (("operator")),
+          ("operator"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("k1"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("k1"),
           ("number"),
-          (("k1")),
+          ("k1"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("k2"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("k2"),
           ("number"),
-          (("k2")),
+          ("k2"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("k3"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("k3"),
           ("number"),
-          (("k3")),
+          ("k3"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("k4"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("k4"),
           ("number"),
-          (("k4")),
+          ("k4"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[30]))[0])).prototype,
+        (definitions[30][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[30]))[0])).name,
+          (definitions[30][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[30]))[0])));
-    installSpecialMethods((((((definitions)[30]))[0])));
-    closePrototype((((((definitions)[30]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[31]))[0])));
-    do {
+
+    installConstants(definitions[30][0]);
+    installSpecialMethods(definitions[30][0]);
+    closePrototype(definitions[30][0]);
+
+    reopenPrototype(definitions[31][0]);
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("in1"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("in1"),
           ("string"),
           ("in"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("in2"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("in2"),
           ("string"),
           ("in2"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("mode"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("mode"),
           ("enumeration"),
-          (("mode")),
+          ("mode"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[31]))[0])).prototype,
+        (definitions[31][0]).prototype,
         ("result"),
         createSVGAttributeGetter(
-          (((((definitions)[31]))[0])).name,
+          (definitions[31][0]).name,
           ("result"),
           ("string"),
-          (("result")),
+          ("result"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[31]))[0])));
-    installSpecialMethods((((((definitions)[31]))[0])));
-    closePrototype((((((definitions)[31]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[32]))[0])));
-    do {
+
+    installConstants(definitions[31][0]);
+    installSpecialMethods(definitions[31][0]);
+    closePrototype(definitions[31][0]);
+
+    reopenPrototype(definitions[32][0]);
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("refX"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("refX"),
           ("length"),
-          (("refX")),
+          ("refX"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("refY"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("refY"),
           ("length"),
-          (("refY")),
+          ("refY"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("markerUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("markerUnits"),
           ("enumeration"),
-          (("markerUnits")),
+          ("markerUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("markerWidth"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("markerWidth"),
           ("length"),
-          (("markerWidth")),
+          ("markerWidth"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("markerHeight"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("markerHeight"),
           ("length"),
-          (("markerHeight")),
+          ("markerHeight"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("orientType"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("orientType"),
           ("enumeration"),
-          (("orientType")),
+          ("orientType"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("orientAngle"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("orientAngle"),
           ("angle"),
           ("orient"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("viewBox"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("viewBox"),
           ("rect"),
-          (("viewBox")),
+          ("viewBox"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[32]))[0])).prototype,
+        (definitions[32][0]).prototype,
         ("preserveAspectRatio"),
         createSVGAttributeGetter(
-          (((((definitions)[32]))[0])).name,
+          (definitions[32][0]).name,
           ("preserveAspectRatio"),
           ("aspectRatio"),
-          (("preserveAspectRatio")),
+          ("preserveAspectRatio"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[32]))[0])));
-    installSpecialMethods((((((definitions)[32]))[0])));
-    closePrototype((((((definitions)[32]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[33]))[0])));
-    do {
+
+    installConstants(definitions[32][0]);
+    installSpecialMethods(definitions[32][0]);
+    closePrototype(definitions[32][0]);
+
+    reopenPrototype(definitions[33][0]);
+
       definePrototypeGetter(
-        (((((definitions)[33]))[0])).prototype,
+        (definitions[33][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[33]))[0])).name,
+          (definitions[33][0]).name,
           ("x"),
           ("lengthList"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[33]))[0])).prototype,
+        (definitions[33][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[33]))[0])).name,
+          (definitions[33][0]).name,
           ("y"),
           ("lengthList"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[33]))[0])).prototype,
+        (definitions[33][0]).prototype,
         ("dx"),
         createSVGAttributeGetter(
-          (((((definitions)[33]))[0])).name,
+          (definitions[33][0]).name,
           ("dx"),
           ("lengthList"),
-          (("dx")),
+          ("dx"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[33]))[0])).prototype,
+        (definitions[33][0]).prototype,
         ("dy"),
         createSVGAttributeGetter(
-          (((((definitions)[33]))[0])).name,
+          (definitions[33][0]).name,
           ("dy"),
           ("lengthList"),
-          (("dy")),
+          ("dy"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[33]))[0])).prototype,
+        (definitions[33][0]).prototype,
         ("rotate"),
         createSVGAttributeGetter(
-          (((((definitions)[33]))[0])).name,
+          (definitions[33][0]).name,
           ("rotate"),
           ("numberList"),
-          (("rotate")),
+          ("rotate"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[33]))[0])));
-    installSpecialMethods((((((definitions)[33]))[0])));
-    closePrototype((((((definitions)[33]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[34]))[0])));
-    do {
+
+    installConstants(definitions[33][0]);
+    installSpecialMethods(definitions[33][0]);
+    closePrototype(definitions[33][0]);
+
+    reopenPrototype(definitions[34][0]);
+
       definePrototypeGetter(
-        (((((definitions)[34]))[0])).prototype,
+        (definitions[34][0]).prototype,
         ("viewBox"),
         createSVGAttributeGetter(
-          (((((definitions)[34]))[0])).name,
+          (definitions[34][0]).name,
           ("viewBox"),
           ("rect"),
-          (("viewBox")),
+          ("viewBox"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[34]))[0])).prototype,
+        (definitions[34][0]).prototype,
         ("preserveAspectRatio"),
         createSVGAttributeGetter(
-          (((((definitions)[34]))[0])).name,
+          (definitions[34][0]).name,
           ("preserveAspectRatio"),
           ("aspectRatio"),
-          (("preserveAspectRatio")),
+          ("preserveAspectRatio"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[34]))[0])).prototype,
+        (definitions[34][0]).prototype,
         ("zoomAndPan"),
         createSVGAttributeGetter(
-          (((((definitions)[34]))[0])).name,
+          (definitions[34][0]).name,
           ("zoomAndPan"),
           ("plainNumber"),
           ("zoomAndPan"),
           (2),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[34]))[0])));
-    installSpecialMethods((((((definitions)[34]))[0])));
-    closePrototype((((((definitions)[34]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[35]))[0])));
-    do {
+
+    installConstants(definitions[34][0]);
+    installSpecialMethods(definitions[34][0]);
+    closePrototype(definitions[34][0]);
+
+    reopenPrototype(definitions[35][0]);
+
       definePrototypeGetter(
-        (((((definitions)[35]))[0])).prototype,
+        (definitions[35][0]).prototype,
         ("startOffset"),
         createSVGAttributeGetter(
-          (((((definitions)[35]))[0])).name,
+          (definitions[35][0]).name,
           ("startOffset"),
           ("length"),
-          (("startOffset")),
+          ("startOffset"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[35]))[0])).prototype,
+        (definitions[35][0]).prototype,
         ("method"),
         createSVGAttributeGetter(
-          (((((definitions)[35]))[0])).name,
+          (definitions[35][0]).name,
           ("method"),
           ("enumeration"),
-          (("method")),
+          ("method"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[35]))[0])).prototype,
+        (definitions[35][0]).prototype,
         ("spacing"),
         createSVGAttributeGetter(
-          (((((definitions)[35]))[0])).name,
+          (definitions[35][0]).name,
           ("spacing"),
           ("enumeration"),
-          (("spacing")),
+          ("spacing"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[35]))[0])).prototype,
+        (definitions[35][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[35]))[0])).name,
+          (definitions[35][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[35]))[0])));
-    installSpecialMethods((((((definitions)[35]))[0])));
-    closePrototype((((((definitions)[35]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[36]))[0])));
-    do {
+
+    installConstants(definitions[35][0]);
+    installSpecialMethods(definitions[35][0]);
+    closePrototype(definitions[35][0]);
+
+    reopenPrototype(definitions[36][0]);
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("maskUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("maskUnits"),
           ("enumeration"),
-          (("maskUnits")),
+          ("maskUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("maskContentUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("maskContentUnits"),
           ("enumeration"),
-          (("maskContentUnits")),
+          ("maskContentUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("requiredExtensions"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("requiredExtensions"),
           ("stringList"),
-          (("requiredExtensions")),
+          ("requiredExtensions"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[36]))[0])).prototype,
+        (definitions[36][0]).prototype,
         ("systemLanguage"),
         createSVGAttributeGetter(
-          (((((definitions)[36]))[0])).name,
+          (definitions[36][0]).name,
           ("systemLanguage"),
           ("stringList"),
-          (("systemLanguage")),
+          ("systemLanguage"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[36]))[0])));
-    installSpecialMethods((((((definitions)[36]))[0])));
-    closePrototype((((((definitions)[36]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[37]))[0])));
-    do {
+
+    installConstants(definitions[36][0]);
+    installSpecialMethods(definitions[36][0]);
+    closePrototype(definitions[36][0]);
+
+    reopenPrototype(definitions[37][0]);
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("patternUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("patternUnits"),
           ("enumeration"),
-          (("patternUnits")),
+          ("patternUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("patternContentUnits"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("patternContentUnits"),
           ("enumeration"),
-          (("patternContentUnits")),
+          ("patternContentUnits"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("patternTransform"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("patternTransform"),
           ("transform"),
-          (("patternTransform")),
+          ("patternTransform"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("viewBox"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("viewBox"),
           ("rect"),
-          (("viewBox")),
+          ("viewBox"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("preserveAspectRatio"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("preserveAspectRatio"),
           ("aspectRatio"),
-          (("preserveAspectRatio")),
+          ("preserveAspectRatio"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("requiredExtensions"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("requiredExtensions"),
           ("stringList"),
-          (("requiredExtensions")),
+          ("requiredExtensions"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[37]))[0])).prototype,
+        (definitions[37][0]).prototype,
         ("systemLanguage"),
         createSVGAttributeGetter(
-          (((((definitions)[37]))[0])).name,
+          (definitions[37][0]).name,
           ("systemLanguage"),
           ("stringList"),
-          (("systemLanguage")),
+          ("systemLanguage"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[37]))[0])));
-    installSpecialMethods((((((definitions)[37]))[0])));
-    closePrototype((((((definitions)[37]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[38]))[0])));
-    do {
+
+    installConstants(definitions[37][0]);
+    installSpecialMethods(definitions[37][0]);
+    closePrototype(definitions[37][0]);
+
+    reopenPrototype(definitions[38][0]);
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("x"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("x"),
           ("length"),
-          (("x")),
+          ("x"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("y"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("y"),
           ("length"),
-          (("y")),
+          ("y"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("width"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("width"),
           ("length"),
-          (("width")),
+          ("width"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("height"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("height"),
           ("length"),
-          (("height")),
+          ("height"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("preserveAspectRatio"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("preserveAspectRatio"),
           ("aspectRatio"),
-          (("preserveAspectRatio")),
+          ("preserveAspectRatio"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("decoding"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("decoding"),
           ("plainString"),
           ("decoding"),
           ("auto"),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("crossOrigin"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("crossOrigin"),
           ("plainNullableString"),
           ("crossorigin"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[38]))[0])).prototype,
+        (definitions[38][0]).prototype,
         ("href"),
         createSVGAttributeGetter(
-          (((((definitions)[38]))[0])).name,
+          (definitions[38][0]).name,
           ("href"),
           ("string"),
-          (("href")),
+          ("href"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[38]))[0])));
-    installSpecialMethods((((((definitions)[38]))[0])));
-    closePrototype((((((definitions)[38]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[39]))[0])));
-    do {
+
+    installConstants(definitions[38][0]);
+    installSpecialMethods(definitions[38][0]);
+    closePrototype(definitions[38][0]);
+
+    reopenPrototype(definitions[39][0]);
+
       definePrototypeGetter(
-        (((((definitions)[39]))[0])).prototype,
+        (definitions[39][0]).prototype,
         ("targetElement"),
         createSVGAttributeGetter(
-          (((((definitions)[39]))[0])).name,
+          (definitions[39][0]).name,
           ("targetElement"),
           ("plainNull"),
-          (("targetElement")),
+          ("targetElement"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[39]))[0])).prototype,
+        (definitions[39][0]).prototype,
         ("onbegin"),
         createSVGAttributeGetter(
-          (((((definitions)[39]))[0])).name,
+          (definitions[39][0]).name,
           ("onbegin"),
           ("plainNull"),
-          (("onbegin")),
+          ("onbegin"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[39]))[0])).prototype,
+        (definitions[39][0]).prototype,
         ("onend"),
         createSVGAttributeGetter(
-          (((((definitions)[39]))[0])).name,
+          (definitions[39][0]).name,
           ("onend"),
           ("plainNull"),
-          (("onend")),
+          ("onend"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[39]))[0])).prototype,
+        (definitions[39][0]).prototype,
         ("onrepeat"),
         createSVGAttributeGetter(
-          (((((definitions)[39]))[0])).name,
+          (definitions[39][0]).name,
           ("onrepeat"),
           ("plainNull"),
-          (("onrepeat")),
+          ("onrepeat"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[39]))[0])).prototype,
+        (definitions[39][0]).prototype,
         ("requiredExtensions"),
         createSVGAttributeGetter(
-          (((((definitions)[39]))[0])).name,
+          (definitions[39][0]).name,
           ("requiredExtensions"),
           ("stringList"),
-          (("requiredExtensions")),
+          ("requiredExtensions"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[39]))[0])).prototype,
+        (definitions[39][0]).prototype,
         ("systemLanguage"),
         createSVGAttributeGetter(
-          (((((definitions)[39]))[0])).name,
+          (definitions[39][0]).name,
           ("systemLanguage"),
           ("stringList"),
-          (("systemLanguage")),
+          ("systemLanguage"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[39]))[0])));
-    installSpecialMethods((((((definitions)[39]))[0])));
-    closePrototype((((((definitions)[39]))[0])));
-  } while (false);
-do {
-    reopenPrototype((((((definitions)[40]))[0])));
-    do {
+
+    installConstants(definitions[39][0]);
+    installSpecialMethods(definitions[39][0]);
+    closePrototype(definitions[39][0]);
+
+    reopenPrototype(definitions[40][0]);
+
       definePrototypeGetter(
-        (((((definitions)[40]))[0])).prototype,
+        (definitions[40][0]).prototype,
         ("textLength"),
         createSVGAttributeGetter(
-          (((((definitions)[40]))[0])).name,
+          (definitions[40][0]).name,
           ("textLength"),
           ("length"),
-          (("textLength")),
+          ("textLength"),
           (0),
         ),
       );
-    } while (false);
-do {
+
       definePrototypeGetter(
-        (((((definitions)[40]))[0])).prototype,
+        (definitions[40][0]).prototype,
         ("lengthAdjust"),
         createSVGAttributeGetter(
-          (((((definitions)[40]))[0])).name,
+          (definitions[40][0]).name,
           ("lengthAdjust"),
           ("enumeration"),
-          (("lengthAdjust")),
+          ("lengthAdjust"),
           (0),
         ),
       );
-    } while (false);
-    installConstants((((((definitions)[40]))[0])));
-    installSpecialMethods((((((definitions)[40]))[0])));
-    closePrototype((((((definitions)[40]))[0])));
-  } while (false);
+
+    installConstants(definitions[40][0]);
+    installSpecialMethods(definitions[40][0]);
+    closePrototype(definitions[40][0]);
+
   installScriptMembers();
   installAnchorMembers();
   installStyleMembers();
@@ -4060,22 +3796,21 @@ function installScriptMembers() {
 
 function installAnchorMembers() {
   reopenPrototype(SVGAElement);
-  do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("target"),
-      elementGetter(SVGAElement, ("target"), ("target"), ""),
-      elementSetter(SVGAElement, ("target")),
+      elementGetter(SVGAElement, "target", "target", ""),
+      elementSetter(SVGAElement, "target"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("rel"),
-      elementGetter(SVGAElement, ("rel"), ("rel"), ""),
-      elementSetter(SVGAElement, ("rel")),
+      elementGetter(SVGAElement, "rel", "rel", ""),
+      elementSetter(SVGAElement, "rel"),
     );
-  } while (false);
+
   const relLists = new WeakMap();
   const relList = function () {
     requireInstance(this, SVGAElement);
@@ -4103,75 +3838,69 @@ do {
     "interestForElement",
     interestForElement,
   );
-  do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("download"),
-      elementGetter(SVGAElement, ("download"), ("download"), ""),
-      elementSetter(SVGAElement, ("download")),
+      elementGetter(SVGAElement, "download", "download", ""),
+      elementSetter(SVGAElement, "download"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("ping"),
-      elementGetter(SVGAElement, ("ping"), ("ping"), ""),
-      elementSetter(SVGAElement, ("ping")),
+      elementGetter(SVGAElement, "ping", "ping", ""),
+      elementSetter(SVGAElement, "ping"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("hreflang"),
-      elementGetter(SVGAElement, ("hreflang"), ("hreflang"), ""),
-      elementSetter(SVGAElement, ("hreflang")),
+      elementGetter(SVGAElement, "hreflang", "hreflang", ""),
+      elementSetter(SVGAElement, "hreflang"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("type"),
-      elementGetter(SVGAElement, ("type"), ("type"), ""),
-      elementSetter(SVGAElement, ("type")),
+      elementGetter(SVGAElement, "type", "type", ""),
+      elementSetter(SVGAElement, "type"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGAElement.prototype,
       ("referrerPolicy"),
-      elementGetter(SVGAElement, ("referrerPolicy"), ("referrerPolicy"), ""),
-      elementSetter(SVGAElement, ("referrerPolicy")),
+      elementGetter(SVGAElement, "referrerPolicy", "referrerPolicy", ""),
+      elementSetter(SVGAElement, "referrerPolicy"),
     );
-  } while (false);
+
   closePrototype(SVGAElement);
 }
 
 function installStyleMembers() {
   reopenPrototype(SVGStyleElement);
-  do {
+
     definePrototypeAccessor(
       SVGStyleElement.prototype,
       ("type"),
-      elementGetter(SVGStyleElement, ("type"), ("type"), ""),
-      elementSetter(SVGStyleElement, ("type")),
+      elementGetter(SVGStyleElement, "type", "type", ""),
+      elementSetter(SVGStyleElement, "type"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGStyleElement.prototype,
       ("media"),
-      elementGetter(SVGStyleElement, ("media"), ("media"), ""),
-      elementSetter(SVGStyleElement, ("media")),
+      elementGetter(SVGStyleElement, "media", "media", ""),
+      elementSetter(SVGStyleElement, "media"),
     );
-  } while (false);
-do {
+
     definePrototypeAccessor(
       SVGStyleElement.prototype,
       ("title"),
-      elementGetter(SVGStyleElement, ("title"), ("title"), ""),
-      elementSetter(SVGStyleElement, ("title")),
+      elementGetter(SVGStyleElement, "title", "title", ""),
+      elementSetter(SVGStyleElement, "title"),
     );
-  } while (false);
+
   const sheet = function () {
     requireInstance(this, SVGStyleElement);
     return styleElementSheet(this);
@@ -4191,7 +3920,7 @@ do {
     function (value) {
       requireInstance(this, SVGStyleElement);
       if (Boolean(value)) disabledElements.add(this);
-      else disabledElements.delete(this);
+      else disabledElements.deletethis;
     },
   );
   closePrototype(SVGStyleElement);
@@ -4397,90 +4126,90 @@ function installSpecialMethods(constructor) {
       ["getSimpleDuration", 0, () => 0],
       ["getStartTime", 0, () => 0],
     ];
-    do {
+    {
       definePrototypeMethod(
         constructor.prototype,
         ("beginElement"),
-        nativeMethod(("beginElement"), (0), function (...args) {
+        nativeMethod("beginElement", 0, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[0]))[2]))(...args);
+          return methods[0][2](...args);
         }),
       );
-    } while (false);
-do {
+    }
+{
       definePrototypeMethod(
         constructor.prototype,
         ("beginElementAt"),
-        nativeMethod(("beginElementAt"), (1), function (...args) {
+        nativeMethod("beginElementAt", 1, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[1]))[2]))(...args);
+          return methods[1][2](...args);
         }),
       );
-    } while (false);
-do {
+    }
+{
       definePrototypeMethod(
         constructor.prototype,
         ("endElement"),
-        nativeMethod(("endElement"), (0), function (...args) {
+        nativeMethod("endElement", 0, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[2]))[2]))(...args);
+          return methods[2][2](...args);
         }),
       );
-    } while (false);
-do {
+    }
+{
       definePrototypeMethod(
         constructor.prototype,
         ("endElementAt"),
-        nativeMethod(("endElementAt"), (1), function (...args) {
+        nativeMethod("endElementAt", 1, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[3]))[2]))(...args);
+          return methods[3][2](...args);
         }),
       );
-    } while (false);
-do {
+    }
+{
       definePrototypeMethod(
         constructor.prototype,
         ("getCurrentTime"),
-        nativeMethod(("getCurrentTime"), (0), function (...args) {
+        nativeMethod("getCurrentTime", 0, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[4]))[2]))(...args);
+          return methods[4][2](...args);
         }),
       );
-    } while (false);
-do {
+    }
+{
       definePrototypeMethod(
         constructor.prototype,
         ("getSimpleDuration"),
-        nativeMethod(("getSimpleDuration"), (0), function (...args) {
+        nativeMethod("getSimpleDuration", 0, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[5]))[2]))(...args);
+          return methods[5][2](...args);
         }),
       );
-    } while (false);
-do {
+    }
+{
       definePrototypeMethod(
         constructor.prototype,
         ("getStartTime"),
-        nativeMethod(("getStartTime"), (0), function (...args) {
+        nativeMethod("getStartTime", 0, function (...args) {
           if (!(this instanceof SVGAnimationElement)) {
             throw new TypeError("Illegal invocation");
           }
-          return (((((methods)[6]))[2]))(...args);
+          return methods[6][2](...args);
         }),
       );
-    } while (false);
+    }
     return;
   }
   if (constructor === SVGTextContentElement) {
@@ -4558,114 +4287,114 @@ function installTextContentMethods(constructor) {
       return undefined;
     }],
   ];
-  do {
+  {
     definePrototypeMethod(
       constructor.prototype,
       ("getCharNumAtPosition"),
-      nativeMethod(("getCharNumAtPosition"), (0), function (...args) {
+      nativeMethod("getCharNumAtPosition", 0, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[0]))[2])).apply(this, args);
+        return methods[0][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getComputedTextLength"),
-      nativeMethod(("getComputedTextLength"), (0), function (...args) {
+      nativeMethod("getComputedTextLength", 0, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[1]))[2])).apply(this, args);
+        return methods[1][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getEndPositionOfChar"),
-      nativeMethod(("getEndPositionOfChar"), (1), function (...args) {
+      nativeMethod("getEndPositionOfChar", 1, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[2]))[2])).apply(this, args);
+        return methods[2][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getExtentOfChar"),
-      nativeMethod(("getExtentOfChar"), (1), function (...args) {
+      nativeMethod("getExtentOfChar", 1, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[3]))[2])).apply(this, args);
+        return methods[3][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getNumberOfChars"),
-      nativeMethod(("getNumberOfChars"), (0), function (...args) {
+      nativeMethod("getNumberOfChars", 0, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[4]))[2])).apply(this, args);
+        return methods[4][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getRotationOfChar"),
-      nativeMethod(("getRotationOfChar"), (1), function (...args) {
+      nativeMethod("getRotationOfChar", 1, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[5]))[2])).apply(this, args);
+        return methods[5][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getStartPositionOfChar"),
-      nativeMethod(("getStartPositionOfChar"), (1), function (...args) {
+      nativeMethod("getStartPositionOfChar", 1, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[6]))[2])).apply(this, args);
+        return methods[6][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("getSubStringLength"),
-      nativeMethod(("getSubStringLength"), (2), function (...args) {
+      nativeMethod("getSubStringLength", 2, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[7]))[2])).apply(this, args);
+        return methods[7][2].apply(this, args);
       }),
     );
-  } while (false);
-do {
+  }
+{
     definePrototypeMethod(
       constructor.prototype,
       ("selectSubString"),
-      nativeMethod(("selectSubString"), (2), function (...args) {
+      nativeMethod("selectSubString", 2, function (...args) {
         if (!(this instanceof SVGTextContentElement)) {
           throw new TypeError("Illegal invocation");
         }
-        return (((((methods)[8]))[2])).apply(this, args);
+        return methods[8][2].apply(this, args);
       }),
     );
-  } while (false);
+  }
 }
 
 function nativeMethod(name, length, callback) {

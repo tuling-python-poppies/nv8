@@ -32,82 +32,19 @@ import {
 
 export function installMessaging() {
   installInheritance();
-  do {
-    delete ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[0])).prototype.constructor;
-    defineGlobalConstructor(((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[0])).name, ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[0])));
-  } while (false);
-do {
-    delete ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[1])).prototype.constructor;
-    defineGlobalConstructor(((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[1])).name, ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[1])));
-  } while (false);
-do {
-    delete ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[2])).prototype.constructor;
-    defineGlobalConstructor(((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[2])).name, ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[2])));
-  } while (false);
-do {
-    delete ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[3])).prototype.constructor;
-    defineGlobalConstructor(((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[3])).name, ((([
-    MessageEvent,
-    MessagePort,
-    MessageChannel,
-    BroadcastChannel,
-  ])[3])));
-  } while (false);
+
+    delete MessageEvent.prototype.constructor;
+    defineGlobalConstructor(MessageEvent.name, MessageEvent);
+
+    delete MessagePort.prototype.constructor;
+    defineGlobalConstructor(MessagePort.name, MessagePort);
+
+    delete MessageChannel.prototype.constructor;
+    defineGlobalConstructor(MessageChannel.name, MessageChannel);
+
+    delete BroadcastChannel.prototype.constructor;
+    defineGlobalConstructor(BroadcastChannel.name, BroadcastChannel);
+
   installMessageEvent();
   installPort();
   installChannel();
@@ -117,23 +54,22 @@ do {
 function installInheritance() {
   Object.setPrototypeOf(MessageEvent.prototype, Event.prototype);
   Object.setPrototypeOf(MessageEvent, Event);
-  do {
-    Object.setPrototypeOf(((([MessagePort, BroadcastChannel])[0])).prototype, EventTarget.prototype);
-    Object.setPrototypeOf(((([MessagePort, BroadcastChannel])[0])), EventTarget);
-  } while (false);
-do {
-    Object.setPrototypeOf(((([MessagePort, BroadcastChannel])[1])).prototype, EventTarget.prototype);
-    Object.setPrototypeOf(((([MessagePort, BroadcastChannel])[1])), EventTarget);
-  } while (false);
+
+    Object.setPrototypeOf(MessagePort.prototype, EventTarget.prototype);
+    Object.setPrototypeOf(MessagePort, EventTarget);
+
+    Object.setPrototypeOf(BroadcastChannel.prototype, EventTarget.prototype);
+    Object.setPrototypeOf(BroadcastChannel, EventTarget);
+
 }
 
 function installMessageEvent() {
-  do {getter(MessageEvent, ("data"), messageEventProperty);} while (false);
-do {getter(MessageEvent, ("origin"), messageEventProperty);} while (false);
-do {getter(MessageEvent, ("lastEventId"), messageEventProperty);} while (false);
-do {getter(MessageEvent, ("source"), messageEventProperty);} while (false);
-do {getter(MessageEvent, ("ports"), messageEventProperty);} while (false);
-do {getter(MessageEvent, ("userActivation"), messageEventProperty);} while (false);
+  getter(MessageEvent, "data", messageEventProperty);
+getter(MessageEvent, "origin", messageEventProperty);
+getter(MessageEvent, "lastEventId", messageEventProperty);
+getter(MessageEvent, "source", messageEventProperty);
+getter(MessageEvent, "ports", messageEventProperty);
+getter(MessageEvent, "userActivation", messageEventProperty);
   method(MessageEvent, "initMessageEvent", 1, initMessageEvent);
   finish(MessageEvent);
 }

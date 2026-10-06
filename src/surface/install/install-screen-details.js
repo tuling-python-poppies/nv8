@@ -27,101 +27,85 @@ const settable = new Set([
 ]);
 
 export function installScreenDetails() {
-  do {
-    delete (((runtime.screenDetailsConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.screenDetailsConstructors)[0])).name, (((runtime.screenDetailsConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.screenDetailsConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.screenDetailsConstructors)[1])).name, (((runtime.screenDetailsConstructors)[1])));
-  } while (false);
+
+    delete runtime.screenDetailsConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.screenDetailsConstructors[0].name, runtime.screenDetailsConstructors[0]);
+
+    delete runtime.screenDetailsConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.screenDetailsConstructors[1].name, runtime.screenDetailsConstructors[1]);
+
   Object.setPrototypeOf(runtime.ScreenDetailed.prototype, Screen.prototype);
   Object.setPrototypeOf(runtime.ScreenDetailed, Screen);
   Object.setPrototypeOf(runtime.ScreenDetails.prototype, EventTarget.prototype);
   Object.setPrototypeOf(runtime.ScreenDetails, EventTarget);
-  do {
+
     {
-  do {
+
     {
-      installAccessor((constructors[("ScreenDetailed")]), ("left"));
+      installAccessor(constructors["ScreenDetailed"], "left");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetailed")]), ("top"));
+      installAccessor(constructors["ScreenDetailed"], "top");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetailed")]), ("isPrimary"));
+      installAccessor(constructors["ScreenDetailed"], "isPrimary");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetailed")]), ("isInternal"));
+      installAccessor(constructors["ScreenDetailed"], "isInternal");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetailed")]), ("devicePixelRatio"));
+      installAccessor(constructors["ScreenDetailed"], "devicePixelRatio");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetailed")]), ("label"));
+      installAccessor(constructors["ScreenDetailed"], "label");
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("ScreenDetailed")]).prototype, (constructors[("ScreenDetailed")]));
+      defineConstructorBacklink(constructors["ScreenDetailed"].prototype, constructors["ScreenDetailed"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("ScreenDetailed")]).prototype, (constructors[("ScreenDetailed")]).name);
+      defineToStringTag(constructors["ScreenDetailed"].prototype, constructors["ScreenDetailed"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
+
     {
-      installAccessor((constructors[("ScreenDetails")]), ("screens"));
+      installAccessor(constructors["ScreenDetails"], "screens");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetails")]), ("currentScreen"));
+      installAccessor(constructors["ScreenDetails"], "currentScreen");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetails")]), ("onscreenschange"));
+      installAccessor(constructors["ScreenDetails"], "onscreenschange");
     }
-  } while (false);
-do {
+
     {
-      installAccessor((constructors[("ScreenDetails")]), ("oncurrentscreenchange"));
+      installAccessor(constructors["ScreenDetails"], "oncurrentscreenchange");
     }
-  } while (false);
-do {
+
     {
-      defineConstructorBacklink((constructors[("ScreenDetails")]).prototype, (constructors[("ScreenDetails")]));
+      defineConstructorBacklink(constructors["ScreenDetails"].prototype, constructors["ScreenDetails"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("ScreenDetails")]).prototype, (constructors[("ScreenDetails")]).name);
+      defineToStringTag(constructors["ScreenDetails"].prototype, constructors["ScreenDetails"].name);
     }
-  } while (false);
+
 }
-  } while (false);
+
   registerNativeFunction(runtime.getScreenDetails, "getScreenDetails");
   defineGlobalFunction("getScreenDetails", runtime.getScreenDetails);
 }
-
-
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

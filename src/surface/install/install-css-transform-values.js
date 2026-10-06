@@ -48,87 +48,41 @@ export function installCSSTransformValues() {
   definePrototypeMethod(CSSTransformComponent.prototype, "toString", componentToString);
   finish(CSSTransformComponent, "CSSTransformComponent");
 
-  {
-  do {
-    definePrototypeGetter((CSSTranslate).prototype, ("x"), ((((([["x", x("CSSTranslate")], ["y", y("CSSTranslate")], ["z", z("CSSTranslate")]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSTranslate).prototype, ("y"), ((((([["x", x("CSSTranslate")], ["y", y("CSSTranslate")], ["z", z("CSSTranslate")]])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSTranslate).prototype, ("z"), ((((([["x", x("CSSTranslate")], ["y", y("CSSTranslate")], ["z", z("CSSTranslate")]])[2]))[1])));
-  } while (false);
-  finish((CSSTranslate), (CSSTranslate).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSSkewY).prototype, ("ay"), ((((([["ay", ay("CSSSkewY")]])[0]))[1])));
-  } while (false);
-  finish((CSSSkewY), (CSSSkewY).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSSkewX).prototype, ("ax"), ((((([["ax", ax("CSSSkewX")]])[0]))[1])));
-  } while (false);
-  finish((CSSSkewX), (CSSSkewX).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSSkew).prototype, ("ax"), ((((([["ax", ax("CSSSkew")], ["ay", ay("CSSSkew")]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSSkew).prototype, ("ay"), ((((([["ax", ax("CSSSkew")], ["ay", ay("CSSSkew")]])[1]))[1])));
-  } while (false);
-  finish((CSSSkew), (CSSSkew).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSScale).prototype, ("x"), ((((([["x", x("CSSScale")], ["y", y("CSSScale")], ["z", z("CSSScale")]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSScale).prototype, ("y"), ((((([["x", x("CSSScale")], ["y", y("CSSScale")], ["z", z("CSSScale")]])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSScale).prototype, ("z"), ((((([["x", x("CSSScale")], ["y", y("CSSScale")], ["z", z("CSSScale")]])[2]))[1])));
-  } while (false);
-  finish((CSSScale), (CSSScale).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSRotate).prototype, ("angle"), ((((([["angle", angle], ["x", x("CSSRotate")], ["y", y("CSSRotate")], ["z", z("CSSRotate")]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSRotate).prototype, ("x"), ((((([["angle", angle], ["x", x("CSSRotate")], ["y", y("CSSRotate")], ["z", z("CSSRotate")]])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSRotate).prototype, ("y"), ((((([["angle", angle], ["x", x("CSSRotate")], ["y", y("CSSRotate")], ["z", z("CSSRotate")]])[2]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSRotate).prototype, ("z"), ((((([["angle", angle], ["x", x("CSSRotate")], ["y", y("CSSRotate")], ["z", z("CSSRotate")]])[3]))[1])));
-  } while (false);
-  finish((CSSRotate), (CSSRotate).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSPerspective).prototype, ("length"), ((((([["length", perspectiveLength]])[0]))[1])));
-  } while (false);
-  finish((CSSPerspective), (CSSPerspective).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSMatrixComponent).prototype, ("matrix"), ((((([["matrix", matrix]])[0]))[1])));
-  } while (false);
-  finish((CSSMatrixComponent), (CSSMatrixComponent).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSPositionValue).prototype, ("x"), ((((([["x", positionX], ["y", positionY]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSPositionValue).prototype, ("y"), ((((([["x", positionX], ["y", positionY]])[1]))[1])));
-  } while (false);
-  finish((CSSPositionValue), (CSSPositionValue).name);
-}
+  definePrototypeGetter(CSSTranslate.prototype, "x", x("CSSTranslate"));
+  definePrototypeGetter(CSSTranslate.prototype, "y", y("CSSTranslate"));
+  definePrototypeGetter(CSSTranslate.prototype, "z", z("CSSTranslate"));
+  finish(CSSTranslate, CSSTranslate.name);
+
+  definePrototypeGetter(CSSSkewY.prototype, "ay", ay("CSSSkewY"));
+  finish(CSSSkewY, CSSSkewY.name);
+
+  definePrototypeGetter(CSSSkewX.prototype, "ax", ax("CSSSkewX"));
+  finish(CSSSkewX, CSSSkewX.name);
+
+  definePrototypeGetter(CSSSkew.prototype, "ax", ax("CSSSkew"));
+  definePrototypeGetter(CSSSkew.prototype, "ay", ay("CSSSkew"));
+  finish(CSSSkew, CSSSkew.name);
+
+  definePrototypeGetter(CSSScale.prototype, "x", x("CSSScale"));
+  definePrototypeGetter(CSSScale.prototype, "y", y("CSSScale"));
+  definePrototypeGetter(CSSScale.prototype, "z", z("CSSScale"));
+  finish(CSSScale, CSSScale.name);
+
+  definePrototypeGetter(CSSRotate.prototype, "angle", angle);
+  definePrototypeGetter(CSSRotate.prototype, "x", x("CSSRotate"));
+  definePrototypeGetter(CSSRotate.prototype, "y", y("CSSRotate"));
+  definePrototypeGetter(CSSRotate.prototype, "z", z("CSSRotate"));
+  finish(CSSRotate, CSSRotate.name);
+
+  definePrototypeGetter(CSSPerspective.prototype, "length", perspectiveLength);
+  finish(CSSPerspective, CSSPerspective.name);
+
+  definePrototypeGetter(CSSMatrixComponent.prototype, "matrix", matrix);
+  finish(CSSMatrixComponent, CSSMatrixComponent.name);
+
+  definePrototypeGetter(CSSPositionValue.prototype, "x", positionX);
+  definePrototypeGetter(CSSPositionValue.prototype, "y", positionY);
+  finish(CSSPositionValue, CSSPositionValue.name);
 
   definePrototypeMethod(CSSTransformValue.prototype, "entries", transformEntries);
   definePrototypeMethod(CSSTransformValue.prototype, "keys", transformKeys);
@@ -144,8 +98,6 @@ do {
     configurable: true,
   });
 }
-
-
 
 function finish(constructor, tag) {
   defineConstructorBacklink(constructor.prototype, constructor);

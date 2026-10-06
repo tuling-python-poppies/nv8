@@ -63,50 +63,40 @@ import {
 } from "../../engine/webidl/native-function.js";
 
 export function installStreams() {
-  do {
-    delete (((streamConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[0])).name, (((streamConstructors)[0])));
-  } while (false);
-do {
-    delete (((streamConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[1])).name, (((streamConstructors)[1])));
-  } while (false);
-do {
-    delete (((streamConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[2])).name, (((streamConstructors)[2])));
-  } while (false);
-do {
-    delete (((streamConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[3])).name, (((streamConstructors)[3])));
-  } while (false);
-do {
-    delete (((streamConstructors)[4])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[4])).name, (((streamConstructors)[4])));
-  } while (false);
-do {
-    delete (((streamConstructors)[5])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[5])).name, (((streamConstructors)[5])));
-  } while (false);
-do {
-    delete (((streamConstructors)[6])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[6])).name, (((streamConstructors)[6])));
-  } while (false);
-do {
-    delete (((streamConstructors)[7])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[7])).name, (((streamConstructors)[7])));
-  } while (false);
-do {
-    delete (((streamConstructors)[8])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[8])).name, (((streamConstructors)[8])));
-  } while (false);
-do {
-    delete (((streamConstructors)[9])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[9])).name, (((streamConstructors)[9])));
-  } while (false);
-do {
-    delete (((streamConstructors)[10])).prototype.constructor;
-    defineGlobalConstructor((((streamConstructors)[10])).name, (((streamConstructors)[10])));
-  } while (false);
+
+    delete streamConstructors[0].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[0].name, streamConstructors[0]);
+
+    delete streamConstructors[1].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[1].name, streamConstructors[1]);
+
+    delete streamConstructors[2].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[2].name, streamConstructors[2]);
+
+    delete streamConstructors[3].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[3].name, streamConstructors[3]);
+
+    delete streamConstructors[4].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[4].name, streamConstructors[4]);
+
+    delete streamConstructors[5].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[5].name, streamConstructors[5]);
+
+    delete streamConstructors[6].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[6].name, streamConstructors[6]);
+
+    delete streamConstructors[7].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[7].name, streamConstructors[7]);
+
+    delete streamConstructors[8].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[8].name, streamConstructors[8]);
+
+    delete streamConstructors[9].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[9].name, streamConstructors[9]);
+
+    delete streamConstructors[10].prototype.constructor;
+    defineGlobalConstructor(streamConstructors[10].name, streamConstructors[10]);
+
   installReadableStream();
   installDefaultController();
   installByteController();

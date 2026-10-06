@@ -19,41 +19,34 @@ const constructors = Object.freeze(Object.fromEntries(
 const settable = new Set(["onchange", "onprioritychange"]);
 
 export function installScheduling() {
-  do {
-    delete (((runtime.schedulingConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[0])).name, (((runtime.schedulingConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[1])).name, (((runtime.schedulingConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[2])).name, (((runtime.schedulingConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[3])).name, (((runtime.schedulingConstructors)[3])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[4])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[4])).name, (((runtime.schedulingConstructors)[4])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[5])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[5])).name, (((runtime.schedulingConstructors)[5])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[6])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[6])).name, (((runtime.schedulingConstructors)[6])));
-  } while (false);
-do {
-    delete (((runtime.schedulingConstructors)[7])).prototype.constructor;
-    defineGlobalConstructor((((runtime.schedulingConstructors)[7])).name, (((runtime.schedulingConstructors)[7])));
-  } while (false);
+
+    delete runtime.schedulingConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[0].name, runtime.schedulingConstructors[0]);
+
+    delete runtime.schedulingConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[1].name, runtime.schedulingConstructors[1]);
+
+    delete runtime.schedulingConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[2].name, runtime.schedulingConstructors[2]);
+
+    delete runtime.schedulingConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[3].name, runtime.schedulingConstructors[3]);
+
+    delete runtime.schedulingConstructors[4].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[4].name, runtime.schedulingConstructors[4]);
+
+    delete runtime.schedulingConstructors[5].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[5].name, runtime.schedulingConstructors[5]);
+
+    delete runtime.schedulingConstructors[6].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[6].name, runtime.schedulingConstructors[6]);
+
+    delete runtime.schedulingConstructors[7].prototype.constructor;
+    defineGlobalConstructor(runtime.schedulingConstructors[7].name, runtime.schedulingConstructors[7]);
+
   const externalParents = { AbortController, AbortSignal, Event, EventTarget };
-  do {
-    const Constructor = constructors[("IdleDeadline")];
+  {
+    const Constructor = constructors["IdleDeadline"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[0]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[0]))[1])).prototypeParent]
       ?? null;
@@ -61,9 +54,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("IdleDetector")];
+  }
+{
+    const Constructor = constructors["IdleDetector"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[1]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[1]))[1])).prototypeParent]
       ?? null;
@@ -71,9 +64,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("Scheduling")];
+  }
+{
+    const Constructor = constructors["Scheduling"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[2]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[2]))[1])).prototypeParent]
       ?? null;
@@ -81,9 +74,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("Scheduler")];
+  }
+{
+    const Constructor = constructors["Scheduler"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[3]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[3]))[1])).prototypeParent]
       ?? null;
@@ -91,9 +84,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("TaskController")];
+  }
+{
+    const Constructor = constructors["TaskController"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[4]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[4]))[1])).prototypeParent]
       ?? null;
@@ -101,9 +94,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("TaskSignal")];
+  }
+{
+    const Constructor = constructors["TaskSignal"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[5]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[5]))[1])).prototypeParent]
       ?? null;
@@ -111,9 +104,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("TaskPriorityChangeEvent")];
+  }
+{
+    const Constructor = constructors["TaskPriorityChangeEvent"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[6]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[6]))[1])).prototypeParent]
       ?? null;
@@ -121,9 +114,9 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("UserActivation")];
+  }
+{
+    const Constructor = constructors["UserActivation"];
     const parent = constructors[(((((Object.entries(SCHEDULING_SURFACES))[7]))[1])).prototypeParent]
       ?? externalParents[(((((Object.entries(SCHEDULING_SURFACES))[7]))[1])).prototypeParent]
       ?? null;
@@ -131,132 +124,102 @@ do {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-  do {
+  }
+
     {
-  do {
-    installAccessor((constructors[("IdleDeadline")]), ("didTimeout"));
-  } while (false);
-do {
-    installMethod((constructors[("IdleDeadline")]), ("timeRemaining"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("IdleDeadline")]).prototype, (constructors[("IdleDeadline")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("IdleDeadline")]).prototype, (constructors[("IdleDeadline")]).name);
-  } while (false);
+
+    installAccessor(constructors["IdleDeadline"], "didTimeout");
+
+    installMethod(constructors["IdleDeadline"], "timeRemaining", 0);
+
+    defineConstructorBacklink(constructors["IdleDeadline"].prototype, constructors["IdleDeadline"]);
+
+    defineToStringTag(constructors["IdleDeadline"].prototype, constructors["IdleDeadline"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("IdleDetector")]), ("userState"));
-  } while (false);
-do {
-    installAccessor((constructors[("IdleDetector")]), ("screenState"));
-  } while (false);
-do {
-    installAccessor((constructors[("IdleDetector")]), ("onchange"));
-  } while (false);
-do {
-    installMethod((constructors[("IdleDetector")]), ("start"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("IdleDetector")]).prototype, (constructors[("IdleDetector")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("IdleDetector")]).prototype, (constructors[("IdleDetector")]).name);
-  } while (false);
+
+    installAccessor(constructors["IdleDetector"], "userState");
+
+    installAccessor(constructors["IdleDetector"], "screenState");
+
+    installAccessor(constructors["IdleDetector"], "onchange");
+
+    installMethod(constructors["IdleDetector"], "start", 0);
+
+    defineConstructorBacklink(constructors["IdleDetector"].prototype, constructors["IdleDetector"]);
+
+    defineToStringTag(constructors["IdleDetector"].prototype, constructors["IdleDetector"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("Scheduling")]), ("isInputPending"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("Scheduling")]).prototype, (constructors[("Scheduling")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("Scheduling")]).prototype, (constructors[("Scheduling")]).name);
-  } while (false);
+
+    installMethod(constructors["Scheduling"], "isInputPending", 0);
+
+    defineConstructorBacklink(constructors["Scheduling"].prototype, constructors["Scheduling"]);
+
+    defineToStringTag(constructors["Scheduling"].prototype, constructors["Scheduling"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("Scheduler")]), ("postTask"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Scheduler")]), ("yield"), (0));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("Scheduler")]).prototype, (constructors[("Scheduler")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("Scheduler")]).prototype, (constructors[("Scheduler")]).name);
-  } while (false);
+
+    installMethod(constructors["Scheduler"], "postTask", 1);
+
+    installMethod(constructors["Scheduler"], "yield", 0);
+
+    defineConstructorBacklink(constructors["Scheduler"].prototype, constructors["Scheduler"]);
+
+    defineToStringTag(constructors["Scheduler"].prototype, constructors["Scheduler"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("TaskController")]), ("setPriority"), (1));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TaskController")]).prototype, (constructors[("TaskController")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TaskController")]).prototype, (constructors[("TaskController")]).name);
-  } while (false);
+
+    installMethod(constructors["TaskController"], "setPriority", 1);
+
+    defineConstructorBacklink(constructors["TaskController"].prototype, constructors["TaskController"]);
+
+    defineToStringTag(constructors["TaskController"].prototype, constructors["TaskController"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("TaskSignal")]), ("priority"));
-  } while (false);
-do {
-    installAccessor((constructors[("TaskSignal")]), ("onprioritychange"));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TaskSignal")]).prototype, (constructors[("TaskSignal")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TaskSignal")]).prototype, (constructors[("TaskSignal")]).name);
-  } while (false);
+
+    installAccessor(constructors["TaskSignal"], "priority");
+
+    installAccessor(constructors["TaskSignal"], "onprioritychange");
+
+    defineConstructorBacklink(constructors["TaskSignal"].prototype, constructors["TaskSignal"]);
+
+    defineToStringTag(constructors["TaskSignal"].prototype, constructors["TaskSignal"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("TaskPriorityChangeEvent")]), ("previousPriority"));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("TaskPriorityChangeEvent")]).prototype, (constructors[("TaskPriorityChangeEvent")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("TaskPriorityChangeEvent")]).prototype, (constructors[("TaskPriorityChangeEvent")]).name);
-  } while (false);
+
+    installAccessor(constructors["TaskPriorityChangeEvent"], "previousPriority");
+
+    defineConstructorBacklink(constructors["TaskPriorityChangeEvent"].prototype, constructors["TaskPriorityChangeEvent"]);
+
+    defineToStringTag(constructors["TaskPriorityChangeEvent"].prototype, constructors["TaskPriorityChangeEvent"].name);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("UserActivation")]), ("hasBeenActive"));
-  } while (false);
-do {
-    installAccessor((constructors[("UserActivation")]), ("isActive"));
-  } while (false);
-do {
-    defineConstructorBacklink((constructors[("UserActivation")]).prototype, (constructors[("UserActivation")]));
-  } while (false);
-do {
-    defineToStringTag((constructors[("UserActivation")]).prototype, (constructors[("UserActivation")]).name);
-  } while (false);
+
+    installAccessor(constructors["UserActivation"], "hasBeenActive");
+
+    installAccessor(constructors["UserActivation"], "isActive");
+
+    defineConstructorBacklink(constructors["UserActivation"].prototype, constructors["UserActivation"]);
+
+    defineToStringTag(constructors["UserActivation"].prototype, constructors["UserActivation"].name);
+
 }
-  } while (false);
+
   defineStatic(runtime.IdleDetector, "requestPermission", 0, runtime.idlePermission);
   const descriptor = Object.getOwnPropertyDescriptor({
     get scheduler() { return runtime.createScheduler(); },
@@ -268,7 +231,6 @@ do {
   defineGlobalFunction("requestIdleCallback", runtime.requestIdleCallback);
   defineGlobalFunction("cancelIdleCallback", runtime.cancelIdleCallback);
 }
-
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

@@ -13,39 +13,31 @@ import {
 import { registerNativeGetter } from "../../engine/webidl/native-function.js";
 
 export function installTextStreams() {
-  do {
-    delete ((([TextEncoderStream, TextDecoderStream])[0])).prototype.constructor;
-    defineGlobalConstructor(((([TextEncoderStream, TextDecoderStream])[0])).name, ((([TextEncoderStream, TextDecoderStream])[0])));
-  } while (false);
-do {
-    delete ((([TextEncoderStream, TextDecoderStream])[1])).prototype.constructor;
-    defineGlobalConstructor(((([TextEncoderStream, TextDecoderStream])[1])).name, ((([TextEncoderStream, TextDecoderStream])[1])));
-  } while (false);
-  do {
-    getter(TextEncoderStream, ("encoding"), encoderProperty);
-  } while (false);
-do {
-    getter(TextEncoderStream, ("readable"), encoderProperty);
-  } while (false);
-do {
-    getter(TextEncoderStream, ("writable"), encoderProperty);
-  } while (false);
+
+    delete TextEncoderStream.prototype.constructor;
+    defineGlobalConstructor(TextEncoderStream.name, TextEncoderStream);
+
+    delete TextDecoderStream.prototype.constructor;
+    defineGlobalConstructor(TextDecoderStream.name, TextDecoderStream);
+
+    getter(TextEncoderStream, "encoding", encoderProperty);
+
+    getter(TextEncoderStream, "readable", encoderProperty);
+
+    getter(TextEncoderStream, "writable", encoderProperty);
+
   finish(TextEncoderStream);
-  do {
-    getter(TextDecoderStream, ("encoding"), decoderProperty);
-  } while (false);
-do {
-    getter(TextDecoderStream, ("fatal"), decoderProperty);
-  } while (false);
-do {
-    getter(TextDecoderStream, ("ignoreBOM"), decoderProperty);
-  } while (false);
-do {
-    getter(TextDecoderStream, ("readable"), decoderProperty);
-  } while (false);
-do {
-    getter(TextDecoderStream, ("writable"), decoderProperty);
-  } while (false);
+
+    getter(TextDecoderStream, "encoding", decoderProperty);
+
+    getter(TextDecoderStream, "fatal", decoderProperty);
+
+    getter(TextDecoderStream, "ignoreBOM", decoderProperty);
+
+    getter(TextDecoderStream, "readable", decoderProperty);
+
+    getter(TextDecoderStream, "writable", decoderProperty);
+
   finish(TextDecoderStream);
 }
 

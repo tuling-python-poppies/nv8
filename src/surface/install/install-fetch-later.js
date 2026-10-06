@@ -17,25 +17,23 @@ import {
 export function installFetchLater() {
   delete runtime.FetchLaterResult.prototype.constructor;
   defineGlobalConstructor("FetchLaterResult", runtime.FetchLaterResult);
-  do {
-    installAccessor(("activated"));
-  } while (false);
-do {
+
+    installAccessor("activated");
+
     {
       defineConstructorBacklink(
         runtime.FetchLaterResult.prototype,
         runtime.FetchLaterResult,
       );
     }
-  } while (false);
-do {
+
     {
       defineToStringTag(
         runtime.FetchLaterResult.prototype,
         "FetchLaterResult",
       );
     }
-  } while (false);
+
   registerNativeFunction(runtime.fetchLater, "fetchLater");
   defineGlobalFunction("fetchLater", runtime.fetchLater);
 }

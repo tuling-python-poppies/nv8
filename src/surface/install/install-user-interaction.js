@@ -24,188 +24,158 @@ const constructors = Object.freeze(Object.fromEntries(
 ));
 
 export function installUserInteraction() {
-  do {
-    delete (((runtime.userInteractionConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.userInteractionConstructors)[0])).name, (((runtime.userInteractionConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.userInteractionConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.userInteractionConstructors)[1])).name, (((runtime.userInteractionConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.userInteractionConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.userInteractionConstructors)[2])).name, (((runtime.userInteractionConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.userInteractionConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.userInteractionConstructors)[3])).name, (((runtime.userInteractionConstructors)[3])));
-  } while (false);
+
+    delete runtime.userInteractionConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.userInteractionConstructors[0].name, runtime.userInteractionConstructors[0]);
+
+    delete runtime.userInteractionConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.userInteractionConstructors[1].name, runtime.userInteractionConstructors[1]);
+
+    delete runtime.userInteractionConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.userInteractionConstructors[2].name, runtime.userInteractionConstructors[2]);
+
+    delete runtime.userInteractionConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.userInteractionConstructors[3].name, runtime.userInteractionConstructors[3]);
+
   Object.setPrototypeOf(runtime.CloseWatcher.prototype, EventTarget.prototype);
   Object.setPrototypeOf(runtime.CloseWatcher, EventTarget);
-  do {
-    {
-  do {
-    {
-      installAccessor((constructors[("CloseWatcher")]), ("oncancel"));
-    }
-  } while (false);
-do {
-    {
-      installAccessor((constructors[("CloseWatcher")]), ("onclose"));
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("close")](...args) {
-          return runtime.userInteractionOperation(this, ("close"), args);
-        },
-      }[("close")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("close"));
-      definePrototypeMethod((constructors[("CloseWatcher")]).prototype, ("close"), callback);
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("destroy")](...args) {
-          return runtime.userInteractionOperation(this, ("destroy"), args);
-        },
-      }[("destroy")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("destroy"));
-      definePrototypeMethod((constructors[("CloseWatcher")]).prototype, ("destroy"), callback);
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("requestClose")](...args) {
-          return runtime.userInteractionOperation(this, ("requestClose"), args);
-        },
-      }[("requestClose")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("requestClose"));
-      definePrototypeMethod((constructors[("CloseWatcher")]).prototype, ("requestClose"), callback);
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("CloseWatcher")]).prototype, (constructors[("CloseWatcher")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("CloseWatcher")]).prototype, (constructors[("CloseWatcher")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      const callback = {
-        [("open")](...args) {
-          return runtime.userInteractionOperation(this, ("open"), args);
-        },
-      }[("open")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("open"));
-      definePrototypeMethod((constructors[("EyeDropper")]).prototype, ("open"), callback);
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("EyeDropper")]).prototype, (constructors[("EyeDropper")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("EyeDropper")]).prototype, (constructors[("EyeDropper")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      const callback = {
-        [("requestPresenter")](...args) {
-          return runtime.userInteractionOperation(this, ("requestPresenter"), args);
-        },
-      }[("requestPresenter")];
-      Object.defineProperty(callback, "length", {
-        value: (0),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("requestPresenter"));
-      definePrototypeMethod((constructors[("Ink")]).prototype, ("requestPresenter"), callback);
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("Ink")]).prototype, (constructors[("Ink")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("Ink")]).prototype, (constructors[("Ink")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    {
-      installAccessor((constructors[("DelegatedInkTrailPresenter")]), ("presentationArea"));
-    }
-  } while (false);
-do {
-    {
-      const callback = {
-        [("updateInkTrailStartPoint")](...args) {
-          return runtime.userInteractionOperation(this, ("updateInkTrailStartPoint"), args);
-        },
-      }[("updateInkTrailStartPoint")];
-      Object.defineProperty(callback, "length", {
-        value: (2),
-        configurable: true,
-      });
-      registerNativeFunction(callback, ("updateInkTrailStartPoint"));
-      definePrototypeMethod((constructors[("DelegatedInkTrailPresenter")]).prototype, ("updateInkTrailStartPoint"), callback);
-    }
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("DelegatedInkTrailPresenter")]).prototype, (constructors[("DelegatedInkTrailPresenter")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("DelegatedInkTrailPresenter")]).prototype, (constructors[("DelegatedInkTrailPresenter")]).name);
-    }
-  } while (false);
-}
-  } while (false);
-}
+  {
 
+    {
+      installAccessor(constructors["CloseWatcher"], "oncancel");
+    }
 
+    {
+      installAccessor(constructors["CloseWatcher"], "onclose");
+    }
+
+{
+      const callback = {
+        ["close"](...args) {
+          return runtime.userInteractionOperation(this, "close", args);
+        },
+      }["close"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "close");
+      definePrototypeMethod(constructors["CloseWatcher"].prototype, "close", callback);
+    }
+{
+      const callback = {
+        ["destroy"](...args) {
+          return runtime.userInteractionOperation(this, "destroy", args);
+        },
+      }["destroy"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "destroy");
+      definePrototypeMethod(constructors["CloseWatcher"].prototype, "destroy", callback);
+    }
+{
+      const callback = {
+        ["requestClose"](...args) {
+          return runtime.userInteractionOperation(this, "requestClose", args);
+        },
+      }["requestClose"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "requestClose");
+      definePrototypeMethod(constructors["CloseWatcher"].prototype, "requestClose", callback);
+    }
+
+    {
+      defineConstructorBacklink(constructors["CloseWatcher"].prototype, constructors["CloseWatcher"]);
+    }
+
+    {
+      defineToStringTag(constructors["CloseWatcher"].prototype, constructors["CloseWatcher"].name);
+    }
+
+}
+{
+  {
+      const callback = {
+        ["open"](...args) {
+          return runtime.userInteractionOperation(this, "open", args);
+        },
+      }["open"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "open");
+      definePrototypeMethod(constructors["EyeDropper"].prototype, "open", callback);
+    }
+
+    {
+      defineConstructorBacklink(constructors["EyeDropper"].prototype, constructors["EyeDropper"]);
+    }
+
+    {
+      defineToStringTag(constructors["EyeDropper"].prototype, constructors["EyeDropper"].name);
+    }
+
+}
+{
+  {
+      const callback = {
+        ["requestPresenter"](...args) {
+          return runtime.userInteractionOperation(this, "requestPresenter", args);
+        },
+      }["requestPresenter"];
+      Object.defineProperty(callback, "length", {
+        value: 0,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "requestPresenter");
+      definePrototypeMethod(constructors["Ink"].prototype, "requestPresenter", callback);
+    }
+
+    {
+      defineConstructorBacklink(constructors["Ink"].prototype, constructors["Ink"]);
+    }
+
+    {
+      defineToStringTag(constructors["Ink"].prototype, constructors["Ink"].name);
+    }
+
+}
+{
+
+    {
+      installAccessor(constructors["DelegatedInkTrailPresenter"], "presentationArea");
+    }
+
+{
+      const callback = {
+        ["updateInkTrailStartPoint"](...args) {
+          return runtime.userInteractionOperation(this, "updateInkTrailStartPoint", args);
+        },
+      }["updateInkTrailStartPoint"];
+      Object.defineProperty(callback, "length", {
+        value: 2,
+        configurable: true,
+      });
+      registerNativeFunction(callback, "updateInkTrailStartPoint");
+      definePrototypeMethod(constructors["DelegatedInkTrailPresenter"].prototype, "updateInkTrailStartPoint", callback);
+    }
+
+    {
+      defineConstructorBacklink(constructors["DelegatedInkTrailPresenter"].prototype, constructors["DelegatedInkTrailPresenter"]);
+    }
+
+    {
+      defineToStringTag(constructors["DelegatedInkTrailPresenter"].prototype, constructors["DelegatedInkTrailPresenter"].name);
+    }
+
+}
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

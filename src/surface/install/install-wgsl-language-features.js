@@ -21,64 +21,56 @@ export function installWGSLLanguageFeatures() {
     runtime.WGSLLanguageFeatures,
   );
   const methods = new Map();
-  do {
-    installAccessor(("size"));
-  } while (false);
-do {
+
+    installAccessor("size");
+
     {
-      methods.set(("entries"), installMethod(("entries"), (0)));
+      methods.set("entries", installMethod("entries", 0));
     }
-  } while (false);
-do {
+
     {
-      methods.set(("forEach"), installMethod(("forEach"), (1)));
+      methods.set("forEach", installMethod("forEach", 1));
     }
-  } while (false);
-do {
+
     {
-      methods.set(("has"), installMethod(("has"), (1)));
+      methods.set("has", installMethod("has", 1));
     }
-  } while (false);
-do {
+
     {
-      methods.set(("keys"), installMethod(("keys"), (0)));
+      methods.set("keys", installMethod("keys", 0));
     }
-  } while (false);
-do {
+
     {
-      methods.set(("values"), installMethod(("values"), (0)));
+      methods.set("values", installMethod("values", 0));
     }
-  } while (false);
-do {
+
     {
       defineConstructorBacklink(
         runtime.WGSLLanguageFeatures.prototype,
         runtime.WGSLLanguageFeatures,
       );
     }
-  } while (false);
-do {
+
     {
       defineToStringTag(
         runtime.WGSLLanguageFeatures.prototype,
         "WGSLLanguageFeatures",
       );
     }
-  } while (false);
-do {
+
     {
       Object.defineProperty(
         runtime.WGSLLanguageFeatures.prototype,
         Symbol.iterator,
         {
-          value: methods.get(("values")),
+          value: methods.get("values"),
           writable: true,
           enumerable: false,
           configurable: true,
         },
       );
     }
-  } while (false);
+
 }
 
 function installAccessor(name) {

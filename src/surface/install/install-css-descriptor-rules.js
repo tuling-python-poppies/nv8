@@ -42,327 +42,75 @@ import {
 export function installCSSDescriptorRules() {
   installCSSDescriptorRuleConstructors();
   {
-  do {
-    definePrototypeGetter((CSSPropertyRule).prototype, ("name"), ((((([
-    ["name", propertyName],
-    ["syntax", propertySyntax],
-    ["inherits", propertyInherits],
-    ["initialValue", propertyInitialValue],
-  ])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSPropertyRule).prototype, ("syntax"), ((((([
-    ["name", propertyName],
-    ["syntax", propertySyntax],
-    ["inherits", propertyInherits],
-    ["initialValue", propertyInitialValue],
-  ])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSPropertyRule).prototype, ("inherits"), ((((([
-    ["name", propertyName],
-    ["syntax", propertySyntax],
-    ["inherits", propertyInherits],
-    ["initialValue", propertyInitialValue],
-  ])[2]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSPropertyRule).prototype, ("initialValue"), ((((([
-    ["name", propertyName],
-    ["syntax", propertySyntax],
-    ["inherits", propertyInherits],
-    ["initialValue", propertyInitialValue],
-  ])[3]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSPropertyRule).prototype, (CSSPropertyRule));
-  defineToStringTag((CSSPropertyRule).prototype, (CSSPropertyRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSFontPaletteValuesRule).prototype, ("name"), ((((([
-    ["name", paletteName],
-    ["fontFamily", paletteFontFamily],
-    ["basePalette", paletteBasePalette],
-    ["overrideColors", paletteOverrideColors],
-  ])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontPaletteValuesRule).prototype, ("fontFamily"), ((((([
-    ["name", paletteName],
-    ["fontFamily", paletteFontFamily],
-    ["basePalette", paletteBasePalette],
-    ["overrideColors", paletteOverrideColors],
-  ])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontPaletteValuesRule).prototype, ("basePalette"), ((((([
-    ["name", paletteName],
-    ["fontFamily", paletteFontFamily],
-    ["basePalette", paletteBasePalette],
-    ["overrideColors", paletteOverrideColors],
-  ])[2]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontPaletteValuesRule).prototype, ("overrideColors"), ((((([
-    ["name", paletteName],
-    ["fontFamily", paletteFontFamily],
-    ["basePalette", paletteBasePalette],
-    ["overrideColors", paletteOverrideColors],
-  ])[3]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSFontPaletteValuesRule).prototype, (CSSFontPaletteValuesRule));
-  defineToStringTag((CSSFontPaletteValuesRule).prototype, (CSSFontPaletteValuesRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("name"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("system"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("symbols"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[2]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("additiveSymbols"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[3]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("negative"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[4]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("prefix"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[5]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("suffix"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[6]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("range"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[7]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("pad"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[8]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("speakAs"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[9]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSCounterStyleRule).prototype, ("fallback"), ((((([
-    ["name", counterName],
-    ["system", counterSystem],
-    ["symbols", counterSymbols],
-    ["additiveSymbols", counterAdditiveSymbols],
-    ["negative", counterNegative],
-    ["prefix", counterPrefix],
-    ["suffix", counterSuffix],
-    ["range", counterRange],
-    ["pad", counterPad],
-    ["speakAs", counterSpeakAs],
-    ["fallback", counterFallback],
-  ])[10]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSCounterStyleRule).prototype, (CSSCounterStyleRule));
-  defineToStringTag((CSSCounterStyleRule).prototype, (CSSCounterStyleRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("fontFamily"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("annotation"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[1]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("ornaments"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[2]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("stylistic"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[3]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("swash"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[4]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("characterVariant"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[5]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSFontFeatureValuesRule).prototype, ("styleset"), ((((([
-    ["fontFamily", featureFontFamily],
-    ["annotation", featureAnnotation],
-    ["ornaments", featureOrnaments],
-    ["stylistic", featureStylistic],
-    ["swash", featureSwash],
-    ["characterVariant", featureCharacterVariant],
-    ["styleset", featureStyleset],
-  ])[6]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSFontFeatureValuesRule).prototype, (CSSFontFeatureValuesRule));
-  defineToStringTag((CSSFontFeatureValuesRule).prototype, (CSSFontFeatureValuesRule).name);
-}
-}
 
+    definePrototypeGetter(CSSPropertyRule.prototype, "name", ((((["name", propertyName]))[1])));
 
+    definePrototypeGetter(CSSPropertyRule.prototype, "syntax", ((((["syntax", propertySyntax]))[1])));
+
+    definePrototypeGetter(CSSPropertyRule.prototype, "inherits", ((((["inherits", propertyInherits]))[1])));
+
+    definePrototypeGetter(CSSPropertyRule.prototype, "initialValue", ((((["initialValue", propertyInitialValue]))[1])));
+
+  defineConstructorBacklink(CSSPropertyRule.prototype, CSSPropertyRule);
+  defineToStringTag(CSSPropertyRule.prototype, CSSPropertyRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSFontPaletteValuesRule.prototype, "name", ((((["name", paletteName]))[1])));
+
+    definePrototypeGetter(CSSFontPaletteValuesRule.prototype, "fontFamily", ((((["fontFamily", paletteFontFamily]))[1])));
+
+    definePrototypeGetter(CSSFontPaletteValuesRule.prototype, "basePalette", ((((["basePalette", paletteBasePalette]))[1])));
+
+    definePrototypeGetter(CSSFontPaletteValuesRule.prototype, "overrideColors", ((((["overrideColors", paletteOverrideColors]))[1])));
+
+  defineConstructorBacklink(CSSFontPaletteValuesRule.prototype, CSSFontPaletteValuesRule);
+  defineToStringTag(CSSFontPaletteValuesRule.prototype, CSSFontPaletteValuesRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "name", ((((["name", counterName]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "system", ((((["system", counterSystem]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "symbols", ((((["symbols", counterSymbols]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "additiveSymbols", ((((["additiveSymbols", counterAdditiveSymbols]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "negative", ((((["negative", counterNegative]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "prefix", ((((["prefix", counterPrefix]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "suffix", ((((["suffix", counterSuffix]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "range", ((((["range", counterRange]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "pad", ((((["pad", counterPad]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "speakAs", ((((["speakAs", counterSpeakAs]))[1])));
+
+    definePrototypeGetter(CSSCounterStyleRule.prototype, "fallback", ((((["fallback", counterFallback]))[1])));
+
+  defineConstructorBacklink(CSSCounterStyleRule.prototype, CSSCounterStyleRule);
+  defineToStringTag(CSSCounterStyleRule.prototype, CSSCounterStyleRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "fontFamily", ((((["fontFamily", featureFontFamily]))[1])));
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "annotation", ((((["annotation", featureAnnotation]))[1])));
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "ornaments", ((((["ornaments", featureOrnaments]))[1])));
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "stylistic", ((((["stylistic", featureStylistic]))[1])));
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "swash", ((((["swash", featureSwash]))[1])));
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "characterVariant", ((((["characterVariant", featureCharacterVariant]))[1])));
+
+    definePrototypeGetter(CSSFontFeatureValuesRule.prototype, "styleset", ((((["styleset", featureStyleset]))[1])));
+
+  defineConstructorBacklink(CSSFontFeatureValuesRule.prototype, CSSFontFeatureValuesRule);
+  defineToStringTag(CSSFontFeatureValuesRule.prototype, CSSFontFeatureValuesRule.name);
+}
+}

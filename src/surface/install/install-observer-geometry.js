@@ -26,331 +26,266 @@ const constructors = Object.freeze(Object.fromEntries(
 const settable = new Set(["onresize", "onscroll", "onscrollend"]);
 
 export function installObserverGeometry() {
-  do {
-    delete (((runtime.observerGeometryConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[0])).name, (((runtime.observerGeometryConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.observerGeometryConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[1])).name, (((runtime.observerGeometryConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.observerGeometryConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[2])).name, (((runtime.observerGeometryConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.observerGeometryConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[3])).name, (((runtime.observerGeometryConstructors)[3])));
-  } while (false);
-do {
-    delete (((runtime.observerGeometryConstructors)[4])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[4])).name, (((runtime.observerGeometryConstructors)[4])));
-  } while (false);
-do {
-    delete (((runtime.observerGeometryConstructors)[5])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[5])).name, (((runtime.observerGeometryConstructors)[5])));
-  } while (false);
-do {
-    delete (((runtime.observerGeometryConstructors)[6])).prototype.constructor;
-    defineGlobalConstructor((((runtime.observerGeometryConstructors)[6])).name, (((runtime.observerGeometryConstructors)[6])));
-  } while (false);
-  do {
-    const Constructor = constructors[("DOMQuad")];
+
+    delete runtime.observerGeometryConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[0].name, runtime.observerGeometryConstructors[0]);
+
+    delete runtime.observerGeometryConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[1].name, runtime.observerGeometryConstructors[1]);
+
+    delete runtime.observerGeometryConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[2].name, runtime.observerGeometryConstructors[2]);
+
+    delete runtime.observerGeometryConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[3].name, runtime.observerGeometryConstructors[3]);
+
+    delete runtime.observerGeometryConstructors[4].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[4].name, runtime.observerGeometryConstructors[4]);
+
+    delete runtime.observerGeometryConstructors[5].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[5].name, runtime.observerGeometryConstructors[5]);
+
+    delete runtime.observerGeometryConstructors[6].prototype.constructor;
+    defineGlobalConstructor(runtime.observerGeometryConstructors[6].name, runtime.observerGeometryConstructors[6]);
+
+  {
+    const Constructor = constructors["DOMQuad"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[0]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[0]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("ResizeObserverSize")];
+  }
+{
+    const Constructor = constructors["ResizeObserverSize"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[1]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[1]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("ResizeObserverEntry")];
+  }
+{
+    const Constructor = constructors["ResizeObserverEntry"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[2]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[2]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("ResizeObserver")];
+  }
+{
+    const Constructor = constructors["ResizeObserver"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[3]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[3]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("IntersectionObserverEntry")];
+  }
+{
+    const Constructor = constructors["IntersectionObserverEntry"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[4]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[4]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("IntersectionObserver")];
+  }
+{
+    const Constructor = constructors["IntersectionObserver"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[5]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[5]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-do {
-    const Constructor = constructors[("VisualViewport")];
+  }
+{
+    const Constructor = constructors["VisualViewport"];
     const parent = constructors[(((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[6]))[1])).prototypeParent]
       ?? ((((((Object.entries(OBSERVER_GEOMETRY_SURFACES))[6]))[1])).prototypeParent === "EventTarget" ? EventTarget : null);
     if (parent !== null) {
       Object.setPrototypeOf(Constructor.prototype, parent.prototype);
       Object.setPrototypeOf(Constructor, parent);
     }
-  } while (false);
-  do {
+  }
+
     {
-  do {
-    installAccessor((constructors[("DOMQuad")]), ("p1"));
-  } while (false);
-do {
-    installAccessor((constructors[("DOMQuad")]), ("p2"));
-  } while (false);
-do {
-    installAccessor((constructors[("DOMQuad")]), ("p3"));
-  } while (false);
-do {
-    installAccessor((constructors[("DOMQuad")]), ("p4"));
-  } while (false);
-do {
-    installMethod((constructors[("DOMQuad")]), ("getBounds"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("DOMQuad")]), ("toJSON"), (0));
-  } while (false);
-do {
+
+    installAccessor(constructors["DOMQuad"], "p1");
+
+    installAccessor(constructors["DOMQuad"], "p2");
+
+    installAccessor(constructors["DOMQuad"], "p3");
+
+    installAccessor(constructors["DOMQuad"], "p4");
+
+    installMethod(constructors["DOMQuad"], "getBounds", 0);
+
+    installMethod(constructors["DOMQuad"], "toJSON", 0);
+
     {
-      defineConstructorBacklink((constructors[("DOMQuad")]).prototype, (constructors[("DOMQuad")]));
+      defineConstructorBacklink(constructors["DOMQuad"].prototype, constructors["DOMQuad"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("DOMQuad")]).prototype, (constructors[("DOMQuad")]).name);
+      defineToStringTag(constructors["DOMQuad"].prototype, constructors["DOMQuad"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("ResizeObserverSize")]), ("inlineSize"));
-  } while (false);
-do {
-    installAccessor((constructors[("ResizeObserverSize")]), ("blockSize"));
-  } while (false);
-do {
+
+    installAccessor(constructors["ResizeObserverSize"], "inlineSize");
+
+    installAccessor(constructors["ResizeObserverSize"], "blockSize");
+
     {
-      defineConstructorBacklink((constructors[("ResizeObserverSize")]).prototype, (constructors[("ResizeObserverSize")]));
+      defineConstructorBacklink(constructors["ResizeObserverSize"].prototype, constructors["ResizeObserverSize"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("ResizeObserverSize")]).prototype, (constructors[("ResizeObserverSize")]).name);
+      defineToStringTag(constructors["ResizeObserverSize"].prototype, constructors["ResizeObserverSize"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("ResizeObserverEntry")]), ("target"));
-  } while (false);
-do {
-    installAccessor((constructors[("ResizeObserverEntry")]), ("contentRect"));
-  } while (false);
-do {
-    installAccessor((constructors[("ResizeObserverEntry")]), ("contentBoxSize"));
-  } while (false);
-do {
-    installAccessor((constructors[("ResizeObserverEntry")]), ("borderBoxSize"));
-  } while (false);
-do {
-    installAccessor((constructors[("ResizeObserverEntry")]), ("devicePixelContentBoxSize"));
-  } while (false);
-do {
+
+    installAccessor(constructors["ResizeObserverEntry"], "target");
+
+    installAccessor(constructors["ResizeObserverEntry"], "contentRect");
+
+    installAccessor(constructors["ResizeObserverEntry"], "contentBoxSize");
+
+    installAccessor(constructors["ResizeObserverEntry"], "borderBoxSize");
+
+    installAccessor(constructors["ResizeObserverEntry"], "devicePixelContentBoxSize");
+
     {
-      defineConstructorBacklink((constructors[("ResizeObserverEntry")]).prototype, (constructors[("ResizeObserverEntry")]));
+      defineConstructorBacklink(constructors["ResizeObserverEntry"].prototype, constructors["ResizeObserverEntry"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("ResizeObserverEntry")]).prototype, (constructors[("ResizeObserverEntry")]).name);
+      defineToStringTag(constructors["ResizeObserverEntry"].prototype, constructors["ResizeObserverEntry"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("ResizeObserver")]), ("disconnect"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("ResizeObserver")]), ("observe"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("ResizeObserver")]), ("unobserve"), (1));
-  } while (false);
-do {
+
+    installMethod(constructors["ResizeObserver"], "disconnect", 0);
+
+    installMethod(constructors["ResizeObserver"], "observe", 1);
+
+    installMethod(constructors["ResizeObserver"], "unobserve", 1);
+
     {
-      defineConstructorBacklink((constructors[("ResizeObserver")]).prototype, (constructors[("ResizeObserver")]));
+      defineConstructorBacklink(constructors["ResizeObserver"].prototype, constructors["ResizeObserver"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("ResizeObserver")]).prototype, (constructors[("ResizeObserver")]).name);
+      defineToStringTag(constructors["ResizeObserver"].prototype, constructors["ResizeObserver"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("time"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("rootBounds"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("boundingClientRect"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("intersectionRect"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("isIntersecting"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("isVisible"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("intersectionRatio"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserverEntry")]), ("target"));
-  } while (false);
-do {
+
+    installAccessor(constructors["IntersectionObserverEntry"], "time");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "rootBounds");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "boundingClientRect");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "intersectionRect");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "isIntersecting");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "isVisible");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "intersectionRatio");
+
+    installAccessor(constructors["IntersectionObserverEntry"], "target");
+
     {
-      defineConstructorBacklink((constructors[("IntersectionObserverEntry")]).prototype, (constructors[("IntersectionObserverEntry")]));
+      defineConstructorBacklink(constructors["IntersectionObserverEntry"].prototype, constructors["IntersectionObserverEntry"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("IntersectionObserverEntry")]).prototype, (constructors[("IntersectionObserverEntry")]).name);
+      defineToStringTag(constructors["IntersectionObserverEntry"].prototype, constructors["IntersectionObserverEntry"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("IntersectionObserver")]), ("root"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserver")]), ("rootMargin"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserver")]), ("scrollMargin"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserver")]), ("thresholds"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserver")]), ("delay"));
-  } while (false);
-do {
-    installAccessor((constructors[("IntersectionObserver")]), ("trackVisibility"));
-  } while (false);
-do {
-    installMethod((constructors[("IntersectionObserver")]), ("disconnect"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("IntersectionObserver")]), ("observe"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("IntersectionObserver")]), ("takeRecords"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("IntersectionObserver")]), ("unobserve"), (1));
-  } while (false);
-do {
+
+    installAccessor(constructors["IntersectionObserver"], "root");
+
+    installAccessor(constructors["IntersectionObserver"], "rootMargin");
+
+    installAccessor(constructors["IntersectionObserver"], "scrollMargin");
+
+    installAccessor(constructors["IntersectionObserver"], "thresholds");
+
+    installAccessor(constructors["IntersectionObserver"], "delay");
+
+    installAccessor(constructors["IntersectionObserver"], "trackVisibility");
+
+    installMethod(constructors["IntersectionObserver"], "disconnect", 0);
+
+    installMethod(constructors["IntersectionObserver"], "observe", 1);
+
+    installMethod(constructors["IntersectionObserver"], "takeRecords", 0);
+
+    installMethod(constructors["IntersectionObserver"], "unobserve", 1);
+
     {
-      defineConstructorBacklink((constructors[("IntersectionObserver")]).prototype, (constructors[("IntersectionObserver")]));
+      defineConstructorBacklink(constructors["IntersectionObserver"].prototype, constructors["IntersectionObserver"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("IntersectionObserver")]).prototype, (constructors[("IntersectionObserver")]).name);
+      defineToStringTag(constructors["IntersectionObserver"].prototype, constructors["IntersectionObserver"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("VisualViewport")]), ("offsetLeft"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("offsetTop"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("pageLeft"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("pageTop"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("width"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("height"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("scale"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("onresize"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("onscroll"));
-  } while (false);
-do {
-    installAccessor((constructors[("VisualViewport")]), ("onscrollend"));
-  } while (false);
-do {
+
+    installAccessor(constructors["VisualViewport"], "offsetLeft");
+
+    installAccessor(constructors["VisualViewport"], "offsetTop");
+
+    installAccessor(constructors["VisualViewport"], "pageLeft");
+
+    installAccessor(constructors["VisualViewport"], "pageTop");
+
+    installAccessor(constructors["VisualViewport"], "width");
+
+    installAccessor(constructors["VisualViewport"], "height");
+
+    installAccessor(constructors["VisualViewport"], "scale");
+
+    installAccessor(constructors["VisualViewport"], "onresize");
+
+    installAccessor(constructors["VisualViewport"], "onscroll");
+
+    installAccessor(constructors["VisualViewport"], "onscrollend");
+
     {
-      defineConstructorBacklink((constructors[("VisualViewport")]).prototype, (constructors[("VisualViewport")]));
+      defineConstructorBacklink(constructors["VisualViewport"].prototype, constructors["VisualViewport"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("VisualViewport")]).prototype, (constructors[("VisualViewport")]).name);
+      defineToStringTag(constructors["VisualViewport"].prototype, constructors["VisualViewport"].name);
     }
-  } while (false);
+
 }
-  } while (false);
+
   installVisualViewportGlobal();
 }
-
-
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

@@ -29,64 +29,58 @@ import {
 export function installCSSDeclarationRules() {
   installCSSDeclarationRuleConstructors();
   {
-  do {
-    definePrototypeGetter((CSSViewTransitionRule).prototype, ("navigation"), ((((([["navigation", viewTransitionNavigation], ["types", viewTransitionTypes]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSViewTransitionRule).prototype, ("types"), ((((([["navigation", viewTransitionNavigation], ["types", viewTransitionTypes]])[1]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSViewTransitionRule).prototype, (CSSViewTransitionRule));
-  defineToStringTag((CSSViewTransitionRule).prototype, (CSSViewTransitionRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSPositionTryRule).prototype, ("name"), ((((([["name", positionTryName], ["style", positionTryStyle]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSPositionTryRule).prototype, ("style"), ((((([["name", positionTryName], ["style", positionTryStyle]])[1]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSPositionTryRule).prototype, (CSSPositionTryRule));
-  defineToStringTag((CSSPositionTryRule).prototype, (CSSPositionTryRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSNestedDeclarations).prototype, ("style"), ((((([["style", nestedStyle]])[0]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSNestedDeclarations).prototype, (CSSNestedDeclarations));
-  defineToStringTag((CSSNestedDeclarations).prototype, (CSSNestedDeclarations).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSNamespaceRule).prototype, ("namespaceURI"), ((((([["namespaceURI", namespaceURI], ["prefix", namespacePrefix]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSNamespaceRule).prototype, ("prefix"), ((((([["namespaceURI", namespaceURI], ["prefix", namespacePrefix]])[1]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSNamespaceRule).prototype, (CSSNamespaceRule));
-  defineToStringTag((CSSNamespaceRule).prototype, (CSSNamespaceRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSMarginRule).prototype, ("name"), ((((([["name", marginName], ["style", marginStyle]])[0]))[1])));
-  } while (false);
-do {
-    definePrototypeGetter((CSSMarginRule).prototype, ("style"), ((((([["name", marginName], ["style", marginStyle]])[1]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSMarginRule).prototype, (CSSMarginRule));
-  defineToStringTag((CSSMarginRule).prototype, (CSSMarginRule).name);
-}
-  {
-  do {
-    definePrototypeGetter((CSSFontFaceRule).prototype, ("style"), ((((([["style", fontFaceStyle]])[0]))[1])));
-  } while (false);
-  defineConstructorBacklink((CSSFontFaceRule).prototype, (CSSFontFaceRule));
-  defineToStringTag((CSSFontFaceRule).prototype, (CSSFontFaceRule).name);
-}
-  {
-  
-  defineConstructorBacklink((CSSImageValue).prototype, (CSSImageValue));
-  defineToStringTag((CSSImageValue).prototype, (CSSImageValue).name);
-}
-}
 
+    definePrototypeGetter(CSSViewTransitionRule.prototype, "navigation", ((((["navigation", viewTransitionNavigation]))[1])));
 
+    definePrototypeGetter(CSSViewTransitionRule.prototype, "types", ((((["types", viewTransitionTypes]))[1])));
+
+  defineConstructorBacklink(CSSViewTransitionRule.prototype, CSSViewTransitionRule);
+  defineToStringTag(CSSViewTransitionRule.prototype, CSSViewTransitionRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSPositionTryRule.prototype, "name", ((((["name", positionTryName]))[1])));
+
+    definePrototypeGetter(CSSPositionTryRule.prototype, "style", ((((["style", positionTryStyle]))[1])));
+
+  defineConstructorBacklink(CSSPositionTryRule.prototype, CSSPositionTryRule);
+  defineToStringTag(CSSPositionTryRule.prototype, CSSPositionTryRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSNestedDeclarations.prototype, "style", ((((([["style", nestedStyle]])[0]))[1])));
+
+  defineConstructorBacklink(CSSNestedDeclarations.prototype, CSSNestedDeclarations);
+  defineToStringTag(CSSNestedDeclarations.prototype, CSSNestedDeclarations.name);
+}
+  {
+
+    definePrototypeGetter(CSSNamespaceRule.prototype, "namespaceURI", ((((["namespaceURI", namespaceURI]))[1])));
+
+    definePrototypeGetter(CSSNamespaceRule.prototype, "prefix", ((((["prefix", namespacePrefix]))[1])));
+
+  defineConstructorBacklink(CSSNamespaceRule.prototype, CSSNamespaceRule);
+  defineToStringTag(CSSNamespaceRule.prototype, CSSNamespaceRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSMarginRule.prototype, "name", ((((["name", marginName]))[1])));
+
+    definePrototypeGetter(CSSMarginRule.prototype, "style", ((((["style", marginStyle]))[1])));
+
+  defineConstructorBacklink(CSSMarginRule.prototype, CSSMarginRule);
+  defineToStringTag(CSSMarginRule.prototype, CSSMarginRule.name);
+}
+  {
+
+    definePrototypeGetter(CSSFontFaceRule.prototype, "style", ((((([["style", fontFaceStyle]])[0]))[1])));
+
+  defineConstructorBacklink(CSSFontFaceRule.prototype, CSSFontFaceRule);
+  defineToStringTag(CSSFontFaceRule.prototype, CSSFontFaceRule.name);
+}
+  {
+
+  defineConstructorBacklink(CSSImageValue.prototype, CSSImageValue);
+  defineToStringTag(CSSImageValue.prototype, CSSImageValue.name);
+}
+}

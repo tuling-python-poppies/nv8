@@ -25,38 +25,35 @@ export function installImageBitmapRenderingContext() {
     "ImageBitmapRenderingContext",
     ImageBitmapRenderingContext,
   );
-  do {
+
     {
       definePrototypeGetter(
         ImageBitmapRenderingContext.prototype,
         ("canvas"),
-        implementations[("canvas")],
+        implementations["canvas"],
       );
     }
-  } while (false);
-do {
+
     {
       definePrototypeMethod(
         ImageBitmapRenderingContext.prototype,
         ("transferFromImageBitmap"),
-        implementations[("transferFromImageBitmap")],
+        implementations["transferFromImageBitmap"],
       );
     }
-  } while (false);
-do {
+
     {
       defineConstructorBacklink(
         ImageBitmapRenderingContext.prototype,
         ImageBitmapRenderingContext,
       );
     }
-  } while (false);
-do {
+
     {
       defineToStringTag(
         ImageBitmapRenderingContext.prototype,
         "ImageBitmapRenderingContext",
       );
     }
-  } while (false);
+
 }

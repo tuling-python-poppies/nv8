@@ -25,113 +25,93 @@ const constructors = Object.freeze({
 
 export function installGlobalServices() {
   runtime.resetGlobalServices();
-  do {
-    delete (((runtime.globalServiceConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.globalServiceConstructors)[0])).name, (((runtime.globalServiceConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.globalServiceConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.globalServiceConstructors)[1])).name, (((runtime.globalServiceConstructors)[1])));
-  } while (false);
-do {
-    delete (((runtime.globalServiceConstructors)[2])).prototype.constructor;
-    defineGlobalConstructor((((runtime.globalServiceConstructors)[2])).name, (((runtime.globalServiceConstructors)[2])));
-  } while (false);
-do {
-    delete (((runtime.globalServiceConstructors)[3])).prototype.constructor;
-    defineGlobalConstructor((((runtime.globalServiceConstructors)[3])).name, (((runtime.globalServiceConstructors)[3])));
-  } while (false);
+
+    delete runtime.globalServiceConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.globalServiceConstructors[0].name, runtime.globalServiceConstructors[0]);
+
+    delete runtime.globalServiceConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.globalServiceConstructors[1].name, runtime.globalServiceConstructors[1]);
+
+    delete runtime.globalServiceConstructors[2].prototype.constructor;
+    defineGlobalConstructor(runtime.globalServiceConstructors[2].name, runtime.globalServiceConstructors[2]);
+
+    delete runtime.globalServiceConstructors[3].prototype.constructor;
+    defineGlobalConstructor(runtime.globalServiceConstructors[3].name, runtime.globalServiceConstructors[3]);
+
   Object.setPrototypeOf(
     runtime.DocumentPictureInPicture.prototype,
     EventTarget.prototype,
   );
   Object.setPrototypeOf(runtime.DocumentPictureInPicture, EventTarget);
-  do {
+
     {
-  do {
-    installMethod((constructors[("CrashReportContext")]), ("delete"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("CrashReportContext")]), ("initialize"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("CrashReportContext")]), ("set"), (2));
-  } while (false);
-do {
+
+    installMethod(constructors["CrashReportContext"], "delete", 1);
+
+    installMethod(constructors["CrashReportContext"], "initialize", 1);
+
+    installMethod(constructors["CrashReportContext"], "set", 2);
+
     {
-      defineConstructorBacklink((constructors[("CrashReportContext")]).prototype, (constructors[("CrashReportContext")]));
+      defineConstructorBacklink(constructors["CrashReportContext"].prototype, constructors["CrashReportContext"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("CrashReportContext")]).prototype, (constructors[("CrashReportContext")]).name);
+      defineToStringTag(constructors["CrashReportContext"].prototype, constructors["CrashReportContext"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("DocumentPictureInPicture")]), ("window"));
-  } while (false);
-do {
-    installAccessor((constructors[("DocumentPictureInPicture")]), ("onenter"));
-  } while (false);
-do {
-    installMethod((constructors[("DocumentPictureInPicture")]), ("requestWindow"), (0));
-  } while (false);
-do {
+
+    installAccessor(constructors["DocumentPictureInPicture"], "window");
+
+    installAccessor(constructors["DocumentPictureInPicture"], "onenter");
+
+    installMethod(constructors["DocumentPictureInPicture"], "requestWindow", 0);
+
     {
-      defineConstructorBacklink((constructors[("DocumentPictureInPicture")]).prototype, (constructors[("DocumentPictureInPicture")]));
+      defineConstructorBacklink(constructors["DocumentPictureInPicture"].prototype, constructors["DocumentPictureInPicture"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("DocumentPictureInPicture")]).prototype, (constructors[("DocumentPictureInPicture")]).name);
+      defineToStringTag(constructors["DocumentPictureInPicture"].prototype, constructors["DocumentPictureInPicture"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installMethod((constructors[("Fence")]), ("getNestedConfigs"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("Fence")]), ("reportEvent"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("Fence")]), ("setReportEventDataForAutomaticBeacons"), (1));
-  } while (false);
-do {
+
+    installMethod(constructors["Fence"], "getNestedConfigs", 0);
+
+    installMethod(constructors["Fence"], "reportEvent", 1);
+
+    installMethod(constructors["Fence"], "setReportEventDataForAutomaticBeacons", 1);
+
     {
-      defineConstructorBacklink((constructors[("Fence")]).prototype, (constructors[("Fence")]));
+      defineConstructorBacklink(constructors["Fence"].prototype, constructors["Fence"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("Fence")]).prototype, (constructors[("Fence")]).name);
+      defineToStringTag(constructors["Fence"].prototype, constructors["Fence"].name);
     }
-  } while (false);
+
 }
-  } while (false);
-do {
+
     {
-  do {
-    installAccessor((constructors[("Viewport")]), ("segments"));
-  } while (false);
-do {
+
+    installAccessor(constructors["Viewport"], "segments");
+
     {
-      defineConstructorBacklink((constructors[("Viewport")]).prototype, (constructors[("Viewport")]));
+      defineConstructorBacklink(constructors["Viewport"].prototype, constructors["Viewport"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("Viewport")]).prototype, (constructors[("Viewport")]).name);
+      defineToStringTag(constructors["Viewport"].prototype, constructors["Viewport"].name);
     }
-  } while (false);
+
 }
-  } while (false);
+
   installReadonlyGlobal("crashReport", runtime.crashReportGlobal);
   installReadonlyGlobal(
     "documentPictureInPicture",
@@ -140,8 +120,6 @@ do {
   installReadonlyGlobal("fence", () => null);
   installViewportGlobal();
 }
-
-
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

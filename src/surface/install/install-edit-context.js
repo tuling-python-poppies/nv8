@@ -29,107 +29,81 @@ const settable = new Set([
 ]);
 
 export function installEditContext() {
-  do {
-    delete (((runtime.editContextConstructors)[0])).prototype.constructor;
-    defineGlobalConstructor((((runtime.editContextConstructors)[0])).name, (((runtime.editContextConstructors)[0])));
-  } while (false);
-do {
-    delete (((runtime.editContextConstructors)[1])).prototype.constructor;
-    defineGlobalConstructor((((runtime.editContextConstructors)[1])).name, (((runtime.editContextConstructors)[1])));
-  } while (false);
+
+    delete runtime.editContextConstructors[0].prototype.constructor;
+    defineGlobalConstructor(runtime.editContextConstructors[0].name, runtime.editContextConstructors[0]);
+
+    delete runtime.editContextConstructors[1].prototype.constructor;
+    defineGlobalConstructor(runtime.editContextConstructors[1].name, runtime.editContextConstructors[1]);
+
   Object.setPrototypeOf(runtime.EditContext.prototype, EventTarget.prototype);
   Object.setPrototypeOf(runtime.EditContext, EventTarget);
-  do {
+
     {
-  do {
-    installAccessor((constructors[("TextFormat")]), ("rangeStart"));
-  } while (false);
-do {
-    installAccessor((constructors[("TextFormat")]), ("rangeEnd"));
-  } while (false);
-do {
-    installAccessor((constructors[("TextFormat")]), ("underlineStyle"));
-  } while (false);
-do {
-    installAccessor((constructors[("TextFormat")]), ("underlineThickness"));
-  } while (false);
-do {
+
+    installAccessor(constructors["TextFormat"], "rangeStart");
+
+    installAccessor(constructors["TextFormat"], "rangeEnd");
+
+    installAccessor(constructors["TextFormat"], "underlineStyle");
+
+    installAccessor(constructors["TextFormat"], "underlineThickness");
+
     {
-      defineConstructorBacklink((constructors[("TextFormat")]).prototype, (constructors[("TextFormat")]));
+      defineConstructorBacklink(constructors["TextFormat"].prototype, constructors["TextFormat"]);
     }
-  } while (false);
-do {
+
     {
-      defineToStringTag((constructors[("TextFormat")]).prototype, (constructors[("TextFormat")]).name);
+      defineToStringTag(constructors["TextFormat"].prototype, constructors["TextFormat"].name);
     }
-  } while (false);
-}
-  } while (false);
-do {
-    {
-  do {
-    installAccessor((constructors[("EditContext")]), ("text"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("selectionStart"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("selectionEnd"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("characterBoundsRangeStart"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("ontextupdate"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("ontextformatupdate"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("oncharacterboundsupdate"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("oncompositionstart"));
-  } while (false);
-do {
-    installAccessor((constructors[("EditContext")]), ("oncompositionend"));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("attachedElements"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("characterBounds"), (0));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("updateCharacterBounds"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("updateControlBounds"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("updateSelection"), (2));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("updateSelectionBounds"), (1));
-  } while (false);
-do {
-    installMethod((constructors[("EditContext")]), ("updateText"), (3));
-  } while (false);
-do {
-    {
-      defineConstructorBacklink((constructors[("EditContext")]).prototype, (constructors[("EditContext")]));
-    }
-  } while (false);
-do {
-    {
-      defineToStringTag((constructors[("EditContext")]).prototype, (constructors[("EditContext")]).name);
-    }
-  } while (false);
-}
-  } while (false);
+
 }
 
+    {
 
+    installAccessor(constructors["EditContext"], "text");
+
+    installAccessor(constructors["EditContext"], "selectionStart");
+
+    installAccessor(constructors["EditContext"], "selectionEnd");
+
+    installAccessor(constructors["EditContext"], "characterBoundsRangeStart");
+
+    installAccessor(constructors["EditContext"], "ontextupdate");
+
+    installAccessor(constructors["EditContext"], "ontextformatupdate");
+
+    installAccessor(constructors["EditContext"], "oncharacterboundsupdate");
+
+    installAccessor(constructors["EditContext"], "oncompositionstart");
+
+    installAccessor(constructors["EditContext"], "oncompositionend");
+
+    installMethod(constructors["EditContext"], "attachedElements", 0);
+
+    installMethod(constructors["EditContext"], "characterBounds", 0);
+
+    installMethod(constructors["EditContext"], "updateCharacterBounds", 2);
+
+    installMethod(constructors["EditContext"], "updateControlBounds", 1);
+
+    installMethod(constructors["EditContext"], "updateSelection", 2);
+
+    installMethod(constructors["EditContext"], "updateSelectionBounds", 1);
+
+    installMethod(constructors["EditContext"], "updateText", 3);
+
+    {
+      defineConstructorBacklink(constructors["EditContext"].prototype, constructors["EditContext"]);
+    }
+
+    {
+      defineToStringTag(constructors["EditContext"].prototype, constructors["EditContext"].name);
+    }
+
+}
+
+}
 
 function installAccessor(Constructor, name) {
   const descriptor = Object.getOwnPropertyDescriptor({

@@ -13,27 +13,23 @@ import {
 import { registerNativeGetter } from "../../engine/webidl/native-function.js";
 
 export function installCompressionStreams() {
-  do {
-    delete ((([CompressionStream, DecompressionStream])[0])).prototype.constructor;
-    defineGlobalConstructor(((([CompressionStream, DecompressionStream])[0])).name, ((([CompressionStream, DecompressionStream])[0])));
-  } while (false);
-do {
-    delete ((([CompressionStream, DecompressionStream])[1])).prototype.constructor;
-    defineGlobalConstructor(((([CompressionStream, DecompressionStream])[1])).name, ((([CompressionStream, DecompressionStream])[1])));
-  } while (false);
-  do {
-    getter(CompressionStream, ("readable"), compressionProperty);
-  } while (false);
-do {
-    getter(CompressionStream, ("writable"), compressionProperty);
-  } while (false);
+
+    delete CompressionStream.prototype.constructor;
+    defineGlobalConstructor(CompressionStream.name, CompressionStream);
+
+    delete DecompressionStream.prototype.constructor;
+    defineGlobalConstructor(DecompressionStream.name, DecompressionStream);
+
+    getter(CompressionStream, "readable", compressionProperty);
+
+    getter(CompressionStream, "writable", compressionProperty);
+
   finish(CompressionStream);
-  do {
-    getter(DecompressionStream, ("readable"), decompressionProperty);
-  } while (false);
-do {
-    getter(DecompressionStream, ("writable"), decompressionProperty);
-  } while (false);
+
+    getter(DecompressionStream, "readable", decompressionProperty);
+
+    getter(DecompressionStream, "writable", decompressionProperty);
+
   finish(DecompressionStream);
 }
 

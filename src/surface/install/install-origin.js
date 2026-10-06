@@ -16,25 +16,21 @@ import {
 export function installOrigin() {
   delete runtime.Origin.prototype.constructor;
   defineGlobalConstructor("Origin", runtime.Origin);
-  do {
-    installAccessor(("opaque"));
-  } while (false);
-do {
-    installMethod(("isSameOrigin"), (1));
-  } while (false);
-do {
-    installMethod(("isSameSite"), (1));
-  } while (false);
-do {
+
+    installAccessor("opaque");
+
+    installMethod("isSameOrigin", 1);
+
+    installMethod("isSameSite", 1);
+
     {
       defineConstructorBacklink(runtime.Origin.prototype, runtime.Origin);
     }
-  } while (false);
-do {
+
     {
       defineToStringTag(runtime.Origin.prototype, "Origin");
     }
-  } while (false);
+
   defineStaticMethod(runtime.Origin, "from", runtime.originFrom, 1);
   installOriginGlobal();
 }
