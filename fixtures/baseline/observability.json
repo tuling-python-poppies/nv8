@@ -1,8 +1,8 @@
 {
   "schema": "nv8/baseline/observability@1",
   "trace": {
-    "count": 38,
-    "digest": "c76c256334c59e59",
+    "count": 39,
+    "digest": "83f09918cfd60b1c",
     "entries": [
       {
         "operation": "construct",
@@ -268,6 +268,13 @@
         "receiver": "URL",
         "argumentTypes": [],
         "result": "https://api.example.test/baseline"
+      },
+      {
+        "operation": "get",
+        "api": "window.URL.prototype.origin",
+        "receiver": "URL",
+        "argumentTypes": [],
+        "result": "https://api.example.test"
       },
       {
         "operation": "get",
