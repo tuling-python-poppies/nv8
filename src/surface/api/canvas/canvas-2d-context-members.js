@@ -1,30 +1,3 @@
-export * from "./canvas-2d-context-lang-property.js";
-export * from "./canvas-2d-context-font-property.js";
-export * from "./canvas-2d-context-text-align-property.js";
-export * from "./canvas-2d-context-text-baseline-property.js";
-export * from "./canvas-2d-context-direction-property.js";
-export * from "./canvas-2d-context-font-kerning-property.js";
-export * from "./canvas-2d-context-font-stretch-property.js";
-export * from "./canvas-2d-context-font-variant-caps-property.js";
-export * from "./canvas-2d-context-letter-spacing-property.js";
-export * from "./canvas-2d-context-text-rendering-property.js";
-export * from "./canvas-2d-context-word-spacing-property.js";
-export * from "./canvas-2d-context-global-composite-operation-property.js";
-export * from "./canvas-2d-context-filter-property.js";
-export * from "./canvas-2d-context-image-smoothing-quality-property.js";
-export * from "./canvas-2d-context-stroke-style-property.js";
-export * from "./canvas-2d-context-fill-style-property.js";
-export * from "./canvas-2d-context-shadow-color-property.js";
-export * from "./canvas-2d-context-line-cap-property.js";
-export * from "./canvas-2d-context-line-join-property.js";
-export * from "./canvas-2d-context-global-alpha-property.js";
-export * from "./canvas-2d-context-image-smoothing-enabled-property.js";
-export * from "./canvas-2d-context-shadow-offset-x-property.js";
-export * from "./canvas-2d-context-shadow-offset-y-property.js";
-export * from "./canvas-2d-context-shadow-blur-property.js";
-export * from "./canvas-2d-context-line-width-property.js";
-export * from "./canvas-2d-context-miter-limit-property.js";
-export * from "./canvas-2d-context-line-dash-offset-property.js";
 export * from "./canvas-2d-context-draw-focus-if-needed.js";
 import { canvasContextMethod } from "./canvas-2d-context-method.js";
 import {
@@ -140,3 +113,40 @@ export const translate = canvasContextMethod("translate", 2, translateOperation)
 import { canvasContextReadonlyProperty } from "./canvas-2d-context-property.js";
 
 export const canvas = canvasContextReadonlyProperty("canvas", state => state.canvas);
+
+import { canvasContextProperty } from "./canvas-2d-context-property.js";
+
+const CANVAS_CONTEXT_PROPERTY_TABLE_ROWS = [
+  ["direction"],
+  ["fillStyle"],
+  ["filter"],
+  ["fontKerning"],
+  ["font"],
+  ["fontStretch"],
+  ["fontVariantCaps"],
+  ["globalAlpha"],
+  ["globalCompositeOperation"],
+  ["imageSmoothingEnabled"],
+  ["imageSmoothingQuality"],
+  ["lang"],
+  ["letterSpacing"],
+  ["lineCap"],
+  ["lineDashOffset"],
+  ["lineJoin"],
+  ["lineWidth"],
+  ["miterLimit"],
+  ["shadowBlur"],
+  ["shadowColor"],
+  ["shadowOffsetX"],
+  ["shadowOffsetY"],
+  ["strokeStyle"],
+  ["textAlign"],
+  ["textBaseline"],
+  ["textRendering"],
+  ["wordSpacing"],
+];
+
+export const canvasContextPropertyTable = CANVAS_CONTEXT_PROPERTY_TABLE_ROWS.map(
+  ([name, ...args]) => [name, canvasContextProperty(name, ...args)],
+);
+

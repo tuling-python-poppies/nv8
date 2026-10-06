@@ -1,9 +1,16 @@
-// canvas 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// canvas 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { imageDataGetter } from "./image-data-getter.js";
 
-export const colorSpace = imageDataGetter("colorSpace");
-export const data = imageDataGetter("data");
-export const height = imageDataGetter("height");
-export const pixelFormat = imageDataGetter("pixelFormat");
-export const width = imageDataGetter("width");
+const IMAGE_DATA_GETTER_TABLE_ROWS = [
+  ["colorSpace"],
+  ["data"],
+  ["height"],
+  ["pixelFormat"],
+  ["width"],
+];
+
+export const imageDataGetterTable = IMAGE_DATA_GETTER_TABLE_ROWS.map(
+  ([name, ...args]) => [name, imageDataGetter(name, ...args)],
+);
+

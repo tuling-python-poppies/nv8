@@ -13,21 +13,13 @@ import {
   HTMLCanvasElement,
   installHTMLCanvasElementConstructor,
 } from "../api/canvas/html-canvas-element-constructor.js";
-import {
-  height,
-  setHeight,
-} from "../api/canvas/html-canvas-element-height-property.js";
 import { toBlob } from "../api/canvas/html-canvas-element-to-blob.js";
 import { toDataURL } from "../api/canvas/html-canvas-element-to-data-url.js";
-import {
-  width,
-  setWidth,
-} from "../api/canvas/html-canvas-element-width-property.js";
+import { htmlCanvasDimensionPropertyTable } from "../api/canvas/html-canvas-dimension-property-members.js";
 
 export function installHTMLCanvasElement() {
   installHTMLCanvasElementConstructor();
-  definePrototypeAccessor(HTMLCanvasElement.prototype, "width", width, setWidth);
-  definePrototypeAccessor(HTMLCanvasElement.prototype, "height", height, setHeight);
+  for (const [name, entry] of htmlCanvasDimensionPropertyTable) definePrototypeAccessor(HTMLCanvasElement.prototype, name, entry.get, entry.set);
   definePrototypeMethod(HTMLCanvasElement.prototype, "captureStream", captureStream);
   definePrototypeMethod(HTMLCanvasElement.prototype, "getContext", getContext);
   definePrototypeMethod(HTMLCanvasElement.prototype, "toBlob", toBlob);

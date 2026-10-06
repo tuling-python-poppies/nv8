@@ -1,6 +1,13 @@
-// canvas 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// canvas 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { textMetricsNumberGetter } from "./text-metrics-number-getter.js";
 
-export const hangingBaseline = textMetricsNumberGetter("hangingBaseline");
-export const width = textMetricsNumberGetter("width");
+const TEXT_METRICS_NUMBER_GETTER_TABLE_ROWS = [
+  ["hangingBaseline"],
+  ["width"],
+];
+
+export const textMetricsNumberGetterTable = TEXT_METRICS_NUMBER_GETTER_TABLE_ROWS.map(
+  ([name, ...args]) => [name, textMetricsNumberGetter(name, ...args)],
+);
+

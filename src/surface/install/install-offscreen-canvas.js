@@ -14,10 +14,6 @@ import {
   transferToImageBitmap,
 } from "../api/canvas/offscreen-canvas-method-members.js";
 import {
-  height,
-  setHeight,
-} from "../api/canvas/offscreen-canvas-height-property.js";
-import {
   oncontextlost,
   setOncontextlost,
 } from "../api/canvas/offscreen-canvas-oncontextlost-property.js";
@@ -25,15 +21,11 @@ import {
   oncontextrestored,
   setOncontextrestored,
 } from "../api/canvas/offscreen-canvas-oncontextrestored-property.js";
-import {
-  width,
-  setWidth,
-} from "../api/canvas/offscreen-canvas-width-property.js";
+import { dimensionPropertyTable } from "../api/canvas/dimension-property-members.js";
 
 export function installOffscreenCanvas() {
   installOffscreenCanvasConstructor();
-  definePrototypeAccessor(OffscreenCanvas.prototype, "width", width, setWidth);
-  definePrototypeAccessor(OffscreenCanvas.prototype, "height", height, setHeight);
+  for (const [name, entry] of dimensionPropertyTable) definePrototypeAccessor(OffscreenCanvas.prototype, name, entry.get, entry.set);
   definePrototypeAccessor(
     OffscreenCanvas.prototype,
     "oncontextlost",

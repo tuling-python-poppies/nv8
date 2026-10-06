@@ -7,33 +7,21 @@ import { addPath } from "../api/canvas/path-2d-add-path.js";
 import { arc } from "../api/canvas/path-2d-arc.js";
 import { arcTo } from "../api/canvas/path-2d-arc-to.js";
 import {
-  bezierCurveTo,
-  closePath,
-  lineTo,
-  moveTo,
-  quadraticCurveTo,
-  rect,
-  roundRect,
-} from "../api/canvas/path-command-members.js";
-import {
   Path2D,
   installPath2DConstructor,
 } from "../api/canvas/path-2d-constructor.js";
 import { ellipse } from "../api/canvas/path-2d-ellipse.js";
+import { pathCommandTable } from "../api/canvas/path-command-members.js";
 
 export function installPath2D() {
   installPath2DConstructor();
   method("addPath", addPath);
-  method("roundRect", roundRect);
+  for (const [name, entry] of pathCommandTable) method(name, entry);
   method("arc", arc);
   method("arcTo", arcTo);
-  method("bezierCurveTo", bezierCurveTo);
-  method("closePath", closePath);
+  for (const [name, entry] of pathCommandTable) method(name, entry);
   method("ellipse", ellipse);
-  method("lineTo", lineTo);
-  method("moveTo", moveTo);
-  method("quadraticCurveTo", quadraticCurveTo);
-  method("rect", rect);
+  for (const [name, entry] of pathCommandTable) method(name, entry);
   defineConstructorBacklink(Path2D.prototype, Path2D);
   defineToStringTag(Path2D.prototype, "Path2D");
 }
