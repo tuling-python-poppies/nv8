@@ -4,16 +4,27 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
+  cite,
+  setCite,
+} from "../api/dom/html-mod-element-cite-property.js";
+import {
   HTMLModElement,
   installHTMLModElementConstructor,
 } from "../api/dom/html-mod-element-constructor.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
-import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
+import {
+  dateTime,
+  setDateTime,
+} from "../api/dom/html-mod-element-date-time-property.js";
 
 export function installHTMLModElement() {
   installHTMLModElementConstructor();
-  for (const [name, entry] of urlReflectionTable) definePrototypeAccessor(HTMLModElement.prototype, name, entry.get, entry.set);
-  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLModElement.prototype, name, entry.get, entry.set, );
+  definePrototypeAccessor(HTMLModElement.prototype, "cite", cite, setCite);
+  definePrototypeAccessor(
+    HTMLModElement.prototype,
+    "dateTime",
+    dateTime,
+    setDateTime,
+  );
   defineConstructorBacklink(HTMLModElement.prototype, HTMLModElement);
   defineToStringTag(HTMLModElement.prototype, "HTMLModElement");
 }

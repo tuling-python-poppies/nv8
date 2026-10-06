@@ -131,16 +131,50 @@ import {
   definePrototypeGetter,
   definePrototypeMethod,
 } from "../../engine/webidl/descriptor.js";
+import { slot, setSlot } from "../api/dom/element-slot-property.js";
 import { part } from "../api/dom/element-part-getter.js";
+import { scrollTop, setScrollTop } from "../api/dom/element-scroll-top-property.js";
+import { scrollLeft, setScrollLeft } from "../api/dom/element-scroll-left-property.js";
 import { scrollWidth } from "../api/dom/element-scroll-width-getter.js";
 import { scrollHeight } from "../api/dom/element-scroll-height-getter.js";
 import { clientTop } from "../api/dom/element-client-top-getter.js";
 import { clientLeft } from "../api/dom/element-client-left-getter.js";
 import { clientWidth } from "../api/dom/element-client-width-getter.js";
 import { clientHeight } from "../api/dom/element-client-height-getter.js";
+import { onbeforecopy, setOnbeforecopy } from "../api/dom/element-onbeforecopy-property.js";
+import { onbeforecut, setOnbeforecut } from "../api/dom/element-onbeforecut-property.js";
+import { onbeforepaste, setOnbeforepaste } from "../api/dom/element-onbeforepaste-property.js";
+import { onsearch, setOnsearch } from "../api/dom/element-onsearch-property.js";
+import { elementTiming, setElementTiming } from "../api/dom/element-element-timing-property.js";
+import { onfullscreenchange, setOnfullscreenchange } from "../api/dom/element-onfullscreenchange-property.js";
+import { onfullscreenerror, setOnfullscreenerror } from "../api/dom/element-onfullscreenerror-property.js";
+import { onwebkitfullscreenchange, setOnwebkitfullscreenchange } from "../api/dom/element-onwebkitfullscreenchange-property.js";
+import { onwebkitfullscreenerror, setOnwebkitfullscreenerror } from "../api/dom/element-onwebkitfullscreenerror-property.js";
 import * as aria from "../api/dom/element-aria-members.js";
 import { previousElementSibling } from "../api/dom/element-previous-element-sibling-getter.js";
 import { nextElementSibling } from "../api/dom/element-next-element-sibling-getter.js";
+import {
+  checkVisibility,
+  getAnimations,
+  getElementsByTagNameNS,
+  getHTML,
+  hasPointerCapture,
+  insertAdjacentElement,
+  insertAdjacentHTML,
+  insertAdjacentText,
+  moveBefore,
+  releasePointerCapture,
+  scroll,
+  scrollBy,
+  scrollIntoView,
+  scrollIntoViewIfNeeded,
+  scrollTo,
+  setHTMLUnsafe,
+  setPointerCapture,
+  webkitMatchesSelector,
+  ariaNotify,
+  setHTML,
+} from "../api/dom/element-extended-method-members.js";
 import { getBoundingClientRect } from "../api/dom/element-get-bounding-client-rect.js";
 import { getClientRects } from "../api/dom/element-get-client-rects.js";
 import { computedStyleMap } from "../api/dom/element-computed-style-map.js";
@@ -153,10 +187,6 @@ import { currentCSSZoom } from "../api/dom/element-current-css-zoom-getter.js";
 import { customElementRegistry } from "../api/dom/element-custom-element-registry-getter.js";
 import { activeViewTransition } from "../api/dom/element-active-view-transition-getter.js";
 import { startViewTransition } from "../api/dom/element-start-view-transition.js";
-import { elementStringPropertyTable } from "../api/dom/element-string-property-members.js";
-import { elementExtendedMethodTable } from "../api/dom/element-extended-method-members.js";
-import { elementHandlerPropertyTable } from "../api/dom/element-handler-property-members.js";
-import { elementNumberPropertyTable } from "../api/dom/element-number-property-members.js";
 
 export function installElement() {
   installElementConstructor();
@@ -167,22 +197,96 @@ export function installElement() {
   installElementId();
   installElementClassName();
   installElementClassList();
-  for (const [name, entry] of elementStringPropertyTable) accessor(name, entry.get, entry.set);
+  accessor("slot", slot, setSlot);
   installElementAttributes();
   installElementShadowRoot();
   getter("part", part);
   installElementAssignedSlot();
   installElementInnerHTML();
   installElementOuterHTML();
-  for (const [name, entry] of elementNumberPropertyTable) accessor(name, entry.get, entry.set);
+  accessor("scrollTop", scrollTop, setScrollTop);
+  accessor("scrollLeft", scrollLeft, setScrollLeft);
   getter("scrollWidth", scrollWidth);
   getter("scrollHeight", scrollHeight);
   getter("clientTop", clientTop);
   getter("clientLeft", clientLeft);
   getter("clientWidth", clientWidth);
   getter("clientHeight", clientHeight);
-  for (const [name, entry] of elementHandlerPropertyTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);
+  accessor("onbeforecopy", onbeforecopy, setOnbeforecopy);
+  accessor("onbeforecut", onbeforecut, setOnbeforecut);
+  accessor("onbeforepaste", onbeforepaste, setOnbeforepaste);
+  accessor("onsearch", onsearch, setOnsearch);
+  accessor("elementTiming", elementTiming, setElementTiming);
+  accessor("onfullscreenchange", onfullscreenchange, setOnfullscreenchange);
+  accessor("onfullscreenerror", onfullscreenerror, setOnfullscreenerror);
+  accessor(
+    "onwebkitfullscreenchange",
+    onwebkitfullscreenchange,
+    setOnwebkitfullscreenchange,
+  );
+  accessor(
+    "onwebkitfullscreenerror",
+    onwebkitfullscreenerror,
+    setOnwebkitfullscreenerror,
+  );
+  accessor("role", aria.role, aria.setRole);
+  accessor("ariaAtomic", aria.ariaAtomic, aria.setAriaAtomic);
+  accessor("ariaAutoComplete", aria.ariaAutoComplete, aria.setAriaAutoComplete);
+  accessor("ariaBusy", aria.ariaBusy, aria.setAriaBusy);
+  accessor("ariaBrailleLabel", aria.ariaBrailleLabel, aria.setAriaBrailleLabel);
+  accessor(
+    "ariaBrailleRoleDescription",
+    aria.ariaBrailleRoleDescription,
+    aria.setAriaBrailleRoleDescription,
+  );
+  accessor("ariaChecked", aria.ariaChecked, aria.setAriaChecked);
+  accessor("ariaColCount", aria.ariaColCount, aria.setAriaColCount);
+  accessor("ariaColIndex", aria.ariaColIndex, aria.setAriaColIndex);
+  accessor("ariaColSpan", aria.ariaColSpan, aria.setAriaColSpan);
+  accessor("ariaCurrent", aria.ariaCurrent, aria.setAriaCurrent);
+  accessor("ariaDescription", aria.ariaDescription, aria.setAriaDescription);
+  accessor("ariaDisabled", aria.ariaDisabled, aria.setAriaDisabled);
+  accessor("ariaExpanded", aria.ariaExpanded, aria.setAriaExpanded);
+  accessor("ariaHasPopup", aria.ariaHasPopup, aria.setAriaHasPopup);
+  accessor("ariaHidden", aria.ariaHidden, aria.setAriaHidden);
+  accessor("ariaInvalid", aria.ariaInvalid, aria.setAriaInvalid);
+  accessor(
+    "ariaKeyShortcuts",
+    aria.ariaKeyShortcuts,
+    aria.setAriaKeyShortcuts,
+  );
+  accessor("ariaLabel", aria.ariaLabel, aria.setAriaLabel);
+  accessor("ariaLevel", aria.ariaLevel, aria.setAriaLevel);
+  accessor("ariaLive", aria.ariaLive, aria.setAriaLive);
+  accessor("ariaModal", aria.ariaModal, aria.setAriaModal);
+  accessor("ariaMultiLine", aria.ariaMultiLine, aria.setAriaMultiLine);
+  accessor(
+    "ariaMultiSelectable",
+    aria.ariaMultiSelectable,
+    aria.setAriaMultiSelectable,
+  );
+  accessor("ariaOrientation", aria.ariaOrientation, aria.setAriaOrientation);
+  accessor("ariaPlaceholder", aria.ariaPlaceholder, aria.setAriaPlaceholder);
+  accessor("ariaPosInSet", aria.ariaPosInSet, aria.setAriaPosInSet);
+  accessor("ariaPressed", aria.ariaPressed, aria.setAriaPressed);
+  accessor("ariaReadOnly", aria.ariaReadOnly, aria.setAriaReadOnly);
+  accessor("ariaRelevant", aria.ariaRelevant, aria.setAriaRelevant);
+  accessor("ariaRequired", aria.ariaRequired, aria.setAriaRequired);
+  accessor(
+    "ariaRoleDescription",
+    aria.ariaRoleDescription,
+    aria.setAriaRoleDescription,
+  );
+  accessor("ariaRowCount", aria.ariaRowCount, aria.setAriaRowCount);
+  accessor("ariaRowIndex", aria.ariaRowIndex, aria.setAriaRowIndex);
+  accessor("ariaRowSpan", aria.ariaRowSpan, aria.setAriaRowSpan);
+  accessor("ariaSelected", aria.ariaSelected, aria.setAriaSelected);
+  accessor("ariaSetSize", aria.ariaSetSize, aria.setAriaSetSize);
+  accessor("ariaSort", aria.ariaSort, aria.setAriaSort);
+  accessor("ariaValueMax", aria.ariaValueMax, aria.setAriaValueMax);
+  accessor("ariaValueMin", aria.ariaValueMin, aria.setAriaValueMin);
+  accessor("ariaValueNow", aria.ariaValueNow, aria.setAriaValueNow);
+  accessor("ariaValueText", aria.ariaValueText, aria.setAriaValueText);
   installElementChildren();
   installElementFirstElementChild();
   installElementLastElementChild();
@@ -194,9 +298,10 @@ export function installElement() {
   installElementAppend();
   installElementAttachShadow();
   installElementBefore();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
+  method("checkVisibility", checkVisibility);
   installElementClosest();
   method("computedStyleMap", computedStyleMap);
+  method("getAnimations", getAnimations);
   installElementGetAttribute();
   installElementGetAttributeNS();
   installElementGetAttributeNames();
@@ -206,13 +311,21 @@ export function installElement() {
   method("getClientRects", getClientRects);
   installElementGetElementsByClassName();
   installElementGetElementsByTagName();
+  method("getElementsByTagNameNS", getElementsByTagNameNS);
+  method("getHTML", getHTML);
   installElementHasAttribute();
   installElementHasAttributeNS();
   installElementHasAttributes();
+  method("hasPointerCapture", hasPointerCapture);
+  method("insertAdjacentElement", insertAdjacentElement);
+  method("insertAdjacentHTML", insertAdjacentHTML);
+  method("insertAdjacentText", insertAdjacentText);
   installElementMatches();
+  method("moveBefore", moveBefore);
   installElementPrepend();
   installElementQuerySelector();
   installElementQuerySelectorAll();
+  method("releasePointerCapture", releasePointerCapture);
   installElementRemove();
   installElementRemoveAttribute();
   installElementRemoveAttributeNS();
@@ -221,18 +334,77 @@ export function installElement() {
   installElementReplaceWith();
   method("requestFullscreen", requestFullscreen);
   method("requestPointerLock", requestPointerLock);
+  method("scroll", scroll);
+  method("scrollBy", scrollBy);
+  method("scrollIntoView", scrollIntoView);
+  method("scrollIntoViewIfNeeded", scrollIntoViewIfNeeded);
+  method("scrollTo", scrollTo);
   installElementSetAttribute();
   installElementSetAttributeNS();
   installElementSetAttributeNode();
   installElementSetAttributeNodeNS();
+  method("setHTMLUnsafe", setHTMLUnsafe);
+  method("setPointerCapture", setPointerCapture);
   installElementToggleAttribute();
+  method("webkitMatchesSelector", webkitMatchesSelector);
   method("webkitRequestFullScreen", webkitRequestFullScreen);
   method("webkitRequestFullscreen", webkitRequestFullscreen);
   getter("currentCSSZoom", currentCSSZoom);
   getter("customElementRegistry", customElementRegistry);
   getter("activeViewTransition", activeViewTransition);
-  for (const [name, entry] of aria.ariaElementPropertyTable) accessor( name, entry.get, entry.set, );
+  accessor(
+    "ariaColIndexText",
+    aria.ariaColIndexText,
+    aria.setAriaColIndexText,
+  );
+  accessor(
+    "ariaRowIndexText",
+    aria.ariaRowIndexText,
+    aria.setAriaRowIndexText,
+  );
+  accessor(
+    "ariaActiveDescendantElement",
+    aria.ariaActiveDescendantElement,
+    aria.setAriaActiveDescendantElement,
+  );
+  accessor(
+    "ariaActionsElements",
+    aria.ariaActionsElements,
+    aria.setAriaActionsElements,
+  );
+  accessor(
+    "ariaControlsElements",
+    aria.ariaControlsElements,
+    aria.setAriaControlsElements,
+  );
+  accessor(
+    "ariaDescribedByElements",
+    aria.ariaDescribedByElements,
+    aria.setAriaDescribedByElements,
+  );
+  accessor(
+    "ariaDetailsElements",
+    aria.ariaDetailsElements,
+    aria.setAriaDetailsElements,
+  );
+  accessor(
+    "ariaErrorMessageElements",
+    aria.ariaErrorMessageElements,
+    aria.setAriaErrorMessageElements,
+  );
+  accessor(
+    "ariaFlowToElements",
+    aria.ariaFlowToElements,
+    aria.setAriaFlowToElements,
+  );
+  accessor(
+    "ariaLabelledByElements",
+    aria.ariaLabelledByElements,
+    aria.setAriaLabelledByElements,
+  );
+  method("ariaNotify", ariaNotify);
   method("pseudo", pseudo);
+  method("setHTML", setHTML);
   method("startViewTransition", startViewTransition);
   finishElementConstructor();
 }

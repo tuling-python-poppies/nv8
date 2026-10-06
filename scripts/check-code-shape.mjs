@@ -10,6 +10,10 @@
  * 两条规则都不需要新依赖，判定逻辑在 `scripts/source-shape.mjs`。
  * 规则 2 只针对「内联 + 常量下标」这个组合，声明式的成员表重复出现不会误报。
  *
+ * 3. 相对 import / re-export 指向的文件不存在（悬空导入）——ESM 链接期才报，静态检查看不见
+ * 4. `for (const [name, entry] of xxxTable)` 里的 xxxTable 在本文件里没有绑定
+ *    ——运行时才 ReferenceError，`node --check` 与基线都发现不了
+ *
  * 用法：`node scripts/check-code-shape.mjs`（不一致时非零退出）
  */
 
@@ -19,6 +23,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { countIdleLoops, findIndexedLiterals, maskSource } from './source-shape.mjs';
+import { existsSync } from 'node:fs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
@@ -40,13 +45,40 @@ async function main() {
   const files = await collectFiles(SRC);
   const idleLoops = [];
   const indexedLiterals = [];
+  const danglingImports = [];
+  const unboundTables = [];
 
   for (const file of files) {
-    const masked = maskSource(await readFile(file, 'utf8'));
+    const original = await readFile(file, 'utf8');
+    const masked = maskSource(original);
     const loops = countIdleLoops(masked);
     if (loops > 0) idleLoops.push({ file, count: loops });
     const indexed = findIndexedLiterals(masked);
     if (indexed.length > 0) indexedLiterals.push({ file, count: indexed.length });
+
+    // 规则 3：相对 import / re-export 的目标必须存在（ESM 链接期才报，静态检查看不见）。
+    // 必须在**原文**上找：挖空后的文本把字符串内容抹掉了，路径本身就没法看见了。
+    for (const line of original.split('\n')) {
+      const trimmed = line.trim();
+      if (!/^(?:import|export)\b/.test(trimmed)) continue;
+      const match = /from\s*["'](\.[^"']+)["']/.exec(trimmed);
+      if (match === null) continue;
+      if (!existsSync(path.resolve(path.dirname(file), match[1]))) {
+        danglingImports.push({ file, specifier: match[1] });
+      }
+    }
+
+    // 规则 4：`of xxxTable)` 里的名字必须有绑定（否则运行时 ReferenceError）
+    const bound = new Set();
+    for (const match of masked.matchAll(/import\s*\{([^}]*)\}\s*from/g)) {
+      for (const name of match[1].split(',').map((value) => value.trim()).filter(Boolean)) bound.add(name);
+    }
+    for (const match of masked.matchAll(/import\s*\*\s*as\s+([\w$]+)/g)) bound.add(match[1]);
+    for (const match of masked.matchAll(/\b(?:const|let|var|function|class)\s+([\w$]+)/g)) bound.add(match[1]);
+    for (const match of masked.matchAll(/of\s+((?:[\w$]+\.)?[\w$]*Table)\s*\)/g)) {
+      const base = match[1].includes('.') ? match[1].split('.')[0] : match[1];
+      if (!bound.has(base)) unboundTables.push({ file, reference: match[1] });
+    }
   }
 
   let failed = false;
@@ -66,6 +98,22 @@ async function main() {
     console.error(`\n内联数组字面量被常量下标取值：${indexedLiterals.length} 个文件、${total} 处`);
     for (const entry of indexedLiterals.slice(0, REPORT_LIMIT)) {
       console.error(`  ${String(entry.count).padStart(5)}  ${path.relative(ROOT, entry.file)}`);
+    }
+  }
+
+  if (danglingImports.length > 0) {
+    failed = true;
+    console.error(`\n悬空导入（指向不存在的文件）：${danglingImports.length} 处`);
+    for (const entry of danglingImports.slice(0, REPORT_LIMIT)) {
+      console.error(`  ${path.relative(ROOT, entry.file)} -> ${entry.specifier}`);
+    }
+  }
+
+  if (unboundTables.length > 0) {
+    failed = true;
+    console.error(`\n表引用没有绑定（运行时 ReferenceError）：${unboundTables.length} 处`);
+    for (const entry of unboundTables.slice(0, REPORT_LIMIT)) {
+      console.error(`  ${path.relative(ROOT, entry.file)}  未绑定: ${entry.reference}`);
     }
   }
 

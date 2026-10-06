@@ -4,16 +4,32 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
+  disabled,
+  setDisabled,
+} from "../api/dom/html-opt-group-element-disabled-property.js";
+import {
   HTMLOptGroupElement,
   installHTMLOptGroupElementConstructor,
 } from "../api/dom/html-opt-group-element-constructor.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import {
+  label,
+  setLabel,
+} from "../api/dom/html-opt-group-element-label-property.js";
 
 export function installHTMLOptGroupElement() {
   installHTMLOptGroupElementConstructor();
-  for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLOptGroupElement.prototype, name, entry.get, entry.set, );
-  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLOptGroupElement.prototype, name, entry.get, entry.set, );
+  definePrototypeAccessor(
+    HTMLOptGroupElement.prototype,
+    "disabled",
+    disabled,
+    setDisabled,
+  );
+  definePrototypeAccessor(
+    HTMLOptGroupElement.prototype,
+    "label",
+    label,
+    setLabel,
+  );
   defineConstructorBacklink(
     HTMLOptGroupElement.prototype,
     HTMLOptGroupElement,

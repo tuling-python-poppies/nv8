@@ -11,15 +11,23 @@ import {
   form,
 } from "../api/dom/html-label-element-form-getter.js";
 import {
+  htmlFor,
+  setHtmlFor,
+} from "../api/dom/html-label-element-html-for-property.js";
+import {
   HTMLLabelElement,
   installHTMLLabelElementConstructor,
 } from "../api/dom/html-label-element-constructor.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLLabelElement() {
   installHTMLLabelElementConstructor();
   definePrototypeGetter(HTMLLabelElement.prototype, "form", form);
-  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLLabelElement.prototype, name, entry.get, entry.set, );
+  definePrototypeAccessor(
+    HTMLLabelElement.prototype,
+    "htmlFor",
+    htmlFor,
+    setHtmlFor,
+  );
   definePrototypeGetter(HTMLLabelElement.prototype, "control", control);
   defineConstructorBacklink(HTMLLabelElement.prototype, HTMLLabelElement);
   defineToStringTag(HTMLLabelElement.prototype, "HTMLLabelElement");

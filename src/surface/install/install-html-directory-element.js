@@ -4,14 +4,22 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
+  compact,
+  setCompact,
+} from "../api/dom/html-directory-element-compact-property.js";
+import {
   HTMLDirectoryElement,
   installHTMLDirectoryElementConstructor,
 } from "../api/dom/html-directory-element-constructor.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLDirectoryElement() {
   installHTMLDirectoryElementConstructor();
-  for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLDirectoryElement.prototype, name, entry.get, entry.set, );
+  definePrototypeAccessor(
+    HTMLDirectoryElement.prototype,
+    "compact",
+    compact,
+    setCompact,
+  );
   defineConstructorBacklink(
     HTMLDirectoryElement.prototype,
     HTMLDirectoryElement,

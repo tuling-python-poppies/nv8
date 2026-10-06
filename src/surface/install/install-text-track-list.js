@@ -11,13 +11,16 @@ import {
 } from "../api/media/text-track-list-constructor.js";
 import { getTrackById } from "../api/media/text-track-list-get-track-by-id.js";
 import { length } from "../api/media/text-track-list-length-getter.js";
+import { onaddtrack, setOnaddtrack } from "../api/media/text-track-list-onaddtrack-property.js";
+import { onchange, setOnchange } from "../api/media/text-track-list-onchange-property.js";
+import { onremovetrack, setOnremovetrack } from "../api/media/text-track-list-onremovetrack-property.js";
 import { values } from "../api/media/text-track-list-values.js";
-import { textTrackListHandlerPropertyTable } from "../api/media/text-track-list-handler-property-members.js";
-
 export function installTextTrackList() {
   installTextTrackListConstructor();
   definePrototypeGetter(TextTrackList.prototype, "length", length);
-  for (const [name, entry] of textTrackListHandlerPropertyTable) definePrototypeAccessor(TextTrackList.prototype, name, entry.get, entry.set);
+  definePrototypeAccessor(TextTrackList.prototype, "onchange", onchange, setOnchange);
+  definePrototypeAccessor(TextTrackList.prototype, "onaddtrack", onaddtrack, setOnaddtrack);
+  definePrototypeAccessor(TextTrackList.prototype, "onremovetrack", onremovetrack, setOnremovetrack);
   definePrototypeMethod(TextTrackList.prototype, "getTrackById", getTrackById);
   defineConstructorBacklink(TextTrackList.prototype, TextTrackList);
   defineToStringTag(TextTrackList.prototype, "TextTrackList");

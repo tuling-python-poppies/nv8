@@ -17,15 +17,32 @@ import { getCapabilities } from "../api/media/media-stream-track-get-capabilitie
 import { getCaptureHandle } from "../api/media/media-stream-track-get-capture-handle.js";
 import { getConstraints } from "../api/media/media-stream-track-get-constraints.js";
 import { getSettings } from "../api/media/media-stream-track-get-settings.js";
+import {
+  id,
+  kind,
+  label,
+  muted,
+  readyState,
+  stats,
+} from "../api/media/media-stream-track-readonly-getter-members.js";
+import { oncapturehandlechange, setOncapturehandlechange } from "../api/media/media-stream-track-oncapturehandlechange-property.js";
+import { onended, setOnended } from "../api/media/media-stream-track-onended-property.js";
+import { onmute, setOnmute } from "../api/media/media-stream-track-onmute-property.js";
+import { onunmute, setOnunmute } from "../api/media/media-stream-track-onunmute-property.js";
 import { stop } from "../api/media/media-stream-track-stop.js";
-import { mediaStreamTrackHandlerPropertyTable } from "../api/media/media-stream-track-handler-property-members.js";
-import { mediaStreamTrackReadonlyGetterTable } from "../api/media/media-stream-track-readonly-getter-members.js";
 
 export function installMediaStreamTrack() {
   installMediaStreamTrackConstructor();
-  for (const [name, entry] of mediaStreamTrackReadonlyGetterTable) getter(name, entry);
+  getter("kind", kind);
+  getter("id", id);
+  getter("label", label);
   accessor("enabled", enabled, setEnabled);
-  for (const [name, entry] of mediaStreamTrackHandlerPropertyTable) accessor(name, entry.get, entry.set);
+  getter("muted", muted);
+  accessor("onmute", onmute, setOnmute);
+  accessor("onunmute", onunmute, setOnunmute);
+  getter("readyState", readyState);
+  accessor("onended", onended, setOnended);
+  getter("stats", stats);
   accessor("contentHint", contentHint, setContentHint);
   method("applyConstraints", applyConstraints);
   method("clone", clone);
@@ -33,6 +50,7 @@ export function installMediaStreamTrack() {
   method("getConstraints", getConstraints);
   method("getSettings", getSettings);
   method("stop", stop);
+  accessor("oncapturehandlechange", oncapturehandlechange, setOncapturehandlechange);
   method("getCaptureHandle", getCaptureHandle);
   defineConstructorBacklink(MediaStreamTrack.prototype, MediaStreamTrack);
   defineToStringTag(MediaStreamTrack.prototype, "MediaStreamTrack");

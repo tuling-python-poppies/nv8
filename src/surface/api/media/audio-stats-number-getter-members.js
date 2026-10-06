@@ -1,19 +1,12 @@
-// media 的成员表：名字就能描述实现，不再一个成员一个文件。
+// media 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
 
 import { audioStatsNumberGetter } from "./media-stream-track-audio-stats-number-getter.js";
 
-const AUDIO_STATS_NUMBER_GETTER_TABLE_ROWS = [
-  ["averageLatency", "averageLatency"],
-  ["deliveredFrames", "deliveredFrames"],
-  ["deliveredFramesDuration", "deliveredFramesDuration"],
-  ["latency", "latency"],
-  ["maximumLatency", "maximumLatency"],
-  ["minimumLatency", "minimumLatency"],
-  ["totalFrames", "totalFrames"],
-  ["totalFramesDuration", "totalFramesDuration"],
-];
-
-export const audioStatsNumberGetterTable = AUDIO_STATS_NUMBER_GETTER_TABLE_ROWS.map(
-  ([name, ...args]) => [name, audioStatsNumberGetter(...args)],
-);
-
+export const averageLatency = audioStatsNumberGetter("averageLatency");
+export const deliveredFrames = audioStatsNumberGetter("deliveredFrames");
+export const deliveredFramesDuration = audioStatsNumberGetter("deliveredFramesDuration");
+export const latency = audioStatsNumberGetter("latency");
+export const maximumLatency = audioStatsNumberGetter("maximumLatency");
+export const minimumLatency = audioStatsNumberGetter("minimumLatency");
+export const totalFrames = audioStatsNumberGetter("totalFrames");
+export const totalFramesDuration = audioStatsNumberGetter("totalFramesDuration");

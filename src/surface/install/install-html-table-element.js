@@ -5,7 +5,12 @@ import {
   definePrototypeMethod,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
+import { align, setAlign } from "../api/dom/html-table-element-align-property.js";
+import { bgColor, setBgColor } from "../api/dom/html-table-element-bg-color-property.js";
+import { border, setBorder } from "../api/dom/html-table-element-border-property.js";
 import { caption, setCaption } from "../api/dom/html-table-element-caption-property.js";
+import { cellPadding, setCellPadding } from "../api/dom/html-table-element-cell-padding-property.js";
+import { cellSpacing, setCellSpacing } from "../api/dom/html-table-element-cell-spacing-property.js";
 import {
   HTMLTableElement,
   installHTMLTableElementConstructor,
@@ -18,12 +23,15 @@ import { deleteCaption } from "../api/dom/html-table-element-delete-caption.js";
 import { deleteRow } from "../api/dom/html-table-element-delete-row.js";
 import { deleteTFoot } from "../api/dom/html-table-element-delete-t-foot.js";
 import { deleteTHead } from "../api/dom/html-table-element-delete-t-head.js";
+import { frame, setFrame } from "../api/dom/html-table-element-frame-property.js";
 import { insertRow } from "../api/dom/html-table-element-insert-row.js";
 import { rows } from "../api/dom/html-table-element-rows-getter.js";
+import { rules, setRules } from "../api/dom/html-table-element-rules-property.js";
+import { summary, setSummary } from "../api/dom/html-table-element-summary-property.js";
 import { tBodies } from "../api/dom/html-table-element-t-bodies-getter.js";
 import { setTFoot, tFoot } from "../api/dom/html-table-element-t-foot-property.js";
 import { setTHead, tHead } from "../api/dom/html-table-element-t-head-property.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { setWidth, width } from "../api/dom/html-table-element-width-property.js";
 
 export function installHTMLTableElement() {
   installHTMLTableElementConstructor();
@@ -32,7 +40,15 @@ export function installHTMLTableElement() {
   accessor("tFoot", tFoot, setTFoot);
   definePrototypeGetter(HTMLTableElement.prototype, "tBodies", tBodies);
   definePrototypeGetter(HTMLTableElement.prototype, "rows", rows);
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("align", align, setAlign);
+  accessor("border", border, setBorder);
+  accessor("frame", frame, setFrame);
+  accessor("rules", rules, setRules);
+  accessor("summary", summary, setSummary);
+  accessor("width", width, setWidth);
+  accessor("bgColor", bgColor, setBgColor);
+  accessor("cellPadding", cellPadding, setCellPadding);
+  accessor("cellSpacing", cellSpacing, setCellSpacing);
   method("createCaption", createCaption);
   method("createTBody", createTBody);
   method("createTFoot", createTFoot);

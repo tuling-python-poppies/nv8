@@ -5,7 +5,11 @@ import {
   definePrototypeMethod,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
+import { align, setAlign } from "../api/dom/html-table-row-element-align-property.js";
+import { bgColor, setBgColor } from "../api/dom/html-table-row-element-bg-color-property.js";
 import { cells } from "../api/dom/html-table-row-element-cells-getter.js";
+import { ch, setCh } from "../api/dom/html-table-row-element-ch-property.js";
+import { chOff, setChOff } from "../api/dom/html-table-row-element-ch-off-property.js";
 import {
   HTMLTableRowElement,
   installHTMLTableRowElementConstructor,
@@ -14,7 +18,7 @@ import { deleteCell } from "../api/dom/html-table-row-element-delete-cell.js";
 import { insertCell } from "../api/dom/html-table-row-element-insert-cell.js";
 import { rowIndex } from "../api/dom/html-table-row-element-row-index-getter.js";
 import { sectionRowIndex } from "../api/dom/html-table-row-element-section-row-index-getter.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { setVAlign, vAlign } from "../api/dom/html-table-row-element-v-align-property.js";
 
 export function installHTMLTableRowElement() {
   installHTMLTableRowElementConstructor();
@@ -25,7 +29,11 @@ export function installHTMLTableRowElement() {
     sectionRowIndex,
   );
   definePrototypeGetter(HTMLTableRowElement.prototype, "cells", cells);
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("align", align, setAlign);
+  accessor("ch", ch, setCh);
+  accessor("chOff", chOff, setChOff);
+  accessor("vAlign", vAlign, setVAlign);
+  accessor("bgColor", bgColor, setBgColor);
   definePrototypeMethod(
     HTMLTableRowElement.prototype,
     "deleteCell",

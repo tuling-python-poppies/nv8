@@ -12,12 +12,16 @@ import {
   HTMLButtonElement,
   installHTMLButtonElementConstructor,
 } from "../api/dom/html-button-element-constructor.js";
+import { disabled, setDisabled } from "../api/dom/html-button-element-disabled-property.js";
 import { formAction, setFormAction } from "../api/dom/html-button-element-form-action-property.js";
 import { formEnctype, setFormEnctype } from "../api/dom/html-button-element-form-enctype-property.js";
 import { form } from "../api/dom/html-button-element-form-getter.js";
 import { formMethod, setFormMethod } from "../api/dom/html-button-element-form-method-property.js";
+import { formNoValidate, setFormNoValidate } from "../api/dom/html-button-element-form-no-validate-property.js";
+import { formTarget, setFormTarget } from "../api/dom/html-button-element-form-target-property.js";
 import { interestForElement, setInterestForElement } from "../api/dom/html-button-element-interest-for-element-property.js";
 import { labels } from "../api/dom/html-button-element-labels-getter.js";
+import { name, setName } from "../api/dom/html-button-element-name-property.js";
 import { popoverTargetAction, setPopoverTargetAction } from "../api/dom/html-button-element-popover-target-action-property.js";
 import { popoverTargetElement, setPopoverTargetElement } from "../api/dom/html-button-element-popover-target-element-property.js";
 import { reportValidity } from "../api/dom/html-button-element-report-validity.js";
@@ -25,19 +29,21 @@ import { setCustomValidity } from "../api/dom/html-button-element-set-custom-val
 import { type, setType } from "../api/dom/html-button-element-type-property.js";
 import { validationMessage } from "../api/dom/html-button-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-button-element-validity-getter.js";
+import { value, setValue } from "../api/dom/html-button-element-value-property.js";
 import { willValidate } from "../api/dom/html-button-element-will-validate-getter.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLButtonElement() {
   installHTMLButtonElementConstructor();
-  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("disabled", disabled, setDisabled);
   getter("form", form);
   accessor("formAction", formAction, setFormAction);
   accessor("formEnctype", formEnctype, setFormEnctype);
   accessor("formMethod", formMethod, setFormMethod);
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("formNoValidate", formNoValidate, setFormNoValidate);
+  accessor("formTarget", formTarget, setFormTarget);
+  accessor("name", name, setName);
   accessor("type", type, setType);
+  accessor("value", value, setValue);
   getter("willValidate", willValidate);
   getter("validity", validity);
   getter("validationMessage", validationMessage);

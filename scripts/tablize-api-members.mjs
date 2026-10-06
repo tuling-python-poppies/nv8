@@ -25,6 +25,22 @@
  *   node scripts/tablize-api-members.mjs                      # 报告
  *   node scripts/tablize-api-members.mjs --only canvas        # 限定若干域
  *   node scripts/tablize-api-members.mjs --only canvas --write
+ *
+ * ## 还没跨过去的坎（要用这个工具前先读）
+ *
+ * 生成的循环是「把整张表装到当前接口」，这对**成员全属于同一个接口**的家族是对的，
+ * 对跨接口的家族会过装——而 `finalizePrototypeSurfaceOrder()` **不会**按表面表清掉多余的
+ * 原型成员（实测 `HTMLAreaElement` 25 → 50、`HTMLButtonElement` 23 → 43，被
+ * `capture-full-surface` 逐项抓到）。
+ *
+ * 所以下一步要么按接口分表（表里带接口名，安装时筛选），要么只对单接口家族启用。
+ * 与之配套的还有两道已实现的闸门：「桶 + 安装器混合体」整族跳过、
+ * 「摘掉的导出名不得在别处继续出现」整族跳过。
+ *
+ * ## 验证时务必先删掉本机缓存
+ *
+ * `src/engine/realm/module-bundle.json` 命中缓存就**用缓存里的旧源码**，
+ * 会让 `npm test` 与基线在改动没生效的情况下显示全绿。跑验证前先删掉它。
  */
 
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -235,6 +251,28 @@ async function findTargetModule(dir, members) {
 }
 
 /**
+ * 目标模块自己是否还在用这些成员（桶 + 安装器混合体）。
+ *
+ * `document-event-members.js` 就是这样：它转发成员，同时导出 6 个安装函数，分别在不同时机
+ * 装同一家族的不同**子集**（readiness / pointerlock / lifecycle / …）。这类分组语义不是
+ * 「一张表 + 一个循环」能表达的，删掉 import 只会让那些函数里的名字悬空。整族跳过。
+ */
+async function targetReusesMembers(targetFile, members) {
+  if (!existsSync(targetFile)) return false;
+  const source = await readFile(targetFile, 'utf8');
+  const memberFiles = new Set(members.map((member) => member.file));
+  const pointsAtMember = (specifier) => memberFiles.has(path.resolve(path.dirname(targetFile), specifier));
+  const stripped = source
+    .replace(/import\s*\{[^}]*\}\s*from\s*"([^"]+)";\n?/g, (whole, specifier) => (pointsAtMember(specifier) ? '' : whole))
+    .replace(/export\s*(?:\*|\{[^}]*\})\s*from\s*"([^"]+)";\n?/g, (whole, specifier) => (pointsAtMember(specifier) ? '' : whole))
+    .replace(/export\s*\{[^}]*\};/g, '');
+  const masked = maskSource(stripped);
+  return members.some((member) => member.exports.some((entry) => (
+    new RegExp(`(?<![\\w$.])${entry.name}(?![\\w$])`).test(masked)
+  )));
+}
+
+/**
  * 生成表声明。
  *
  * 行只存「名字 + 额外字面量参数」，工厂调用在 map 里统一发生，所以 `animationProperty`、
@@ -387,6 +425,39 @@ function addNamedImport(source, name, specifier) {
 }
 
 /** 整理 import 区：去掉空行，与正文之间留恰好一个空行。 */
+/**
+ * 摘掉具名导入后，文件里是否还在别处用这些名字。
+ *
+ * `install-media-list.js` 就是反例：成员 `values` 不是被安装语句装上去的，而是作为
+ * `Symbol.iterator` 的值用的。变换只看「形如安装调用的语句」，会把它的 import 摘掉却留下
+ * 引用——运行时 `values is not defined`，而 `node --check`、悬空导入检查、基线全都不报。
+ *
+ * 判定方式是把将要成环的语句段先挖掉，再看剩下的文本里还有没有这些名字；
+ * 有就说明这个家族不能收成表，整族跳过。
+ */
+function stillReferencesDroppedNames(source, loops, droppedNames) {
+  let text = source;
+  for (const loop of [...loops].sort((a, b) => b.startOffset - a.startOffset)) {
+    text = text.slice(0, loop.startOffset) + text.slice(loop.endOffset);
+  }
+  // 先摘掉 import / re-export 行：即将被删的那些导入名字不能算「本文件已有绑定」，
+  // 否则正是要检查的悬空引用会被自己放过（`values` 那次就是这么漏的）。
+  const body = text
+    .replace(/import\s*\{[^}]*\}\s*from\s*"[^"]+";\n?/g, '')
+    .replace(/import\s*\*\s*as\s+[\w$]+\s*from\s*"[^"]+";\n?/g, '');
+  const masked = maskSource(body);
+  // 文件自己绑定的名字不算（本地 helper 的参数常与成员重名：`function accessor(name, getter, setter)`）
+  const bound = new Set();
+  for (const match of masked.matchAll(/\b(?:const|let|var|function|class)\s+([\w$]+)/g)) bound.add(match[1]);
+  for (const match of masked.matchAll(/(?:function\s*[\w$]*\s*|\()\s*([\w$]+)\s*[),=]/g)) bound.add(match[1]);
+  for (const name of droppedNames) {
+    if (bound.has(name)) continue;
+    // `value:` 这种对象字面量的键不是引用，排除掉
+    if (new RegExp(`(?<![\\w$.])${name}(?![\\w$:])`).test(masked)) return name;
+  }
+  return null;
+}
+
 function tidyImports(source) {
   const pattern = /import\s+(?:[\w$]+\s*,?\s*)?(?:\{[^}]*\}|\*\s*as\s+[\w$]+)\s*from\s*"[^"]+";|import\s+"[^"]+";/g;
   let end = 0;
@@ -620,6 +691,14 @@ async function main() {
       console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：多个候选桶`);
       continue;
     }
+    // 目标本身就是成员模块（成员声明在它里面）时不算「桶 + 安装器混合体」——
+    // 那条路径走的是就地改写。只有目标**另有其人**（是转发这些成员的桶）时才需要提防它自己也在用。
+    const targetIsMemberFile = group.members.some((member) => member.file === target.file);
+    if (!targetIsMemberFile && await targetReusesMembers(target.file, group.members)) {
+      console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：`
+        + `目标模块 ${path.basename(target.file)} 自己也在用这些成员（桶 + 安装器混合体）`);
+      continue;
+    }
     const slotByName = new Map();
     for (const member of group.members) {
       for (const entry of member.exports) slotByName.set(entry.name, entry.slot);
@@ -654,6 +733,14 @@ async function main() {
         referenced += references;
         covered += loopLines;
         if (references !== loopLines) clean = false;
+        // 还要确认：被摘掉的导出名没有在别处（比如当值用）继续出现
+        const droppedNames = plan.members.flatMap((member) => member.exports.map((entry) => entry.name));
+        const stillUsed = stillReferencesDroppedNames(source, loops, droppedNames);
+        if (stillUsed !== null) {
+          skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
+            + `（${path.basename(file)} 里 ${stillUsed} 不是被安装语句用的，收成表会留下悬空引用）`);
+          clean = false;
+        }
         if (loops.length === 0) continue;
         map.set(file, loops);
         totalLoops += loops.length;

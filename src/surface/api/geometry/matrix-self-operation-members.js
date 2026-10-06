@@ -1,4 +1,4 @@
-// geometry 的成员表：名字就能描述实现，不再一个成员一个文件。
+// geometry 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
 
 import {
   matrixSelfOperation,
@@ -13,35 +13,46 @@ import {
   translationMatrix,
 } from "./dom-matrix-state.js";
 
-const MATRIX_SELF_OPERATION_TABLE_ROWS = [
-  ["invertSelf", "invertSelf", invertMatrix],
-  ["multiplySelf", "multiplySelf", (matrix, args) => multiplyMatrices(matrix, matrixFromValue(args[0]))],
-  ["preMultiplySelf", "preMultiplySelf", (matrix, args) => multiplyMatrices(matrixFromValue(args[0]), matrix)],
-  ["rotateAxisAngleSelf", "rotateAxisAngleSelf", (matrix, args) => multiplyMatrices(matrix, axisRotationMatrix(
+export const invertSelf = matrixSelfOperation("invertSelf", invertMatrix);
+export const multiplySelf = matrixSelfOperation(
+  "multiplySelf",
+  (matrix, args) => multiplyMatrices(matrix, matrixFromValue(args[0])),
+);
+export const preMultiplySelf = matrixSelfOperation(
+  "preMultiplySelf",
+  (matrix, args) => multiplyMatrices(matrixFromValue(args[0]), matrix),
+);
+export const rotateAxisAngleSelf = matrixSelfOperation(
+  "rotateAxisAngleSelf",
+  (matrix, args) => multiplyMatrices(matrix, axisRotationMatrix(
     optionalNumber(args, 0, 0),
     optionalNumber(args, 1, 0),
     optionalNumber(args, 2, 0),
     optionalNumber(args, 3, 0),
-  ))],
-  ["rotateFromVectorSelf", "rotateFromVectorSelf", (matrix, args) => multiplyMatrices(
+  )),
+);
+export const rotateFromVectorSelf = matrixSelfOperation(
+  "rotateFromVectorSelf",
+  (matrix, args) => multiplyMatrices(
     matrix,
     rotationZMatrix(Math.atan2(
       optionalNumber(args, 1, 0),
       optionalNumber(args, 0, 0),
     ) * 180 / Math.PI),
-  )],
-  ["rotateSelf", "rotateSelf", (matrix, args) => multiplyMatrices(
+  ),
+);
+export const rotateSelf = matrixSelfOperation(
+  "rotateSelf",
+  (matrix, args) => multiplyMatrices(
     matrix,
     rotationZMatrix(optionalNumber(args, 0, 0)),
-  )],
-  ["translateSelf", "translateSelf", (matrix, args) => multiplyMatrices(matrix, translationMatrix(
+  ),
+);
+export const translateSelf = matrixSelfOperation(
+  "translateSelf",
+  (matrix, args) => multiplyMatrices(matrix, translationMatrix(
     optionalNumber(args, 0, 0),
     optionalNumber(args, 1, 0),
     optionalNumber(args, 2, 0),
-  ))],
-];
-
-export const matrixSelfOperationTable = MATRIX_SELF_OPERATION_TABLE_ROWS.map(
-  ([name, ...args]) => [name, matrixSelfOperation(...args)],
+  )),
 );
-

@@ -4,14 +4,17 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
+  cite,
+  setCite,
+} from "../api/dom/html-quote-element-cite-property.js";
+import {
   HTMLQuoteElement,
   installHTMLQuoteElementConstructor,
 } from "../api/dom/html-quote-element-constructor.js";
-import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
 
 export function installHTMLQuoteElement() {
   installHTMLQuoteElementConstructor();
-  for (const [name, entry] of urlReflectionTable) definePrototypeAccessor(HTMLQuoteElement.prototype, name, entry.get, entry.set);
+  definePrototypeAccessor(HTMLQuoteElement.prototype, "cite", cite, setCite);
   defineConstructorBacklink(HTMLQuoteElement.prototype, HTMLQuoteElement);
   defineToStringTag(HTMLQuoteElement.prototype, "HTMLQuoteElement");
 }

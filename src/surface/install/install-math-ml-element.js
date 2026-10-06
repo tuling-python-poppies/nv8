@@ -18,6 +18,14 @@ import {
 } from "../api/dom/html-element-event-members.js";
 import { dataset } from "../api/dom/html-element-dataset-getter.js";
 import {
+  nonce,
+  setNonce,
+} from "../api/dom/html-element-nonce-property.js";
+import {
+  autofocus,
+  setAutofocus,
+} from "../api/dom/html-element-autofocus-property.js";
+import {
   tabIndex,
   setTabIndex,
 } from "../api/dom/html-element-tab-index-property.js";
@@ -27,21 +35,29 @@ import {
 } from "../api/dom/html-element-attribute-style-map-getter.js";
 import { blur } from "../api/dom/html-element-blur.js";
 import { focus } from "../api/dom/html-element-focus.js";
-import { htmlStringDescriptorTable } from "../api/dom/html-string-descriptor-members.js";
-import { htmlBooleanDescriptorTable } from "../api/dom/html-boolean-descriptor-members.js";
+import {
+  focusGroup,
+  setFocusGroup,
+} from "../api/dom/html-element-focus-group-property.js";
+import {
+  focusGroupStart,
+  setFocusGroupStart,
+} from "../api/dom/html-element-focus-group-start-property.js";
 
 export function installMathMLElement() {
   installMathMLElementConstructor();
   installHTMLElementEarlyEventMembers(accessor);
   getter("dataset", dataset);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlBooleanDescriptorTable) accessor(name, entry.get, entry.set);
+  accessor("nonce", nonce, setNonce);
+  accessor("autofocus", autofocus, setAutofocus);
   accessor("tabIndex", tabIndex, setTabIndex);
   getter("style", style);
   getter("attributeStyleMap", attributeStyleMap);
   method("blur", blur);
   method("focus", focus);
   installHTMLElementLateEventMembers(accessor);
+  accessor("focusGroup", focusGroup, setFocusGroup);
+  accessor("focusGroupStart", focusGroupStart, setFocusGroupStart);
   finishMathMLElementConstructor();
   installHTMLElementAfterConstructorEventMembers(accessor);
 }

@@ -1,70 +1,52 @@
-import { ariaElementProperty } from "./element-aria-element-property.js";
-
-const ARIA_ELEMENT_PROPERTY_TABLE_ROWS = [
-  ["ariaActionsElements", "ariaActionsElements", "aria-actions", true],
-  ["ariaActiveDescendantElement", "ariaActiveDescendantElement", "aria-activedescendant", false],
-  ["ariaControlsElements", "ariaControlsElements", "aria-controls", true],
-  ["ariaDescribedByElements", "ariaDescribedByElements", "aria-describedby", true],
-  ["ariaDetailsElements", "ariaDetailsElements", "aria-details", true],
-  ["ariaErrorMessageElements", "ariaErrorMessageElements", "aria-errormessage", true],
-  ["ariaFlowToElements", "ariaFlowToElements", "aria-flowto", true],
-  ["ariaLabelledByElements", "ariaLabelledByElements", "aria-labelledby", true],
-];
-
-export const ariaElementPropertyTable = ARIA_ELEMENT_PROPERTY_TABLE_ROWS.map(
-  ([name, ...args]) => [name, ariaElementProperty(...args)],
-);
-
-import { elementNullableStringProperty } from "./element-extended-property.js";
-
-const ELEMENT_NULLABLE_STRING_PROPERTY_TABLE_ROWS = [
-  ["ariaAtomic", "ariaAtomic", "aria-atomic"],
-  ["ariaAutoComplete", "ariaAutoComplete", "aria-autocomplete"],
-  ["ariaBrailleLabel", "ariaBrailleLabel", "aria-braillelabel"],
-  ["ariaBrailleRoleDescription", "ariaBrailleRoleDescription", "aria-brailleroledescription"],
-  ["ariaBusy", "ariaBusy", "aria-busy"],
-  ["ariaChecked", "ariaChecked", "aria-checked"],
-  ["ariaColCount", "ariaColCount", "aria-colcount"],
-  ["ariaColIndex", "ariaColIndex", "aria-colindex"],
-  ["ariaColIndexText", "ariaColIndexText", "aria-colindextext"],
-  ["ariaColSpan", "ariaColSpan", "aria-colspan"],
-  ["ariaCurrent", "ariaCurrent", "aria-current"],
-  ["ariaDescription", "ariaDescription", "aria-description"],
-  ["ariaDisabled", "ariaDisabled", "aria-disabled"],
-  ["ariaExpanded", "ariaExpanded", "aria-expanded"],
-  ["ariaHasPopup", "ariaHasPopup", "aria-haspopup"],
-  ["ariaHidden", "ariaHidden", "aria-hidden"],
-  ["ariaInvalid", "ariaInvalid", "aria-invalid"],
-  ["ariaKeyShortcuts", "ariaKeyShortcuts", "aria-keyshortcuts"],
-  ["ariaLabel", "ariaLabel", "aria-label"],
-  ["ariaLevel", "ariaLevel", "aria-level"],
-  ["ariaLive", "ariaLive", "aria-live"],
-  ["ariaModal", "ariaModal", "aria-modal"],
-  ["ariaMultiLine", "ariaMultiLine", "aria-multiline"],
-  ["ariaMultiSelectable", "ariaMultiSelectable", "aria-multiselectable"],
-  ["ariaOrientation", "ariaOrientation", "aria-orientation"],
-  ["ariaPlaceholder", "ariaPlaceholder", "aria-placeholder"],
-  ["ariaPosInSet", "ariaPosInSet", "aria-posinset"],
-  ["ariaPressed", "ariaPressed", "aria-pressed"],
-  ["ariaReadOnly", "ariaReadOnly", "aria-readonly"],
-  ["ariaRelevant", "ariaRelevant", "aria-relevant"],
-  ["ariaRequired", "ariaRequired", "aria-required"],
-  ["ariaRoleDescription", "ariaRoleDescription", "aria-roledescription"],
-  ["ariaRowCount", "ariaRowCount", "aria-rowcount"],
-  ["ariaRowIndex", "ariaRowIndex", "aria-rowindex"],
-  ["ariaRowIndexText", "ariaRowIndexText", "aria-rowindextext"],
-  ["ariaRowSpan", "ariaRowSpan", "aria-rowspan"],
-  ["ariaSelected", "ariaSelected", "aria-selected"],
-  ["ariaSetSize", "ariaSetSize", "aria-setsize"],
-  ["ariaSort", "ariaSort", "aria-sort"],
-  ["ariaValueMax", "ariaValueMax", "aria-valuemax"],
-  ["ariaValueMin", "ariaValueMin", "aria-valuemin"],
-  ["ariaValueNow", "ariaValueNow", "aria-valuenow"],
-  ["ariaValueText", "ariaValueText", "aria-valuetext"],
-  ["role", "role", "role"],
-];
-
-export const elementNullableStringPropertyTable = ELEMENT_NULLABLE_STRING_PROPERTY_TABLE_ROWS.map(
-  ([name, ...args]) => [name, elementNullableStringProperty(...args)],
-);
-
+export * from "./element-role-property.js";
+export * from "./element-aria-atomic-property.js";
+export * from "./element-aria-auto-complete-property.js";
+export * from "./element-aria-busy-property.js";
+export * from "./element-aria-braille-label-property.js";
+export * from "./element-aria-braille-role-description-property.js";
+export * from "./element-aria-checked-property.js";
+export * from "./element-aria-col-count-property.js";
+export * from "./element-aria-col-index-property.js";
+export * from "./element-aria-col-span-property.js";
+export * from "./element-aria-current-property.js";
+export * from "./element-aria-description-property.js";
+export * from "./element-aria-disabled-property.js";
+export * from "./element-aria-expanded-property.js";
+export * from "./element-aria-has-popup-property.js";
+export * from "./element-aria-hidden-property.js";
+export * from "./element-aria-invalid-property.js";
+export * from "./element-aria-key-shortcuts-property.js";
+export * from "./element-aria-label-property.js";
+export * from "./element-aria-level-property.js";
+export * from "./element-aria-live-property.js";
+export * from "./element-aria-modal-property.js";
+export * from "./element-aria-multi-line-property.js";
+export * from "./element-aria-multi-selectable-property.js";
+export * from "./element-aria-orientation-property.js";
+export * from "./element-aria-placeholder-property.js";
+export * from "./element-aria-pos-in-set-property.js";
+export * from "./element-aria-pressed-property.js";
+export * from "./element-aria-read-only-property.js";
+export * from "./element-aria-relevant-property.js";
+export * from "./element-aria-required-property.js";
+export * from "./element-aria-role-description-property.js";
+export * from "./element-aria-row-count-property.js";
+export * from "./element-aria-row-index-property.js";
+export * from "./element-aria-row-span-property.js";
+export * from "./element-aria-selected-property.js";
+export * from "./element-aria-set-size-property.js";
+export * from "./element-aria-sort-property.js";
+export * from "./element-aria-value-max-property.js";
+export * from "./element-aria-value-min-property.js";
+export * from "./element-aria-value-now-property.js";
+export * from "./element-aria-value-text-property.js";
+export * from "./element-aria-col-index-text-property.js";
+export * from "./element-aria-row-index-text-property.js";
+export * from "./element-aria-active-descendant-element-property.js";
+export * from "./element-aria-actions-elements-property.js";
+export * from "./element-aria-controls-elements-property.js";
+export * from "./element-aria-described-by-elements-property.js";
+export * from "./element-aria-details-elements-property.js";
+export * from "./element-aria-error-message-elements-property.js";
+export * from "./element-aria-flow-to-elements-property.js";
+export * from "./element-aria-labelled-by-elements-property.js";

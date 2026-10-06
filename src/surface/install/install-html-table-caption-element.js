@@ -4,14 +4,22 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
+  align,
+  setAlign,
+} from "../api/dom/html-table-caption-element-align-property.js";
+import {
   HTMLTableCaptionElement,
   installHTMLTableCaptionElementConstructor,
 } from "../api/dom/html-table-caption-element-constructor.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLTableCaptionElement() {
   installHTMLTableCaptionElementConstructor();
-  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLTableCaptionElement.prototype, name, entry.get, entry.set, );
+  definePrototypeAccessor(
+    HTMLTableCaptionElement.prototype,
+    "align",
+    align,
+    setAlign,
+  );
   defineConstructorBacklink(
     HTMLTableCaptionElement.prototype,
     HTMLTableCaptionElement,

@@ -7,11 +7,14 @@ import {
   HTMLDataElement,
   installHTMLDataElementConstructor,
 } from "../api/dom/html-data-element-constructor.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import {
+  setValue,
+  value,
+} from "../api/dom/html-data-element-value-property.js";
 
 export function installHTMLDataElement() {
   installHTMLDataElementConstructor();
-  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLDataElement.prototype, name, entry.get, entry.set);
+  definePrototypeAccessor(HTMLDataElement.prototype, "value", value, setValue);
   defineConstructorBacklink(HTMLDataElement.prototype, HTMLDataElement);
   defineToStringTag(HTMLDataElement.prototype, "HTMLDataElement");
 }
