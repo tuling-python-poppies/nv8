@@ -501,16 +501,20 @@ export function findLoops(source, scoped) {
       continue;
     }
     let count = 1;
+    // 这一段循环装的就是这几个成员——「表按安装作用域切」靠它知道每张表该放哪些行
+    const covered = [first.member];
     while (index + count < statements.length) {
       const next = matchStatement(statements[index + count].text, scoped);
       if (next === null
         || next.template !== first.template
         || next.slotsKey !== first.slotsKey
         || next.scope !== first.scope) break;
+      covered.push(next.member);
       count += 1;
     }
     loops.push({
       ...first,
+      covered,
       count,
       startOffset: statements[index].start,
       endOffset: statements[index + count - 1].end,
@@ -575,6 +579,13 @@ function enclosingFunction(source, offset) {
   return matches.length === 0 ? -1 : matches[matches.length - 1].index;
 }
 
+/** 语句所在函数的函数名（用于给「按作用域切」的表起名），取不到返回 null。 */
+function enclosingFunctionName(source, offset) {
+  const before = source.slice(0, offset);
+  const matches = [...before.matchAll(/^[ \t]*(?:export\s+)?(?:async\s+)?function\s+([\w$]+)/gm)];
+  return matches.length === 0 ? null : matches[matches.length - 1][1];
+}
+
 /** 折叠空白，但不动字符串/模板内容。 */
 export function collapseOutsideStrings(text) {
   const spans = findProtectedSpans(text).filter((span) => span.kind === 'string');
@@ -595,7 +606,7 @@ export function matchStatement(line, scoped) {
     for (const member of scope.family.members) {
       const converted = toTemplate(line, member, scope);
       if (converted === null) continue;
-      return { ...converted, slotsKey: converted.slots.join('|'), scope };
+      return { ...converted, slotsKey: converted.slots.join('|'), scope, member };
     }
   }
   return null;
@@ -718,14 +729,6 @@ async function main() {
       console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：多个候选桶`);
       continue;
     }
-    // 目标本身就是成员模块（成员声明在它里面）时不算「桶 + 安装器混合体」——
-    // 那条路径走的是就地改写。只有目标**另有其人**（是转发这些成员的桶）时才需要提防它自己也在用。
-    const targetIsMemberFile = group.members.some((member) => member.file === target.file);
-    if (!targetIsMemberFile && await targetReusesMembers(target.file, group.members)) {
-      console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：`
-        + `目标模块 ${path.basename(target.file)} 自己也在用这些成员（桶 + 安装器混合体）`);
-      continue;
-    }
     const slotByName = new Map();
     for (const member of group.members) {
       for (const entry of member.exports) slotByName.set(entry.name, entry.slot);
@@ -760,14 +763,8 @@ async function main() {
         referenced += references;
         covered += loopLines;
         if (references !== loopLines) clean = false;
-        // 等价性不变量：**每个消费者都必须安装该家族的全部成员**。只有这时「整表循环」才与
-        // 原语句逐条等价；只要有一个文件只装了子集，循环就会把别的成员也装上去（过装，
-        // 而 finalizePrototypeSurfaceOrder 不会按表面表清掉多余的原型成员）。
-        if (loopLines !== plan.members.length) {
-          skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
-            + `（${path.basename(file)} 只装了 ${loopLines}/${plan.members.length} 个成员，整表循环会过装）`);
-          clean = false;
-        }
+        // 等价性交给「表按安装作用域切」保证：每张表只放那段语句装的成员，
+        // 所以循环不可能装上别的成员（过装）。这里只保留「不许有认不出的引用」这条。
         // 还要确认：被摘掉的导出名没有在别处（比如当值用）继续出现
         const droppedNames = plan.members.flatMap((member) => member.exports.map((entry) => entry.name));
         const stillUsed = stillReferencesDroppedNames(source, loops, droppedNames);
@@ -879,15 +876,57 @@ async function main() {
 
   if (!write) return;
 
+  const tablesByPlan = new Map();
+  const tableNameByLoop = new Map();
+
   for (const plan of perPlan.keys()) {
-    const memberFiles = [...new Set(plan.members.map((member) => member.file))];
+    // 按安装作用域切表：一个（文件, 外层函数）= 一张表，表里正好是那段语句装的那些成员。
+    // 「循环装整张表」于是与原来的逐条语句严格等价，过装从原理上不可能发生。
+    const tables = [];
+    const byScope = new Map();
+    for (const [file, loops] of perPlan.get(plan)) {
+      const source = installSources.get(file);
+      for (const loop of loops) {
+        const key = `${file}\u0000${enclosingFunction(source, loop.startOffset)}`;
+        if (!byScope.has(key)) {
+          const scopeName = enclosingFunctionName(source, loop.startOffset);
+          const label = scopeName === null
+            ? `part${tables.length + 1}`
+            : `${scopeName.replace(/^install/, '').replace(/^[A-Z]/, (c) => c.toLowerCase())}`;
+          byScope.set(key, { base: label, members: [] });
+        }
+        const table = byScope.get(key);
+        for (const member of loop.covered ?? []) {
+          if (!table.members.includes(member)) table.members.push(member);
+        }
+        tableNameByLoop.set(loop, table);
+      }
+    }
+    const scopeTables = [...byScope.values()];
+    const singleScope = scopeTables.length === 1;
+    for (const table of scopeTables) {
+      table.name = singleScope ? plan.tableName : `${table.base}Table`;
+    }
+    tables.push(...scopeTables);
+    tablesByPlan.set(plan, tables);
+
+    const coveredMembers = new Set(tables.flatMap((table) => table.members));
+    const declaredByFile = new Map();
+    for (const member of plan.members) {
+      if (!declaredByFile.has(member.file)) declaredByFile.set(member.file, []);
+      declaredByFile.get(member.file).push(member);
+    }
+    // 只有当文件里声明的成员**全部**进了表，才删这个文件
+    const memberFiles = [...declaredByFile]
+      .filter(([, list]) => list.every((member) => coveredMembers.has(member)))
+      .map(([file]) => file);
     // 目标模块本身就是某个成员文件时（之前合并出来的多成员模块），旧内容整体作废重写
-    const targetIsMemberFile = memberFiles.includes(plan.target.file);
+    const targetIsMemberFile = plan.members.some((member) => member.file === plan.target.file);
     const current = !targetIsMemberFile && existsSync(plan.target.file)
       ? await readFile(plan.target.file, 'utf8')
       : '';
     const bySpecifier = new Map();
-    for (const member of plan.members) {
+    for (const member of coveredMembers) {
       for (const entry of member.imports) {
         if (!bySpecifier.has(entry.specifier)) bySpecifier.set(entry.specifier, []);
         const names = bySpecifier.get(entry.specifier);
@@ -898,7 +937,7 @@ async function main() {
     const parts = [
       stripped.replace(/\s+$/, '') || `// ${path.basename(plan.dir)} 的成员表：名字就能描述实现，不再一个成员一个文件。`,
       formatImportBlock(bySpecifier),
-      buildTable(plan.tableName, plan.members),
+      tables.map((table) => buildTable(table.name, table.members).replace(/\n+$/, '')).join('\n\n'),
     ].filter((part) => part !== '');
     await writeFile(plan.target.file, `${parts.join('\n\n')}\n`);
     for (const file of memberFiles) {
@@ -908,22 +947,14 @@ async function main() {
 
   for (const [file, edit] of fileEdits) {
     let source = installSources.get(file);
-    // 同一**函数**里同一家族的多个循环段只保留第一段（循环装的是整张表，装第二遍没意义）；
-    // 不同函数不能合并——它们在各自的调用时机拿到不同 accessor，合并会改变安装顺序。
-    const keptFirst = new Map();
-    for (const loop of [...edit.loops].sort((a, b) => a.startOffset - b.startOffset)) {
-      const key = `${enclosingFunction(source, loop.startOffset)}\u0000${loop.plan.factory}`;
-      if (!keptFirst.has(key)) keptFirst.set(key, loop);
-    }
     for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
-      const key = `${enclosingFunction(source, loop.startOffset)}\u0000${loop.plan.factory}`;
-      const isFirst = keptFirst.get(key) === loop;
+      // 表按作用域切，每段循环各自迭代自己那张表，不需要再去重
+      const tableName = tableNameByLoop.get(loop)?.name ?? loop.plan.tableName;
       const ref = loop.scope.namespace === null
-        ? loop.plan.tableName
-        : `${loop.scope.namespace}.${loop.plan.tableName}`;
-      const replacement = isFirst
-        ? `${loop.indent}for (const [name, entry] of ${ref}) ${fillTemplate(loop.template, loop.slots)}`
-        : '';
+        ? tableName
+        : `${loop.scope.namespace}.${tableName}`;
+      const replacement = `${loop.indent}for (const [name, entry] of ${ref}) `
+        + `${fillTemplate(loop.template, loop.slots)}`;
       // 语句独占一行时把替换范围向前吃到行首，避免缩进叠加；删除时再吃掉行尾换行，免得留空行
       let from = loop.startOffset;
       const lineStart = source.lastIndexOf('\n', from - 1) + 1;
@@ -936,7 +967,16 @@ async function main() {
       source = source.slice(0, from) + replacement + source.slice(to);
     }
     source = dropNamedImports(source, file, edit.drops);
-    for (const [tableName, specifier] of edit.adds) {
+    // 补 import：按该文件各循环**实际**用到的表名来补（表按作用域切之后，一个文件可能
+    // 需要不止一个表名，家族级的 `plan.tableName` 已经不代表实际导出的名字）。
+    const needed = new Map();
+    for (const loop of edit.loops) {
+      if (loop.scope.namespace !== null) continue;
+      const name = tableNameByLoop.get(loop)?.name;
+      if (name === undefined) continue;
+      needed.set(name, relative(file, loop.plan.target.file));
+    }
+    for (const [tableName, specifier] of needed) {
       source = addNamedImport(source, tableName, specifier);
     }
     await writeFile(file, tidyImports(source));
