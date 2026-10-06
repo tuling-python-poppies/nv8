@@ -42,7 +42,6 @@ export function installMathMLElement() {
   method("blur", blur);
   method("focus", focus);
   installHTMLElementLateEventMembers(accessor);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   finishMathMLElementConstructor();
   installHTMLElementAfterConstructorEventMembers(accessor);
 }

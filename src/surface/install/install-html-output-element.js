@@ -26,7 +26,8 @@ import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 export function installHTMLOutputElement() {
   installHTMLOutputElementConstructor();
   definePrototypeAccessor(HTMLOutputElement.prototype, "htmlFor", htmlFor, setHtmlFor);
-  definePrototypeGetter(HTMLOutputElement.prototype, "form", form);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLOutputElement.prototype, name, entry.get, entry.set);
+  definePrototypeGetter(HTMLOutputElement.prototype, "form", form);
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLOutputElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLOutputElement.prototype, "type", type);
   definePrototypeAccessor(HTMLOutputElement.prototype, "defaultValue", defaultValue, setDefaultValue);
   definePrototypeAccessor(HTMLOutputElement.prototype, "value", value, setValue);

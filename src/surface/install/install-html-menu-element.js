@@ -10,7 +10,8 @@ import {
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLMenuElement() {
-  installHTMLMenuElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLMenuElement.prototype, name, entry.get, entry.set, );
+  installHTMLMenuElementConstructor();
+  for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLMenuElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLMenuElement.prototype, HTMLMenuElement);
   defineToStringTag(HTMLMenuElement.prototype, "HTMLMenuElement");
 }

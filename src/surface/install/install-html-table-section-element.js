@@ -16,7 +16,8 @@ import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLTableSectionElement() {
   installHTMLTableSectionElementConstructor();
-  definePrototypeGetter(HTMLTableSectionElement.prototype, "rows", rows);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  definePrototypeGetter(HTMLTableSectionElement.prototype, "rows", rows);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeMethod(
     HTMLTableSectionElement.prototype,
     "deleteRow",

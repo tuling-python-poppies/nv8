@@ -15,7 +15,6 @@ export function installAnimation() {
   getter("playState", playState);
   getter("replaceState", replaceState);
   getter("pending", pending);
-  for (const [name, entry] of animationPropertyTable) accessor(name, entry.get, entry.set);
   getter("finished", finished);
   getter("ready", ready);
   for (const [name, entry] of animationMethodTable) method(name, entry);

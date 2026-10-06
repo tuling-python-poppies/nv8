@@ -37,15 +37,9 @@ export function installHTMLElement() {
   installHTMLElementConstructor();
   for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   accessor("translate", translate, setTranslate);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of htmlBooleanDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlBooleanDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of htmlStateDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   getter("isContentEditable", isContentEditable);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   getter("offsetParent", offsetParent);
   getter("offsetTop", offsetTop);
   getter("offsetLeft", offsetLeft);
@@ -54,11 +48,8 @@ export function installHTMLElement() {
   accessor("popover", popover, setPopover);
   accessor("innerText", innerText, setInnerText);
   accessor("outerText", outerText, setOuterText);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   installHTMLElementEarlyEventMembers(accessor);
   getter("dataset", dataset);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlBooleanDescriptorTable) accessor(name, entry.get, entry.set);
   accessor("tabIndex", tabIndex, setTabIndex);
   getter("style", style);
   getter("attributeStyleMap", attributeStyleMap);
@@ -66,10 +57,8 @@ export function installHTMLElement() {
   method("blur", blur);
   method("click", click);
   method("focus", focus);
-  for (const [name, entry] of htmlElementMethodTable) method(name, entry);
   method("togglePopover", togglePopover);
   installHTMLElementLateEventMembers(accessor);
-  for (const [name, entry] of htmlStringDescriptorTable) accessor(name, entry.get, entry.set);
   finishHTMLElementConstructor();
   installHTMLElementAfterConstructorEventMembers(accessor);
   finishHTMLElementToStringTag();

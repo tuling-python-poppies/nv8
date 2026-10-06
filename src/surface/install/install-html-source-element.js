@@ -7,16 +7,14 @@ import {
   HTMLSourceElement,
   installHTMLSourceElementConstructor,
 } from "../api/dom/html-source-element-constructor.js";
-import {
-  setSrc,
-  src,
-} from "../api/dom/html-source-element-src-property.js";
-import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
+import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
 
 export function installHTMLSourceElement() {
   installHTMLSourceElementConstructor();
-  accessor("src", src, setSrc);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLSourceElement.prototype, HTMLSourceElement);
   defineToStringTag(HTMLSourceElement.prototype, "HTMLSourceElement");

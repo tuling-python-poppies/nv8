@@ -24,7 +24,8 @@ export function installHTMLTableRowElement() {
     "sectionRowIndex",
     sectionRowIndex,
   );
-  definePrototypeGetter(HTMLTableRowElement.prototype, "cells", cells);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  definePrototypeGetter(HTMLTableRowElement.prototype, "cells", cells);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeMethod(
     HTMLTableRowElement.prototype,
     "deleteCell",

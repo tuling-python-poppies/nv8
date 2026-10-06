@@ -14,7 +14,8 @@ import {
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLMapElement() {
-  installHTMLMapElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLMapElement.prototype, name, entry.get, entry.set);
+  installHTMLMapElementConstructor();
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLMapElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLMapElement.prototype, "areas", areas);
   defineConstructorBacklink(HTMLMapElement.prototype, HTMLMapElement);
   defineToStringTag(HTMLMapElement.prototype, "HTMLMapElement");

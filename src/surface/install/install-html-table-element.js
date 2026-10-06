@@ -31,7 +31,8 @@ export function installHTMLTableElement() {
   accessor("tHead", tHead, setTHead);
   accessor("tFoot", tFoot, setTFoot);
   definePrototypeGetter(HTMLTableElement.prototype, "tBodies", tBodies);
-  definePrototypeGetter(HTMLTableElement.prototype, "rows", rows);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  definePrototypeGetter(HTMLTableElement.prototype, "rows", rows);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   method("createCaption", createCaption);
   method("createTBody", createTBody);
   method("createTFoot", createTFoot);

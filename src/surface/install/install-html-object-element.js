@@ -19,20 +19,21 @@ import { setCustomValidity } from "../api/dom/html-object-element-set-custom-val
 import { validationMessage } from "../api/dom/html-object-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-object-element-validity-getter.js";
 import { willValidate } from "../api/dom/html-object-element-will-validate-getter.js";
-import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 
 export function installHTMLObjectElement() {
-  installHTMLObjectElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  getter("form", form);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLObjectElementConstructor();
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  getter("form", form);
   getter("contentDocument", contentDocument);
   getter("contentWindow", contentWindow);
   getter("willValidate", willValidate);
   getter("validity", validity);
-  getter("validationMessage", validationMessage);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  getter("validationMessage", validationMessage);
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   method("checkValidity", checkValidity);
   method("getSVGDocument", getSVGDocument);
   method("reportValidity", reportValidity);

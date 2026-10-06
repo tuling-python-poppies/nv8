@@ -26,16 +26,18 @@ import { type, setType } from "../api/dom/html-button-element-type-property.js";
 import { validationMessage } from "../api/dom/html-button-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-button-element-validity-getter.js";
 import { willValidate } from "../api/dom/html-button-element-will-validate-getter.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLButtonElement() {
-  installHTMLButtonElementConstructor();for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLButtonElementConstructor();
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   getter("form", form);
   accessor("formAction", formAction, setFormAction);
   accessor("formEnctype", formEnctype, setFormEnctype);
-  accessor("formMethod", formMethod, setFormMethod);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("type", type, setType);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("formMethod", formMethod, setFormMethod);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("type", type, setType);
   getter("willValidate", willValidate);
   getter("validity", validity);
   getter("validationMessage", validationMessage);

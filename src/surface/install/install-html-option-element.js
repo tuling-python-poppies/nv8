@@ -17,9 +17,10 @@ import { setValue, value } from "../api/dom/html-option-element-value-property.j
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLOptionElement() {
-  installHTMLOptionElementConstructor();for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLOptionElementConstructor();
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLOptionElement.prototype, "form", form);
-  accessor("label", label, setLabel);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("label", label, setLabel);
   accessor("selected", selected, setSelected);
   accessor("value", value, setValue);
   accessor("text", text, setText);

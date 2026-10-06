@@ -11,15 +11,13 @@ import {
 import {
   getSVGDocument,
 } from "../api/dom/html-embed-element-get-svg-document.js";
-import {
-  setSrc,
-  src,
-} from "../api/dom/html-embed-element-src-property.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
 
 export function installHTMLEmbedElement() {
   installHTMLEmbedElementConstructor();
-  accessor("src", src, setSrc);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeMethod(
     HTMLEmbedElement.prototype,
     "getSVGDocument",

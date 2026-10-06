@@ -17,15 +17,17 @@ import { requestPictureInPicture } from "../api/media/html-video-element-request
 import { requestVideoFrameCallback } from "../api/media/html-video-element-request-video-frame-callback.js";
 import { webkitDecodedFrameCount } from "../api/media/html-video-element-webkit-decoded-frame-count-getter.js";
 import { webkitDroppedFrameCount } from "../api/media/html-video-element-webkit-dropped-frame-count-getter.js";
-import { videoReadonlyPropertyTable } from "../api/media/video-readonly-property-members.js";
 import { videoPropertyTable } from "../api/media/video-property-members.js";
 import { videoHandlerPropertyTable } from "../api/media/video-handler-property-members.js";
+import { videoReadonlyPropertyTable } from "../api/media/video-readonly-property-members.js";
 
 export function installHTMLVideoElement() {
-  installHTMLVideoElementConstructor();for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of videoReadonlyPropertyTable) getter(name, entry);for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);
+  installHTMLVideoElementConstructor();
+  for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of videoReadonlyPropertyTable) getter(name, entry);
   getter("webkitDecodedFrameCount", webkitDecodedFrameCount);
-  getter("webkitDroppedFrameCount", webkitDroppedFrameCount);for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of videoHandlerPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of videoPropertyTable) accessor( name, entry.get, entry.set, );
+  getter("webkitDroppedFrameCount", webkitDroppedFrameCount);
+  for (const [name, entry] of videoHandlerPropertyTable) accessor( name, entry.get, entry.set, );
   method("cancelVideoFrameCallback", cancelVideoFrameCallback);
   method("getVideoPlaybackQuality", getVideoPlaybackQuality);
   method("requestPictureInPicture", requestPictureInPicture);

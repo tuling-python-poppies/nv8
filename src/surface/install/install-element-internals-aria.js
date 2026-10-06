@@ -5,5 +5,4 @@ export function installElementInternalsARIABeforeMethods(accessor) {
 }
 
 export function installElementInternalsARIAAfterMethods(accessor) {
-  for (const [name, entry] of elementInternalsARIAPropertyTable) accessor(name, entry);
 }

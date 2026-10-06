@@ -27,7 +27,8 @@ export function installHTMLStyleElement() {
     "disabled",
     disabled,
     setDisabled,
-  );for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLStyleElement.prototype, name, entry.get, entry.set, );for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLStyleElement.prototype, name, entry.get, entry.set);
+  );
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLStyleElement.prototype, name, entry.get, entry.set, );
   definePrototypeGetter(HTMLStyleElement.prototype, "sheet", sheet);
   definePrototypeGetter(HTMLStyleElement.prototype, "blocking", blocking);
   defineConstructorBacklink(HTMLStyleElement.prototype, HTMLStyleElement);

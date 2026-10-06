@@ -9,24 +9,26 @@ import {
   HTMLAreaElement,
   installHTMLAreaElementConstructor,
 } from "../api/dom/html-area-element-constructor.js";
-import { href, setHref } from "../api/dom/html-area-element-href-property.js";
 import { interestForElement, setInterestForElement } from "../api/dom/html-area-element-interest-for-element-property.js";
 import { origin } from "../api/dom/html-area-element-origin-getter.js";
 import { relList, setRelList } from "../api/dom/html-area-element-rel-list-property.js";
 import { toString } from "../api/dom/html-area-element-to-string.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 import { areaURLComponentPropertyTable } from "../api/dom/area-urlcomponent-property-members.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
 
 export function installHTMLAreaElement() {
-  installHTMLAreaElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("relList", relList, setRelList);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLAreaElementConstructor();
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("relList", relList, setRelList);
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLAreaElement.prototype, "origin", origin);
   for (const [name, entry] of areaURLComponentPropertyTable) accessor(name, entry.get, entry.set);
-  accessor("href", href, setHref);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
   accessor("interestForElement", interestForElement, setInterestForElement);
   definePrototypeMethod(HTMLAreaElement.prototype, "toString", toString);
-  defineConstructorBacklink(HTMLAreaElement.prototype, HTMLAreaElement);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  defineConstructorBacklink(HTMLAreaElement.prototype, HTMLAreaElement);
   defineToStringTag(HTMLAreaElement.prototype, "HTMLAreaElement");
 }
 

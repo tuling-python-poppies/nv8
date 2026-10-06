@@ -155,8 +155,8 @@ import { activeViewTransition } from "../api/dom/element-active-view-transition-
 import { startViewTransition } from "../api/dom/element-start-view-transition.js";
 import { elementStringPropertyTable } from "../api/dom/element-string-property-members.js";
 import { elementExtendedMethodTable } from "../api/dom/element-extended-method-members.js";
-import { elementNumberPropertyTable } from "../api/dom/element-number-property-members.js";
 import { elementHandlerPropertyTable } from "../api/dom/element-handler-property-members.js";
+import { elementNumberPropertyTable } from "../api/dom/element-number-property-members.js";
 
 export function installElement() {
   installElementConstructor();
@@ -180,8 +180,9 @@ export function installElement() {
   getter("clientTop", clientTop);
   getter("clientLeft", clientLeft);
   getter("clientWidth", clientWidth);
-  getter("clientHeight", clientHeight);for (const [name, entry] of elementHandlerPropertyTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of elementStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of elementHandlerPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of elementHandlerPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);
+  getter("clientHeight", clientHeight);
+  for (const [name, entry] of elementHandlerPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);
   installElementChildren();
   installElementFirstElementChild();
   installElementLastElementChild();
@@ -196,7 +197,6 @@ export function installElement() {
   for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementClosest();
   method("computedStyleMap", computedStyleMap);
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementGetAttribute();
   installElementGetAttributeNS();
   installElementGetAttributeNames();
@@ -206,17 +206,13 @@ export function installElement() {
   method("getClientRects", getClientRects);
   installElementGetElementsByClassName();
   installElementGetElementsByTagName();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementHasAttribute();
   installElementHasAttributeNS();
   installElementHasAttributes();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementMatches();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementPrepend();
   installElementQuerySelector();
   installElementQuerySelectorAll();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementRemove();
   installElementRemoveAttribute();
   installElementRemoveAttributeNS();
@@ -225,22 +221,18 @@ export function installElement() {
   installElementReplaceWith();
   method("requestFullscreen", requestFullscreen);
   method("requestPointerLock", requestPointerLock);
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementSetAttribute();
   installElementSetAttributeNS();
   installElementSetAttributeNode();
   installElementSetAttributeNodeNS();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementToggleAttribute();
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   method("webkitRequestFullScreen", webkitRequestFullScreen);
   method("webkitRequestFullscreen", webkitRequestFullscreen);
   getter("currentCSSZoom", currentCSSZoom);
   getter("customElementRegistry", customElementRegistry);
-  getter("activeViewTransition", activeViewTransition);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.ariaElementPropertyTable) accessor( name, entry.get, entry.set, );
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
+  getter("activeViewTransition", activeViewTransition);
+  for (const [name, entry] of aria.ariaElementPropertyTable) accessor( name, entry.get, entry.set, );
   method("pseudo", pseudo);
-  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   method("startViewTransition", startViewTransition);
   finishElementConstructor();
 }

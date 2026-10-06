@@ -10,7 +10,8 @@ import {
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLMetaElement() {
-  installHTMLMetaElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLMetaElementConstructor();
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLMetaElement.prototype, HTMLMetaElement);
   defineToStringTag(HTMLMetaElement.prototype, "HTMLMetaElement");
 }

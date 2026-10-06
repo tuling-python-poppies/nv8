@@ -21,26 +21,17 @@ import { readonlyMatrixValueOperationTable } from "../api/geometry/readonly-matr
 
 export function installDOMMatrixReadOnly() {
   installDOMMatrixReadOnlyConstructor();
-  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry); getter("b", b); getter("c", c); getter("d", d);
-  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry); getter("f", f);
-  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry); getter("m12", m12); getter("m13", m13); getter("m14", m14);
-  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry); getter("m22", m22); getter("m23", m23); getter("m24", m24);
-  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry); getter("m32", m32); getter("m33", m33); getter("m34", m34);
-  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry); getter("m42", m42); getter("m43", m43); getter("m44", m44);
+  for (const [name, entry] of matrixComponentGetterTable) getter(name, entry);
   for (const [name, entry] of matrixBooleanGetterTable) getter(name, entry);
   for (const [name, entry] of readonlyMatrixOperationTable) method(name, entry);
   method("rotate", rotate);
-  for (const [name, entry] of readonlyMatrixOperationTable) method(name, entry);
   method("scale", scale);
   method("scale3d", scale3d);
-  for (const [name, entry] of readonlyMatrixOperationTable) method(name, entry);
   method("skewX", skewX);
   method("skewY", skewY);
   for (const [name, entry] of readonlyMatrixValueOperationTable) method(name, entry);
   method("transformPoint", transformPoint);
-  for (const [name, entry] of readonlyMatrixOperationTable) method(name, entry);
   defineConstructorBacklink(DOMMatrixReadOnly.prototype, DOMMatrixReadOnly);
-  for (const [name, entry] of readonlyMatrixValueOperationTable) method(name, entry);
   defineToStringTag(DOMMatrixReadOnly.prototype, "DOMMatrixReadOnly");
 }
 

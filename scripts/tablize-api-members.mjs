@@ -458,7 +458,9 @@ export function logicalStatements(source) {
 
 function leadingSpaces(source, offset) {
   let index = offset;
-  while (index < source.length && (source[index] === ' ' || source[index] === '\t')) index += 1;
+  // 跳过整段空白（含换行）：语句起点落在自己的首个非空白字符上，
+  // 只跳空格的话，替换会把新循环粘到上一条语句结尾。
+  while (index < source.length && /\s/.test(source[index])) index += 1;
   return index - offset;
 }
 
@@ -700,19 +702,22 @@ async function main() {
   let perPlan;
   let fileEdits;
   let totalLoops = 0;
+  const dropped = [];
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    skipped.length = 0;
     perPlan = new Map();
     fileEdits = new Map();
     ({ perPlan, fileEdits, totalLoops } = computeEdits(active));
     const { offenders, samples } = await audit(active, perPlan, fileEdits);
     if (offenders.size === 0) break;
     for (const plan of offenders) {
-      skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
+      // 记到 dropped 而不是 skipped：skipped 每轮会被 computeEdits 重填，
+      // 写在里面会被下一轮清掉，报告就看不出家族被审计剔除了。
+      dropped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
         + `（有模块直接引用了它的成员文件：${samples[0] ?? ''}）`);
     }
     active = active.filter((plan) => !offenders.has(plan));
   }
+  skipped.push(...dropped);
 
   for (const plan of plans) {
     const consumers = [...(perPlan.get(plan) ?? [])].map(
@@ -723,7 +728,9 @@ async function main() {
       + `${plan.factory.padEnd(32)} -> ${path.basename(plan.target.file).padEnd(40)} 循环: ${consumers.join(' ') || '无'}`,
     );
   }
-  console.log(`\n合计 ${plans.length} 个家族、${plans.reduce((sum, plan) => sum + plan.members.length, 0)} 个成员文件、`
+  const planned = [...perPlan.keys()];
+  console.log(`\n合计 ${planned.length}/${plans.length} 个家族、`
+    + `${planned.reduce((sum, plan) => sum + plan.members.length, 0)} 个成员文件、`
     + `${totalLoops} 段循环、${fileEdits.size} 个安装文件待改` + (write ? '（已落盘）' : '（dry-run）'));
   if (skipped.length > 0) {
     console.log(`\n因覆盖不全而跳过 ${skipped.length} 个家族：`);
@@ -761,13 +768,30 @@ async function main() {
 
   for (const [file, edit] of fileEdits) {
     let source = installSources.get(file);
+    // 同一文件里同一家族的多个循环段只保留第一段：循环装的是整张表，装第二遍没有意义，
+    // 留着会读出一串一模一样的 for。其余段整段删掉（成员由保留的那段装上）。
+    const keptFirst = new Map();
+    for (const loop of [...edit.loops].sort((a, b) => a.startOffset - b.startOffset)) {
+      if (!keptFirst.has(loop.plan)) keptFirst.set(loop.plan, loop);
+    }
     for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
+      const isFirst = keptFirst.get(loop.plan) === loop;
       const ref = loop.scope.namespace === null
         ? loop.plan.tableName
         : `${loop.scope.namespace}.${loop.plan.tableName}`;
-      const replacement = `${loop.indent}for (const [name, entry] of ${ref}) `
-        + `${fillTemplate(loop.template, loop.slots)}`;
-      source = source.slice(0, loop.startOffset) + replacement + source.slice(loop.endOffset);
+      const replacement = isFirst
+        ? `${loop.indent}for (const [name, entry] of ${ref}) ${fillTemplate(loop.template, loop.slots)}`
+        : '';
+      // 语句独占一行时把替换范围向前吃到行首，避免缩进叠加；删除时再吃掉行尾换行，免得留空行
+      let from = loop.startOffset;
+      const lineStart = source.lastIndexOf('\n', from - 1) + 1;
+      if (source.slice(lineStart, from).trim() === '') from = lineStart;
+      let to = loop.endOffset;
+      if (replacement === '') {
+        while (to < source.length && source[to] !== '\n' && source[to].trim() === '') to += 1;
+        if (source[to] === '\n') to += 1;
+      }
+      source = source.slice(0, from) + replacement + source.slice(to);
     }
     source = dropNamedImports(source, file, edit.drops);
     for (const [tableName, specifier] of edit.adds) {

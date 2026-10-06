@@ -14,7 +14,9 @@ import { offscreenCanvasPropertyTable } from "../api/canvas/offscreen-canvas-pro
 
 export function installOffscreenCanvas() {
   installOffscreenCanvasConstructor();
-  for (const [name, entry] of dimensionPropertyTable) definePrototypeAccessor(OffscreenCanvas.prototype, name, entry.get, entry.set);for (const [name, entry] of offscreenCanvasPropertyTable) definePrototypeAccessor( OffscreenCanvas.prototype, name, entry.get, entry.set, );for (const [name, entry] of offscreenCanvasMethodTable) definePrototypeMethod(OffscreenCanvas.prototype, name, entry);for (const [name, entry] of offscreenCanvasMethodTable) definePrototypeMethod( OffscreenCanvas.prototype, name, entry, );
+  for (const [name, entry] of dimensionPropertyTable) definePrototypeAccessor(OffscreenCanvas.prototype, name, entry.get, entry.set);
+  for (const [name, entry] of offscreenCanvasPropertyTable) definePrototypeAccessor( OffscreenCanvas.prototype, name, entry.get, entry.set, );
+  for (const [name, entry] of offscreenCanvasMethodTable) definePrototypeMethod(OffscreenCanvas.prototype, name, entry);
   defineConstructorBacklink(OffscreenCanvas.prototype, OffscreenCanvas);
   defineToStringTag(OffscreenCanvas.prototype, "OffscreenCanvas");
 }

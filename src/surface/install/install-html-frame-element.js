@@ -19,7 +19,6 @@ export function installHTMLFrameElement() {
   accessor("noResize", noResize, setNoResize);
   definePrototypeGetter(HTMLFrameElement.prototype, "contentDocument", contentDocument);
   definePrototypeGetter(HTMLFrameElement.prototype, "contentWindow", contentWindow);
-  for (const [name, entry] of frameStringPropertyTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLFrameElement.prototype, HTMLFrameElement);
   defineToStringTag(HTMLFrameElement.prototype, "HTMLFrameElement");
 }

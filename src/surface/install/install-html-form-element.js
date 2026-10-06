@@ -23,16 +23,18 @@ import { requestSubmit } from "../api/dom/html-form-element-request-submit.js";
 import { reset } from "../api/dom/html-form-element-reset.js";
 import { submit } from "../api/dom/html-form-element-submit.js";
 import { values } from "../api/dom/html-form-element-values.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLFormElement() {
-  installHTMLFormElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
+  installHTMLFormElementConstructor();
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
   definePrototypeAccessor(HTMLFormElement.prototype, "action", action, setAction);
   definePrototypeAccessor(HTMLFormElement.prototype, "autocomplete", autocomplete, setAutocomplete);
   definePrototypeAccessor(HTMLFormElement.prototype, "enctype", enctype, setEnctype);
   definePrototypeAccessor(HTMLFormElement.prototype, "encoding", encoding, setEncoding);
-  definePrototypeAccessor(HTMLFormElement.prototype, "method", method, setMethod);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
+  definePrototypeAccessor(HTMLFormElement.prototype, "method", method, setMethod);
+  for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLFormElement.prototype, "relList", relList);
   definePrototypeGetter(HTMLFormElement.prototype, "elements", elements);
   definePrototypeGetter(HTMLFormElement.prototype, "length", length);

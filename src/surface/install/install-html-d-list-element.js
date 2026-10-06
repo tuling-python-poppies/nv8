@@ -10,7 +10,8 @@ import {
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLDListElement() {
-  installHTMLDListElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLDListElement.prototype, name, entry.get, entry.set, );
+  installHTMLDListElementConstructor();
+  for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLDListElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLDListElement.prototype, HTMLDListElement);
   defineToStringTag(HTMLDListElement.prototype, "HTMLDListElement");
 }

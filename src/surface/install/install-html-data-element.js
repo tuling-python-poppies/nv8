@@ -10,7 +10,8 @@ import {
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLDataElement() {
-  installHTMLDataElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLDataElement.prototype, name, entry.get, entry.set);
+  installHTMLDataElementConstructor();
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLDataElement.prototype, name, entry.get, entry.set);
   defineConstructorBacklink(HTMLDataElement.prototype, HTMLDataElement);
   defineToStringTag(HTMLDataElement.prototype, "HTMLDataElement");
 }

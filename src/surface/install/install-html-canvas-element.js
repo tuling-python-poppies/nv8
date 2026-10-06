@@ -15,9 +15,10 @@ import { htmlCanvasMethodTable } from "../api/canvas/html-canvas-method-members.
 
 export function installHTMLCanvasElement() {
   installHTMLCanvasElementConstructor();
-  for (const [name, entry] of htmlCanvasDimensionPropertyTable) definePrototypeAccessor(HTMLCanvasElement.prototype, name, entry.get, entry.set);for (const [name, entry] of htmlCanvasMethodTable) definePrototypeMethod(HTMLCanvasElement.prototype, name, entry);
+  for (const [name, entry] of htmlCanvasDimensionPropertyTable) definePrototypeAccessor(HTMLCanvasElement.prototype, name, entry.get, entry.set);
+  for (const [name, entry] of htmlCanvasMethodTable) definePrototypeMethod(HTMLCanvasElement.prototype, name, entry);
   definePrototypeMethod(HTMLCanvasElement.prototype, "toBlob", toBlob);
-  definePrototypeMethod(HTMLCanvasElement.prototype, "toDataURL", toDataURL);for (const [name, entry] of htmlCanvasMethodTable) definePrototypeMethod( HTMLCanvasElement.prototype, name, entry, );
+  definePrototypeMethod(HTMLCanvasElement.prototype, "toDataURL", toDataURL);
   defineConstructorBacklink(HTMLCanvasElement.prototype, HTMLCanvasElement);
   defineToStringTag(HTMLCanvasElement.prototype, "HTMLCanvasElement");
 }

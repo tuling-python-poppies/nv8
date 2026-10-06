@@ -10,7 +10,8 @@ import {
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLTimeElement() {
-  installHTMLTimeElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLTimeElement.prototype, name, entry.get, entry.set, );
+  installHTMLTimeElementConstructor();
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLTimeElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLTimeElement.prototype, HTMLTimeElement);
   defineToStringTag(HTMLTimeElement.prototype, "HTMLTimeElement");
 }

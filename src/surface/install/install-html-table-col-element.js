@@ -15,7 +15,8 @@ import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLTableColElement() {
   installHTMLTableColElementConstructor();
-  accessor("span", span, setSpan);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("span", span, setSpan);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLTableColElement.prototype, HTMLTableColElement);
   defineToStringTag(HTMLTableColElement.prototype, "HTMLTableColElement");
 }

@@ -23,7 +23,6 @@ export function installCSSStyleSheet() {
   definePrototypeMethod(CSSStyleSheet.prototype, "addRule", addRule);
   for (const [name, entry] of cssStyleSheetMethodTable) definePrototypeMethod(CSSStyleSheet.prototype, name, entry);
   definePrototypeMethod(CSSStyleSheet.prototype, "replace", replace);
-  for (const [name, entry] of cssStyleSheetMethodTable) definePrototypeMethod(CSSStyleSheet.prototype, name, entry);
   defineConstructorBacklink(CSSStyleSheet.prototype, CSSStyleSheet);
   defineToStringTag(CSSStyleSheet.prototype, "CSSStyleSheet");
 }

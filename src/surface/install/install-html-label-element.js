@@ -18,7 +18,8 @@ import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLLabelElement() {
   installHTMLLabelElementConstructor();
-  definePrototypeGetter(HTMLLabelElement.prototype, "form", form);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLLabelElement.prototype, name, entry.get, entry.set, );
+  definePrototypeGetter(HTMLLabelElement.prototype, "form", form);
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLLabelElement.prototype, name, entry.get, entry.set, );
   definePrototypeGetter(HTMLLabelElement.prototype, "control", control);
   defineConstructorBacklink(HTMLLabelElement.prototype, HTMLLabelElement);
   defineToStringTag(HTMLLabelElement.prototype, "HTMLLabelElement");

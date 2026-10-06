@@ -21,22 +21,12 @@ import { matrixSelfOperationTable } from "../api/geometry/matrix-self-operation-
 
 export function installDOMMatrix() {
   installDOMMatrixConstructor();
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("b", b, setB); accessor("c", c, setC);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("e", e, setE); accessor("f", f, setF);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m12", m12, setM12);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m14", m14, setM14);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m22", m22, setM22);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m24", m24, setM24);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m32", m32, setM32);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m34", m34, setM34);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m42", m42, setM42);
-  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set); accessor("m44", m44, setM44);
+  for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of matrixSelfOperationTable) method(name, entry);
   method("scale3dSelf", scale3dSelf);
   method("scaleSelf", scaleSelf);
   method("skewXSelf", skewXSelf);
   method("skewYSelf", skewYSelf);
-  for (const [name, entry] of matrixSelfOperationTable) method(name, entry);
   defineConstructorBacklink(DOMMatrix.prototype, DOMMatrix);
   method("setMatrixValue", setMatrixValue);
   defineToStringTag(DOMMatrix.prototype, "DOMMatrix");

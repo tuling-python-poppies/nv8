@@ -17,9 +17,7 @@ export function installBlob() {
   for (const [name, entry] of blobMethodTable) definePrototypeMethod(Blob.prototype, name, entry);
   definePrototypeMethod(Blob.prototype, "slice", slice);
   definePrototypeMethod(Blob.prototype, "stream", stream);
-  for (const [name, entry] of blobMethodTable) definePrototypeMethod(Blob.prototype, name, entry);
   definePrototypeMethod(Blob.prototype, "textStream", textStream);
-  for (const [name, entry] of blobMethodTable) definePrototypeMethod(Blob.prototype, name, entry);
   defineConstructorBacklink(Blob.prototype, Blob);
   defineToStringTag(Blob.prototype, "Blob");
 }

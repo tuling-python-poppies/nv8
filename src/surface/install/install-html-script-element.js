@@ -20,10 +20,6 @@ import {
   setInnerText,
 } from "../api/dom/html-script-element-inner-text-property.js";
 import {
-  src,
-  setSrc,
-} from "../api/dom/html-script-element-src-property.js";
-import {
   textContent,
   setTextContent,
 } from "../api/dom/html-script-element-text-content-property.js";
@@ -31,20 +27,23 @@ import {
   text,
   setText,
 } from "../api/dom/html-script-element-text-property.js";
-import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
+import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
 
 export function installHTMLScriptElement() {
   installHTMLScriptElementConstructor();
-  accessor("src", src, setSrc);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("async", asyncValue, setAsync);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("async", asyncValue, setAsync);
   for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("text", text, setText);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("text", text, setText);
   definePrototypeGetter(HTMLScriptElement.prototype, "blocking", blocking);
   accessor("textContent", textContent, setTextContent);
   accessor("innerText", innerText, setInnerText);
-  defineConstructorBacklink(HTMLScriptElement.prototype, HTMLScriptElement);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  defineConstructorBacklink(HTMLScriptElement.prototype, HTMLScriptElement);
   defineToStringTag(HTMLScriptElement.prototype, "HTMLScriptElement");
 }
 

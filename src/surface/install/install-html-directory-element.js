@@ -10,7 +10,8 @@ import {
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLDirectoryElement() {
-  installHTMLDirectoryElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLDirectoryElement.prototype, name, entry.get, entry.set, );
+  installHTMLDirectoryElementConstructor();
+  for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLDirectoryElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(
     HTMLDirectoryElement.prototype,
     HTMLDirectoryElement,

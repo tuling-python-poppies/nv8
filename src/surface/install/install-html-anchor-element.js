@@ -10,10 +10,6 @@ import {
   installHTMLAnchorElementConstructor,
 } from "../api/dom/html-anchor-element-constructor.js";
 import {
-  href,
-  setHref,
-} from "../api/dom/html-anchor-element-href-property.js";
-import {
   interestForElement,
   setInterestForElement,
 } from "../api/dom/html-anchor-element-interest-for-element-property.js";
@@ -26,16 +22,18 @@ import {
   setText,
 } from "../api/dom/html-anchor-element-text-property.js";
 import { toString } from "../api/dom/html-anchor-element-to-string.js";
-import { anchorURLComponentPropertyTable } from "../api/dom/anchor-urlcomponent-property-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { anchorURLComponentPropertyTable } from "../api/dom/anchor-urlcomponent-property-members.js";
+import { urlReflectionTable } from "../api/dom/url-reflection-members.js";
 
 export function installHTMLAnchorElement() {
-  installHTMLAnchorElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  definePrototypeGetter(HTMLAnchorElement.prototype, "relList", relList);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("text", text, setText);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLAnchorElementConstructor();
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  definePrototypeGetter(HTMLAnchorElement.prototype, "relList", relList);
+  accessor("text", text, setText);
   definePrototypeGetter(HTMLAnchorElement.prototype, "origin", origin);
   for (const [name, entry] of anchorURLComponentPropertyTable) accessor(name, entry.get, entry.set);
-  accessor("href", href, setHref);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
   accessor(
     "interestForElement",
     interestForElement,
@@ -45,7 +43,7 @@ export function installHTMLAnchorElement() {
   defineConstructorBacklink(
     HTMLAnchorElement.prototype,
     HTMLAnchorElement,
-  );for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  );
   defineToStringTag(HTMLAnchorElement.prototype, "HTMLAnchorElement");
 }
 

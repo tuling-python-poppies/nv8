@@ -27,16 +27,16 @@ import { validationMessage } from "../api/dom/html-text-area-element-validation-
 import { validity } from "../api/dom/html-text-area-element-validity-getter.js";
 import { value, setValue } from "../api/dom/html-text-area-element-value-property.js";
 import { willValidate } from "../api/dom/html-text-area-element-will-validate-getter.js";
-import { textAreaNumberReflectionTable } from "../api/dom/text-area-number-reflection-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { textAreaNumberReflectionTable } from "../api/dom/text-area-number-reflection-members.js";
 
 export function installHTMLTextAreaElement() {
-  installHTMLTextAreaElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of textAreaNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  installHTMLTextAreaElementConstructor();
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of textAreaNumberReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   getter("form", form);
-  for (const [name, entry] of textAreaNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of textAreaNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   getter("type", type);
   accessor("defaultValue", defaultValue, setDefaultValue);
   accessor("value", value, setValue);

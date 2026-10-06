@@ -25,11 +25,7 @@ export function installMediaStreamTrack() {
   installMediaStreamTrackConstructor();
   for (const [name, entry] of mediaStreamTrackReadonlyGetterTable) getter(name, entry);
   accessor("enabled", enabled, setEnabled);
-  for (const [name, entry] of mediaStreamTrackReadonlyGetterTable) getter(name, entry);
   for (const [name, entry] of mediaStreamTrackHandlerPropertyTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of mediaStreamTrackReadonlyGetterTable) getter(name, entry);
-  for (const [name, entry] of mediaStreamTrackHandlerPropertyTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of mediaStreamTrackReadonlyGetterTable) getter(name, entry);
   accessor("contentHint", contentHint, setContentHint);
   method("applyConstraints", applyConstraints);
   method("clone", clone);
@@ -37,7 +33,6 @@ export function installMediaStreamTrack() {
   method("getConstraints", getConstraints);
   method("getSettings", getSettings);
   method("stop", stop);
-  for (const [name, entry] of mediaStreamTrackHandlerPropertyTable) accessor(name, entry.get, entry.set);
   method("getCaptureHandle", getCaptureHandle);
   defineConstructorBacklink(MediaStreamTrack.prototype, MediaStreamTrack);
   defineToStringTag(MediaStreamTrack.prototype, "MediaStreamTrack");

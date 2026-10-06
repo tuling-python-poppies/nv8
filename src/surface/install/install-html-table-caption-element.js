@@ -10,7 +10,8 @@ import {
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLTableCaptionElement() {
-  installHTMLTableCaptionElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLTableCaptionElement.prototype, name, entry.get, entry.set, );
+  installHTMLTableCaptionElementConstructor();
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLTableCaptionElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(
     HTMLTableCaptionElement.prototype,
     HTMLTableCaptionElement,

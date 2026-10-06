@@ -10,7 +10,8 @@ import {
 import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLFontElement() {
-  installHTMLFontElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFontElement.prototype, name, entry.get, entry.set);
+  installHTMLFontElementConstructor();
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFontElement.prototype, name, entry.get, entry.set);
   defineConstructorBacklink(HTMLFontElement.prototype, HTMLFontElement);
   defineToStringTag(HTMLFontElement.prototype, "HTMLFontElement");
 }
