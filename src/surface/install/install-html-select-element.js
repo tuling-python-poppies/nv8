@@ -31,13 +31,13 @@ import {
 import { selectedOptions } from "../api/dom/html-select-element-selected-options-getter.js";
 import { setCustomValidity } from "../api/dom/html-select-element-set-custom-validity.js";
 import { showPicker } from "../api/dom/html-select-element-show-picker.js";
-import { setSize, size } from "../api/dom/html-select-element-size-property.js";
 import { type } from "../api/dom/html-select-element-type-getter.js";
 import { validity } from "../api/dom/html-select-element-validity-getter.js";
 import { validationMessage } from "../api/dom/html-select-element-validation-message-getter.js";
 import { setValue, value } from "../api/dom/html-select-element-value-property.js";
 import { values } from "../api/dom/html-select-element-values.js";
 import { willValidate } from "../api/dom/html-select-element-will-validate-getter.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 
 export function installHTMLSelectElement() {
   installHTMLSelectElementConstructor();
@@ -47,7 +47,7 @@ export function installHTMLSelectElement() {
   accessor("multiple", multiple, setMultiple);
   accessor("name", name, setName);
   accessor("required", required, setRequired);
-  accessor("size", size, setSize);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   getter("type", type);
   getter("options", options);
   accessor("length", length, setLength);

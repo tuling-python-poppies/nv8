@@ -23,7 +23,6 @@ import { declare, setDeclare } from "../api/dom/html-object-element-declare-prop
 import { form } from "../api/dom/html-object-element-form-getter.js";
 import { getSVGDocument } from "../api/dom/html-object-element-get-svg-document.js";
 import { height, setHeight } from "../api/dom/html-object-element-height-property.js";
-import { hspace, setHspace } from "../api/dom/html-object-element-hspace-property.js";
 import { name, setName } from "../api/dom/html-object-element-name-property.js";
 import { reportValidity } from "../api/dom/html-object-element-report-validity.js";
 import { setCustomValidity } from "../api/dom/html-object-element-set-custom-validity.js";
@@ -32,9 +31,9 @@ import { type, setType } from "../api/dom/html-object-element-type-property.js";
 import { useMap, setUseMap } from "../api/dom/html-object-element-use-map-property.js";
 import { validationMessage } from "../api/dom/html-object-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-object-element-validity-getter.js";
-import { vspace, setVspace } from "../api/dom/html-object-element-vspace-property.js";
 import { width, setWidth } from "../api/dom/html-object-element-width-property.js";
 import { willValidate } from "../api/dom/html-object-element-will-validate-getter.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 
 export function installHTMLObjectElement() {
   installHTMLObjectElementConstructor();
@@ -54,9 +53,9 @@ export function installHTMLObjectElement() {
   accessor("archive", archive, setArchive);
   accessor("code", code, setCode);
   accessor("declare", declare, setDeclare);
-  accessor("hspace", hspace, setHspace);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   accessor("standby", standby, setStandby);
-  accessor("vspace", vspace, setVspace);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   accessor("codeBase", codeBase, setCodeBase);
   accessor("codeType", codeType, setCodeType);
   accessor("border", border, setBorder);

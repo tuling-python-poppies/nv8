@@ -4,10 +4,6 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
-  height,
-  setHeight,
-} from "../api/dom/html-source-element-height-property.js";
-import {
   media,
   setMedia,
 } from "../api/dom/html-source-element-media-property.js";
@@ -31,10 +27,7 @@ import {
   setType,
   type,
 } from "../api/dom/html-source-element-type-property.js";
-import {
-  setWidth,
-  width,
-} from "../api/dom/html-source-element-width-property.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 
 export function installHTMLSourceElement() {
   installHTMLSourceElementConstructor();
@@ -43,8 +36,7 @@ export function installHTMLSourceElement() {
   accessor("srcset", srcset, setSrcset);
   accessor("sizes", sizes, setSizes);
   accessor("media", media, setMedia);
-  accessor("width", width, setWidth);
-  accessor("height", height, setHeight);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLSourceElement.prototype, HTMLSourceElement);
   defineToStringTag(HTMLSourceElement.prototype, "HTMLSourceElement");
 }

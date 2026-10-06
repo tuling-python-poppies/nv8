@@ -30,8 +30,6 @@ import {
   fetchPriority,
   setFetchPriority,
 } from "../api/dom/html-image-element-fetch-priority-property.js";
-import { height, setHeight } from "../api/dom/html-image-element-height-property.js";
-import { hspace, setHspace } from "../api/dom/html-image-element-hspace-property.js";
 import {
   HTMLImageElement,
   installHTMLImageElementConstructor,
@@ -55,11 +53,10 @@ import { sizes, setSizes } from "../api/dom/html-image-element-sizes-property.js
 import { src, setSrc } from "../api/dom/html-image-element-src-property.js";
 import { srcset, setSrcset } from "../api/dom/html-image-element-srcset-property.js";
 import { useMap, setUseMap } from "../api/dom/html-image-element-use-map-property.js";
-import { vspace, setVspace } from "../api/dom/html-image-element-vspace-property.js";
-import { width, setWidth } from "../api/dom/html-image-element-width-property.js";
 import { x } from "../api/dom/html-image-element-x-getter.js";
 import { y } from "../api/dom/html-image-element-y-getter.js";
 import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 
 export function installHTMLImageElement() {
   installHTMLImageElementConstructor();
@@ -70,8 +67,7 @@ export function installHTMLImageElement() {
   for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
   accessor("useMap", useMap, setUseMap);
   accessor("isMap", isMap, setIsMap);
-  accessor("width", width, setWidth);
-  accessor("height", height, setHeight);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   getter("naturalWidth", naturalWidth);
   getter("naturalHeight", naturalHeight);
   getter("complete", complete);
@@ -83,8 +79,7 @@ export function installHTMLImageElement() {
   accessor("name", name, setName);
   accessor("lowsrc", lowsrc, setLowsrc);
   accessor("align", align, setAlign);
-  accessor("hspace", hspace, setHspace);
-  accessor("vspace", vspace, setVspace);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   accessor("longDesc", longDesc, setLongDesc);
   accessor("border", border, setBorder);
   getter("x", x);

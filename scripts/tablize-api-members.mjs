@@ -438,7 +438,8 @@ function matchStatement(line, scoped) {
  *
  * 用作覆盖闸门：如果「引用行数」多于「被循环覆盖的行数」，说明还有我认不出的用法，
  * 这时整个家族必须跳过——否则删掉成员文件后会留下悬空导入或静默少装成员。
- * 在挖空文本上匹配，字符串里的同名内容不算引用。
+ * 在挖空文本上匹配，字符串里的同名内容不算引用；**来源规则与匹配器一致**，否则会把别的
+ * 家族的同名成员算进来，把闸门撑成误报（`accessor("target", target, setTarget)` 就是这种）。
  */
 function countReferences(source, scoped) {
   // 多行 import 的续行也会命中成员名，先把 import 语句整段摘掉再数
@@ -454,6 +455,7 @@ function countReferences(source, scoped) {
     for (const scope of scoped) {
       for (const member of scope.family.members) {
         for (const entry of member.exports) {
+          if (scope.namedExports !== null && !scope.namedExports.has(entry.name)) continue;
           const pattern = scope.namespace === null
             ? new RegExp(`(?<![\\w$.])${entry.name}(?![\\w$])`)
             : new RegExp(`\\b${scope.namespace}\\.${entry.name}(?![\\w$])`);
