@@ -10,10 +10,6 @@ import {
   installHTMLAnchorElementConstructor,
 } from "../api/dom/html-anchor-element-constructor.js";
 import {
-  href,
-  setHref,
-} from "../api/dom/html-anchor-element-href-property.js";
-import {
   interestForElement,
   setInterestForElement,
 } from "../api/dom/html-anchor-element-interest-for-element-property.js";
@@ -28,6 +24,7 @@ import {
 import { toString } from "../api/dom/html-anchor-element-to-string.js";
 import { anchorURLComponentPropertyTable } from "../api/dom/anchor-urlcomponent-property-members.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-html-anchor-element-members.js";
+import { urlReflectionTable } from "../api/dom/html-anchor-element-href-property.js";
 
 export function installHTMLAnchorElement() {
   installHTMLAnchorElementConstructor();
@@ -36,7 +33,7 @@ export function installHTMLAnchorElement() {
   accessor("text", text, setText);
   definePrototypeGetter(HTMLAnchorElement.prototype, "origin", origin);
   for (const [name, entry] of anchorURLComponentPropertyTable) accessor(name, entry.get, entry.set);
-  accessor("href", href, setHref);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
   accessor(
     "interestForElement",
     interestForElement,

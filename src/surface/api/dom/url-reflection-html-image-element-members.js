@@ -3,11 +3,13 @@
 import { urlReflection } from "./html-reflection.js";
 
 const URL_REFLECTION_TABLE_ROWS = [
-  ["href", "HTMLAnchorElement", "href", "href"],
+  ["src", "HTMLImageElement", "src", "src"],
+  ["lowsrc", "HTMLImageElement", "lowsrc", "lowsrc"],
+  ["longDesc", "HTMLImageElement", "longDesc", "longdesc"],
 ];
 
 export const urlReflectionTable = URL_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, urlReflection(...args)],
 );
 
-export const href = new Map([...urlReflectionTable]).get("href").get;
+export const src = new Map([...urlReflectionTable]).get("src").get;

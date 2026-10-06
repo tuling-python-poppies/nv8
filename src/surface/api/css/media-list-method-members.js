@@ -1,8 +1,15 @@
-// css 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// css 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { mediaListMethod } from "./media-list-method.js";
 
-export const item = mediaListMethod("item", 1, (record, args) =>
-  record.values[Number(args[0]) >>> 0] ?? null);
-export const toString = mediaListMethod("toString", 0, record => record.values.join(", "));
-export const values = mediaListMethod("values", 0, record => record.values.values());
+const MEDIA_LIST_METHOD_TABLE_ROWS = [
+  ["item", "item", 1, (record, args) =>
+  record.values[Number(args[0]) >>> 0] ?? null],
+  ["toString", "toString", 0, record => record.values.join(", ")],
+];
+
+export const mediaListMethodTable = MEDIA_LIST_METHOD_TABLE_ROWS.map(
+  ([name, ...args]) => [name, mediaListMethod(...args)],
+);
+
+export const values = new Map([...mediaListMethodTable]).get("values");

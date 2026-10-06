@@ -495,12 +495,13 @@ function stillReferencesDroppedNames(source, loops, droppedNames) {
   const bound = new Set();
   for (const match of masked.matchAll(/\b(?:const|let|var|function|class)\s+([\w$]+)/g)) bound.add(match[1]);
   for (const match of masked.matchAll(/(?:function\s*[\w$]*\s*|\()\s*([\w$]+)\s*[),=]/g)) bound.add(match[1]);
+  const found = [];
   for (const name of droppedNames) {
     if (bound.has(name)) continue;
     // `value:` 这种对象字面量的键不是引用，排除掉
-    if (new RegExp(`(?<![\\w$.])${name}(?![\\w$:])`).test(masked)) return name;
+    if (new RegExp(`(?<![\\w$.])${name}(?![\\w$:])`).test(masked)) found.push(name);
   }
-  return null;
+  return found;
 }
 
 function tidyImports(source) {
@@ -719,7 +720,7 @@ function formatImportBlock(bySpecifier) {
  * 目标文件（api 目录的桶）本身也可能是消费者——它里面有安装函数。所以这段逻辑两个地方都用：
  * 单独写消费者时用，以及在写目标模块前先把它自己的正文改写掉（顺序反了会把刚写的表冲掉）。
  */
-function rewriteConsumer(source, file, edit, tableNameByLoop) {
+function rewriteConsumer(source, file, edit, tableNameByLoop, compatNames = new Map()) {
   let out = source;
   for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
     const tableName = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name
@@ -747,6 +748,22 @@ function rewriteConsumer(source, file, edit, tableNameByLoop) {
   }
   for (const [tableName, specifier] of needed) {
     out = addNamedImport(out, tableName, specifier);
+  }
+  // 兼容名字：成员在别处还要按名字用（`values` 当 Symbol.iterator 的值、第三方直接 import）。
+  // 表模块会具名再导出它们，这里把导入补上。
+  const compatNeeded = new Map();
+  for (const loop of edit.loops) {
+    if (loop.scope.namespace !== null) continue;
+    if (loop.plan.target.file === file) continue;
+    const names = compatNames.get(loop.plan);
+    if (names === undefined) continue;
+    for (const name of names) {
+      if (!new RegExp(`(?<![\\w$.])${name}(?![\\w$:])`).test(maskSource(out))) continue;
+      compatNeeded.set(name, relative(file, loop.plan.target.file));
+    }
+  }
+  for (const [name, specifier] of compatNeeded) {
+    out = addNamedImport(out, name, specifier);
   }
   return tidyImports(out);
 }
@@ -839,12 +856,13 @@ async function main() {
         // 等价性交给「表按安装作用域切」保证：每张表只放那段语句装的成员，
         // 所以循环不可能装上别的成员（过装）。这里只保留「不许有认不出的引用」这条。
         // 还要确认：被摘掉的导出名没有在别处（比如当值用）继续出现
+        // 成员在别处（不是安装语句）还按名字被需要——不当成错误，而是让表模块把该名字
+        // **具名再导出**，引用方改成从表模块取。`mediaListMethod` 的 `values`（当
+        // `Symbol.iterator` 的值用）与 `urlReflection`（别的模块直接 import 成员文件）都是这类。
         const droppedNames = plan.members.flatMap((member) => member.exports.map((entry) => entry.name));
-        const stillUsed = stillReferencesDroppedNames(source, loops, droppedNames);
-        if (stillUsed !== null) {
-          skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
-            + `（${path.basename(file)} 里 ${stillUsed} 不是被安装语句用的，收成表会留下悬空引用）`);
-          clean = false;
+        for (const name of stillReferencesDroppedNames(source, loops, droppedNames)) {
+          if (!compatNames.has(plan)) compatNames.set(plan, new Set());
+          compatNames.get(plan).add(name);
         }
         if (loops.length === 0) continue;
         map.set(file, loops);
@@ -879,7 +897,7 @@ async function main() {
    * 这是最后一道闸门——目标选错、或者别的模块直接 import 了成员文件时，删掉它会留下悬空导入。
    * 命中的**家族整体剔除**（而不是中止全部），让其余家族照常迁移。
    */
-  async function audit(candidates, perPlan, fileEdits) {
+  async function audit(candidates, perPlan, fileEdits, compatNames) {
     const rewritten = new Set([...fileEdits.keys()]);
     for (const plan of perPlan.keys()) rewritten.add(plan.target.file);
     const owners = new Map();
@@ -891,33 +909,43 @@ async function main() {
     }
     const offenders = new Set();
     const samples = [];
+    // 直接 import 成员文件的第三方：改成从表模块按名字取（表模块会具名再导出）。
+    const rewrites = new Map();
     for (const file of await walk(path.join(ROOT, 'src'))) {
       if (rewritten.has(file)) continue;
       const source = await readFile(file, 'utf8');
-      for (const match of source.matchAll(/from\s+"([^"]+)"/g)) {
-        if (!match[1].startsWith('.')) continue;
-        const plans = owners.get(path.resolve(path.dirname(file), match[1]));
+      for (const match of source.matchAll(/import\s*\{([^}]*)\}\s*from\s*"([^"]+)";/g)) {
+        if (!match[2].startsWith('.')) continue;
+        const plans = owners.get(path.resolve(path.dirname(file), match[2]));
         if (plans === undefined) continue;
         for (const plan of plans) {
-          if (rewritten.has(file)) continue;
-          offenders.add(plan);
-          if (samples.length < 5) samples.push(`${path.relative(ROOT, file)} -> ${match[1]}`);
+          if (!rewrites.has(file)) rewrites.set(file, new Map());
+          rewrites.get(file).set(match[2], relative(file, plan.target.file));
+          if (!compatNames.has(plan)) compatNames.set(plan, new Set());
+          for (const name of match[1].split(',').map((value) => value.trim()).filter(Boolean)) {
+            compatNames.get(plan).add(name);
+          }
         }
       }
     }
-    return { offenders, samples };
+    return { offenders, samples, rewrites };
   }
 
   let active = plans;
   let perPlan;
   let fileEdits;
   let totalLoops = 0;
+  // 「成员在别处按名字还要用」的集合：表模块会为这些名字补一个具名导出
+  const compatNames = new Map();
+  let rewrites = new Map();
   const dropped = [];
   for (let attempt = 0; attempt < 4; attempt += 1) {
     perPlan = new Map();
     fileEdits = new Map();
     ({ perPlan, fileEdits, totalLoops } = computeEdits(active));
-    const { offenders, samples } = await audit(active, perPlan, fileEdits);
+    const audited = await audit(active, perPlan, fileEdits, compatNames);
+    rewrites = audited.rewrites;
+    const { offenders, samples } = audited;
     if (offenders.size === 0) break;
     for (const plan of offenders) {
       // 记到 dropped 而不是 skipped：skipped 每轮会被 computeEdits 重填，
@@ -1003,7 +1031,7 @@ async function main() {
     const current = targetIsMemberFile
       ? ''
       : (ownEdit !== undefined
-        ? rewriteConsumer(installSources.get(plan.target.file) ?? '', plan.target.file, ownEdit, tableNameByLoop)
+        ? rewriteConsumer(installSources.get(plan.target.file) ?? '', plan.target.file, ownEdit, tableNameByLoop, compatNames)
         : (existsSync(plan.target.file) ? await readFile(plan.target.file, 'utf8') : ''));
     const bySpecifier = new Map();
     for (const member of coveredMembers) {
@@ -1014,10 +1042,21 @@ async function main() {
       }
     }
     const stripped = stripForwarding(current, plan.target.file, plan.members).replace(/^\n+/, '');
+    // 给「别处还要按名字用」的成员补具名再导出：`export const values = new Map([...表]).get("values");`
+    const compat = compatNames.get(plan);
+    const lookup = `new Map([${tables.map((table) => `...${table.name}`).join(', ')}])`;
+    const compatLines = compat === undefined ? '' : [...compat]
+      .map((name) => {
+        const slot = plan.slotByName?.get(name) ?? null;
+        const access = slot === null || slot === undefined ? '' : `.${slot}`;
+        return `export const ${name} = ${lookup}.get(${JSON.stringify(name)})${access};`;
+      })
+      .join('\n');
     const parts = [
       stripped.replace(/\s+$/, '') || `// ${path.basename(plan.dir)} 的成员表：名字就能描述实现，不再一个成员一个文件。`,
       formatImportBlock(bySpecifier),
       tables.map((table) => buildTable(table.name, table.members).replace(/\n+$/, '')).join('\n\n'),
+      compatLines,
     ].filter((part) => part !== '');
     await writeFile(plan.target.file, `${parts.join('\n\n')}\n`);
     for (const file of memberFiles) {
@@ -1028,7 +1067,16 @@ async function main() {
   for (const [file, edit] of fileEdits) {
     // 已经作为目标模块处理过的消费者（它的正文已在写表之前改写）不再重写
     if (handledTargets.has(file)) continue;
-    await writeFile(file, rewriteConsumer(installSources.get(file), file, edit, tableNameByLoop));
+    await writeFile(file, rewriteConsumer(installSources.get(file), file, edit, tableNameByLoop, compatNames));
+  }
+
+  // 直接 import 成员文件的第三方：把 specifier 改指向表模块（表模块已具名再导出那些名字）
+  for (const [file, specifiers] of rewrites) {
+    let source = await readFile(file, 'utf8');
+    for (const [before, after] of specifiers) {
+      source = source.split(`"${before}"`).join(`"${after}"`);
+    }
+    await writeFile(file, tidyImports(source));
   }
 }
 

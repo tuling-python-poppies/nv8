@@ -12,22 +12,20 @@ import {
   HTMLImageElement,
   installHTMLImageElementConstructor,
 } from "../api/dom/html-image-element-constructor.js";
-import { longDesc, setLongDesc } from "../api/dom/html-image-element-long-desc-property.js";
-import { lowsrc, setLowsrc } from "../api/dom/html-image-element-lowsrc-property.js";
 import { naturalHeight } from "../api/dom/html-image-element-natural-height-getter.js";
 import { naturalWidth } from "../api/dom/html-image-element-natural-width-getter.js";
-import { src, setSrc } from "../api/dom/html-image-element-src-property.js";
 import { x } from "../api/dom/html-image-element-x-getter.js";
 import { y } from "../api/dom/html-image-element-y-getter.js";
 import { stringReflectionTable } from "../api/dom/string-reflection-html-image-element-members.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-html-image-element-members.js";
 import { nullableStringReflectionTable } from "../api/dom/html-image-element-cross-origin-property.js";
 import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-html-image-element-members.js";
+import { urlReflectionTable } from "../api/dom/url-reflection-html-image-element-members.js";
 
 export function installHTMLImageElement() {
   installHTMLImageElementConstructor();
   for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("src", src, setSrc);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
@@ -35,8 +33,7 @@ export function installHTMLImageElement() {
   getter("naturalHeight", naturalHeight);
   getter("complete", complete);
   getter("currentSrc", currentSrc);
-  accessor("lowsrc", lowsrc, setLowsrc);
-  accessor("longDesc", longDesc, setLongDesc);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
   getter("x", x);
   getter("y", y);
   definePrototypeMethod(HTMLImageElement.prototype, "decode", decode);

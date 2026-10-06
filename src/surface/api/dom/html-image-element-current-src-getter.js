@@ -1,6 +1,7 @@
 import { traceGetter } from "../../../infra/trace/trace-accessor.js";
 import { registerNativeGetter } from "../../../engine/webidl/native-function.js";
-import { src } from "./html-image-element-src-property.js";
+import { src } from "./url-reflection-html-image-element-members.js";
+
 export const currentSrc = Object.getOwnPropertyDescriptor({
   get currentSrc() {
     const result = Reflect.apply(src, this, []);
