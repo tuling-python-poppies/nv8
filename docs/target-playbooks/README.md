@@ -53,6 +53,7 @@
 | 五秒盾 Cloudflare Turnstile | [cloudflare-turnstile.md](cloudflare-turnstile.md) | 混合链线上通过（浏览器仅 token 步，token 688 字符；纯 NV8 为 CF 服务端风控判定，如实记录） |
 | 小红书（`x-s` / `x-s-common`） | [xiaohongshu-x-s.md](xiaohongshu-x-s.md) | 已接入（线上真实笔记验收） |
 | Akamai 阿迪达斯 HK | [adidas-hk-akamai.md](adidas-hk-akamai.md) | 已接入（线上真实商品验收，48 件） |
+| 阿里云验证码 V2（PZDS FeiLin 设备 profile） | [aliyun-v2-pzds.md](aliyun-v2-pzds.md) | 已接入（纯 nv8 无浏览器采集；在线 T001 + 业务数据验收） |
 
 ## 3. 逐目标手册
 
@@ -67,4 +68,5 @@
 | 荔枝网 gdtv | [gdtv-wasm-sign.md](gdtv-wasm-sign.md) | wasm 签名 + 请求头 |
 | 中文期刊 cqvip（瑞数 RS6） | [cqvip-rs6.md](cqvip-rs6.md) | 瑞数 RS6 适配记录 |
 | 欧冶 ouyeel（瑞数 RS6） | [ouyeel-rs6.md](ouyeel-rs6.md) | 瑞数 RS6 适配记录 |
+| 阿里云验证码 V2（PZDS FeiLin） | [aliyun-v2-pzds.md](aliyun-v2-pzds.md) | 活中继 + 动态脚本 loader shim + 持久化种子；设备 profile 采集与线上验收 |
 
