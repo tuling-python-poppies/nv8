@@ -509,7 +509,15 @@ function countReferences(source, scoped) {
   let count = 0;
   for (const statement of logicalStatements(withoutImports)) {
     const trimmed = statement.text.trim();
-    if (trimmed.startsWith('export {') || trimmed.startsWith('export *')) continue;
+    // 只统计「形如安装调用」的语句。生成的循环（`for (…) accessor(name, …)`）与本地 helper
+    // （`function getter(name, …) {`）里的 `name`/`getter` 会和某些成员重名，不排除就是误报。
+    if (!/^[\w$]+\(/.test(trimmed)) continue;
+    const nameMatch = /"([^"]+)"/.exec(statement.text);
+    if (nameMatch === null) continue;
+    const isMemberName = scoped.some((scope) => (
+      scope.family.members.some((member) => member.name === nameMatch[1])
+    ));
+    if (!isMemberName) continue;
     const masked = maskSource(statement.text);
     let hit = false;
     for (const scope of scoped) {

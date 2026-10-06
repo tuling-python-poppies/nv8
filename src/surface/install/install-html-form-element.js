@@ -5,7 +5,6 @@ import {
   definePrototypeMethod,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
-import { acceptCharset, setAcceptCharset } from "../api/dom/html-form-element-accept-charset-property.js";
 import { action, setAction } from "../api/dom/html-form-element-action-property.js";
 import { autocomplete, setAutocomplete } from "../api/dom/html-form-element-autocomplete-property.js";
 import { checkValidity } from "../api/dom/html-form-element-check-validity.js";
@@ -18,28 +17,22 @@ import { encoding, setEncoding } from "../api/dom/html-form-element-encoding-pro
 import { enctype, setEnctype } from "../api/dom/html-form-element-enctype-property.js";
 import { length } from "../api/dom/html-form-element-length-getter.js";
 import { method, setMethod } from "../api/dom/html-form-element-method-property.js";
-import { name, setName } from "../api/dom/html-form-element-name-property.js";
-import { rel, setRel } from "../api/dom/html-form-element-rel-property.js";
 import { relList } from "../api/dom/html-form-element-rel-list-getter.js";
 import { reportValidity } from "../api/dom/html-form-element-report-validity.js";
 import { requestSubmit } from "../api/dom/html-form-element-request-submit.js";
 import { reset } from "../api/dom/html-form-element-reset.js";
 import { submit } from "../api/dom/html-form-element-submit.js";
-import { target, setTarget } from "../api/dom/html-form-element-target-property.js";
 import { values } from "../api/dom/html-form-element-values.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLFormElement() {
-  installHTMLFormElementConstructor();
-  definePrototypeAccessor(HTMLFormElement.prototype, "acceptCharset", acceptCharset, setAcceptCharset);
+  installHTMLFormElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
   definePrototypeAccessor(HTMLFormElement.prototype, "action", action, setAction);
   definePrototypeAccessor(HTMLFormElement.prototype, "autocomplete", autocomplete, setAutocomplete);
   definePrototypeAccessor(HTMLFormElement.prototype, "enctype", enctype, setEnctype);
   definePrototypeAccessor(HTMLFormElement.prototype, "encoding", encoding, setEncoding);
-  definePrototypeAccessor(HTMLFormElement.prototype, "method", method, setMethod);
-  definePrototypeAccessor(HTMLFormElement.prototype, "name", name, setName);for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
-  definePrototypeAccessor(HTMLFormElement.prototype, "target", target, setTarget);
-  definePrototypeAccessor(HTMLFormElement.prototype, "rel", rel, setRel);
+  definePrototypeAccessor(HTMLFormElement.prototype, "method", method, setMethod);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLFormElement.prototype, "relList", relList);
   definePrototypeGetter(HTMLFormElement.prototype, "elements", elements);
   definePrototypeGetter(HTMLFormElement.prototype, "length", length);

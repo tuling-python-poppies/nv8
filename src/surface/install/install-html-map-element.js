@@ -11,14 +11,10 @@ import {
   HTMLMapElement,
   installHTMLMapElementConstructor,
 } from "../api/dom/html-map-element-constructor.js";
-import {
-  name,
-  setName,
-} from "../api/dom/html-map-element-name-property.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLMapElement() {
-  installHTMLMapElementConstructor();
-  definePrototypeAccessor(HTMLMapElement.prototype, "name", name, setName);
+  installHTMLMapElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLMapElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLMapElement.prototype, "areas", areas);
   defineConstructorBacklink(HTMLMapElement.prototype, HTMLMapElement);
   defineToStringTag(HTMLMapElement.prototype, "HTMLMapElement");

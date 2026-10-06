@@ -7,20 +7,11 @@ import {
   HTMLUListElement,
   installHTMLUListElementConstructor,
 } from "../api/dom/html-u-list-element-constructor.js";
-import {
-  setType,
-  type,
-} from "../api/dom/html-u-list-element-type-property.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLUListElement() {
-  installHTMLUListElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLUListElement.prototype, name, entry.get, entry.set, );
-  definePrototypeAccessor(
-    HTMLUListElement.prototype,
-    "type",
-    type,
-    setType,
-  );
+  installHTMLUListElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLUListElement.prototype, name, entry.get, entry.set, );for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLUListElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLUListElement.prototype, HTMLUListElement);
   defineToStringTag(HTMLUListElement.prototype, "HTMLUListElement");
 }

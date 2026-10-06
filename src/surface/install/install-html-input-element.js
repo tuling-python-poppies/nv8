@@ -5,10 +5,6 @@ import {
   definePrototypeMethod,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
-import { accept, setAccept } from "../api/dom/html-input-element-accept-property.js";
-import { align, setAlign } from "../api/dom/html-input-element-align-property.js";
-import { alt, setAlt } from "../api/dom/html-input-element-alt-property.js";
-import { autocomplete, setAutocomplete } from "../api/dom/html-input-element-autocomplete-property.js";
 import { checkValidity } from "../api/dom/html-input-element-check-validity.js";
 import { checked, setChecked } from "../api/dom/html-input-element-checked-property.js";
 import {
@@ -17,21 +13,14 @@ import {
 } from "../api/dom/html-input-element-constructor.js";
 import { defaultChecked, setDefaultChecked } from "../api/dom/html-input-element-default-checked-property.js";
 import { defaultValue, setDefaultValue } from "../api/dom/html-input-element-default-value-property.js";
-import { dirName, setDirName } from "../api/dom/html-input-element-dir-name-property.js";
 import { files, setFiles } from "../api/dom/html-input-element-files-property.js";
 import { formAction, setFormAction } from "../api/dom/html-input-element-form-action-property.js";
 import { formEnctype, setFormEnctype } from "../api/dom/html-input-element-form-enctype-property.js";
 import { form } from "../api/dom/html-input-element-form-getter.js";
 import { formMethod, setFormMethod } from "../api/dom/html-input-element-form-method-property.js";
-import { formTarget, setFormTarget } from "../api/dom/html-input-element-form-target-property.js";
 import { indeterminate, setIndeterminate } from "../api/dom/html-input-element-indeterminate-property.js";
 import { labels } from "../api/dom/html-input-element-labels-getter.js";
 import { list } from "../api/dom/html-input-element-list-getter.js";
-import { max, setMax } from "../api/dom/html-input-element-max-property.js";
-import { min, setMin } from "../api/dom/html-input-element-min-property.js";
-import { name, setName } from "../api/dom/html-input-element-name-property.js";
-import { pattern, setPattern } from "../api/dom/html-input-element-pattern-property.js";
-import { placeholder, setPlaceholder } from "../api/dom/html-input-element-placeholder-property.js";
 import { popoverTargetAction, setPopoverTargetAction } from "../api/dom/html-input-element-popover-target-action-property.js";
 import { popoverTargetElement, setPopoverTargetElement } from "../api/dom/html-input-element-popover-target-element-property.js";
 import { reportValidity } from "../api/dom/html-input-element-report-validity.js";
@@ -45,10 +34,8 @@ import { setSelectionRange } from "../api/dom/html-input-element-set-selection-r
 import { showPicker } from "../api/dom/html-input-element-show-picker.js";
 import { src, setSrc } from "../api/dom/html-input-element-src-property.js";
 import { stepDown } from "../api/dom/html-input-element-step-down.js";
-import { step, setStep } from "../api/dom/html-input-element-step-property.js";
 import { stepUp } from "../api/dom/html-input-element-step-up.js";
 import { type, setType } from "../api/dom/html-input-element-type-property.js";
-import { useMap, setUseMap } from "../api/dom/html-input-element-use-map-property.js";
 import { validationMessage } from "../api/dom/html-input-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-input-element-validity-getter.js";
 import { valueAsDate, setValueAsDate } from "../api/dom/html-input-element-value-as-date-property.js";
@@ -58,34 +45,24 @@ import { webkitEntries } from "../api/dom/html-input-element-webkit-entries-gett
 import { willValidate } from "../api/dom/html-input-element-will-validate-getter.js";
 import { inputNumberReflectionTable } from "../api/dom/input-number-reflection-members.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLInputElement() {
-  installHTMLInputElementConstructor();
-  accessor("accept", accept, setAccept);
-  accessor("alt", alt, setAlt);
-  accessor("autocomplete", autocomplete, setAutocomplete);
+  installHTMLInputElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   accessor("defaultChecked", defaultChecked, setDefaultChecked);
-  accessor("checked", checked, setChecked);
-  accessor("dirName", dirName, setDirName);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("checked", checked, setChecked);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   getter("form", form);
   accessor("files", files, setFiles);
   accessor("formAction", formAction, setFormAction);
   accessor("formEnctype", formEnctype, setFormEnctype);
-  accessor("formMethod", formMethod, setFormMethod);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("formTarget", formTarget, setFormTarget);
+  accessor("formMethod", formMethod, setFormMethod);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);
   accessor("indeterminate", indeterminate, setIndeterminate);
-  getter("list", list);
-  accessor("max", max, setMax);
+  getter("list", list);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("min", min, setMin);
-  for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("name", name, setName);
-  accessor("pattern", pattern, setPattern);
-  accessor("placeholder", placeholder, setPlaceholder);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("src", src, setSrc);
-  accessor("step", step, setStep);
+  accessor("src", src, setSrc);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   accessor("type", type, setType);
   accessor("defaultValue", defaultValue, setDefaultValue);
   accessor("value", value, setValue);
@@ -98,9 +75,7 @@ export function installHTMLInputElement() {
   getter("labels", labels);
   accessor("selectionStart", selectionStart, setSelectionStart);
   accessor("selectionEnd", selectionEnd, setSelectionEnd);
-  accessor("selectionDirection", selectionDirection, setSelectionDirection);
-  accessor("align", align, setAlign);
-  accessor("useMap", useMap, setUseMap);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("selectionDirection", selectionDirection, setSelectionDirection);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   accessor("popoverTargetElement", popoverTargetElement, setPopoverTargetElement);
   accessor("popoverTargetAction", popoverTargetAction, setPopoverTargetAction);
   method("checkValidity", checkValidity);

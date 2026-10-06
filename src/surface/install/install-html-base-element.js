@@ -11,20 +11,11 @@ import {
   href,
   setHref,
 } from "../api/dom/html-base-element-href-property.js";
-import {
-  setTarget,
-  target,
-} from "../api/dom/html-base-element-target-property.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLBaseElement() {
   installHTMLBaseElementConstructor();
-  definePrototypeAccessor(HTMLBaseElement.prototype, "href", href, setHref);
-  definePrototypeAccessor(
-    HTMLBaseElement.prototype,
-    "target",
-    target,
-    setTarget,
-  );
+  definePrototypeAccessor(HTMLBaseElement.prototype, "href", href, setHref);for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLBaseElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLBaseElement.prototype, HTMLBaseElement);
   defineToStringTag(HTMLBaseElement.prototype, "HTMLBaseElement");
 }

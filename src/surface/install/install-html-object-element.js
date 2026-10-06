@@ -5,59 +5,34 @@ import {
   definePrototypeMethod,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
-import { align, setAlign } from "../api/dom/html-object-element-align-property.js";
-import { archive, setArchive } from "../api/dom/html-object-element-archive-property.js";
-import { border, setBorder } from "../api/dom/html-object-element-border-property.js";
 import { checkValidity } from "../api/dom/html-object-element-check-validity.js";
-import { codeBase, setCodeBase } from "../api/dom/html-object-element-code-base-property.js";
-import { code, setCode } from "../api/dom/html-object-element-code-property.js";
-import { codeType, setCodeType } from "../api/dom/html-object-element-code-type-property.js";
 import { contentDocument } from "../api/dom/html-object-element-content-document-getter.js";
 import { contentWindow } from "../api/dom/html-object-element-content-window-getter.js";
 import {
   HTMLObjectElement,
   installHTMLObjectElementConstructor,
 } from "../api/dom/html-object-element-constructor.js";
-import { data, setData } from "../api/dom/html-object-element-data-property.js";
 import { form } from "../api/dom/html-object-element-form-getter.js";
 import { getSVGDocument } from "../api/dom/html-object-element-get-svg-document.js";
-import { height, setHeight } from "../api/dom/html-object-element-height-property.js";
-import { name, setName } from "../api/dom/html-object-element-name-property.js";
 import { reportValidity } from "../api/dom/html-object-element-report-validity.js";
 import { setCustomValidity } from "../api/dom/html-object-element-set-custom-validity.js";
-import { standby, setStandby } from "../api/dom/html-object-element-standby-property.js";
-import { type, setType } from "../api/dom/html-object-element-type-property.js";
-import { useMap, setUseMap } from "../api/dom/html-object-element-use-map-property.js";
 import { validationMessage } from "../api/dom/html-object-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-object-element-validity-getter.js";
-import { width, setWidth } from "../api/dom/html-object-element-width-property.js";
 import { willValidate } from "../api/dom/html-object-element-will-validate-getter.js";
 import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLObjectElement() {
-  installHTMLObjectElementConstructor();
-  accessor("data", data, setData);
-  accessor("type", type, setType);
-  accessor("name", name, setName);
-  accessor("useMap", useMap, setUseMap);
-  getter("form", form);
-  accessor("width", width, setWidth);
-  accessor("height", height, setHeight);
+  installHTMLObjectElementConstructor();for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  getter("form", form);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   getter("contentDocument", contentDocument);
   getter("contentWindow", contentWindow);
   getter("willValidate", willValidate);
   getter("validity", validity);
-  getter("validationMessage", validationMessage);
-  accessor("align", align, setAlign);
-  accessor("archive", archive, setArchive);
-  accessor("code", code, setCode);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("standby", standby, setStandby);
-  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("codeBase", codeBase, setCodeBase);
-  accessor("codeType", codeType, setCodeType);
-  accessor("border", border, setBorder);
+  getter("validationMessage", validationMessage);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
   method("checkValidity", checkValidity);
   method("getSVGDocument", getSVGDocument);
   method("reportValidity", reportValidity);

@@ -7,20 +7,11 @@ import {
   HTMLOptGroupElement,
   installHTMLOptGroupElementConstructor,
 } from "../api/dom/html-opt-group-element-constructor.js";
-import {
-  label,
-  setLabel,
-} from "../api/dom/html-opt-group-element-label-property.js";
 import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLOptGroupElement() {
-  installHTMLOptGroupElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLOptGroupElement.prototype, name, entry.get, entry.set, );
-  definePrototypeAccessor(
-    HTMLOptGroupElement.prototype,
-    "label",
-    label,
-    setLabel,
-  );
+  installHTMLOptGroupElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLOptGroupElement.prototype, name, entry.get, entry.set, );for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLOptGroupElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(
     HTMLOptGroupElement.prototype,
     HTMLOptGroupElement,

@@ -7,19 +7,10 @@ import {
   HTMLTimeElement,
   installHTMLTimeElementConstructor,
 } from "../api/dom/html-time-element-constructor.js";
-import {
-  dateTime,
-  setDateTime,
-} from "../api/dom/html-time-element-date-time-property.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-members.js";
 
 export function installHTMLTimeElement() {
-  installHTMLTimeElementConstructor();
-  definePrototypeAccessor(
-    HTMLTimeElement.prototype,
-    "dateTime",
-    dateTime,
-    setDateTime,
-  );
+  installHTMLTimeElementConstructor();for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLTimeElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLTimeElement.prototype, HTMLTimeElement);
   defineToStringTag(HTMLTimeElement.prototype, "HTMLTimeElement");
 }
