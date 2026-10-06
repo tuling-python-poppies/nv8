@@ -16,10 +16,6 @@ import {
   installHTMLHRElementConstructor,
 } from "../api/dom/html-hr-element-constructor.js";
 import {
-  noShade,
-  setNoShade,
-} from "../api/dom/html-hr-element-no-shade-property.js";
-import {
   setSize,
   size,
 } from "../api/dom/html-hr-element-size-property.js";
@@ -27,17 +23,12 @@ import {
   setWidth,
   width,
 } from "../api/dom/html-hr-element-width-property.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLHRElement() {
   installHTMLHRElementConstructor();
   definePrototypeAccessor(HTMLHRElement.prototype, "align", align, setAlign);
-  definePrototypeAccessor(HTMLHRElement.prototype, "color", color, setColor);
-  definePrototypeAccessor(
-    HTMLHRElement.prototype,
-    "noShade",
-    noShade,
-    setNoShade,
-  );
+  definePrototypeAccessor(HTMLHRElement.prototype, "color", color, setColor);for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLHRElement.prototype, name, entry.get, entry.set, );
   definePrototypeAccessor(HTMLHRElement.prototype, "size", size, setSize);
   definePrototypeAccessor(HTMLHRElement.prototype, "width", width, setWidth);
   defineConstructorBacklink(HTMLHRElement.prototype, HTMLHRElement);

@@ -10,46 +10,22 @@ import {
   HTMLVideoElement,
   installHTMLVideoElementConstructor,
 } from "../api/media/html-video-element-constructor.js";
-import { disablePictureInPicture, setDisablePictureInPicture } from "../api/media/html-video-element-disable-picture-in-picture-property.js";
 import { getVideoPlaybackQuality } from "../api/media/html-video-element-get-video-playback-quality.js";
-import { height, setHeight } from "../api/media/html-video-element-height-property.js";
 import { msGetVideoProcessingTypes } from "../api/media/html-video-element-ms-get-video-processing-types.js";
 import { msVideoProcessing, setMsVideoProcessing } from "../api/media/html-video-element-ms-video-processing-property.js";
-import { onenterpictureinpicture, setOnenterpictureinpicture } from "../api/media/html-video-element-onenterpictureinpicture-property.js";
-import { onleavepictureinpicture, setOnleavepictureinpicture } from "../api/media/html-video-element-onleavepictureinpicture-property.js";
-import { playsInline, setPlaysInline } from "../api/media/html-video-element-plays-inline-property.js";
-import { poster, setPoster } from "../api/media/html-video-element-poster-property.js";
 import { requestPictureInPicture } from "../api/media/html-video-element-request-picture-in-picture.js";
 import { requestVideoFrameCallback } from "../api/media/html-video-element-request-video-frame-callback.js";
 import { webkitDecodedFrameCount } from "../api/media/html-video-element-webkit-decoded-frame-count-getter.js";
 import { webkitDroppedFrameCount } from "../api/media/html-video-element-webkit-dropped-frame-count-getter.js";
-import { width, setWidth } from "../api/media/html-video-element-width-property.js";
 import { videoReadonlyPropertyTable } from "../api/media/video-readonly-property-members.js";
+import { videoPropertyTable } from "../api/media/video-property-members.js";
+import { videoHandlerPropertyTable } from "../api/media/video-handler-property-members.js";
 
 export function installHTMLVideoElement() {
-  installHTMLVideoElementConstructor();
-  accessor("width", width, setWidth);
-  accessor("height", height, setHeight);
-  for (const [name, entry] of videoReadonlyPropertyTable) getter(name, entry);
-  accessor("poster", poster, setPoster);
+  installHTMLVideoElementConstructor();for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of videoReadonlyPropertyTable) getter(name, entry);for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);
   getter("webkitDecodedFrameCount", webkitDecodedFrameCount);
-  getter("webkitDroppedFrameCount", webkitDroppedFrameCount);
-  accessor("playsInline", playsInline, setPlaysInline);
-  accessor(
-    "onenterpictureinpicture",
-    onenterpictureinpicture,
-    setOnenterpictureinpicture,
-  );
-  accessor(
-    "onleavepictureinpicture",
-    onleavepictureinpicture,
-    setOnleavepictureinpicture,
-  );
-  accessor(
-    "disablePictureInPicture",
-    disablePictureInPicture,
-    setDisablePictureInPicture,
-  );
+  getter("webkitDroppedFrameCount", webkitDroppedFrameCount);for (const [name, entry] of videoPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of videoHandlerPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of videoPropertyTable) accessor( name, entry.get, entry.set, );
   method("cancelVideoFrameCallback", cancelVideoFrameCallback);
   method("getVideoPlaybackQuality", getVideoPlaybackQuality);
   method("requestPictureInPicture", requestPictureInPicture);

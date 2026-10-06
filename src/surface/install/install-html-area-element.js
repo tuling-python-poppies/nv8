@@ -15,7 +15,6 @@ import { coords, setCoords } from "../api/dom/html-area-element-coords-property.
 import { download, setDownload } from "../api/dom/html-area-element-download-property.js";
 import { href, setHref } from "../api/dom/html-area-element-href-property.js";
 import { interestForElement, setInterestForElement } from "../api/dom/html-area-element-interest-for-element-property.js";
-import { noHref, setNoHref } from "../api/dom/html-area-element-no-href-property.js";
 import { origin } from "../api/dom/html-area-element-origin-getter.js";
 import { ping, setPing } from "../api/dom/html-area-element-ping-property.js";
 import { referrerPolicy, setReferrerPolicy } from "../api/dom/html-area-element-referrer-policy-property.js";
@@ -25,6 +24,7 @@ import { shape, setShape } from "../api/dom/html-area-element-shape-property.js"
 import { target, setTarget } from "../api/dom/html-area-element-target-property.js";
 import { toString } from "../api/dom/html-area-element-to-string.js";
 import { areaURLComponentPropertyTable } from "../api/dom/area-urlcomponent-property-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLAreaElement() {
   installHTMLAreaElementConstructor();
@@ -36,8 +36,7 @@ export function installHTMLAreaElement() {
   accessor("ping", ping, setPing);
   accessor("rel", rel, setRel);
   accessor("relList", relList, setRelList);
-  accessor("referrerPolicy", referrerPolicy, setReferrerPolicy);
-  accessor("noHref", noHref, setNoHref);
+  accessor("referrerPolicy", referrerPolicy, setReferrerPolicy);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLAreaElement.prototype, "origin", origin);
   for (const [name, entry] of areaURLComponentPropertyTable) accessor(name, entry.get, entry.set);
   accessor("href", href, setHref);

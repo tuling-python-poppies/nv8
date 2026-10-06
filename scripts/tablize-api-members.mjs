@@ -33,7 +33,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { maskSource, topLevelSpans } from './source-shape.mjs';
+import { findProtectedSpans, maskSource, topLevelSpans } from './source-shape.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const API_DIR = path.join(ROOT, 'src', 'surface', 'api');
@@ -329,7 +329,10 @@ function toTemplate(line, member, scope) {
     out += line.slice(cursor, edit.from) + edit.text;
     cursor = edit.to;
   }
-  return { template: (out + line.slice(cursor)).trimStart(), slots: member.exports.map((entry) => entry.slot) };
+  return {
+    template: collapseOutsideStrings(out + line.slice(cursor)),
+    slots: member.exports.map((entry) => entry.slot),
+  };
 }
 
 /** 回填模板：`<name>` → 循环变量，`<entry:i>` → 第 i 个导出在表项里的取值表达式。 */
@@ -395,39 +398,96 @@ function tidyImports(source) {
  * 只有模板相同的**连续**语句才成环，因此安装顺序天然不变。
  */
 export function findLoops(source, scoped) {
-  const lines = source.split('\n');
+  const statements = logicalStatements(source);
   const loops = [];
   let index = 0;
-  while (index < lines.length) {
-    const first = matchStatement(lines[index], scoped);
+  while (index < statements.length) {
+    const first = matchStatement(statements[index].text, scoped);
     if (first === null) {
       index += 1;
       continue;
     }
     let count = 1;
-    while (index + count < lines.length) {
-      const next = matchStatement(lines[index + count], scoped);
+    while (index + count < statements.length) {
+      const next = matchStatement(statements[index + count].text, scoped);
       if (next === null
         || next.template !== first.template
         || next.slotsKey !== first.slotsKey
         || next.scope !== first.scope) break;
       count += 1;
     }
-    loops.push({ ...first, count, start: index, end: index + count });
+    loops.push({
+      ...first,
+      count,
+      startOffset: statements[index].start,
+      endOffset: statements[index + count - 1].end,
+      indent: lineIndent(source, statements[index].start),
+    });
     index += count;
   }
   return loops;
 }
 
-function matchStatement(line, scoped) {
+/**
+ * 按逻辑语句切分源码：括号配对内的换行不切断语句。
+ *
+ * 安装器里大量语句是多行写法（`definePrototypeMethod(\n  X,\n  "name",\n  fn,\n);`），
+ * 按行切会把续行当成独立引用，既匹不出循环、又把覆盖闸门撑成误报。
+ */
+export function logicalStatements(source) {
+  const masked = maskSource(source);
+  const statements = [];
+  // 括号深度只看 `(`/`[`；花括号当**块边界**参与切分——否则整个函数体会被当成一条语句，
+  // 函数体内的成员安装语句永远分不出来。
+  let depth = 0;
+  let start = 0;
+  const push = (end) => {
+    const text = source.slice(start, end).trim();
+    if (text !== '') statements.push({ text, start: start + leadingSpaces(source, start), end });
+    start = end;
+  };
+  for (let index = 0; index < source.length; index += 1) {
+    const char = masked[index];
+    if (char === '(' || char === '[') depth += 1;
+    else if (char === ')' || char === ']') depth -= 1;
+    else if (depth === 0 && (char === ';' || char === '{' || char === '}')) push(index + 1);
+  }
+  push(source.length);
+  return statements;
+}
+
+function leadingSpaces(source, offset) {
+  let index = offset;
+  while (index < source.length && (source[index] === ' ' || source[index] === '\t')) index += 1;
+  return index - offset;
+}
+
+function lineIndent(source, offset) {
+  const lineStart = source.lastIndexOf('\n', offset) + 1;
+  return source.slice(lineStart, offset).match(/^[ \t]*/)?.[0] ?? '';
+}
+
+/** 折叠空白，但不动字符串/模板内容。 */
+export function collapseOutsideStrings(text) {
+  const spans = findProtectedSpans(text).filter((span) => span.kind === 'string');
+  let out = '';
+  let cursor = 0;
+  for (const span of spans) {
+    out += text.slice(cursor, span.from).replace(/\s+/g, ' ');
+    out += text.slice(span.from, span.to);
+    cursor = span.to;
+  }
+  return (out + text.slice(cursor).replace(/\s+/g, ' ')).trim();
+}
+
+export function matchStatement(line, scoped) {
   const trimmed = line.trim();
   if (!trimmed.endsWith(';') || !/^[\w$]+\(/.test(trimmed)) return null;
-  const indent = line.slice(0, line.length - line.trimStart().length);
   for (const scope of scoped) {
     for (const member of scope.family.members) {
       const converted = toTemplate(line, member, scope);
       if (converted === null) continue;
-      return { ...converted, slotsKey: converted.slots.join('|'), scope, indent };
+      return { ...converted, slotsKey: converted.slots.join('|'), scope };
     }
   }
   return null;
@@ -447,10 +507,10 @@ function countReferences(source, scoped) {
     .replace(/import\s*\{[^}]*\}\s*from\s*"[^"]+";/g, '')
     .replace(/import\s*\*\s*as\s+[\w$]+\s*from\s*"[^"]+";/g, '');
   let count = 0;
-  for (const line of withoutImports.split('\n')) {
-    const trimmed = line.trim();
+  for (const statement of logicalStatements(withoutImports)) {
+    const trimmed = statement.text.trim();
     if (trimmed.startsWith('export {') || trimmed.startsWith('export *')) continue;
-    const masked = maskSource(line);
+    const masked = maskSource(statement.text);
     let hit = false;
     for (const scope of scoped) {
       for (const member of scope.family.members) {
@@ -693,18 +753,14 @@ async function main() {
 
   for (const [file, edit] of fileEdits) {
     let source = installSources.get(file);
-    const lines = source.split('\n');
-    for (const loop of [...edit.loops].sort((a, b) => b.start - a.start)) {
+    for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
       const ref = loop.scope.namespace === null
         ? loop.plan.tableName
         : `${loop.scope.namespace}.${loop.plan.tableName}`;
-      lines.splice(
-        loop.start,
-        loop.count,
-        `${loop.indent}for (const [name, entry] of ${ref}) ${fillTemplate(loop.template, loop.slots)}`,
-      );
+      const replacement = `${loop.indent}for (const [name, entry] of ${ref}) `
+        + `${fillTemplate(loop.template, loop.slots)}`;
+      source = source.slice(0, loop.startOffset) + replacement + source.slice(loop.endOffset);
     }
-    source = lines.join('\n');
     source = dropNamedImports(source, file, edit.drops);
     for (const [tableName, specifier] of edit.adds) {
       source = addNamedImport(source, tableName, specifier);

@@ -1,4 +1,4 @@
-// canvas 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// canvas 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { offscreenCanvasMethod } from "./offscreen-canvas-method.js";
 import {
@@ -7,18 +7,13 @@ import {
   offscreenCanvasBitmap,
 } from "./offscreen-canvas-state.js";
 
-export const convertToBlob = offscreenCanvasMethod(
-  "convertToBlob",
-  0,
-  (canvas, args) => Promise.resolve(offscreenCanvasBlob(canvas, args[0])),
+const OFFSCREEN_CANVAS_METHOD_TABLE_ROWS = [
+  ["convertToBlob", "convertToBlob", 0, (canvas, args) => Promise.resolve(offscreenCanvasBlob(canvas, args[0]))],
+  ["getContext", "getContext", 1, (canvas, args) => getOffscreenCanvasContext(canvas, args[0], args[1])],
+  ["transferToImageBitmap", "transferToImageBitmap", 0, canvas => offscreenCanvasBitmap(canvas)],
+];
+
+export const offscreenCanvasMethodTable = OFFSCREEN_CANVAS_METHOD_TABLE_ROWS.map(
+  ([name, ...args]) => [name, offscreenCanvasMethod(...args)],
 );
-export const getContext = offscreenCanvasMethod(
-  "getContext",
-  1,
-  (canvas, args) => getOffscreenCanvasContext(canvas, args[0], args[1]),
-);
-export const transferToImageBitmap = offscreenCanvasMethod(
-  "transferToImageBitmap",
-  0,
-  canvas => offscreenCanvasBitmap(canvas),
-);
+

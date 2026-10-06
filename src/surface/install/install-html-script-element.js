@@ -24,10 +24,6 @@ import {
   installHTMLScriptElementConstructor,
 } from "../api/dom/html-script-element-constructor.js";
 import {
-  defer,
-  setDefer,
-} from "../api/dom/html-script-element-defer-property.js";
-import {
   event,
   setEvent,
 } from "../api/dom/html-script-element-event-property.js";
@@ -47,10 +43,6 @@ import {
   integrity,
   setIntegrity,
 } from "../api/dom/html-script-element-integrity-property.js";
-import {
-  noModule,
-  setNoModule,
-} from "../api/dom/html-script-element-no-module-property.js";
 import {
   referrerPolicy,
   setReferrerPolicy,
@@ -72,15 +64,14 @@ import {
   setType,
 } from "../api/dom/html-script-element-type-property.js";
 import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLScriptElement() {
   installHTMLScriptElementConstructor();
   accessor("src", src, setSrc);
-  accessor("type", type, setType);
-  accessor("noModule", noModule, setNoModule);
+  accessor("type", type, setType);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   accessor("charset", charset, setCharset);
-  accessor("async", asyncValue, setAsync);
-  accessor("defer", defer, setDefer);
+  accessor("async", asyncValue, setAsync);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
   accessor("text", text, setText);
   accessor("referrerPolicy", referrerPolicy, setReferrerPolicy);

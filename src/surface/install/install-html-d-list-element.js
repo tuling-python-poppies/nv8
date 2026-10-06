@@ -4,22 +4,13 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
-  compact,
-  setCompact,
-} from "../api/dom/html-d-list-element-compact-property.js";
-import {
   HTMLDListElement,
   installHTMLDListElementConstructor,
 } from "../api/dom/html-d-list-element-constructor.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLDListElement() {
-  installHTMLDListElementConstructor();
-  definePrototypeAccessor(
-    HTMLDListElement.prototype,
-    "compact",
-    compact,
-    setCompact,
-  );
+  installHTMLDListElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLDListElement.prototype, name, entry.get, entry.set, );
   defineConstructorBacklink(HTMLDListElement.prototype, HTMLDListElement);
   defineToStringTag(HTMLDListElement.prototype, "HTMLDListElement");
 }

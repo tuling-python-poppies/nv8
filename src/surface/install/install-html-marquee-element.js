@@ -14,9 +14,9 @@ import { direction, setDirection } from "../api/dom/html-marquee-element-directi
 import { height, setHeight } from "../api/dom/html-marquee-element-height-property.js";
 import { start } from "../api/dom/html-marquee-element-start.js";
 import { stop } from "../api/dom/html-marquee-element-stop.js";
-import { trueSpeed, setTrueSpeed } from "../api/dom/html-marquee-element-true-speed-property.js";
 import { width, setWidth } from "../api/dom/html-marquee-element-width-property.js";
 import { marqueeNumberReflectionTable } from "../api/dom/marquee-number-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLMarqueeElement() {
   installHTMLMarqueeElementConstructor();
@@ -24,8 +24,7 @@ export function installHTMLMarqueeElement() {
   accessor("bgColor", bgColor, setBgColor);
   accessor("direction", direction, setDirection);
   accessor("height", height, setHeight);
-  for (const [name, entry] of marqueeNumberReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("trueSpeed", trueSpeed, setTrueSpeed);
+  for (const [name, entry] of marqueeNumberReflectionTable) accessor(name, entry.get, entry.set);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of marqueeNumberReflectionTable) accessor(name, entry.get, entry.set);
   accessor("width", width, setWidth);
   definePrototypeMethod(HTMLMarqueeElement.prototype, "start", start);

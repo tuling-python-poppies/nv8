@@ -4,10 +4,6 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
-  compact,
-  setCompact,
-} from "../api/dom/html-u-list-element-compact-property.js";
-import {
   HTMLUListElement,
   installHTMLUListElementConstructor,
 } from "../api/dom/html-u-list-element-constructor.js";
@@ -15,15 +11,10 @@ import {
   setType,
   type,
 } from "../api/dom/html-u-list-element-type-property.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLUListElement() {
-  installHTMLUListElementConstructor();
-  definePrototypeAccessor(
-    HTMLUListElement.prototype,
-    "compact",
-    compact,
-    setCompact,
-  );
+  installHTMLUListElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor( HTMLUListElement.prototype, name, entry.get, entry.set, );
   definePrototypeAccessor(
     HTMLUListElement.prototype,
     "type",

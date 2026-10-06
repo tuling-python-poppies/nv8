@@ -10,7 +10,6 @@ import {
   HTMLFieldSetElement,
   installHTMLFieldSetElementConstructor,
 } from "../api/dom/html-field-set-element-constructor.js";
-import { disabled, setDisabled } from "../api/dom/html-field-set-element-disabled-property.js";
 import { elements } from "../api/dom/html-field-set-element-elements-getter.js";
 import { form } from "../api/dom/html-field-set-element-form-getter.js";
 import { name, setName } from "../api/dom/html-field-set-element-name-property.js";
@@ -20,10 +19,10 @@ import { type } from "../api/dom/html-field-set-element-type-getter.js";
 import { validationMessage } from "../api/dom/html-field-set-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-field-set-element-validity-getter.js";
 import { willValidate } from "../api/dom/html-field-set-element-will-validate-getter.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLFieldSetElement() {
-  installHTMLFieldSetElementConstructor();
-  definePrototypeAccessor(HTMLFieldSetElement.prototype, "disabled", disabled, setDisabled);
+  installHTMLFieldSetElementConstructor();for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor(HTMLFieldSetElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLFieldSetElement.prototype, "form", form);
   definePrototypeAccessor(HTMLFieldSetElement.prototype, "name", name, setName);
   definePrototypeGetter(HTMLFieldSetElement.prototype, "type", type);

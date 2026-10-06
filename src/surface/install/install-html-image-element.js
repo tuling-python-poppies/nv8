@@ -15,10 +15,6 @@ import {
   border,
   setBorder,
 } from "../api/dom/html-image-element-border-property.js";
-import {
-  browsingTopics,
-  setBrowsingTopics,
-} from "../api/dom/html-image-element-browsing-topics-property.js";
 import { complete } from "../api/dom/html-image-element-complete-getter.js";
 import { currentSrc } from "../api/dom/html-image-element-current-src-getter.js";
 import { decode } from "../api/dom/html-image-element-decode.js";
@@ -34,7 +30,6 @@ import {
   HTMLImageElement,
   installHTMLImageElementConstructor,
 } from "../api/dom/html-image-element-constructor.js";
-import { isMap, setIsMap } from "../api/dom/html-image-element-is-map-property.js";
 import { loading, setLoading } from "../api/dom/html-image-element-loading-property.js";
 import { longDesc, setLongDesc } from "../api/dom/html-image-element-long-desc-property.js";
 import { lowsrc, setLowsrc } from "../api/dom/html-image-element-lowsrc-property.js";
@@ -45,10 +40,6 @@ import {
   referrerPolicy,
   setReferrerPolicy,
 } from "../api/dom/html-image-element-referrer-policy-property.js";
-import {
-  sharedStorageWritable,
-  setSharedStorageWritable,
-} from "../api/dom/html-image-element-shared-storage-writable-property.js";
 import { sizes, setSizes } from "../api/dom/html-image-element-sizes-property.js";
 import { src, setSrc } from "../api/dom/html-image-element-src-property.js";
 import { srcset, setSrcset } from "../api/dom/html-image-element-srcset-property.js";
@@ -57,6 +48,7 @@ import { x } from "../api/dom/html-image-element-x-getter.js";
 import { y } from "../api/dom/html-image-element-y-getter.js";
 import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
 import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLImageElement() {
   installHTMLImageElementConstructor();
@@ -65,8 +57,7 @@ export function installHTMLImageElement() {
   accessor("srcset", srcset, setSrcset);
   accessor("sizes", sizes, setSizes);
   for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
-  accessor("useMap", useMap, setUseMap);
-  accessor("isMap", isMap, setIsMap);
+  accessor("useMap", useMap, setUseMap);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   getter("naturalWidth", naturalWidth);
   getter("naturalHeight", naturalHeight);
@@ -85,14 +76,8 @@ export function installHTMLImageElement() {
   getter("x", x);
   getter("y", y);
   definePrototypeMethod(HTMLImageElement.prototype, "decode", decode);
-  defineConstructorBacklink(HTMLImageElement.prototype, HTMLImageElement);
-  accessor("browsingTopics", browsingTopics, setBrowsingTopics);
-  accessor("attributionSrc", attributionSrc, setAttributionSrc);
-  accessor(
-    "sharedStorageWritable",
-    sharedStorageWritable,
-    setSharedStorageWritable,
-  );
+  defineConstructorBacklink(HTMLImageElement.prototype, HTMLImageElement);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("attributionSrc", attributionSrc, setAttributionSrc);for (const [name, entry] of booleanReflectionTable) accessor( name, entry.get, entry.set, );
   defineToStringTag(HTMLImageElement.prototype, "HTMLImageElement");
 }
 

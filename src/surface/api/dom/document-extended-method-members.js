@@ -1,3 +1,4 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { documentMethod } from "./document-method.js";
 import {
@@ -37,45 +38,52 @@ import {
   writelnOperation,
 } from "./document-extended-method-operations.js";
 
-export const append = documentMethod("append", 0, appendOperation);
-export const ariaNotify = documentMethod("ariaNotify", 1, ariaNotifyOperation);
-export const browsingTopics = documentMethod("browsingTopics", 0, browsingTopicsOperation);
-export const captureEvents = documentMethod("captureEvents", 0, noResultOperation);
-export const caretPositionFromPoint = documentMethod("caretPositionFromPoint", 2, caretPositionOperation);
-export const caretRangeFromPoint = documentMethod("caretRangeFromPoint", 0, caretRangeOperation);
-export const clear = documentMethod("clear", 0, clearOperation);
-export const close = documentMethod("close", 0, closeOperation);
-export const createExpression = documentMethod("createExpression", 1, createExpressionOperation);
-export const createNSResolver = documentMethod("createNSResolver", 1, createNSResolverOperation);
-export const elementFromPoint = documentMethod("elementFromPoint", 2, elementFromPointOperation);
-export const elementsFromPoint = documentMethod("elementsFromPoint", 2, elementsFromPointOperation);
-export const evaluate = documentMethod("evaluate", 2, evaluateOperation);
-export const execCommand = documentMethod("execCommand", 1, execCommandOperation);
-export const exitFullscreen = documentMethod("exitFullscreen", 0, exitFullscreenOperation);
-export const exitPictureInPicture = documentMethod("exitPictureInPicture", 0, exitPictureInPictureOperation);
-export const exitPointerLock = documentMethod("exitPointerLock", 0, exitPointerLockOperation);
-export const getAnimations = documentMethod("getAnimations", 0, getAnimationsOperation);
-export const getElementsByName = documentMethod("getElementsByName", 1, getElementsByNameOperation);
-export const getElementsByTagNameNS = documentMethod("getElementsByTagNameNS", 2, getElementsByTagNameNSOperation);
-export const hasFocus = documentMethod("hasFocus", 0, hasFocusOperation);
-export const hasPrivateToken = documentMethod("hasPrivateToken", 1, resolvedFalseOperation);
-export const hasRedemptionRecord = documentMethod("hasRedemptionRecord", 1, resolvedFalseOperation);
-export const hasStorageAccess = documentMethod("hasStorageAccess", 0, resolvedTrueOperation);
-export const hasUnpartitionedCookieAccess = documentMethod("hasUnpartitionedCookieAccess", 0, resolvedTrueOperation);
-export const moveBefore = documentMethod("moveBefore", 2, moveBeforeDocumentOperation);
-export const open = documentMethod("open", 0, openOperation);
-export const prepend = documentMethod("prepend", 0, prependOperation);
-export const queryCommandEnabled = documentMethod("queryCommandEnabled", 1, queryCommandEnabledOperation);
-export const queryCommandIndeterm = documentMethod("queryCommandIndeterm", 1, falseOperation);
-export const queryCommandState = documentMethod("queryCommandState", 1, falseOperation);
-export const queryCommandSupported = documentMethod("queryCommandSupported", 1, queryCommandSupportedOperation);
-export const queryCommandValue = documentMethod("queryCommandValue", 1, emptyStringOperation);
-export const releaseEvents = documentMethod("releaseEvents", 0, noResultOperation);
-export const replaceChildren = documentMethod("replaceChildren", 0, replaceChildrenOperation);
-export const requestStorageAccess = documentMethod("requestStorageAccess", 0, resolvedTrueOperation);
-export const requestStorageAccessFor = documentMethod("requestStorageAccessFor", 1, resolvedTrueOperation);
-export const startViewTransition = documentMethod("startViewTransition", 0, startViewTransitionOperation);
-export const webkitCancelFullScreen = documentMethod("webkitCancelFullScreen", 0, exitFullscreenOperation);
-export const webkitExitFullscreen = documentMethod("webkitExitFullscreen", 0, exitFullscreenOperation);
-export const write = documentMethod("write", 0, writeOperation);
-export const writeln = documentMethod("writeln", 0, writelnOperation);
+const DOCUMENT_METHOD_TABLE_ROWS = [
+  ["append", "append", 0, appendOperation],
+  ["ariaNotify", "ariaNotify", 1, ariaNotifyOperation],
+  ["browsingTopics", "browsingTopics", 0, browsingTopicsOperation],
+  ["captureEvents", "captureEvents", 0, noResultOperation],
+  ["caretPositionFromPoint", "caretPositionFromPoint", 2, caretPositionOperation],
+  ["caretRangeFromPoint", "caretRangeFromPoint", 0, caretRangeOperation],
+  ["clear", "clear", 0, clearOperation],
+  ["close", "close", 0, closeOperation],
+  ["createExpression", "createExpression", 1, createExpressionOperation],
+  ["createNSResolver", "createNSResolver", 1, createNSResolverOperation],
+  ["elementFromPoint", "elementFromPoint", 2, elementFromPointOperation],
+  ["elementsFromPoint", "elementsFromPoint", 2, elementsFromPointOperation],
+  ["evaluate", "evaluate", 2, evaluateOperation],
+  ["execCommand", "execCommand", 1, execCommandOperation],
+  ["exitFullscreen", "exitFullscreen", 0, exitFullscreenOperation],
+  ["exitPictureInPicture", "exitPictureInPicture", 0, exitPictureInPictureOperation],
+  ["exitPointerLock", "exitPointerLock", 0, exitPointerLockOperation],
+  ["getAnimations", "getAnimations", 0, getAnimationsOperation],
+  ["getElementsByName", "getElementsByName", 1, getElementsByNameOperation],
+  ["getElementsByTagNameNS", "getElementsByTagNameNS", 2, getElementsByTagNameNSOperation],
+  ["hasFocus", "hasFocus", 0, hasFocusOperation],
+  ["hasPrivateToken", "hasPrivateToken", 1, resolvedFalseOperation],
+  ["hasRedemptionRecord", "hasRedemptionRecord", 1, resolvedFalseOperation],
+  ["hasStorageAccess", "hasStorageAccess", 0, resolvedTrueOperation],
+  ["hasUnpartitionedCookieAccess", "hasUnpartitionedCookieAccess", 0, resolvedTrueOperation],
+  ["moveBefore", "moveBefore", 2, moveBeforeDocumentOperation],
+  ["open", "open", 0, openOperation],
+  ["prepend", "prepend", 0, prependOperation],
+  ["queryCommandEnabled", "queryCommandEnabled", 1, queryCommandEnabledOperation],
+  ["queryCommandIndeterm", "queryCommandIndeterm", 1, falseOperation],
+  ["queryCommandState", "queryCommandState", 1, falseOperation],
+  ["queryCommandSupported", "queryCommandSupported", 1, queryCommandSupportedOperation],
+  ["queryCommandValue", "queryCommandValue", 1, emptyStringOperation],
+  ["releaseEvents", "releaseEvents", 0, noResultOperation],
+  ["replaceChildren", "replaceChildren", 0, replaceChildrenOperation],
+  ["requestStorageAccess", "requestStorageAccess", 0, resolvedTrueOperation],
+  ["requestStorageAccessFor", "requestStorageAccessFor", 1, resolvedTrueOperation],
+  ["startViewTransition", "startViewTransition", 0, startViewTransitionOperation],
+  ["webkitCancelFullScreen", "webkitCancelFullScreen", 0, exitFullscreenOperation],
+  ["webkitExitFullscreen", "webkitExitFullscreen", 0, exitFullscreenOperation],
+  ["write", "write", 0, writeOperation],
+  ["writeln", "writeln", 0, writelnOperation],
+];
+
+export const documentMethodTable = DOCUMENT_METHOD_TABLE_ROWS.map(
+  ([name, ...args]) => [name, documentMethod(...args)],
+);
+

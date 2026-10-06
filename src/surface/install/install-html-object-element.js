@@ -19,7 +19,6 @@ import {
   installHTMLObjectElementConstructor,
 } from "../api/dom/html-object-element-constructor.js";
 import { data, setData } from "../api/dom/html-object-element-data-property.js";
-import { declare, setDeclare } from "../api/dom/html-object-element-declare-property.js";
 import { form } from "../api/dom/html-object-element-form-getter.js";
 import { getSVGDocument } from "../api/dom/html-object-element-get-svg-document.js";
 import { height, setHeight } from "../api/dom/html-object-element-height-property.js";
@@ -34,6 +33,7 @@ import { validity } from "../api/dom/html-object-element-validity-getter.js";
 import { width, setWidth } from "../api/dom/html-object-element-width-property.js";
 import { willValidate } from "../api/dom/html-object-element-will-validate-getter.js";
 import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLObjectElement() {
   installHTMLObjectElementConstructor();
@@ -51,8 +51,7 @@ export function installHTMLObjectElement() {
   getter("validationMessage", validationMessage);
   accessor("align", align, setAlign);
   accessor("archive", archive, setArchive);
-  accessor("code", code, setCode);
-  accessor("declare", declare, setDeclare);
+  accessor("code", code, setCode);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   accessor("standby", standby, setStandby);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);

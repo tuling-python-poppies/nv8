@@ -19,7 +19,6 @@ import { enctype, setEnctype } from "../api/dom/html-form-element-enctype-proper
 import { length } from "../api/dom/html-form-element-length-getter.js";
 import { method, setMethod } from "../api/dom/html-form-element-method-property.js";
 import { name, setName } from "../api/dom/html-form-element-name-property.js";
-import { noValidate, setNoValidate } from "../api/dom/html-form-element-no-validate-property.js";
 import { rel, setRel } from "../api/dom/html-form-element-rel-property.js";
 import { relList } from "../api/dom/html-form-element-rel-list-getter.js";
 import { reportValidity } from "../api/dom/html-form-element-report-validity.js";
@@ -28,6 +27,7 @@ import { reset } from "../api/dom/html-form-element-reset.js";
 import { submit } from "../api/dom/html-form-element-submit.js";
 import { target, setTarget } from "../api/dom/html-form-element-target-property.js";
 import { values } from "../api/dom/html-form-element-values.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLFormElement() {
   installHTMLFormElementConstructor();
@@ -37,8 +37,7 @@ export function installHTMLFormElement() {
   definePrototypeAccessor(HTMLFormElement.prototype, "enctype", enctype, setEnctype);
   definePrototypeAccessor(HTMLFormElement.prototype, "encoding", encoding, setEncoding);
   definePrototypeAccessor(HTMLFormElement.prototype, "method", method, setMethod);
-  definePrototypeAccessor(HTMLFormElement.prototype, "name", name, setName);
-  definePrototypeAccessor(HTMLFormElement.prototype, "noValidate", noValidate, setNoValidate);
+  definePrototypeAccessor(HTMLFormElement.prototype, "name", name, setName);for (const [name, entry] of booleanReflectionTable) definePrototypeAccessor(HTMLFormElement.prototype, name, entry.get, entry.set);
   definePrototypeAccessor(HTMLFormElement.prototype, "target", target, setTarget);
   definePrototypeAccessor(HTMLFormElement.prototype, "rel", rel, setRel);
   definePrototypeGetter(HTMLFormElement.prototype, "relList", relList);

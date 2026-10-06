@@ -12,18 +12,15 @@ import {
   HTMLSelectElement,
   installHTMLSelectElementConstructor,
 } from "../api/dom/html-select-element-constructor.js";
-import { disabled, setDisabled } from "../api/dom/html-select-element-disabled-property.js";
 import { form } from "../api/dom/html-select-element-form-getter.js";
 import { item } from "../api/dom/html-select-element-item.js";
 import { labels } from "../api/dom/html-select-element-labels-getter.js";
 import { length, setLength } from "../api/dom/html-select-element-length-property.js";
-import { multiple, setMultiple } from "../api/dom/html-select-element-multiple-property.js";
 import { name, setName } from "../api/dom/html-select-element-name-property.js";
 import { namedItem } from "../api/dom/html-select-element-named-item.js";
 import { options } from "../api/dom/html-select-element-options-getter.js";
 import { remove } from "../api/dom/html-select-element-remove.js";
 import { reportValidity } from "../api/dom/html-select-element-report-validity.js";
-import { required, setRequired } from "../api/dom/html-select-element-required-property.js";
 import {
   selectedIndex,
   setSelectedIndex,
@@ -38,15 +35,13 @@ import { setValue, value } from "../api/dom/html-select-element-value-property.j
 import { values } from "../api/dom/html-select-element-values.js";
 import { willValidate } from "../api/dom/html-select-element-will-validate-getter.js";
 import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-members.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLSelectElement() {
   installHTMLSelectElementConstructor();
-  accessor("autocomplete", autocomplete, setAutocomplete);
-  accessor("disabled", disabled, setDisabled);
-  getter("form", form);
-  accessor("multiple", multiple, setMultiple);
-  accessor("name", name, setName);
-  accessor("required", required, setRequired);
+  accessor("autocomplete", autocomplete, setAutocomplete);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  getter("form", form);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  accessor("name", name, setName);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   getter("type", type);
   getter("options", options);

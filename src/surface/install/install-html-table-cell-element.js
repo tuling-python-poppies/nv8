@@ -18,11 +18,11 @@ import {
 } from "../api/dom/html-table-cell-element-constructor.js";
 import { headers, setHeaders } from "../api/dom/html-table-cell-element-headers-property.js";
 import { height, setHeight } from "../api/dom/html-table-cell-element-height-property.js";
-import { noWrap, setNoWrap } from "../api/dom/html-table-cell-element-no-wrap-property.js";
 import { rowSpan, setRowSpan } from "../api/dom/html-table-cell-element-row-span-property.js";
 import { scope, setScope } from "../api/dom/html-table-cell-element-scope-property.js";
 import { setVAlign, vAlign } from "../api/dom/html-table-cell-element-v-align-property.js";
 import { setWidth, width } from "../api/dom/html-table-cell-element-width-property.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-members.js";
 
 export function installHTMLTableCellElement() {
   installHTMLTableCellElementConstructor();
@@ -35,8 +35,7 @@ export function installHTMLTableCellElement() {
   accessor("height", height, setHeight);
   accessor("width", width, setWidth);
   accessor("ch", ch, setCh);
-  accessor("chOff", chOff, setChOff);
-  accessor("noWrap", noWrap, setNoWrap);
+  accessor("chOff", chOff, setChOff);for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   accessor("vAlign", vAlign, setVAlign);
   accessor("bgColor", bgColor, setBgColor);
   accessor("abbr", abbr, setAbbr);

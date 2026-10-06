@@ -138,14 +138,6 @@ import { clientTop } from "../api/dom/element-client-top-getter.js";
 import { clientLeft } from "../api/dom/element-client-left-getter.js";
 import { clientWidth } from "../api/dom/element-client-width-getter.js";
 import { clientHeight } from "../api/dom/element-client-height-getter.js";
-import { onbeforecopy, setOnbeforecopy } from "../api/dom/element-onbeforecopy-property.js";
-import { onbeforecut, setOnbeforecut } from "../api/dom/element-onbeforecut-property.js";
-import { onbeforepaste, setOnbeforepaste } from "../api/dom/element-onbeforepaste-property.js";
-import { onsearch, setOnsearch } from "../api/dom/element-onsearch-property.js";
-import { onfullscreenchange, setOnfullscreenchange } from "../api/dom/element-onfullscreenchange-property.js";
-import { onfullscreenerror, setOnfullscreenerror } from "../api/dom/element-onfullscreenerror-property.js";
-import { onwebkitfullscreenchange, setOnwebkitfullscreenchange } from "../api/dom/element-onwebkitfullscreenchange-property.js";
-import { onwebkitfullscreenerror, setOnwebkitfullscreenerror } from "../api/dom/element-onwebkitfullscreenerror-property.js";
 import * as aria from "../api/dom/element-aria-members.js";
 import { previousElementSibling } from "../api/dom/element-previous-element-sibling-getter.js";
 import { nextElementSibling } from "../api/dom/element-next-element-sibling-getter.js";
@@ -164,6 +156,7 @@ import { startViewTransition } from "../api/dom/element-start-view-transition.js
 import { elementStringPropertyTable } from "../api/dom/element-string-property-members.js";
 import { elementExtendedMethodTable } from "../api/dom/element-extended-method-members.js";
 import { elementNumberPropertyTable } from "../api/dom/element-number-property-members.js";
+import { elementHandlerPropertyTable } from "../api/dom/element-handler-property-members.js";
 
 export function installElement() {
   installElementConstructor();
@@ -187,82 +180,8 @@ export function installElement() {
   getter("clientTop", clientTop);
   getter("clientLeft", clientLeft);
   getter("clientWidth", clientWidth);
-  getter("clientHeight", clientHeight);
-  accessor("onbeforecopy", onbeforecopy, setOnbeforecopy);
-  accessor("onbeforecut", onbeforecut, setOnbeforecut);
-  accessor("onbeforepaste", onbeforepaste, setOnbeforepaste);
-  accessor("onsearch", onsearch, setOnsearch);
-  for (const [name, entry] of elementStringPropertyTable) accessor(name, entry.get, entry.set);
-  accessor("onfullscreenchange", onfullscreenchange, setOnfullscreenchange);
-  accessor("onfullscreenerror", onfullscreenerror, setOnfullscreenerror);
-  accessor(
-    "onwebkitfullscreenchange",
-    onwebkitfullscreenchange,
-    setOnwebkitfullscreenchange,
-  );
-  accessor(
-    "onwebkitfullscreenerror",
-    onwebkitfullscreenerror,
-    setOnwebkitfullscreenerror,
-  );
-  accessor("role", aria.role, aria.setRole);
-  accessor("ariaAtomic", aria.ariaAtomic, aria.setAriaAtomic);
-  accessor("ariaAutoComplete", aria.ariaAutoComplete, aria.setAriaAutoComplete);
-  accessor("ariaBusy", aria.ariaBusy, aria.setAriaBusy);
-  accessor("ariaBrailleLabel", aria.ariaBrailleLabel, aria.setAriaBrailleLabel);
-  accessor(
-    "ariaBrailleRoleDescription",
-    aria.ariaBrailleRoleDescription,
-    aria.setAriaBrailleRoleDescription,
-  );
-  accessor("ariaChecked", aria.ariaChecked, aria.setAriaChecked);
-  accessor("ariaColCount", aria.ariaColCount, aria.setAriaColCount);
-  accessor("ariaColIndex", aria.ariaColIndex, aria.setAriaColIndex);
-  accessor("ariaColSpan", aria.ariaColSpan, aria.setAriaColSpan);
-  accessor("ariaCurrent", aria.ariaCurrent, aria.setAriaCurrent);
-  accessor("ariaDescription", aria.ariaDescription, aria.setAriaDescription);
-  accessor("ariaDisabled", aria.ariaDisabled, aria.setAriaDisabled);
-  accessor("ariaExpanded", aria.ariaExpanded, aria.setAriaExpanded);
-  accessor("ariaHasPopup", aria.ariaHasPopup, aria.setAriaHasPopup);
-  accessor("ariaHidden", aria.ariaHidden, aria.setAriaHidden);
-  accessor("ariaInvalid", aria.ariaInvalid, aria.setAriaInvalid);
-  accessor(
-    "ariaKeyShortcuts",
-    aria.ariaKeyShortcuts,
-    aria.setAriaKeyShortcuts,
-  );
-  accessor("ariaLabel", aria.ariaLabel, aria.setAriaLabel);
-  accessor("ariaLevel", aria.ariaLevel, aria.setAriaLevel);
-  accessor("ariaLive", aria.ariaLive, aria.setAriaLive);
-  accessor("ariaModal", aria.ariaModal, aria.setAriaModal);
-  accessor("ariaMultiLine", aria.ariaMultiLine, aria.setAriaMultiLine);
-  accessor(
-    "ariaMultiSelectable",
-    aria.ariaMultiSelectable,
-    aria.setAriaMultiSelectable,
-  );
-  accessor("ariaOrientation", aria.ariaOrientation, aria.setAriaOrientation);
-  accessor("ariaPlaceholder", aria.ariaPlaceholder, aria.setAriaPlaceholder);
-  accessor("ariaPosInSet", aria.ariaPosInSet, aria.setAriaPosInSet);
-  accessor("ariaPressed", aria.ariaPressed, aria.setAriaPressed);
-  accessor("ariaReadOnly", aria.ariaReadOnly, aria.setAriaReadOnly);
-  accessor("ariaRelevant", aria.ariaRelevant, aria.setAriaRelevant);
-  accessor("ariaRequired", aria.ariaRequired, aria.setAriaRequired);
-  accessor(
-    "ariaRoleDescription",
-    aria.ariaRoleDescription,
-    aria.setAriaRoleDescription,
-  );
-  accessor("ariaRowCount", aria.ariaRowCount, aria.setAriaRowCount);
-  accessor("ariaRowIndex", aria.ariaRowIndex, aria.setAriaRowIndex);
-  accessor("ariaRowSpan", aria.ariaRowSpan, aria.setAriaRowSpan);
-  accessor("ariaSelected", aria.ariaSelected, aria.setAriaSelected);
-  accessor("ariaSetSize", aria.ariaSetSize, aria.setAriaSetSize);
-  accessor("ariaSort", aria.ariaSort, aria.setAriaSort);
-  accessor("ariaValueMax", aria.ariaValueMax, aria.setAriaValueMax);
-  accessor("ariaValueMin", aria.ariaValueMin, aria.setAriaValueMin);
-  accessor("ariaValueNow", aria.ariaValueNow, aria.setAriaValueNow);
-  accessor("ariaValueText", aria.ariaValueText, aria.setAriaValueText);
+  getter("clientHeight", clientHeight);for (const [name, entry] of elementHandlerPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of elementStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of elementHandlerPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of elementHandlerPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor(name, entry.get, entry.set);
   installElementChildren();
   installElementFirstElementChild();
   installElementLastElementChild();
@@ -318,57 +237,7 @@ export function installElement() {
   method("webkitRequestFullscreen", webkitRequestFullscreen);
   getter("currentCSSZoom", currentCSSZoom);
   getter("customElementRegistry", customElementRegistry);
-  getter("activeViewTransition", activeViewTransition);
-  accessor(
-    "ariaColIndexText",
-    aria.ariaColIndexText,
-    aria.setAriaColIndexText,
-  );
-  accessor(
-    "ariaRowIndexText",
-    aria.ariaRowIndexText,
-    aria.setAriaRowIndexText,
-  );
-  accessor(
-    "ariaActiveDescendantElement",
-    aria.ariaActiveDescendantElement,
-    aria.setAriaActiveDescendantElement,
-  );
-  accessor(
-    "ariaActionsElements",
-    aria.ariaActionsElements,
-    aria.setAriaActionsElements,
-  );
-  accessor(
-    "ariaControlsElements",
-    aria.ariaControlsElements,
-    aria.setAriaControlsElements,
-  );
-  accessor(
-    "ariaDescribedByElements",
-    aria.ariaDescribedByElements,
-    aria.setAriaDescribedByElements,
-  );
-  accessor(
-    "ariaDetailsElements",
-    aria.ariaDetailsElements,
-    aria.setAriaDetailsElements,
-  );
-  accessor(
-    "ariaErrorMessageElements",
-    aria.ariaErrorMessageElements,
-    aria.setAriaErrorMessageElements,
-  );
-  accessor(
-    "ariaFlowToElements",
-    aria.ariaFlowToElements,
-    aria.setAriaFlowToElements,
-  );
-  accessor(
-    "ariaLabelledByElements",
-    aria.ariaLabelledByElements,
-    aria.setAriaLabelledByElements,
-  );
+  getter("activeViewTransition", activeViewTransition);for (const [name, entry] of aria.elementNullableStringPropertyTable) accessor( name, entry.get, entry.set, );for (const [name, entry] of aria.ariaElementPropertyTable) accessor( name, entry.get, entry.set, );
   for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   method("pseudo", pseudo);
   for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
