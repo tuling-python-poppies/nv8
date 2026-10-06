@@ -61,7 +61,7 @@ function trailingWord(masked, end) {
 }
 
 /** 元素是否是「可安全内联展开」的形态：简单表达式，或一层套一层的简单数组。 */
-export function isSimpleElement(masked, from, to, depth = 0) {
+function isSimpleElement(masked, from, to, depth = 0) {
   const [start, end] = trimSpan(masked, from, to);
   if (start >= end) return false;
   if (SIMPLE_ELEMENT.test(masked.slice(start, end))) return true;
@@ -102,7 +102,7 @@ function applyAll(source, find) {
 }
 
 /** R1：`([A, B, C])[1]` → `B`。 */
-export function findIndexedLiteral(masked, source, from) {
+function findIndexedLiteral(masked, source, from) {
   for (let start = from; start < masked.length; start += 1) {
     if (masked[start] !== '[') continue;
     const end = matchBracket(masked, start, '[', ']');
@@ -134,7 +134,7 @@ export function findIndexedLiteral(masked, source, from) {
 }
 
 /** R2：`do { X } while (false);` → `X`（块内有词法声明时保留花括号）。 */
-export function findIdleLoop(masked, source, from) {
+function findIdleLoop(masked, source, from) {
   for (let doIndex = masked.indexOf('do', from); doIndex !== -1; doIndex = masked.indexOf('do', doIndex + 1)) {
     if (/\w/.test(masked[doIndex - 1] ?? '') || /\w/.test(masked[doIndex + 2] ?? '')) continue;
     const prev = previousSignificant(masked, doIndex);
@@ -155,7 +155,7 @@ export function findIdleLoop(masked, source, from) {
 }
 
 /** R3：`{ { X } }` → `{ X }`（外层块只有这一个子块时）。 */
-export function findSoleChildBlock(masked, source, from) {
+function findSoleChildBlock(masked, source, from) {
   for (let start = from; start < masked.length; start += 1) {
     if (masked[start] !== '{') continue;
     const outerEnd = matchBracket(masked, start, '{', '}');
@@ -178,7 +178,7 @@ export function findSoleChildBlock(masked, source, from) {
 }
 
 /** R4：行中间 `(简单表达式)` → 去掉小括号。 */
-export function findRedundantParens(masked, source, from) {
+function findRedundantParens(masked, source, from) {
   for (let start = from; start < masked.length; start += 1) {
     if (masked[start] !== '(') continue;
     const prev = previousSignificant(masked, start);
@@ -250,7 +250,7 @@ function cleanup(source) {
   return out.join('\n');
 }
 
-export function transform(source) {
+function transform(source) {
   let current = source;
   const counts = { R1: 0, R2: 0, R3: 0, R4: 0 };
   for (let pass = 0; pass < MAX_PASSES; pass += 1) {
