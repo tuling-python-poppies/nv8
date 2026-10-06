@@ -20,10 +20,6 @@ import {
   setBrowsingTopics,
 } from "../api/dom/html-image-element-browsing-topics-property.js";
 import { complete } from "../api/dom/html-image-element-complete-getter.js";
-import {
-  crossOrigin,
-  setCrossOrigin,
-} from "../api/dom/html-image-element-cross-origin-property.js";
 import { currentSrc } from "../api/dom/html-image-element-current-src-getter.js";
 import { decode } from "../api/dom/html-image-element-decode.js";
 import {
@@ -63,6 +59,7 @@ import { vspace, setVspace } from "../api/dom/html-image-element-vspace-property
 import { width, setWidth } from "../api/dom/html-image-element-width-property.js";
 import { x } from "../api/dom/html-image-element-x-getter.js";
 import { y } from "../api/dom/html-image-element-y-getter.js";
+import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
 
 export function installHTMLImageElement() {
   installHTMLImageElementConstructor();
@@ -70,7 +67,7 @@ export function installHTMLImageElement() {
   accessor("src", src, setSrc);
   accessor("srcset", srcset, setSrcset);
   accessor("sizes", sizes, setSizes);
-  accessor("crossOrigin", crossOrigin, setCrossOrigin);
+  for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
   accessor("useMap", useMap, setUseMap);
   accessor("isMap", isMap, setIsMap);
   accessor("width", width, setWidth);

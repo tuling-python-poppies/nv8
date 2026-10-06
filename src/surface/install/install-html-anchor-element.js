@@ -26,18 +26,6 @@ import {
   setDownload,
 } from "../api/dom/html-anchor-element-download-property.js";
 import {
-  hash,
-  setHash,
-} from "../api/dom/html-anchor-element-hash-property.js";
-import {
-  host,
-  setHost,
-} from "../api/dom/html-anchor-element-host-property.js";
-import {
-  hostname,
-  setHostname,
-} from "../api/dom/html-anchor-element-hostname-property.js";
-import {
   href,
   setHref,
 } from "../api/dom/html-anchor-element-href-property.js";
@@ -59,25 +47,9 @@ import {
 } from "../api/dom/html-anchor-element-name-property.js";
 import { origin } from "../api/dom/html-anchor-element-origin-getter.js";
 import {
-  password,
-  setPassword,
-} from "../api/dom/html-anchor-element-password-property.js";
-import {
-  pathname,
-  setPathname,
-} from "../api/dom/html-anchor-element-pathname-property.js";
-import {
   ping,
   setPing,
 } from "../api/dom/html-anchor-element-ping-property.js";
-import {
-  port,
-  setPort,
-} from "../api/dom/html-anchor-element-port-property.js";
-import {
-  protocol,
-  setProtocol,
-} from "../api/dom/html-anchor-element-protocol-property.js";
 import {
   referrerPolicy,
   setReferrerPolicy,
@@ -93,10 +65,6 @@ import {
   rev,
   setRev,
 } from "../api/dom/html-anchor-element-rev-property.js";
-import {
-  search,
-  setSearch,
-} from "../api/dom/html-anchor-element-search-property.js";
 import {
   shape,
   setShape,
@@ -114,10 +82,7 @@ import {
   type,
   setType,
 } from "../api/dom/html-anchor-element-type-property.js";
-import {
-  username,
-  setUsername,
-} from "../api/dom/html-anchor-element-username-property.js";
+import { anchorURLComponentPropertyTable } from "../api/dom/anchor-urlcomponent-property-members.js";
 
 export function installHTMLAnchorElement() {
   installHTMLAnchorElementConstructor();
@@ -136,15 +101,7 @@ export function installHTMLAnchorElement() {
   accessor("rev", rev, setRev);
   accessor("shape", shape, setShape);
   definePrototypeGetter(HTMLAnchorElement.prototype, "origin", origin);
-  accessor("protocol", protocol, setProtocol);
-  accessor("username", username, setUsername);
-  accessor("password", password, setPassword);
-  accessor("host", host, setHost);
-  accessor("hostname", hostname, setHostname);
-  accessor("port", port, setPort);
-  accessor("pathname", pathname, setPathname);
-  accessor("search", search, setSearch);
-  accessor("hash", hash, setHash);
+  for (const [name, entry] of anchorURLComponentPropertyTable) accessor(name, entry.get, entry.set);
   accessor("href", href, setHref);
   accessor(
     "interestForElement",

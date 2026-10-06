@@ -24,10 +24,6 @@ import {
   installHTMLScriptElementConstructor,
 } from "../api/dom/html-script-element-constructor.js";
 import {
-  crossOrigin,
-  setCrossOrigin,
-} from "../api/dom/html-script-element-cross-origin-property.js";
-import {
   defer,
   setDefer,
 } from "../api/dom/html-script-element-defer-property.js";
@@ -75,6 +71,7 @@ import {
   type,
   setType,
 } from "../api/dom/html-script-element-type-property.js";
+import { nullableStringReflectionTable } from "../api/dom/nullable-string-reflection-members.js";
 
 export function installHTMLScriptElement() {
   installHTMLScriptElementConstructor();
@@ -84,7 +81,7 @@ export function installHTMLScriptElement() {
   accessor("charset", charset, setCharset);
   accessor("async", asyncValue, setAsync);
   accessor("defer", defer, setDefer);
-  accessor("crossOrigin", crossOrigin, setCrossOrigin);
+  for (const [name, entry] of nullableStringReflectionTable) accessor(name, entry.get, entry.set);
   accessor("text", text, setText);
   accessor("referrerPolicy", referrerPolicy, setReferrerPolicy);
   accessor("fetchPriority", fetchPriority, setFetchPriority);

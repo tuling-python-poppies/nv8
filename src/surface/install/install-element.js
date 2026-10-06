@@ -131,10 +131,7 @@ import {
   definePrototypeGetter,
   definePrototypeMethod,
 } from "../../engine/webidl/descriptor.js";
-import { slot, setSlot } from "../api/dom/element-slot-property.js";
 import { part } from "../api/dom/element-part-getter.js";
-import { scrollTop, setScrollTop } from "../api/dom/element-scroll-top-property.js";
-import { scrollLeft, setScrollLeft } from "../api/dom/element-scroll-left-property.js";
 import { scrollWidth } from "../api/dom/element-scroll-width-getter.js";
 import { scrollHeight } from "../api/dom/element-scroll-height-getter.js";
 import { clientTop } from "../api/dom/element-client-top-getter.js";
@@ -145,7 +142,6 @@ import { onbeforecopy, setOnbeforecopy } from "../api/dom/element-onbeforecopy-p
 import { onbeforecut, setOnbeforecut } from "../api/dom/element-onbeforecut-property.js";
 import { onbeforepaste, setOnbeforepaste } from "../api/dom/element-onbeforepaste-property.js";
 import { onsearch, setOnsearch } from "../api/dom/element-onsearch-property.js";
-import { elementTiming, setElementTiming } from "../api/dom/element-element-timing-property.js";
 import { onfullscreenchange, setOnfullscreenchange } from "../api/dom/element-onfullscreenchange-property.js";
 import { onfullscreenerror, setOnfullscreenerror } from "../api/dom/element-onfullscreenerror-property.js";
 import { onwebkitfullscreenchange, setOnwebkitfullscreenchange } from "../api/dom/element-onwebkitfullscreenchange-property.js";
@@ -153,28 +149,6 @@ import { onwebkitfullscreenerror, setOnwebkitfullscreenerror } from "../api/dom/
 import * as aria from "../api/dom/element-aria-members.js";
 import { previousElementSibling } from "../api/dom/element-previous-element-sibling-getter.js";
 import { nextElementSibling } from "../api/dom/element-next-element-sibling-getter.js";
-import {
-  checkVisibility,
-  getAnimations,
-  getElementsByTagNameNS,
-  getHTML,
-  hasPointerCapture,
-  insertAdjacentElement,
-  insertAdjacentHTML,
-  insertAdjacentText,
-  moveBefore,
-  releasePointerCapture,
-  scroll,
-  scrollBy,
-  scrollIntoView,
-  scrollIntoViewIfNeeded,
-  scrollTo,
-  setHTMLUnsafe,
-  setPointerCapture,
-  webkitMatchesSelector,
-  ariaNotify,
-  setHTML,
-} from "../api/dom/element-extended-method-members.js";
 import { getBoundingClientRect } from "../api/dom/element-get-bounding-client-rect.js";
 import { getClientRects } from "../api/dom/element-get-client-rects.js";
 import { computedStyleMap } from "../api/dom/element-computed-style-map.js";
@@ -187,6 +161,9 @@ import { currentCSSZoom } from "../api/dom/element-current-css-zoom-getter.js";
 import { customElementRegistry } from "../api/dom/element-custom-element-registry-getter.js";
 import { activeViewTransition } from "../api/dom/element-active-view-transition-getter.js";
 import { startViewTransition } from "../api/dom/element-start-view-transition.js";
+import { elementStringPropertyTable } from "../api/dom/element-string-property-members.js";
+import { elementExtendedMethodTable } from "../api/dom/element-extended-method-members.js";
+import { elementNumberPropertyTable } from "../api/dom/element-number-property-members.js";
 
 export function installElement() {
   installElementConstructor();
@@ -197,15 +174,14 @@ export function installElement() {
   installElementId();
   installElementClassName();
   installElementClassList();
-  accessor("slot", slot, setSlot);
+  for (const [name, entry] of elementStringPropertyTable) accessor(name, entry.get, entry.set);
   installElementAttributes();
   installElementShadowRoot();
   getter("part", part);
   installElementAssignedSlot();
   installElementInnerHTML();
   installElementOuterHTML();
-  accessor("scrollTop", scrollTop, setScrollTop);
-  accessor("scrollLeft", scrollLeft, setScrollLeft);
+  for (const [name, entry] of elementNumberPropertyTable) accessor(name, entry.get, entry.set);
   getter("scrollWidth", scrollWidth);
   getter("scrollHeight", scrollHeight);
   getter("clientTop", clientTop);
@@ -216,7 +192,7 @@ export function installElement() {
   accessor("onbeforecut", onbeforecut, setOnbeforecut);
   accessor("onbeforepaste", onbeforepaste, setOnbeforepaste);
   accessor("onsearch", onsearch, setOnsearch);
-  accessor("elementTiming", elementTiming, setElementTiming);
+  for (const [name, entry] of elementStringPropertyTable) accessor(name, entry.get, entry.set);
   accessor("onfullscreenchange", onfullscreenchange, setOnfullscreenchange);
   accessor("onfullscreenerror", onfullscreenerror, setOnfullscreenerror);
   accessor(
@@ -298,10 +274,10 @@ export function installElement() {
   installElementAppend();
   installElementAttachShadow();
   installElementBefore();
-  method("checkVisibility", checkVisibility);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementClosest();
   method("computedStyleMap", computedStyleMap);
-  method("getAnimations", getAnimations);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementGetAttribute();
   installElementGetAttributeNS();
   installElementGetAttributeNames();
@@ -311,21 +287,17 @@ export function installElement() {
   method("getClientRects", getClientRects);
   installElementGetElementsByClassName();
   installElementGetElementsByTagName();
-  method("getElementsByTagNameNS", getElementsByTagNameNS);
-  method("getHTML", getHTML);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementHasAttribute();
   installElementHasAttributeNS();
   installElementHasAttributes();
-  method("hasPointerCapture", hasPointerCapture);
-  method("insertAdjacentElement", insertAdjacentElement);
-  method("insertAdjacentHTML", insertAdjacentHTML);
-  method("insertAdjacentText", insertAdjacentText);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementMatches();
-  method("moveBefore", moveBefore);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementPrepend();
   installElementQuerySelector();
   installElementQuerySelectorAll();
-  method("releasePointerCapture", releasePointerCapture);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementRemove();
   installElementRemoveAttribute();
   installElementRemoveAttributeNS();
@@ -334,19 +306,14 @@ export function installElement() {
   installElementReplaceWith();
   method("requestFullscreen", requestFullscreen);
   method("requestPointerLock", requestPointerLock);
-  method("scroll", scroll);
-  method("scrollBy", scrollBy);
-  method("scrollIntoView", scrollIntoView);
-  method("scrollIntoViewIfNeeded", scrollIntoViewIfNeeded);
-  method("scrollTo", scrollTo);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementSetAttribute();
   installElementSetAttributeNS();
   installElementSetAttributeNode();
   installElementSetAttributeNodeNS();
-  method("setHTMLUnsafe", setHTMLUnsafe);
-  method("setPointerCapture", setPointerCapture);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   installElementToggleAttribute();
-  method("webkitMatchesSelector", webkitMatchesSelector);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   method("webkitRequestFullScreen", webkitRequestFullScreen);
   method("webkitRequestFullscreen", webkitRequestFullscreen);
   getter("currentCSSZoom", currentCSSZoom);
@@ -402,9 +369,9 @@ export function installElement() {
     aria.ariaLabelledByElements,
     aria.setAriaLabelledByElements,
   );
-  method("ariaNotify", ariaNotify);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   method("pseudo", pseudo);
-  method("setHTML", setHTML);
+  for (const [name, entry] of elementExtendedMethodTable) method(name, entry);
   method("startViewTransition", startViewTransition);
   finishElementConstructor();
 }

@@ -10,19 +10,11 @@ import {
 } from "../api/geometry/dom-point-read-only-constructor.js";
 import { matrixTransform } from "../api/geometry/dom-point-read-only-matrix-transform.js";
 import { toJSON } from "../api/geometry/dom-point-read-only-to-json.js";
-import {
-  w,
-  x,
-  y,
-  z,
-} from "../api/geometry/point-getter-members.js";
+import { pointGetterTable } from "../api/geometry/point-getter-members.js";
 
 export function installDOMPointReadOnly() {
   installDOMPointReadOnlyConstructor();
-  definePrototypeGetter(DOMPointReadOnly.prototype, "x", x);
-  definePrototypeGetter(DOMPointReadOnly.prototype, "y", y);
-  definePrototypeGetter(DOMPointReadOnly.prototype, "z", z);
-  definePrototypeGetter(DOMPointReadOnly.prototype, "w", w);
+  for (const [name, entry] of pointGetterTable) definePrototypeGetter(DOMPointReadOnly.prototype, name, entry);
   definePrototypeMethod(DOMPointReadOnly.prototype, "matrixTransform", matrixTransform);
   definePrototypeMethod(DOMPointReadOnly.prototype, "toJSON", toJSON);
   defineConstructorBacklink(DOMPointReadOnly.prototype, DOMPointReadOnly);

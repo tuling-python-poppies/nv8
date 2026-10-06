@@ -7,21 +7,11 @@ import {
   CSSImportRule,
   installCSSImportRuleConstructor,
 } from "../api/css/css-import-rule-constructor.js";
-import {
-  href,
-  layerName,
-  media,
-  styleSheet,
-  supportsText,
-} from "../api/css/css-import-rule-getters.js";
+import { cssImportRuleGetterTable } from "../api/css/css-import-rule-getters.js";
 
 export function installCSSImportRule() {
   installCSSImportRuleConstructor();
-  definePrototypeGetter(CSSImportRule.prototype, "href", href);
-  definePrototypeGetter(CSSImportRule.prototype, "media", media);
-  definePrototypeGetter(CSSImportRule.prototype, "styleSheet", styleSheet);
-  definePrototypeGetter(CSSImportRule.prototype, "layerName", layerName);
-  definePrototypeGetter(CSSImportRule.prototype, "supportsText", supportsText);
+  for (const [name, entry] of cssImportRuleGetterTable) definePrototypeGetter(CSSImportRule.prototype, name, entry);
   defineConstructorBacklink(CSSImportRule.prototype, CSSImportRule);
   defineToStringTag(CSSImportRule.prototype, "CSSImportRule");
 }

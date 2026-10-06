@@ -208,11 +208,21 @@ async function findTargetModule(dir, members) {
     .filter((entry) => entry.isFile() && entry.name.endsWith('-members.js'))
     .map((entry) => path.join(dir, entry.name));
   const bases = new Set(members.map((member) => path.basename(member.file)));
+  const memberFiles = new Set(members.map((member) => member.file));
   const barrels = [];
   for (const candidate of candidates) {
     const source = await readFile(candidate, 'utf8');
     const forwarded = [...source.matchAll(REEXPORT_RE)].map((match) => path.basename(match[1]));
-    if (forwarded.some((base) => bases.has(base))) barrels.push(candidate);
+    if (forwarded.some((base) => bases.has(base))) {
+      barrels.push(candidate);
+      continue;
+    }
+    // 另一种桶：先 import 再 export（`import { a, b } from "./a-b-property.js";`）。
+    // 只认 `export *`/`export {} from` 会漏掉它，于是目标判定另起新文件、旧桶被删。
+    const importedFromMember = namedImports(source).some((entry) => (
+      memberFiles.has(path.resolve(path.dirname(candidate), entry.specifier))
+    ));
+    if (importedFromMember) barrels.push(candidate);
   }
   if (barrels.length === 1) return { file: barrels[0], existed: true };
   if (barrels.length > 1) return { ambiguous: barrels.map((file) => path.basename(file)) };
@@ -465,9 +475,17 @@ function countReferences(source, scoped) {
 function stripForwarding(source, targetFile, members) {
   const pattern = /export\s*(?:\*|\{[^}]*\})\s*from\s*"([^"]+)";\n?/g;
   const memberFiles = new Set(members.map((member) => member.file));
-  return source.replace(pattern, (whole, specifier) => (
+  const stripped = source.replace(pattern, (whole, specifier) => (
     memberFiles.has(path.resolve(path.dirname(targetFile), specifier)) ? '' : whole
   ));
+  // 桶也可能是「先 import 再 export」的形式：指向成员文件的 import 同样要摘掉，
+  // 否则成员文件删掉后这里会留下悬空导入。
+  return stripped.replace(
+    /import\s*\{[^}]*\}\s*from\s*"([^"]+)";\n?/g,
+    (whole, specifier) => (
+      memberFiles.has(path.resolve(path.dirname(targetFile), specifier)) ? '' : whole
+    ),
+  );
 }
 
 function formatImportBlock(bySpecifier) {
@@ -525,47 +543,105 @@ async function main() {
   }
 
   // 每个家族在每个安装文件里的循环段。行号基于原始文本，因此同文件的多个家族可以一次性套用。
-  const perPlan = new Map();
-  const fileEdits = new Map();
-  let totalLoops = 0;
   const skipped = [];
-  for (const plan of plans) {
-    const map = new Map();
-    let covered = 0;
-    let referenced = 0;
-    let clean = true;
-    for (const [file, source] of installSources) {
-      const scoped = fileScope(source, file, [plan]);
-      if (scoped.length === 0) continue;
-      const loops = findLoops(source, scoped);
-      const loopLines = loops.reduce((sum, loop) => sum + loop.count, 0);
-      const references = countReferences(source, scoped);
-      referenced += references;
-      covered += loopLines;
-      if (references !== loopLines) clean = false;
-      if (loops.length === 0) continue;
-      map.set(file, loops);
-      totalLoops += loops.length;
-    }
-    if (!clean) {
-      skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
-        + `（引用 ${referenced} 行、可合并 ${covered} 行）`);
-      continue;
-    }
-    perPlan.set(plan, map);
 
-    for (const [file, loops] of map) {
-      if (!fileEdits.has(file)) fileEdits.set(file, { loops: [], drops: new Map(), adds: [] });
-      const edit = fileEdits.get(file);
-      for (const loop of loops) edit.loops.push({ ...loop, plan });
-      for (const member of plan.members) {
-        if (!edit.drops.has(member.file)) edit.drops.set(member.file, new Set());
-        for (const entry of member.exports) edit.drops.get(member.file).add(entry.name);
+  /** 计算每个家族在哪些安装文件里成环；覆盖不全的家族直接剔除。 */
+  function computeEdits(candidates) {
+    const perPlan = new Map();
+    const fileEdits = new Map();
+    let totalLoops = 0;
+    for (const plan of candidates) {
+      const map = new Map();
+      let covered = 0;
+      let referenced = 0;
+      let clean = true;
+      for (const [file, source] of installSources) {
+        const scoped = fileScope(source, file, [plan]);
+        if (scoped.length === 0) continue;
+        const loops = findLoops(source, scoped);
+        const loopLines = loops.reduce((sum, loop) => sum + loop.count, 0);
+        const references = countReferences(source, scoped);
+        referenced += references;
+        covered += loopLines;
+        if (references !== loopLines) clean = false;
+        if (loops.length === 0) continue;
+        map.set(file, loops);
+        totalLoops += loops.length;
       }
-      if (loops.some((loop) => loop.scope.namespace === null)) {
-        edit.adds.push([plan.tableName, relative(file, plan.target.file)]);
+      if (!clean) {
+        skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
+          + `（引用 ${referenced} 行、可合并 ${covered} 行）`);
+        continue;
+      }
+      perPlan.set(plan, map);
+
+      for (const [file, loops] of map) {
+        if (!fileEdits.has(file)) fileEdits.set(file, { loops: [], drops: new Map(), adds: [] });
+        const edit = fileEdits.get(file);
+        for (const loop of loops) edit.loops.push({ ...loop, plan });
+        for (const member of plan.members) {
+          if (!edit.drops.has(member.file)) edit.drops.set(member.file, new Set());
+          for (const entry of member.exports) edit.drops.get(member.file).add(entry.name);
+        }
+        if (loops.some((loop) => loop.scope.namespace === null)) {
+          edit.adds.push([plan.tableName, relative(file, plan.target.file)]);
+        }
       }
     }
+    return { perPlan, fileEdits, totalLoops };
+  }
+
+  /**
+   * 写盘前审计：被删的成员文件不能再有别的引用者。
+   *
+   * 这是最后一道闸门——目标选错、或者别的模块直接 import 了成员文件时，删掉它会留下悬空导入。
+   * 命中的**家族整体剔除**（而不是中止全部），让其余家族照常迁移。
+   */
+  async function audit(candidates, perPlan, fileEdits) {
+    const rewritten = new Set([...fileEdits.keys()]);
+    for (const plan of perPlan.keys()) rewritten.add(plan.target.file);
+    const owners = new Map();
+    for (const plan of perPlan.keys()) {
+      for (const member of plan.members) {
+        if (!owners.has(member.file)) owners.set(member.file, new Set());
+        owners.get(member.file).add(plan);
+      }
+    }
+    const offenders = new Set();
+    const samples = [];
+    for (const file of await walk(path.join(ROOT, 'src'))) {
+      if (rewritten.has(file)) continue;
+      const source = await readFile(file, 'utf8');
+      for (const match of source.matchAll(/from\s+"([^"]+)"/g)) {
+        if (!match[1].startsWith('.')) continue;
+        const plans = owners.get(path.resolve(path.dirname(file), match[1]));
+        if (plans === undefined) continue;
+        for (const plan of plans) {
+          if (rewritten.has(file)) continue;
+          offenders.add(plan);
+          if (samples.length < 5) samples.push(`${path.relative(ROOT, file)} -> ${match[1]}`);
+        }
+      }
+    }
+    return { offenders, samples };
+  }
+
+  let active = plans;
+  let perPlan;
+  let fileEdits;
+  let totalLoops = 0;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    skipped.length = 0;
+    perPlan = new Map();
+    fileEdits = new Map();
+    ({ perPlan, fileEdits, totalLoops } = computeEdits(active));
+    const { offenders, samples } = await audit(active, perPlan, fileEdits);
+    if (offenders.size === 0) break;
+    for (const plan of offenders) {
+      skipped.push(`${path.relative(ROOT, plan.dir).replace(/\\/g, '/')} ${plan.factory}`
+        + `（有模块直接引用了它的成员文件：${samples[0] ?? ''}）`);
+    }
+    active = active.filter((plan) => !offenders.has(plan));
   }
 
   for (const plan of plans) {
@@ -585,33 +661,6 @@ async function main() {
   }
 
   if (!write) return;
-
-  // 写盘前审计：被删的成员文件不能再有别的引用者（桶的转发行会被改写，安装器会被改写）。
-  // 这是最后一道闸门——目标选错时，成员文件会被删掉而旧模块还 import 着它。
-  const beingRewritten = new Set([
-    ...fileEdits.keys(),
-    ...[...perPlan.keys()].map((plan) => plan.target.file),
-  ]);
-  const toDelete = new Set(
-    [...perPlan.keys()].flatMap((plan) => plan.members.map((member) => member.file)),
-  );
-  const dangling = [];
-  for (const file of await walk(path.join(ROOT, 'src'))) {
-    if (beingRewritten.has(file)) continue;
-    const source = await readFile(file, 'utf8');
-    for (const match of source.matchAll(/from\s+"([^"]+)"/g)) {
-      if (!match[1].startsWith('.')) continue;
-      const resolved = path.resolve(path.dirname(file), match[1]);
-      if (toDelete.has(resolved)) {
-        dangling.push(`${path.relative(ROOT, file)} -> ${match[1]}`);
-      }
-    }
-  }
-  if (dangling.length > 0) {
-    console.error(`\n审计未通过：${dangling.length} 处引用了将被删除的成员文件，拒绝写盘。`);
-    for (const entry of dangling.slice(0, 10)) console.error(`  ${entry}`);
-    process.exit(1);
-  }
 
   for (const plan of perPlan.keys()) {
     const memberFiles = [...new Set(plan.members.map((member) => member.file))];

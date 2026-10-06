@@ -6,9 +6,9 @@ import {
 } from "../../engine/webidl/descriptor.js";
 import { CSSRule, installCSSRuleConstructor } from "../api/css/css-rule-constructor.js";
 import { type } from "../api/css/css-rule-type-getter.js";
-import { cssText } from "../api/css/css-rule-accessor-descriptor-members.js";
 import { parentRule } from "../api/css/css-rule-parent-rule-getter.js";
 import { parentStyleSheet } from "../api/css/css-rule-parent-style-sheet-getter.js";
+import { cssRuleAccessorDescriptorTable } from "../api/css/css-rule-accessor-descriptor-members.js";
 
 const constants = [
   ["STYLE_RULE", 1],
@@ -29,7 +29,7 @@ const constants = [
 export function installCSSRule() {
   installCSSRuleConstructor();
   definePrototypeGetter(CSSRule.prototype, "type", type);
-  definePrototypeAccessor(CSSRule.prototype, "cssText", cssText.get, cssText.set);
+  for (const [name, entry] of cssRuleAccessorDescriptorTable) definePrototypeAccessor(CSSRule.prototype, name, entry.get, entry.set);
   definePrototypeGetter(CSSRule.prototype, "parentRule", parentRule);
   definePrototypeGetter(CSSRule.prototype, "parentStyleSheet", parentStyleSheet);
   for (const [name, value] of constants) {

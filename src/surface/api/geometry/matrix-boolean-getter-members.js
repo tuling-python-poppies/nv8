@@ -1,6 +1,13 @@
-// geometry 目录的成员实现：原本一个成员一个文件，合并以减少模块图节点。
+// geometry 的成员表：名字就能描述实现，不再一个成员一个文件。
 
 import { matrixBooleanGetter } from "./dom-matrix-read-only-boolean-getter.js";
 
-export const is2D = matrixBooleanGetter("is2D");
-export const isIdentity = matrixBooleanGetter("isIdentity");
+const MATRIX_BOOLEAN_GETTER_TABLE_ROWS = [
+  ["is2D", "is2D"],
+  ["isIdentity", "isIdentity"],
+];
+
+export const matrixBooleanGetterTable = MATRIX_BOOLEAN_GETTER_TABLE_ROWS.map(
+  ([name, ...args]) => [name, matrixBooleanGetter(...args)],
+);
+

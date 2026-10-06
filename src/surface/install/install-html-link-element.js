@@ -5,7 +5,6 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import { as, setAs } from "../api/dom/html-link-element-as-property.js";
-import { blocking, setBlocking } from "../api/dom/html-link-element-blocking-property.js";
 import { charset, setCharset } from "../api/dom/html-link-element-charset-property.js";
 import {
   HTMLLinkElement,
@@ -21,13 +20,12 @@ import { imageSrcset, setImageSrcset } from "../api/dom/html-link-element-image-
 import { integrity, setIntegrity } from "../api/dom/html-link-element-integrity-property.js";
 import { media, setMedia } from "../api/dom/html-link-element-media-property.js";
 import { referrerPolicy, setReferrerPolicy } from "../api/dom/html-link-element-referrer-policy-property.js";
-import { relList, setRelList } from "../api/dom/html-link-element-rel-list-property.js";
 import { rel, setRel } from "../api/dom/html-link-element-rel-property.js";
 import { rev, setRev } from "../api/dom/html-link-element-rev-property.js";
 import { sheet } from "../api/dom/html-link-element-sheet-getter.js";
-import { sizes, setSizes } from "../api/dom/html-link-element-sizes-property.js";
 import { target, setTarget } from "../api/dom/html-link-element-target-property.js";
 import { type, setType } from "../api/dom/html-link-element-type-property.js";
+import { linkTokenListPropertyTable } from "../api/dom/link-token-list-property-members.js";
 
 export function installHTMLLinkElement() {
   installHTMLLinkElementConstructor();
@@ -35,13 +33,13 @@ export function installHTMLLinkElement() {
   accessor("href", href, setHref);
   accessor("crossOrigin", crossOrigin, setCrossOrigin);
   accessor("rel", rel, setRel);
-  accessor("relList", relList, setRelList);
+  for (const [name, entry] of linkTokenListPropertyTable) accessor(name, entry.get, entry.set);
   accessor("media", media, setMedia);
   accessor("hreflang", hreflang, setHreflang);
   accessor("type", type, setType);
   accessor("as", as, setAs);
   accessor("referrerPolicy", referrerPolicy, setReferrerPolicy);
-  accessor("sizes", sizes, setSizes);
+  for (const [name, entry] of linkTokenListPropertyTable) accessor(name, entry.get, entry.set);
   accessor("fetchPriority", fetchPriority, setFetchPriority);
   accessor("imageSrcset", imageSrcset, setImageSrcset);
   accessor("imageSizes", imageSizes, setImageSizes);
@@ -50,7 +48,7 @@ export function installHTMLLinkElement() {
   accessor("target", target, setTarget);
   definePrototypeGetter(HTMLLinkElement.prototype, "sheet", sheet);
   accessor("integrity", integrity, setIntegrity);
-  accessor("blocking", blocking, setBlocking);
+  for (const [name, entry] of linkTokenListPropertyTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLLinkElement.prototype, HTMLLinkElement);
   defineToStringTag(HTMLLinkElement.prototype, "HTMLLinkElement");
 }
