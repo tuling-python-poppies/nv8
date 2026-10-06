@@ -29,7 +29,6 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const API_DIR = path.join(ROOT, 'src', 'surface', 'api');
 
-const DELEGATE_BODY = /^export const (\w+)\s*=\s*([\w$]+)\(([\s\S]*)\);$/;
 /**
  * 桶里的转发语句：`export * from "…"` 与具名 `export { a, b } from "…"` 都要认。
  *
@@ -183,6 +182,9 @@ async function main() {
 
   const groups = new Map();
   for (const file of apiFiles) {
+    // 合并后的单成员模块（只含一条导出的 `-members.js`）形如委托文件，但它就是目标本身，
+    // 再合并一次只会得到「目标已导出该名字」的假告警。直接排除。
+    if (path.basename(file).endsWith('-members.js')) continue;
     const delegate = await readDelegate(file);
     if (delegate === null) continue;
     const dir = path.dirname(file);
