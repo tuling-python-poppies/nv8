@@ -1283,6 +1283,22 @@ surface 一模一样），而它还声明了 `canvas.base` 能力——ADR-0002 
 因此看不见这个洞。`plugins/dom` 与 `plugins/html` 则是**有意的聚合门面**：
 它们的能力由 `dom-core` + `dom-collections` / `html-elements` 实际提供。
 
+**成员按工厂收成表，安装器循环装表。** `surface/api/<域>` 里凡是「内容能由名字描述」的
+成员，不再一个成员一个文件，而是按**工厂 + 接口 + 安装作用域**收成表；安装器里对应的连续
+语句变成一行循环：
+
+```js
+for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+```
+
+表只装**那段语句原本装的成员**，所以循环与原语句严格等价（不会过装）。成员若在安装语句
+之外还按名字被需要（当值用、被别的模块直接 import），表模块会为它补一个具名再导出。
+带真实算法的成员仍然一个文件一个（`dom` 里大量如此）。迁移工具是
+`scripts/tablize-api-members.mjs`，形态护栏是 `scripts/check-code-shape.mjs`。
+
+> 跑验证前先删掉 gitignore 的 `src/engine/realm/module-bundle.json`：
+> `RealmModuleLoader` 命中缓存就用缓存里的**旧源码**，会让测试与基线在改动没生效时显示全绿。
+
 ---
 
 ## 设计原则
