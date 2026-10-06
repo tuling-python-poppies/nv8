@@ -729,6 +729,15 @@ async function main() {
       console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：多个候选桶`);
       continue;
     }
+    // 目标（api 目录里的桶）自己如果用这些成员装东西，就整族跳过：
+    // 语句扫描目前只覆盖 `src/surface/install/**`，改写不到桶里的安装函数，
+    // 而 `stripForwarding` 会摘掉它们的 import → 名字悬空（`onabort is not defined`）。
+    // 要真正解决，得把扫描范围扩到 api 目录；在那之前这里必须挡住。
+    if (await targetReusesMembers(target.file, group.members)) {
+      console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：`
+        + `目标模块 ${path.basename(target.file)} 自己也在装这些成员（语句扫描不含 api 目录）`);
+      continue;
+    }
     const slotByName = new Map();
     for (const member of group.members) {
       for (const entry of member.exports) slotByName.set(entry.name, entry.slot);
@@ -899,7 +908,9 @@ async function main() {
         for (const member of loop.covered ?? []) {
           if (!table.members.includes(member)) table.members.push(member);
         }
-        tableNameByLoop.set(loop, table);
+        // 键必须是稳定字符串：写入路径遍历的是 `{...loop, plan}` 副本，
+        // 用对象作键会查不到，于是退回家族级表名（模块里并不存在这个名字）。
+        tableNameByLoop.set(`${plan.factory}|${file}|${loop.startOffset}`, table);
       }
     }
     const scopeTables = [...byScope.values()];
@@ -949,7 +960,8 @@ async function main() {
     let source = installSources.get(file);
     for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
       // 表按作用域切，每段循环各自迭代自己那张表，不需要再去重
-      const tableName = tableNameByLoop.get(loop)?.name ?? loop.plan.tableName;
+      const tableName = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name
+        ?? loop.plan.tableName;
       const ref = loop.scope.namespace === null
         ? tableName
         : `${loop.scope.namespace}.${tableName}`;
@@ -972,7 +984,7 @@ async function main() {
     const needed = new Map();
     for (const loop of edit.loops) {
       if (loop.scope.namespace !== null) continue;
-      const name = tableNameByLoop.get(loop)?.name;
+      const name = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name;
       if (name === undefined) continue;
       needed.set(name, relative(file, loop.plan.target.file));
     }
