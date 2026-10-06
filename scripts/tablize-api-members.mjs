@@ -377,7 +377,12 @@ function addNamedImport(source, name, specifier) {
   for (const match of expanded.matchAll(/import\s*\{[^}]*\}\s*from\s*"[^"]+";|import\s*\*\s*as\s+[\w$]+\s*from\s*"[^"]+";/g)) {
     lastEnd = match.index + match[0].length;
   }
-  if (merged || lastEnd === -1) return expanded;
+  if (merged) return expanded;
+  // 文件里一条 import 都没有时（原 import 全是被删成员），插到文件开头，
+  // 否则表名会悬空——`node --check` 与基线都看不出这类问题。
+  if (lastEnd === -1) {
+    return `import { ${name} } from "${specifier}";\n\n${expanded.replace(/^\n+/, '')}`;
+  }
   return `${expanded.slice(0, lastEnd)}\nimport { ${name} } from "${specifier}";${expanded.slice(lastEnd)}`;
 }
 
@@ -467,6 +472,19 @@ function leadingSpaces(source, offset) {
 function lineIndent(source, offset) {
   const lineStart = source.lastIndexOf('\n', offset) + 1;
   return source.slice(lineStart, offset).match(/^[ \t]*/)?.[0] ?? '';
+}
+
+/**
+ * 语句所在的函数体起点（找不到则 -1）。
+ *
+ * 去重复循环时要用它判定「同一作用域」：`installElementInternalsARIABeforeMethods` 与
+ * `...AfterMethods` 装的是**不同时机**的成员，各自被调用时拿到不同的 accessor，
+ * 把后者合并到前者会改变安装顺序（aria 那批就是刻意分前后的）。
+ */
+function enclosingFunction(source, offset) {
+  const before = source.slice(0, offset);
+  const matches = [...before.matchAll(/^[ \t]*(?:export\s+)?(?:async\s+)?function\s+[\w$]*/gm)];
+  return matches.length === 0 ? -1 : matches[matches.length - 1].index;
 }
 
 /** 折叠空白，但不动字符串/模板内容。 */
@@ -768,14 +786,16 @@ async function main() {
 
   for (const [file, edit] of fileEdits) {
     let source = installSources.get(file);
-    // 同一文件里同一家族的多个循环段只保留第一段：循环装的是整张表，装第二遍没有意义，
-    // 留着会读出一串一模一样的 for。其余段整段删掉（成员由保留的那段装上）。
+    // 同一**函数**里同一家族的多个循环段只保留第一段（循环装的是整张表，装第二遍没意义）；
+    // 不同函数不能合并——它们在各自的调用时机拿到不同 accessor，合并会改变安装顺序。
     const keptFirst = new Map();
     for (const loop of [...edit.loops].sort((a, b) => a.startOffset - b.startOffset)) {
-      if (!keptFirst.has(loop.plan)) keptFirst.set(loop.plan, loop);
+      const key = `${enclosingFunction(source, loop.startOffset)}\u0000${loop.plan.factory}`;
+      if (!keptFirst.has(key)) keptFirst.set(key, loop);
     }
     for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
-      const isFirst = keptFirst.get(loop.plan) === loop;
+      const key = `${enclosingFunction(source, loop.startOffset)}\u0000${loop.plan.factory}`;
+      const isFirst = keptFirst.get(key) === loop;
       const ref = loop.scope.namespace === null
         ? loop.plan.tableName
         : `${loop.scope.namespace}.${loop.plan.tableName}`;
