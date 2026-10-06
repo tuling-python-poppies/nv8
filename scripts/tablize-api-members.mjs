@@ -95,7 +95,11 @@ function allImports(source) {
 }
 
 function kebab(name) {
-  return name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+  return name
+    // 缩写边界：HTMLAnchorElement → HTML-AnchorElement
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase();
 }
 
 function relative(from, to) {
@@ -218,7 +222,7 @@ export async function readFamilyFile(file) {
 }
 
 /** 目标模块：优先复用目录里已经转发这组成员的 `-members.js` 桶，否则按工厂名新建。 */
-async function findTargetModule(dir, members) {
+async function findTargetModule(dir, members, nameHint = null) {
   const entries = await readdir(dir, { withFileTypes: true });
   const candidates = entries
     .filter((entry) => entry.isFile() && entry.name.endsWith('-members.js'))
@@ -246,8 +250,21 @@ async function findTargetModule(dir, members) {
   // 若另起新文件，旧模块会被当成待删成员文件删掉，而安装器还 import 着它。
   const uniqueFiles = [...new Set(members.map((member) => member.file))];
   if (uniqueFiles.length === 1) return { file: uniqueFiles[0], existed: true };
-  const created = path.join(dir, `${kebab(members[0].factory)}-members.js`);
+  const suffix = nameHint === null ? '' : `-${kebab(nameHint)}`;
+  const created = path.join(dir, `${kebab(members[0].factory)}${suffix}-members.js`);
   return { file: created, existed: existsSync(created) };
+}
+
+/**
+ * 成员的「接口」：工厂第一个参数是形如 `"HTMLAnchorElement"` 的字符串时取它，否则 null。
+ *
+ * 跨接口家族（`stringReflection("HTMLAnchorElement", "href", "href")` 这类）必须**按接口分表**：
+ * 每个元素安装器只装自己接口的那几个成员，一张跨接口的表被任何安装器整表循环都会过装。
+ * 单接口家族（第一个参数不是接口名，或本来就只有一个接口）保持原样。
+ */
+function interfaceKeyOf(member) {
+  const first = member.argsList[0];
+  return first !== undefined && /^"[A-Z][\w]*"$/.test(first) ? first.slice(1, -1) : null;
 }
 
 /**
@@ -664,6 +681,10 @@ async function main() {
   const only = onlyIndex === -1
     ? null
     : new Set(args.slice(onlyIndex + 1).filter((arg) => !arg.startsWith('--')));
+  const interfaceArg = args.indexOf('--interface');
+  const interfaceFilter = interfaceArg === -1
+    ? null
+    : (args[interfaceArg + 1] ?? null);
 
   const apiFiles = (await walk(API_DIR)).filter((file) => !/-surface\.js$/.test(file));
   const grouped = new Map();
@@ -672,11 +693,17 @@ async function main() {
     if (parsed === null) continue;
     const dir = path.dirname(file);
     if (only !== null && !only.has(path.basename(dir))) continue;
-    const key = `${dir}\u0000${parsed.factory}`;
-    if (!grouped.has(key)) grouped.set(key, { dir, factory: parsed.factory, members: [] });
+    // 一个文件里的成员若跨接口，就不拆（拆了会让同一个文件落到两组、删除时打架）
+    const keys = new Set(parsed.members.map(interfaceKeyOf));
+    const fileInterface = keys.size === 1 ? [...keys][0] : null;
+    if (interfaceFilter !== null && fileInterface !== interfaceFilter) continue;
+    const key = `${dir}\u0000${parsed.factory}\u0000${fileInterface ?? ''}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, { dir, factory: parsed.factory, interfaceName: fileInterface, members: [] });
+    }
     const group = grouped.get(key);
     for (const member of parsed.members) {
-      group.members.push({ file, imports: parsed.imports, ...member });
+      group.members.push({ file, imports: parsed.imports, interfaceName: fileInterface, ...member });
     }
   }
 
@@ -686,7 +713,7 @@ async function main() {
 
   const plans = [];
   for (const group of grouped.values()) {
-    const target = await findTargetModule(group.dir, group.members);
+    const target = await findTargetModule(group.dir, group.members, group.interfaceName);
     if (target.ambiguous !== undefined) {
       console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：多个候选桶`);
       continue;
