@@ -38,16 +38,17 @@
  * 再追加表**；目标内的表引用不补 import（避免自引用）。实测这两个家族（219 个成员文件）
  * 已能迁移，护栏通过。
  *
- * ### 2. 唯一剩下的拦路石：一处「漏装」没定位
+ * ### 2. 已解决：按「安装函数名」给表命名会撞名
  *
- * 放开闸门跑全量后端到端实测：`HTMLElement` 143 → 130、`MathMLElement` 113 → 110
- * （成员变少＝漏装），涉及的家族是 `htmlStringDescriptor`（13 个成员）与
- * `htmlBooleanDescriptor`（5 个）——它们的成员分别被 `install-html-element.js` 与
- * `install-math-ml-element.js` 装了一部分。怀疑仍有 scope 的语句没被匹配上。
+ * 多作用域时我曾用外层函数名给表命名，于是同一个安装函数里装的**两个家族**都叫
+ * `hTMLElementTable`（`htmlStringDescriptor` 与 `htmlBooleanDescriptor` 都由
+ * `installHTMLElement` 装）。消费者第二次 import 同名表时被去重跳过，循环于是迭代了**另一族**的
+ * 表——`HTMLElement` 少 13 个成员（实测 143 → 130），而布尔那 5 个被重复装了一遍，成员数看不出来。
  *
- * 下一步：把「未匹配的语句」清单打出来（`countReferences` 已经能算出「引用行数 − 可合并行数」，
- * 把差额对应的语句原文打印即可），看是哪种写法。漏装比过装隐蔽，
- * `capture-full-surface` 的成员摘要是唯一能抓它的地方——**这也是每次都必须跑基线的原因**。
+ * 现在表名一律带**家族**名：单作用域 `<工厂>Table`，多作用域 `<工厂>Part<N>Table`。
+ *
+ * 教训：**漏装比过装隐蔽**——过装会让成员数变多、一眼可见；漏装只让某个成员悄悄消失，
+ * 只有 `capture-full-surface` 的成员摘要能抓到。所以每次落盘前那三份基线不能省。
  *
  * ### 3. 成员被当值用 / 被别的模块直接 import
  *
@@ -962,11 +963,7 @@ async function main() {
       for (const loop of loops) {
         const key = `${file}\u0000${enclosingFunction(source, loop.startOffset)}`;
         if (!byScope.has(key)) {
-          const scopeName = enclosingFunctionName(source, loop.startOffset);
-          const label = scopeName === null
-            ? `part${tables.length + 1}`
-            : `${scopeName.replace(/^install/, '').replace(/^[A-Z]/, (c) => c.toLowerCase())}`;
-          byScope.set(key, { base: label, members: [] });
+          byScope.set(key, { members: [] });
         }
         const table = byScope.get(key);
         for (const member of loop.covered ?? []) {
@@ -978,10 +975,13 @@ async function main() {
       }
     }
     const scopeTables = [...byScope.values()];
-    const singleScope = scopeTables.length === 1;
-    for (const table of scopeTables) {
-      table.name = singleScope ? plan.tableName : `${table.base}Table`;
-    }
+    // 表名必须带**家族**名：用外层函数名会让同一安装函数里的两个家族撞名
+    // （`htmlStringDescriptor` 与 `htmlBooleanDescriptor` 都由 `installHTMLElement` 装），
+    // 撞名后消费者 import 到的是另一族的表 → 静默漏装/过装。
+    const stem = plan.tableName.replace(/Table$/, '');
+    scopeTables.forEach((table, index) => {
+      table.name = scopeTables.length === 1 ? plan.tableName : `${stem}Part${index + 1}Table`;
+    });
     tables.push(...scopeTables);
     tablesByPlan.set(plan, tables);
 
