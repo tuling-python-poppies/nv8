@@ -28,22 +28,26 @@
  *
  * ## 还没跨过去的坎（要用这个工具前先读）
  *
- * ### 1. 语句扫描范围只有 `src/surface/install/**`
+ * ### 1. 已解决：api 目录里的安装语句
  *
  * 两个 handler 家族的安装函数写在 **api 目录的桶文件**里（`document-event-members.js`
- * 的 6 个 `install*EventMembers`、`html-element-event-members.js` 同理）。扫描不到它们，
- * 于是桶的 import 被 `stripForwarding` 摘掉、里面的语句没人改写 → 运行时
- * `onabort is not defined`。`targetReusesMembers()` 这道闸门就是为它设的。
+ * 的 6 个 `install*EventMembers`）。此前扫描范围只有 `src/surface/install/**`，
+ * 于是桶的 import 被摘、语句没人改写 → `onabort is not defined`。
  *
- * 要解掉：把每个 plan 的**目标文件**也纳入消费者扫描。注意写入顺序——目标既是表的
- * 所有者又是消费者，得先按循环改写它的正文、再追加表，否则「先写表、后按原文改写正文」
- * 会把刚写的表冲掉；目标文件里的表引用也不要再补 import（会自引用）。
+ * 现在：目标文件也纳入消费者扫描（`rewriteConsumer` 两处复用），并且**先改写目标正文、
+ * 再追加表**；目标内的表引用不补 import（避免自引用）。实测这两个家族（219 个成员文件）
+ * 已能迁移，护栏通过。
  *
- * ### 2. 还有一处「漏装」没定位
+ * ### 2. 唯一剩下的拦路石：一处「漏装」没定位
  *
- * 关掉闸门放开最后 2 个家族后，实测 `HTMLElement` 143 → 130、`MathMLElement` 113 → 110
- * （成员变少＝漏装）。怀疑仍有 scope 的语句没被匹配上，需要把「没匹配的语句」清单打出来看。
- * 漏装比过装隐蔽，`capture-full-surface` 的成员摘要是唯一能抓它的地方。
+ * 放开闸门跑全量后端到端实测：`HTMLElement` 143 → 130、`MathMLElement` 113 → 110
+ * （成员变少＝漏装），涉及的家族是 `htmlStringDescriptor`（13 个成员）与
+ * `htmlBooleanDescriptor`（5 个）——它们的成员分别被 `install-html-element.js` 与
+ * `install-math-ml-element.js` 装了一部分。怀疑仍有 scope 的语句没被匹配上。
+ *
+ * 下一步：把「未匹配的语句」清单打出来（`countReferences` 已经能算出「引用行数 − 可合并行数」，
+ * 把差额对应的语句原文打印即可），看是哪种写法。漏装比过装隐蔽，
+ * `capture-full-surface` 的成员摘要是唯一能抓它的地方——**这也是每次都必须跑基线的原因**。
  *
  * ### 3. 成员被当值用 / 被别的模块直接 import
  *
@@ -708,6 +712,44 @@ function formatImportBlock(bySpecifier) {
     .join('\n');
 }
 
+/**
+ * 把一个消费者文件改写成「循环语句 + 修好的导入」。
+ *
+ * 目标文件（api 目录的桶）本身也可能是消费者——它里面有安装函数。所以这段逻辑两个地方都用：
+ * 单独写消费者时用，以及在写目标模块前先把它自己的正文改写掉（顺序反了会把刚写的表冲掉）。
+ */
+function rewriteConsumer(source, file, edit, tableNameByLoop) {
+  let out = source;
+  for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
+    const tableName = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name
+      ?? loop.plan.tableName;
+    const ref = loop.scope.namespace === null
+      ? tableName
+      : `${loop.scope.namespace}.${tableName}`;
+    const replacement = `${loop.indent}for (const [name, entry] of ${ref}) `
+      + `${fillTemplate(loop.template, loop.slots)}`;
+    // 语句独占一行时把替换范围向前吃到行首，避免缩进叠加
+    let from = loop.startOffset;
+    const lineStart = out.lastIndexOf('\n', from - 1) + 1;
+    if (out.slice(lineStart, from).trim() === '') from = lineStart;
+    out = out.slice(0, from) + replacement + out.slice(loop.endOffset);
+  }
+  out = dropNamedImports(out, file, edit.drops);
+  // 补 import：按该文件各循环**实际**用到的表名来补。目标文件本身是表的所有者，跳过（会自引用）。
+  const needed = new Map();
+  for (const loop of edit.loops) {
+    if (loop.scope.namespace !== null) continue;
+    if (loop.plan.target.file === file) continue;
+    const name = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name;
+    if (name === undefined) continue;
+    needed.set(name, relative(file, loop.plan.target.file));
+  }
+  for (const [tableName, specifier] of needed) {
+    out = addNamedImport(out, tableName, specifier);
+  }
+  return tidyImports(out);
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const write = args.includes('--write');
@@ -752,15 +794,6 @@ async function main() {
       console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：多个候选桶`);
       continue;
     }
-    // 目标（api 目录里的桶）自己如果用这些成员装东西，就整族跳过：
-    // 语句扫描目前只覆盖 `src/surface/install/**`，改写不到桶里的安装函数，
-    // 而 `stripForwarding` 会摘掉它们的 import → 名字悬空（`onabort is not defined`）。
-    // 要真正解决，得把扫描范围扩到 api 目录；在那之前这里必须挡住。
-    if (await targetReusesMembers(target.file, group.members)) {
-      console.log(`SKIP ${path.relative(ROOT, group.dir)} ${group.factory}：`
-        + `目标模块 ${path.basename(target.file)} 自己也在装这些成员（语句扫描不含 api 目录）`);
-      continue;
-    }
     const slotByName = new Map();
     for (const member of group.members) {
       for (const entry of member.exports) slotByName.set(entry.name, entry.slot);
@@ -774,6 +807,13 @@ async function main() {
   }
 
   // 每个家族在每个安装文件里的循环段。行号基于原始文本，因此同文件的多个家族可以一次性套用。
+  // 目标模块（api 目录的桶）里也可能有安装语句（handler 家族的 6 个 install*EventMembers 就是），
+  // 把它一并纳入消费者扫描，否则它的导入会被摘掉、里面的语句没人改写。
+  for (const plan of plans) {
+    if (installSources.has(plan.target.file)) continue;
+    if (!existsSync(plan.target.file)) continue;
+    installSources.set(plan.target.file, await readFile(plan.target.file, 'utf8'));
+  }
   const skipped = [];
 
   /** 计算每个家族在哪些安装文件里成环；覆盖不全的家族直接剔除。 */
@@ -910,6 +950,7 @@ async function main() {
 
   const tablesByPlan = new Map();
   const tableNameByLoop = new Map();
+  const handledTargets = new Set();
 
   for (const plan of perPlan.keys()) {
     // 按安装作用域切表：一个（文件, 外层函数）= 一张表，表里正好是那段语句装的那些成员。
@@ -956,9 +997,14 @@ async function main() {
       .map(([file]) => file);
     // 目标模块本身就是某个成员文件时（之前合并出来的多成员模块），旧内容整体作废重写
     const targetIsMemberFile = plan.members.some((member) => member.file === plan.target.file);
-    const current = !targetIsMemberFile && existsSync(plan.target.file)
-      ? await readFile(plan.target.file, 'utf8')
-      : '';
+    // 目标自己也是消费者时：先按循环改写它的正文，再追加表。顺序反了会把刚写的表冲掉。
+    const ownEdit = fileEdits.get(plan.target.file);
+    if (ownEdit !== undefined) handledTargets.add(plan.target.file);
+    const current = targetIsMemberFile
+      ? ''
+      : (ownEdit !== undefined
+        ? rewriteConsumer(installSources.get(plan.target.file) ?? '', plan.target.file, ownEdit, tableNameByLoop)
+        : (existsSync(plan.target.file) ? await readFile(plan.target.file, 'utf8') : ''));
     const bySpecifier = new Map();
     for (const member of coveredMembers) {
       for (const entry of member.imports) {
@@ -980,41 +1026,9 @@ async function main() {
   }
 
   for (const [file, edit] of fileEdits) {
-    let source = installSources.get(file);
-    for (const loop of [...edit.loops].sort((a, b) => b.startOffset - a.startOffset)) {
-      // 表按作用域切，每段循环各自迭代自己那张表，不需要再去重
-      const tableName = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name
-        ?? loop.plan.tableName;
-      const ref = loop.scope.namespace === null
-        ? tableName
-        : `${loop.scope.namespace}.${tableName}`;
-      const replacement = `${loop.indent}for (const [name, entry] of ${ref}) `
-        + `${fillTemplate(loop.template, loop.slots)}`;
-      // 语句独占一行时把替换范围向前吃到行首，避免缩进叠加；删除时再吃掉行尾换行，免得留空行
-      let from = loop.startOffset;
-      const lineStart = source.lastIndexOf('\n', from - 1) + 1;
-      if (source.slice(lineStart, from).trim() === '') from = lineStart;
-      let to = loop.endOffset;
-      if (replacement === '') {
-        while (to < source.length && source[to] !== '\n' && source[to].trim() === '') to += 1;
-        if (source[to] === '\n') to += 1;
-      }
-      source = source.slice(0, from) + replacement + source.slice(to);
-    }
-    source = dropNamedImports(source, file, edit.drops);
-    // 补 import：按该文件各循环**实际**用到的表名来补（表按作用域切之后，一个文件可能
-    // 需要不止一个表名，家族级的 `plan.tableName` 已经不代表实际导出的名字）。
-    const needed = new Map();
-    for (const loop of edit.loops) {
-      if (loop.scope.namespace !== null) continue;
-      const name = tableNameByLoop.get(`${loop.plan.factory}|${file}|${loop.startOffset}`)?.name;
-      if (name === undefined) continue;
-      needed.set(name, relative(file, loop.plan.target.file));
-    }
-    for (const [tableName, specifier] of needed) {
-      source = addNamedImport(source, tableName, specifier);
-    }
-    await writeFile(file, tidyImports(source));
+    // 已经作为目标模块处理过的消费者（它的正文已在写表之前改写）不再重写
+    if (handledTargets.has(file)) continue;
+    await writeFile(file, rewriteConsumer(installSources.get(file), file, edit, tableNameByLoop));
   }
 }
 
