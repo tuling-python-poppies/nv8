@@ -1186,7 +1186,7 @@ RSS 变化不作为性能门槛：短基准中的 GC 和线程池回收会产生
 
 ### 关于 `build:bundle`
 
-`RealmModuleLoader` 支持把 4030 个模块预打包成一个 JSON 以减少文件读取。
+`RealmModuleLoader` 支持把 3076 个模块预打包成一个 JSON 以减少文件读取。
 这个缓存**以绝对 `file://` URL 为键**，因此与生成它的机器路径绑定。
 
 仓库里曾提交过一份这样的包（3992 个键，全部以 `file:///D:/develop_software/Nv8/`
@@ -1246,7 +1246,7 @@ src/
     ├── trace/         API 调用追踪
     └── utils/         logger
 
-tests/                 159 个 .js 测试文件
+tests/                 163 个 .js 文件（其中 160 个 *-test.js）
 scripts/               指纹采集与构建脚本
 fixtures/              真实 Edge 采集结果与基线快照
 docs/                  设计文档与 ADR
