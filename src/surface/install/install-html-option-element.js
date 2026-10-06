@@ -4,11 +4,6 @@ import {
   definePrototypeGetter,
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
-import {
-  defaultSelected,
-  setDefaultSelected,
-} from "../api/dom/html-option-element-default-selected-property.js";
-import { disabled, setDisabled } from "../api/dom/html-option-element-disabled-property.js";
 import { form } from "../api/dom/html-option-element-form-getter.js";
 import {
   HTMLOptionElement,
@@ -19,13 +14,13 @@ import { label, setLabel } from "../api/dom/html-option-element-label-property.j
 import { selected, setSelected } from "../api/dom/html-option-element-selected-property.js";
 import { setText, text } from "../api/dom/html-option-element-text-property.js";
 import { setValue, value } from "../api/dom/html-option-element-value-property.js";
+import { booleanReflectionTable } from "../api/dom/boolean-reflection-html-option-element-members.js";
 
 export function installHTMLOptionElement() {
   installHTMLOptionElementConstructor();
-  accessor("disabled", disabled, setDisabled);
+  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLOptionElement.prototype, "form", form);
   accessor("label", label, setLabel);
-  accessor("defaultSelected", defaultSelected, setDefaultSelected);
   accessor("selected", selected, setSelected);
   accessor("value", value, setValue);
   accessor("text", text, setText);

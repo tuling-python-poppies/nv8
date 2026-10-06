@@ -4,47 +4,18 @@ import {
   defineToStringTag,
 } from "../../engine/webidl/descriptor.js";
 import {
-  height,
-  setHeight,
-} from "../api/dom/html-source-element-height-property.js";
-import {
-  media,
-  setMedia,
-} from "../api/dom/html-source-element-media-property.js";
-import {
-  setSizes,
-  sizes,
-} from "../api/dom/html-source-element-sizes-property.js";
-import {
   HTMLSourceElement,
   installHTMLSourceElementConstructor,
 } from "../api/dom/html-source-element-constructor.js";
-import {
-  setSrc,
-  src,
-} from "../api/dom/html-source-element-src-property.js";
-import {
-  setSrcset,
-  srcset,
-} from "../api/dom/html-source-element-srcset-property.js";
-import {
-  setType,
-  type,
-} from "../api/dom/html-source-element-type-property.js";
-import {
-  setWidth,
-  width,
-} from "../api/dom/html-source-element-width-property.js";
+import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-html-source-element-members.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-html-source-element-members.js";
+import { urlReflectionTable } from "../api/dom/html-source-element-src-property.js";
 
 export function installHTMLSourceElement() {
   installHTMLSourceElementConstructor();
-  accessor("src", src, setSrc);
-  accessor("type", type, setType);
-  accessor("srcset", srcset, setSrcset);
-  accessor("sizes", sizes, setSizes);
-  accessor("media", media, setMedia);
-  accessor("width", width, setWidth);
-  accessor("height", height, setHeight);
+  for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLSourceElement.prototype, HTMLSourceElement);
   defineToStringTag(HTMLSourceElement.prototype, "HTMLSourceElement");
 }

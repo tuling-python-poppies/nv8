@@ -14,7 +14,6 @@ import { defaultValue, setDefaultValue } from "../api/dom/html-output-element-de
 import { form } from "../api/dom/html-output-element-form-getter.js";
 import { htmlFor, setHtmlFor } from "../api/dom/html-output-element-html-for-property.js";
 import { labels } from "../api/dom/html-output-element-labels-getter.js";
-import { name, setName } from "../api/dom/html-output-element-name-property.js";
 import { reportValidity } from "../api/dom/html-output-element-report-validity.js";
 import { setCustomValidity } from "../api/dom/html-output-element-set-custom-validity.js";
 import { type } from "../api/dom/html-output-element-type-getter.js";
@@ -22,12 +21,13 @@ import { validationMessage } from "../api/dom/html-output-element-validation-mes
 import { validity } from "../api/dom/html-output-element-validity-getter.js";
 import { value, setValue } from "../api/dom/html-output-element-value-property.js";
 import { willValidate } from "../api/dom/html-output-element-will-validate-getter.js";
+import { stringReflectionTable } from "../api/dom/html-output-element-name-property.js";
 
 export function installHTMLOutputElement() {
   installHTMLOutputElementConstructor();
   definePrototypeAccessor(HTMLOutputElement.prototype, "htmlFor", htmlFor, setHtmlFor);
   definePrototypeGetter(HTMLOutputElement.prototype, "form", form);
-  definePrototypeAccessor(HTMLOutputElement.prototype, "name", name, setName);
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLOutputElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLOutputElement.prototype, "type", type);
   definePrototypeAccessor(HTMLOutputElement.prototype, "defaultValue", defaultValue, setDefaultValue);
   definePrototypeAccessor(HTMLOutputElement.prototype, "value", value, setValue);

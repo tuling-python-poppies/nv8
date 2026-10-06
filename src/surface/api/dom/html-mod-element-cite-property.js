@@ -1,5 +1,12 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
+
 import { urlReflection } from "./html-reflection.js";
 
-const descriptor = urlReflection("HTMLModElement", "cite", "cite");
-export const cite = descriptor.get;
-export const setCite = descriptor.set;
+const URL_REFLECTION_TABLE_ROWS = [
+  ["cite", "HTMLModElement", "cite", "cite"],
+];
+
+export const urlReflectionTable = URL_REFLECTION_TABLE_ROWS.map(
+  ([name, ...args]) => [name, urlReflection(...args)],
+);
+

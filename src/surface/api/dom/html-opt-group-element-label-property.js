@@ -1,5 +1,12 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
+
 import { stringReflection } from "./html-reflection.js";
 
-const descriptor = stringReflection("HTMLOptGroupElement", "label", "label");
-export const label = descriptor.get;
-export const setLabel = descriptor.set;
+const STRING_REFLECTION_TABLE_ROWS = [
+  ["label", "HTMLOptGroupElement", "label", "label"],
+];
+
+export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+

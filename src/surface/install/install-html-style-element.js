@@ -16,16 +16,9 @@ import {
   setDisabled,
 } from "../api/dom/html-style-element-disabled-property.js";
 import {
-  media,
-  setMedia,
-} from "../api/dom/html-style-element-media-property.js";
-import {
   sheet,
 } from "../api/dom/html-style-element-sheet-getter.js";
-import {
-  setType,
-  type,
-} from "../api/dom/html-style-element-type-property.js";
+import { stringReflectionTable } from "../api/dom/string-reflection-html-style-element-members.js";
 
 export function installHTMLStyleElement() {
   installHTMLStyleElementConstructor();
@@ -35,13 +28,7 @@ export function installHTMLStyleElement() {
     disabled,
     setDisabled,
   );
-  definePrototypeAccessor(
-    HTMLStyleElement.prototype,
-    "media",
-    media,
-    setMedia,
-  );
-  definePrototypeAccessor(HTMLStyleElement.prototype, "type", type, setType);
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLStyleElement.prototype, name, entry.get, entry.set, );
   definePrototypeGetter(HTMLStyleElement.prototype, "sheet", sheet);
   definePrototypeGetter(HTMLStyleElement.prototype, "blocking", blocking);
   defineConstructorBacklink(HTMLStyleElement.prototype, HTMLStyleElement);

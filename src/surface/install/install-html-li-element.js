@@ -7,19 +7,13 @@ import {
   HTMLLIElement,
   installHTMLLIElementConstructor,
 } from "../api/dom/html-li-element-constructor.js";
-import {
-  setType,
-  type,
-} from "../api/dom/html-li-element-type-property.js";
-import {
-  setValue,
-  value,
-} from "../api/dom/html-li-element-value-property.js";
+import { stringReflectionTable } from "../api/dom/html-li-element-type-property.js";
+import { longReflectionTable } from "../api/dom/html-li-element-value-property.js";
 
 export function installHTMLLIElement() {
   installHTMLLIElementConstructor();
-  definePrototypeAccessor(HTMLLIElement.prototype, "value", value, setValue);
-  definePrototypeAccessor(HTMLLIElement.prototype, "type", type, setType);
+  for (const [name, entry] of longReflectionTable) definePrototypeAccessor(HTMLLIElement.prototype, name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor(HTMLLIElement.prototype, name, entry.get, entry.set);
   defineConstructorBacklink(HTMLLIElement.prototype, HTMLLIElement);
   defineToStringTag(HTMLLIElement.prototype, "HTMLLIElement");
 }

@@ -1,4 +1,12 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
+
 import { unsignedReflection } from "./html-reflection.js";
-const descriptor = unsignedReflection("HTMLSelectElement", "size", "size");
-export const size = descriptor.get;
-export const setSize = descriptor.set;
+
+const UNSIGNED_REFLECTION_TABLE_ROWS = [
+  ["size", "HTMLSelectElement", "size", "size"],
+];
+
+export const unsignedReflectionTable = UNSIGNED_REFLECTION_TABLE_ROWS.map(
+  ([name, ...args]) => [name, unsignedReflection(...args)],
+);
+

@@ -1,4 +1,12 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
+
 import { booleanReflection } from "./html-reflection.js";
-const descriptor = booleanReflection("HTMLTableCellElement", "noWrap", "nowrap");
-export const noWrap = descriptor.get;
-export const setNoWrap = descriptor.set;
+
+const BOOLEAN_REFLECTION_TABLE_ROWS = [
+  ["noWrap", "HTMLTableCellElement", "noWrap", "nowrap"],
+];
+
+export const booleanReflectionTable = BOOLEAN_REFLECTION_TABLE_ROWS.map(
+  ([name, ...args]) => [name, booleanReflection(...args)],
+);
+

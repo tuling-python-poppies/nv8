@@ -1,4 +1,12 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
+
 import { urlReflection } from "./html-reflection.js";
-const descriptor = urlReflection("HTMLLinkElement", "href", "href");
-export const href = descriptor.get;
-export const setHref = descriptor.set;
+
+const URL_REFLECTION_TABLE_ROWS = [
+  ["href", "HTMLLinkElement", "href", "href"],
+];
+
+export const urlReflectionTable = URL_REFLECTION_TABLE_ROWS.map(
+  ([name, ...args]) => [name, urlReflection(...args)],
+);
+

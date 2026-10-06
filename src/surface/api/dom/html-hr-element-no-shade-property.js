@@ -1,5 +1,12 @@
+// dom 的成员表：名字就能描述实现，不再一个成员一个文件。
+
 import { booleanReflection } from "./html-reflection.js";
 
-const descriptor = booleanReflection("HTMLHRElement", "noShade", "noshade");
-export const noShade = descriptor.get;
-export const setNoShade = descriptor.set;
+const BOOLEAN_REFLECTION_TABLE_ROWS = [
+  ["noShade", "HTMLHRElement", "noShade", "noshade"],
+];
+
+export const booleanReflectionTable = BOOLEAN_REFLECTION_TABLE_ROWS.map(
+  ([name, ...args]) => [name, booleanReflection(...args)],
+);
+
