@@ -92,6 +92,27 @@ test('state slot validates scope and initializer configuration', () => {
   );
 });
 
+test('console module state is isolated between Realm module graphs', async () => {
+  const vm = await import('node:vm');
+  const { RealmModuleLoader } = await import('../src/engine/realm/module-loader.js');
+  const url = new URL('../src/surface/api/console/console-state.js', import.meta.url);
+  const first = (await new RealmModuleLoader(vm.createContext({})).importUrlAsync(url)).namespace;
+  const second = (await new RealmModuleLoader(vm.createContext({})).importUrlAsync(url)).namespace;
+
+  const firstConsole = first.currentConsole();
+  const secondConsole = second.currentConsole();
+  const firstMemory = { realm: 1 };
+  const secondMemory = { realm: 2 };
+  first.setMemoryInfo(firstMemory);
+  second.setMemoryInfo(secondMemory);
+
+  assert.notEqual(firstConsole, secondConsole);
+  assert.equal(first.currentConsole(), firstConsole);
+  assert.equal(second.currentConsole(), secondConsole);
+  assert.equal(first.currentMemoryInfo(), firstMemory);
+  assert.equal(second.currentMemoryInfo(), secondMemory);
+});
+
 // ------------------------------------------------------------- module audits
 
 test('migrated modules no longer declare the known singleton variables', async () => {

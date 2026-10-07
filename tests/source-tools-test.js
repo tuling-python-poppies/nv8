@@ -55,6 +55,26 @@ test("repeated table loops are rejected within one function", () => {
       for (const [name, entry] of secondPartTable) installOne(name, entry);
     }
   `)), []);
+  const methodSources = [
+    `const api = {
+      install() {
+        for (const row of firstTable) use(row);
+        for (const row of firstTable) use(row);
+      },
+    };`,
+    `class Installer {
+      install() {
+        for (const row of firstTable) use(row);
+        for (const row of firstTable) use(row);
+      }
+    }`,
+  ];
+  for (const source of methodSources) {
+    assert.deepEqual(
+      repeatedTableLoops(maskSource(source)).map(({ table, count }) => ({ table, count })),
+      [{ table: "firstTable", count: 2 }],
+    );
+  }
 });
 
 test("table binding checks respect lexical scope", () => {

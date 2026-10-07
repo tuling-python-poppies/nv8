@@ -1,5 +1,8 @@
+import { createRealmSlot } from "../../../engine/core/state-scope.js";
 import { ErrorEvent } from "../general-events/general-events-runtime.js";
 import { error as consoleError } from "../console/console-error.js";
+
+const reportingExceptionSlot = createRealmSlot(() => false, "reporting-exception");
 
 /**
  * HTML「report the exception」的 NV8 实现。
@@ -16,15 +19,13 @@ import { error as consoleError } from "../console/console-error.js";
  *
  * 这是监听器 / 定时器 / 微任务三个回调边界的公共出口。
  */
-let reportingException = false;
-
 export function reportException(value) {
   const message = `Uncaught ${describeErrorText(value)}`;
-  if (reportingException) {
+  if (reportingExceptionSlot.get(globalThis)) {
     consoleError(message);
     return;
   }
-  reportingException = true;
+  reportingExceptionSlot.set(globalThis, true);
   try {
     const { filename, lineno, colno } = exceptionLocation(value);
     const notCanceled = globalThis.dispatchEvent(new ErrorEvent("error", {
@@ -38,7 +39,7 @@ export function reportException(value) {
       consoleError(message);
     }
   } finally {
-    reportingException = false;
+    reportingExceptionSlot.set(globalThis, false);
   }
 }
 

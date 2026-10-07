@@ -167,9 +167,9 @@ Core 的 `StateRegistry` 还对显式的 sandbox/realm/app/plugin 状态提供�
 `maxStateKeysPerStore`（默认 4096）和 `maxStateTotalKeys`（默认 65536）。这些
 上限属于 Sandbox 实例，既不会跨实例共享，也不会把状态值写入诊断或日志。
 
-## 收尾：4 处保留为进程级
+## 收尾：3 处保留为进程级
 
-迁移到最后剩下 4 处，逐个审阅后判定它们**本来就该是进程级**，强行按 Realm
+迁移到最后剩下 3 处，逐个审阅后判定它们**本来就该是进程级**，强行按 Realm
 隔离反而错误：
 
 | 位置 | 判定理由 |
@@ -179,7 +179,7 @@ Core 的 `StateRegistry` 还对显式的 sandbox/realm/app/plugin 状态提供�
 | `webidl/native-function-realm-safe.js` `realmContexts` | 按 Realm ID 索引的上下文注册表。它本身就是跨 Realm 管理器，隔离它会让其失去意义 |
 | `webidl/native-function.js` `currentContext` | 安装期的当前上下文指针。由 `setNativeFunctionContext()` 在 Realm 激活时设置，安装完成后失效 |
 
-这 4 处登记在 `scripts/audit-module-state.mjs` 的
+这 3 处登记在 `scripts/audit-module-state.mjs` 的
 `REVIEWED_PROCESS_LEVEL_STATE` 里，**每项必须写明理由**。审计输出会单独
 列出它们，不计入待迁移数。
 
@@ -193,10 +193,10 @@ npm run audit:state
 ```
 
 ```
-宿主 ESM 图模块数      : 1813
+宿主 ESM 图模块数      : 1278
 待迁移的文件          : 0
 待迁移的模块级状态    : 0
-已审阅的进程级状态    : 4
+已审阅的进程级状态    : 3
 ```
 
 ## 迁移过程中踩到的坑

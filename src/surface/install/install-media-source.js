@@ -125,225 +125,44 @@ const writable = new Set([
 ]);
 
 export function installMediaSource() {
+  for (const [Constructor] of surfaces) {
+    delete Constructor.prototype.constructor;
+    defineGlobalConstructor(Constructor.name, Constructor);
+  }
 
-    delete ((([...(surfaces.keys())])[0])).prototype.constructor;
-    defineGlobalConstructor(((([...(surfaces.keys())])[0])).name, ((([...(surfaces.keys())])[0])));
-
-    delete ((([...(surfaces.keys())])[1])).prototype.constructor;
-    defineGlobalConstructor(((([...(surfaces.keys())])[1])).name, ((([...(surfaces.keys())])[1])));
-
-    delete ((([...(surfaces.keys())])[2])).prototype.constructor;
-    defineGlobalConstructor(((([...(surfaces.keys())])[2])).name, ((([...(surfaces.keys())])[2])));
-
-    delete ((([...(surfaces.keys())])[3])).prototype.constructor;
-    defineGlobalConstructor(((([...(surfaces.keys())])[3])).name, ((([...(surfaces.keys())])[3])));
-
-    delete ((([...(surfaces.keys())])[4])).prototype.constructor;
-    defineGlobalConstructor(((([...(surfaces.keys())])[4])).name, ((([...(surfaces.keys())])[4])));
-
-    delete ((([...(surfaces.keys())])[5])).prototype.constructor;
-    defineGlobalConstructor(((([...(surfaces.keys())])[5])).name, ((([...(surfaces.keys())])[5])));
-
-    Object.setPrototypeOf(MediaSource.prototype, EventTarget.prototype);
-    Object.setPrototypeOf(MediaSource, EventTarget);
-
-    Object.setPrototypeOf(SourceBuffer.prototype, EventTarget.prototype);
-    Object.setPrototypeOf(SourceBuffer, EventTarget);
-
-    Object.setPrototypeOf(SourceBufferList.prototype, EventTarget.prototype);
-    Object.setPrototypeOf(SourceBufferList, EventTarget);
-
-    Object.setPrototypeOf(MediaRecorder.prototype, EventTarget.prototype);
-    Object.setPrototypeOf(MediaRecorder, EventTarget);
-
+  for (const Constructor of [MediaSource, SourceBuffer, SourceBufferList, MediaRecorder]) {
+    Object.setPrototypeOf(Constructor.prototype, EventTarget.prototype);
+    Object.setPrototypeOf(Constructor, EventTarget);
+  }
   Object.setPrototypeOf(BlobEvent.prototype, Event.prototype);
   Object.setPrototypeOf(BlobEvent, Event);
 
-    {
-
-    accessor((((([...(surfaces)])[0]))[0]), "sourceBuffers");
-
-    accessor((((([...(surfaces)])[0]))[0]), "activeSourceBuffers");
-
-    accessor((((([...(surfaces)])[0]))[0]), "duration");
-
-    accessor((((([...(surfaces)])[0]))[0]), "onsourceopen");
-
-    accessor((((([...(surfaces)])[0]))[0]), "onsourceended");
-
-    accessor((((([...(surfaces)])[0]))[0]), "onsourceclose");
-
-    accessor((((([...(surfaces)])[0]))[0]), "readyState");
-
-    method((((([...(surfaces)])[0]))[0]), "addSourceBuffer", 1);
-
-    method((((([...(surfaces)])[0]))[0]), "clearLiveSeekableRange", 0);
-
-    method((((([...(surfaces)])[0]))[0]), "endOfStream", 0);
-
-    method((((([...(surfaces)])[0]))[0]), "removeSourceBuffer", 1);
-
-    method((((([...(surfaces)])[0]))[0]), "setLiveSeekableRange", 2);
-
-    {
-      defineConstructorBacklink((((([...(surfaces)])[0]))[0]).prototype, (((([...(surfaces)])[0]))[0]));
+  for (const [Constructor, members] of surfaces) {
+    for (const [kind, name, length] of members) {
+      if (kind === "accessor") accessor(Constructor, name);
+      else if (kind === "method") method(Constructor, name, length);
+      else if (kind === "constructor") defineConstructorBacklink(Constructor.prototype, Constructor);
+      else if (kind === "tag") defineToStringTag(Constructor.prototype, Constructor.name);
+      else if (kind === "iterator") installIterator(Constructor);
     }
-
-    {
-      defineToStringTag((((([...(surfaces)])[0]))[0]).prototype, (((([...(surfaces)])[0]))[0]).name);
-    }
-
-}
-
-    {
-
-    {
-      defineConstructorBacklink((((([...(surfaces)])[1]))[0]).prototype, (((([...(surfaces)])[1]))[0]));
-    }
-
-    {
-      defineToStringTag((((([...(surfaces)])[1]))[0]).prototype, (((([...(surfaces)])[1]))[0]).name);
-    }
-
-}
-
-    {
-
-    accessor((((([...(surfaces)])[2]))[0]), "mode");
-
-    accessor((((([...(surfaces)])[2]))[0]), "updating");
-
-    accessor((((([...(surfaces)])[2]))[0]), "buffered");
-
-    accessor((((([...(surfaces)])[2]))[0]), "timestampOffset");
-
-    accessor((((([...(surfaces)])[2]))[0]), "appendWindowStart");
-
-    accessor((((([...(surfaces)])[2]))[0]), "appendWindowEnd");
-
-    accessor((((([...(surfaces)])[2]))[0]), "onupdatestart");
-
-    accessor((((([...(surfaces)])[2]))[0]), "onupdate");
-
-    accessor((((([...(surfaces)])[2]))[0]), "onupdateend");
-
-    accessor((((([...(surfaces)])[2]))[0]), "onerror");
-
-    accessor((((([...(surfaces)])[2]))[0]), "onabort");
-
-    method((((([...(surfaces)])[2]))[0]), "abort", 0);
-
-    method((((([...(surfaces)])[2]))[0]), "appendBuffer", 1);
-
-    method((((([...(surfaces)])[2]))[0]), "changeType", 1);
-
-    method((((([...(surfaces)])[2]))[0]), "remove", 2);
-
-    {
-      defineConstructorBacklink((((([...(surfaces)])[2]))[0]).prototype, (((([...(surfaces)])[2]))[0]));
-    }
-
-    {
-      defineToStringTag((((([...(surfaces)])[2]))[0]).prototype, (((([...(surfaces)])[2]))[0]).name);
-    }
-
-}
-
-{
-
-    accessor((((([...(surfaces)])[3]))[0]), "length");
-
-    accessor((((([...(surfaces)])[3]))[0]), "onaddsourcebuffer");
-
-    accessor((((([...(surfaces)])[3]))[0]), "onremovesourcebuffer");
-
-    {
-      defineConstructorBacklink((((([...(surfaces)])[3]))[0]).prototype, (((([...(surfaces)])[3]))[0]));
-    }
-
-    {
-      defineToStringTag((((([...(surfaces)])[3]))[0]).prototype, (((([...(surfaces)])[3]))[0]).name);
-    }
-
-{
-      function values() {
-        return sourceBufferListValues(this);
-      }
-      registerNativeFunction(values, "values");
-      definePrototypeMethod(
-        [...surfaces][3][0].prototype,
-        Symbol.iterator,
-        values,
-        "values",
-        false,
-      );
-    }
-}
-
-    {
-
-    accessor((((([...(surfaces)])[4]))[0]), "stream");
-
-    accessor((((([...(surfaces)])[4]))[0]), "mimeType");
-
-    accessor((((([...(surfaces)])[4]))[0]), "state");
-
-    accessor((((([...(surfaces)])[4]))[0]), "onstart");
-
-    accessor((((([...(surfaces)])[4]))[0]), "onstop");
-
-    accessor((((([...(surfaces)])[4]))[0]), "ondataavailable");
-
-    accessor((((([...(surfaces)])[4]))[0]), "onpause");
-
-    accessor((((([...(surfaces)])[4]))[0]), "onresume");
-
-    accessor((((([...(surfaces)])[4]))[0]), "onerror");
-
-    accessor((((([...(surfaces)])[4]))[0]), "videoBitsPerSecond");
-
-    accessor((((([...(surfaces)])[4]))[0]), "audioBitsPerSecond");
-
-    accessor((((([...(surfaces)])[4]))[0]), "audioBitrateMode");
-
-    method((((([...(surfaces)])[4]))[0]), "pause", 0);
-
-    method((((([...(surfaces)])[4]))[0]), "requestData", 0);
-
-    method((((([...(surfaces)])[4]))[0]), "resume", 0);
-
-    method((((([...(surfaces)])[4]))[0]), "start", 0);
-
-    method((((([...(surfaces)])[4]))[0]), "stop", 0);
-
-    {
-      defineConstructorBacklink((((([...(surfaces)])[4]))[0]).prototype, (((([...(surfaces)])[4]))[0]));
-    }
-
-    {
-      defineToStringTag((((([...(surfaces)])[4]))[0]).prototype, (((([...(surfaces)])[4]))[0]).name);
-    }
-
-}
-
-    {
-
-    accessor((((([...(surfaces)])[5]))[0]), "data");
-
-    accessor((((([...(surfaces)])[5]))[0]), "timecode");
-
-    {
-      defineConstructorBacklink((((([...(surfaces)])[5]))[0]).prototype, (((([...(surfaces)])[5]))[0]));
-    }
-
-    {
-      defineToStringTag((((([...(surfaces)])[5]))[0]).prototype, (((([...(surfaces)])[5]))[0]).name);
-    }
-
-}
+  }
 
   staticMethod(MediaSource, "isTypeSupported", mediaSourceIsTypeSupported);
   staticMethod(MediaRecorder, "isTypeSupported", mediaRecorderIsTypeSupported);
+}
+
+function installIterator(Constructor) {
+  function values() {
+    return sourceBufferListValues(this);
+  }
+  registerNativeFunction(values, "values");
+  definePrototypeMethod(
+    Constructor.prototype,
+    Symbol.iterator,
+    values,
+    "values",
+    false,
+  );
 }
 
 function accessor(Constructor, name) {

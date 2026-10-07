@@ -92,6 +92,16 @@ export function lexicalBindings(masked) {
 
 export function repeatedTableLoops(masked) {
   const bodies = [];
+  const seenBodies = new Set();
+  const addBody = (openBrace) => {
+    const closeBrace = matchBracket(masked, openBrace);
+    if (closeBrace === -1) return;
+    const key = `${openBrace}:${closeBrace}`;
+    if (seenBodies.has(key)) return;
+    seenBodies.add(key);
+    bodies.push({ from: openBrace, to: closeBrace });
+  };
+
   for (const match of masked.matchAll(/\bfunction\b/g)) {
     const openParen = masked.indexOf('(', match.index + match[0].length);
     if (openParen === -1) continue;
@@ -100,13 +110,28 @@ export function repeatedTableLoops(masked) {
     let openBrace = closeParen + 1;
     while (/\s/.test(masked[openBrace] ?? '')) openBrace += 1;
     if (masked[openBrace] !== '{') continue;
-    const closeBrace = matchBracket(masked, openBrace);
-    if (closeBrace !== -1) bodies.push({ from: openBrace, to: closeBrace });
+    addBody(openBrace);
   }
   for (const match of masked.matchAll(/=>\s*\{/g)) {
-    const openBrace = masked.indexOf('{', match.index);
-    const closeBrace = matchBracket(masked, openBrace);
-    if (closeBrace !== -1) bodies.push({ from: openBrace, to: closeBrace });
+    addBody(masked.indexOf('{', match.index));
+  }
+
+  // Object-literal and class methods do not contain the `function` keyword.
+  // Exclude control statements so `if (...) { ... }` is not treated as a method.
+  const controlNames = new Set([
+    'catch', 'do', 'for', 'if', 'switch', 'try', 'while', 'with',
+  ]);
+  for (const match of masked.matchAll(
+    /(?:^|[;{},])\s*(?:(?:static|async)\s+)*(?:(?:get|set)\s+)?([\w$]+|\[[^\n\]]+\])\s*\(/g,
+  )) {
+    if (controlNames.has(match[1])) continue;
+    const openParen = masked.indexOf('(', match.index);
+    const closeParen = matchBracket(masked, openParen, '(', ')');
+    if (closeParen === -1) continue;
+    let openBrace = closeParen + 1;
+    while (/\s/.test(masked[openBrace] ?? '')) openBrace += 1;
+    if (masked[openBrace] !== '{') continue;
+    addBody(openBrace);
   }
 
   const counts = new Map();
@@ -207,7 +232,7 @@ async function main() {
     failed = true;
     console.error(`\n同一函数重复遍历同一成员表：${repeatedTables.length} 处`);
     for (const entry of repeatedTables.slice(0, REPORT_LIMIT)) {
-      const line = entry.file.slice(0, entry.index).split('\n').length;
+      const line = original.slice(0, entry.index).split('\n').length;
       console.error(`  ${path.relative(ROOT, entry.file)}:${line}  ${entry.table}（${entry.count} 次）`);
     }
   }
