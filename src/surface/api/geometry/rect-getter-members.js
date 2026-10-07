@@ -3,17 +3,16 @@
 import { rectGetter } from "./dom-rect-property.js";
 
 const RECT_GETTER_TABLE_ROWS = [
-  ["bottom", "bottom", s => Math.max(s.y, s.y + s.height)],
-  ["height", "height"],
-  ["left", "left", s => Math.min(s.x, s.x + s.width)],
-  ["right", "right", s => Math.max(s.x, s.x + s.width)],
-  ["top", "top", s => Math.min(s.y, s.y + s.height)],
-  ["width", "width"],
   ["x", "x"],
   ["y", "y"],
+  ["width", "width"],
+  ["height", "height"],
+  ["top", "top", s => Math.min(s.y, s.y + s.height)],
+  ["right", "right", s => Math.max(s.x, s.x + s.width)],
+  ["bottom", "bottom", s => Math.max(s.y, s.y + s.height)],
+  ["left", "left", s => Math.min(s.x, s.x + s.width)],
 ];
 
 export const rectGetterTable = RECT_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, rectGetter(...args)],
 );
-

@@ -32,15 +32,25 @@ import { validationMessage } from "../api/dom/html-select-element-validation-mes
 import { setValue, value } from "../api/dom/html-select-element-value-property.js";
 import { values } from "../api/dom/html-select-element-values.js";
 import { willValidate } from "../api/dom/html-select-element-will-validate-getter.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-html-select-element-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-html-select-element-members.js";
+import {
+  stringReflectionPart1Table,
+  stringReflectionPart2Table,
+} from "../api/dom/string-reflection-html-select-element-members.js";
+import {
+  booleanReflectionPart1Table,
+  booleanReflectionPart2Table,
+  booleanReflectionPart3Table,
+} from "../api/dom/boolean-reflection-html-select-element-members.js";
 import { unsignedReflectionTable } from "../api/dom/html-select-element-size-property.js";
 
 export function installHTMLSelectElement() {
   installHTMLSelectElementConstructor();
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart1Table) accessor(name, entry.get, entry.set);
   getter("form", form);
+  for (const [name, entry] of booleanReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart3Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
   getter("type", type);
   getter("options", options);

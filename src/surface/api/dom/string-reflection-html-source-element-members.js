@@ -3,13 +3,12 @@
 import { stringReflection } from "./html-reflection.js";
 
 const STRING_REFLECTION_TABLE_ROWS = [
-  ["media", "HTMLSourceElement", "media", "media"],
-  ["sizes", "HTMLSourceElement", "sizes", "sizes"],
-  ["srcset", "HTMLSourceElement", "srcset", "srcset"],
   ["type", "HTMLSourceElement", "type", "type"],
+  ["srcset", "HTMLSourceElement", "srcset", "srcset"],
+  ["sizes", "HTMLSourceElement", "sizes", "sizes"],
+  ["media", "HTMLSourceElement", "media", "media"],
 ];
 
 export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
-

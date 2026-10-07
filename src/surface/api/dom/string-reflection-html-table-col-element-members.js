@@ -4,8 +4,8 @@ import { stringReflection } from "./html-reflection.js";
 
 const STRING_REFLECTION_TABLE_ROWS = [
   ["align", "HTMLTableColElement", "align", "align"],
-  ["chOff", "HTMLTableColElement", "chOff", "charoff"],
   ["ch", "HTMLTableColElement", "ch", "char"],
+  ["chOff", "HTMLTableColElement", "chOff", "charoff"],
   ["vAlign", "HTMLTableColElement", "vAlign", "valign"],
   ["width", "HTMLTableColElement", "width", "width"],
 ];
@@ -13,4 +13,3 @@ const STRING_REFLECTION_TABLE_ROWS = [
 export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
-

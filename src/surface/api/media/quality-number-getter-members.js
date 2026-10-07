@@ -3,13 +3,12 @@
 import { qualityNumberGetter } from "./video-playback-quality-number-getter.js";
 
 const QUALITY_NUMBER_GETTER_TABLE_ROWS = [
-  ["corruptedVideoFrames", "corruptedVideoFrames"],
   ["creationTime", "creationTime"],
-  ["droppedVideoFrames", "droppedVideoFrames"],
   ["totalVideoFrames", "totalVideoFrames"],
+  ["droppedVideoFrames", "droppedVideoFrames"],
+  ["corruptedVideoFrames", "corruptedVideoFrames"],
 ];
 
 export const qualityNumberGetterTable = QUALITY_NUMBER_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, qualityNumberGetter(...args)],
 );
-

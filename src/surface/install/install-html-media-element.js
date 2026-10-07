@@ -28,22 +28,48 @@ import { src, setSrc } from "../api/media/html-media-element-src-property.js";
 import { volume, setVolume } from "../api/media/html-media-element-volume-property.js";
 import { webkitAudioDecodedByteCount } from "../api/media/html-media-element-webkit-audio-decoded-byte-count-getter.js";
 import { webkitVideoDecodedByteCount } from "../api/media/html-media-element-webkit-video-decoded-byte-count-getter.js";
-import { mediaPropertyTable } from "../api/media/media-property-members.js";
+import {
+  mediaPropertyPart1Table,
+  mediaPropertyPart2Table,
+  mediaPropertyPart3Table,
+  mediaPropertyPart4Table,
+  mediaPropertyPart5Table,
+  mediaPropertyPart6Table,
+} from "../api/media/media-property-members.js";
 import { mediaHandlerPropertyTable } from "../api/media/media-handler-property-members.js";
-import { mediaReadonlyPropertyTable } from "../api/media/media-readonly-property-members.js";
+import {
+  mediaReadonlyPropertyPart1Table,
+  mediaReadonlyPropertyPart2Table,
+  mediaReadonlyPropertyPart3Table,
+  mediaReadonlyPropertyPart4Table,
+  mediaReadonlyPropertyPart5Table,
+  mediaReadonlyPropertyPart6Table,
+  mediaReadonlyPropertyPart7Table,
+  mediaReadonlyPropertyPart8Table,
+  mediaReadonlyPropertyPart9Table,
+} from "../api/media/media-readonly-property-members.js";
 
 export function installHTMLMediaElement() {
   installHTMLMediaElementConstructor();
-  for (const [name, entry] of mediaReadonlyPropertyTable) getter(name, entry);
+  for (const [name, entry] of mediaReadonlyPropertyPart1Table) getter(name, entry);
   accessor("src", src, setSrc);
+  for (const [name, entry] of mediaReadonlyPropertyPart2Table) getter(name, entry);
   accessor("crossOrigin", crossOrigin, setCrossOrigin);
+  for (const [name, entry] of mediaReadonlyPropertyPart3Table) getter(name, entry);
   accessor("preload", preload, setPreload);
   getter("buffered", buffered);
-  for (const [name, entry] of mediaPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of mediaReadonlyPropertyPart4Table) getter(name, entry);
+  for (const [name, entry] of mediaPropertyPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of mediaReadonlyPropertyPart5Table) getter(name, entry);
+  for (const [name, entry] of mediaPropertyPart2Table) accessor(name, entry.get, entry.set);
   getter("played", played);
   getter("seekable", seekable);
+  for (const [name, entry] of mediaReadonlyPropertyPart6Table) getter(name, entry);
+  for (const [name, entry] of mediaPropertyPart3Table) accessor(name, entry.get, entry.set);
   accessor("controlsList", controlsList, setControlsList);
   accessor("volume", volume, setVolume);
+  for (const [name, entry] of mediaPropertyPart4Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of mediaReadonlyPropertyPart7Table) getter(name, entry);
   getter("webkitAudioDecodedByteCount", webkitAudioDecodedByteCount);
   getter("webkitVideoDecodedByteCount", webkitVideoDecodedByteCount);
   for (const [name, entry] of mediaHandlerPropertyTable) accessor(name, entry.get, entry.set);
@@ -63,8 +89,12 @@ export function installHTMLMediaElement() {
   method("load", load);
   method("pause", pause);
   method("play", play);
+  for (const [name, entry] of mediaPropertyPart5Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of mediaReadonlyPropertyPart8Table) getter(name, entry);
+  for (const [name, entry] of mediaPropertyPart6Table) accessor(name, entry.get, entry.set);
   method("setSinkId", setSinkId);
   defineConstructorBacklink(HTMLMediaElement.prototype, HTMLMediaElement);
+  for (const [name, entry] of mediaReadonlyPropertyPart9Table) getter(name, entry);
   method("setMediaKeys", setMediaKeys);
   defineToStringTag(HTMLMediaElement.prototype, "HTMLMediaElement");
   constant(HTMLMediaElement, "NETWORK_EMPTY", 0);

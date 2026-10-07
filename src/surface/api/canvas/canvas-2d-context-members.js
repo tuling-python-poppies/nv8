@@ -149,4 +149,3 @@ const CANVAS_CONTEXT_PROPERTY_TABLE_ROWS = [
 export const canvasContextPropertyTable = CANVAS_CONTEXT_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, canvasContextProperty(name, ...args)],
 );
-

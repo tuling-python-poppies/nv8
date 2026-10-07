@@ -27,22 +27,25 @@ import {
 } from "../api/dom/html-element-attribute-style-map-getter.js";
 import { blur } from "../api/dom/html-element-blur.js";
 import { focus } from "../api/dom/html-element-focus.js";
-import { htmlStringDescriptorPart2Table } from "../api/dom/html-string-descriptor-members.js";
-import { htmlBooleanDescriptorPart2Table } from "../api/dom/html-boolean-descriptor-members.js";
+import {
+  htmlStringDescriptorPart10Table,
+  htmlStringDescriptorPart11Table,
+} from "../api/dom/html-string-descriptor-members.js";
+import { htmlBooleanDescriptorPart4Table } from "../api/dom/html-boolean-descriptor-members.js";
 
 export function installMathMLElement() {
   installMathMLElementConstructor();
   installHTMLElementEarlyEventMembers(accessor);
   getter("dataset", dataset);
-  for (const [name, entry] of htmlStringDescriptorPart2Table) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlBooleanDescriptorPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart10Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlBooleanDescriptorPart4Table) accessor(name, entry.get, entry.set);
   accessor("tabIndex", tabIndex, setTabIndex);
   getter("style", style);
   getter("attributeStyleMap", attributeStyleMap);
   method("blur", blur);
   method("focus", focus);
   installHTMLElementLateEventMembers(accessor);
-  for (const [name, entry] of htmlStringDescriptorPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart11Table) accessor(name, entry.get, entry.set);
   finishMathMLElementConstructor();
   installHTMLElementAfterConstructorEventMembers(accessor);
 }

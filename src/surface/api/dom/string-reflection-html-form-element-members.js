@@ -2,14 +2,27 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["acceptCharset", "HTMLFormElement", "acceptCharset", "accept-charset"],
-  ["name", "HTMLFormElement", "name", "name"],
-  ["rel", "HTMLFormElement", "rel", "rel"],
-  ["target", "HTMLFormElement", "target", "target"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["name", "HTMLFormElement", "name", "name"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART3_TABLE_ROWS = [
+  ["target", "HTMLFormElement", "target", "target"],
+  ["rel", "HTMLFormElement", "rel", "rel"],
+];
+
+export const stringReflectionPart3Table = STRING_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

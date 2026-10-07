@@ -13,4 +13,3 @@ const CSS_RULE_ACCESSOR_DESCRIPTOR_TABLE_ROWS = [
 export const cssRuleAccessorDescriptorTable = CSS_RULE_ACCESSOR_DESCRIPTOR_TABLE_ROWS.map(
   ([name, ...args]) => [name, cssRuleAccessorDescriptor(...args)],
 );
-

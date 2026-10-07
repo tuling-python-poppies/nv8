@@ -2,22 +2,63 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
-  ["align", "HTMLImageElement", "align", "align"],
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["alt", "HTMLImageElement", "alt", "alt"],
-  ["attributionSrc", "HTMLImageElement", "attributionSrc", "attributionsrc"],
-  ["border", "HTMLImageElement", "border", "border"],
+];
+
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["srcset", "HTMLImageElement", "srcset", "srcset"],
+  ["sizes", "HTMLImageElement", "sizes", "sizes"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART3_TABLE_ROWS = [
+  ["useMap", "HTMLImageElement", "useMap", "usemap"],
+];
+
+export const stringReflectionPart3Table = STRING_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART4_TABLE_ROWS = [
+  ["referrerPolicy", "HTMLImageElement", "referrerPolicy", "referrerpolicy"],
   ["decoding", "HTMLImageElement", "decoding", "decoding"],
   ["fetchPriority", "HTMLImageElement", "fetchPriority", "fetchpriority"],
   ["loading", "HTMLImageElement", "loading", "loading"],
   ["name", "HTMLImageElement", "name", "name"],
-  ["referrerPolicy", "HTMLImageElement", "referrerPolicy", "referrerpolicy"],
-  ["sizes", "HTMLImageElement", "sizes", "sizes"],
-  ["srcset", "HTMLImageElement", "srcset", "srcset"],
-  ["useMap", "HTMLImageElement", "useMap", "usemap"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart4Table = STRING_REFLECTION_PART4_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART5_TABLE_ROWS = [
+  ["align", "HTMLImageElement", "align", "align"],
+];
+
+export const stringReflectionPart5Table = STRING_REFLECTION_PART5_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART6_TABLE_ROWS = [
+  ["border", "HTMLImageElement", "border", "border"],
+];
+
+export const stringReflectionPart6Table = STRING_REFLECTION_PART6_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART7_TABLE_ROWS = [
+  ["attributionSrc", "HTMLImageElement", "attributionSrc", "attributionsrc"],
+];
+
+export const stringReflectionPart7Table = STRING_REFLECTION_PART7_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

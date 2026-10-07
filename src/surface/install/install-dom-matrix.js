@@ -17,16 +17,20 @@ import { setMatrixValue } from "../api/geometry/dom-matrix-set-matrix-value.js";
 import { skewXSelf } from "../api/geometry/dom-matrix-skew-x-self.js";
 import { skewYSelf } from "../api/geometry/dom-matrix-skew-y-self.js";
 import { mutableMatrixComponentTable } from "../api/geometry/mutable-matrix-component-members.js";
-import { matrixSelfOperationTable } from "../api/geometry/matrix-self-operation-members.js";
+import {
+  matrixSelfOperationPart1Table,
+  matrixSelfOperationPart2Table,
+} from "../api/geometry/matrix-self-operation-members.js";
 
 export function installDOMMatrix() {
   installDOMMatrixConstructor();
   for (const [name, entry] of mutableMatrixComponentTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of matrixSelfOperationTable) method(name, entry);
+  for (const [name, entry] of matrixSelfOperationPart1Table) method(name, entry);
   method("scale3dSelf", scale3dSelf);
   method("scaleSelf", scaleSelf);
   method("skewXSelf", skewXSelf);
   method("skewYSelf", skewYSelf);
+  for (const [name, entry] of matrixSelfOperationPart2Table) method(name, entry);
   defineConstructorBacklink(DOMMatrix.prototype, DOMMatrix);
   method("setMatrixValue", setMatrixValue);
   defineToStringTag(DOMMatrix.prototype, "DOMMatrix");

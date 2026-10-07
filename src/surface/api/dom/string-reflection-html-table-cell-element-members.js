@@ -2,21 +2,34 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
-  ["abbr", "HTMLTableCellElement", "abbr", "abbr"],
-  ["align", "HTMLTableCellElement", "align", "align"],
-  ["axis", "HTMLTableCellElement", "axis", "axis"],
-  ["bgColor", "HTMLTableCellElement", "bgColor", "bgcolor"],
-  ["chOff", "HTMLTableCellElement", "chOff", "charoff"],
-  ["ch", "HTMLTableCellElement", "ch", "char"],
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["headers", "HTMLTableCellElement", "headers", "headers"],
-  ["height", "HTMLTableCellElement", "height", "height"],
-  ["scope", "HTMLTableCellElement", "scope", "scope"],
-  ["vAlign", "HTMLTableCellElement", "vAlign", "valign"],
-  ["width", "HTMLTableCellElement", "width", "width"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["align", "HTMLTableCellElement", "align", "align"],
+  ["axis", "HTMLTableCellElement", "axis", "axis"],
+  ["height", "HTMLTableCellElement", "height", "height"],
+  ["width", "HTMLTableCellElement", "width", "width"],
+  ["ch", "HTMLTableCellElement", "ch", "char"],
+  ["chOff", "HTMLTableCellElement", "chOff", "charoff"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART3_TABLE_ROWS = [
+  ["vAlign", "HTMLTableCellElement", "vAlign", "valign"],
+  ["bgColor", "HTMLTableCellElement", "bgColor", "bgcolor"],
+  ["abbr", "HTMLTableCellElement", "abbr", "abbr"],
+  ["scope", "HTMLTableCellElement", "scope", "scope"],
+];
+
+export const stringReflectionPart3Table = STRING_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

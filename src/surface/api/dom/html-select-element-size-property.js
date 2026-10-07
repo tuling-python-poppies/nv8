@@ -9,4 +9,3 @@ const UNSIGNED_REFLECTION_TABLE_ROWS = [
 export const unsignedReflectionTable = UNSIGNED_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, unsignedReflection(...args)],
 );
-

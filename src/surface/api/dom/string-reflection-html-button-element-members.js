@@ -2,13 +2,19 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["formTarget", "HTMLButtonElement", "formTarget", "formtarget"],
   ["name", "HTMLButtonElement", "name", "name"],
-  ["value", "HTMLButtonElement", "value", "value"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["value", "HTMLButtonElement", "value", "value"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

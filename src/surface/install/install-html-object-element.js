@@ -19,21 +19,35 @@ import { setCustomValidity } from "../api/dom/html-object-element-set-custom-val
 import { validationMessage } from "../api/dom/html-object-element-validation-message-getter.js";
 import { validity } from "../api/dom/html-object-element-validity-getter.js";
 import { willValidate } from "../api/dom/html-object-element-will-validate-getter.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-html-object-element-members.js";
+import {
+  stringReflectionPart1Table,
+  stringReflectionPart2Table,
+  stringReflectionPart3Table,
+  stringReflectionPart4Table,
+  stringReflectionPart5Table,
+} from "../api/dom/string-reflection-html-object-element-members.js";
 import { booleanReflectionTable } from "../api/dom/html-object-element-declare-property.js";
-import { unsignedReflectionTable } from "../api/dom/unsigned-reflection-html-object-element-members.js";
+import {
+  unsignedReflectionPart1Table,
+  unsignedReflectionPart2Table,
+} from "../api/dom/unsigned-reflection-html-object-element-members.js";
 
 export function installHTMLObjectElement() {
   installHTMLObjectElementConstructor();
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart1Table) accessor(name, entry.get, entry.set);
   getter("form", form);
+  for (const [name, entry] of stringReflectionPart2Table) accessor(name, entry.get, entry.set);
   getter("contentDocument", contentDocument);
   getter("contentWindow", contentWindow);
   getter("willValidate", willValidate);
   getter("validity", validity);
   getter("validationMessage", validationMessage);
+  for (const [name, entry] of stringReflectionPart3Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of unsignedReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of unsignedReflectionPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart4Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of unsignedReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart5Table) accessor(name, entry.get, entry.set);
   method("checkValidity", checkValidity);
   method("getSVGDocument", getSVGDocument);
   method("reportValidity", reportValidity);

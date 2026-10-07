@@ -10,4 +10,3 @@ const CSS_KEYFRAME_RULE_GETTER_TABLE_ROWS = [
 export const cssKeyframeRuleGetterTable = CSS_KEYFRAME_RULE_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, cssKeyframeRuleGetter(...args)],
 );
-

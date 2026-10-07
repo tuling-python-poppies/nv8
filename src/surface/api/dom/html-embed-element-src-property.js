@@ -9,4 +9,3 @@ const URL_REFLECTION_TABLE_ROWS = [
 export const urlReflectionTable = URL_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, urlReflection(...args)],
 );
-

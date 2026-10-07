@@ -3,12 +3,11 @@
 import { remotePlaybackHandlerProperty } from "./remote-playback-handler-property.js";
 
 const REMOTE_PLAYBACK_HANDLER_PROPERTY_TABLE_ROWS = [
-  ["onconnect", "onconnect"],
   ["onconnecting", "onconnecting"],
+  ["onconnect", "onconnect"],
   ["ondisconnect", "ondisconnect"],
 ];
 
 export const remotePlaybackHandlerPropertyTable = REMOTE_PLAYBACK_HANDLER_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, remotePlaybackHandlerProperty(...args)],
 );
-

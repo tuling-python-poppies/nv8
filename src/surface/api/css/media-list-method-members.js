@@ -12,4 +12,4 @@ export const mediaListMethodTable = MEDIA_LIST_METHOD_TABLE_ROWS.map(
   ([name, ...args]) => [name, mediaListMethod(...args)],
 );
 
-export const values = new Map([...mediaListMethodTable]).get("values");
+export const values = mediaListMethod("values", 0, record => record.values.values());

@@ -2,12 +2,18 @@
 
 import { elementStringProperty } from "./element-extended-property.js";
 
-const ELEMENT_STRING_PROPERTY_TABLE_ROWS = [
-  ["elementTiming", "elementTiming", "elementtiming"],
+const ELEMENT_STRING_PROPERTY_PART1_TABLE_ROWS = [
   ["slot", "slot"],
 ];
 
-export const elementStringPropertyTable = ELEMENT_STRING_PROPERTY_TABLE_ROWS.map(
+export const elementStringPropertyPart1Table = ELEMENT_STRING_PROPERTY_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, elementStringProperty(...args)],
 );
 
+const ELEMENT_STRING_PROPERTY_PART2_TABLE_ROWS = [
+  ["elementTiming", "elementTiming", "elementtiming"],
+];
+
+export const elementStringPropertyPart2Table = ELEMENT_STRING_PROPERTY_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, elementStringProperty(...args)],
+);

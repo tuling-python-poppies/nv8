@@ -7,13 +7,19 @@ import {
   transferHTMLCanvasControl,
 } from "./html-canvas-element-state.js";
 
-const HTML_CANVAS_METHOD_TABLE_ROWS = [
+const HTML_CANVAS_METHOD_PART1_TABLE_ROWS = [
   ["captureStream", "captureStream", 0, (canvas, args) => captureHTMLCanvasStream(canvas, args[0])],
   ["getContext", "getContext", 1, (canvas, args) => getHTMLCanvasContext(canvas, args[0], args[1])],
-  ["transferControlToOffscreen", "transferControlToOffscreen", 0, canvas => transferHTMLCanvasControl(canvas)],
 ];
 
-export const htmlCanvasMethodTable = HTML_CANVAS_METHOD_TABLE_ROWS.map(
+export const htmlCanvasMethodPart1Table = HTML_CANVAS_METHOD_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, htmlCanvasMethod(...args)],
 );
 
+const HTML_CANVAS_METHOD_PART2_TABLE_ROWS = [
+  ["transferControlToOffscreen", "transferControlToOffscreen", 0, canvas => transferHTMLCanvasControl(canvas)],
+];
+
+export const htmlCanvasMethodPart2Table = HTML_CANVAS_METHOD_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, htmlCanvasMethod(...args)],
+);

@@ -3,13 +3,12 @@
 import { mutablePointProperty } from "./dom-point-property.js";
 
 const MUTABLE_POINT_PROPERTY_TABLE_ROWS = [
-  ["w", "w"],
   ["x", "x"],
   ["y", "y"],
   ["z", "z"],
+  ["w", "w"],
 ];
 
 export const mutablePointPropertyTable = MUTABLE_POINT_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, mutablePointProperty(...args)],
 );
-

@@ -3,13 +3,12 @@
 import { pointGetter } from "./dom-point-property.js";
 
 const POINT_GETTER_TABLE_ROWS = [
-  ["w", "w"],
   ["x", "x"],
   ["y", "y"],
   ["z", "z"],
+  ["w", "w"],
 ];
 
 export const pointGetterTable = POINT_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, pointGetter(...args)],
 );
-

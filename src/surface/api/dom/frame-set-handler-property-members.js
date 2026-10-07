@@ -2,18 +2,18 @@
 
 import { frameSetHandlerProperty } from "./html-frame-set-element-handler-property.js";
 
-const FRAME_SET_HANDLER_PROPERTY_TABLE_ROWS = [
-  ["onafterprint", "onafterprint"],
-  ["onbeforeprint", "onbeforeprint"],
-  ["onbeforeunload", "onbeforeunload"],
+const FRAME_SET_HANDLER_PROPERTY_PART1_TABLE_ROWS = [
   ["onblur", "onblur"],
   ["onerror", "onerror"],
   ["onfocus", "onfocus"],
-  ["ongamepadconnected", "ongamepadconnected"],
-  ["ongamepaddisconnected", "ongamepaddisconnected"],
+  ["onload", "onload"],
+  ["onresize", "onresize"],
+  ["onscroll", "onscroll"],
+  ["onafterprint", "onafterprint"],
+  ["onbeforeprint", "onbeforeprint"],
+  ["onbeforeunload", "onbeforeunload"],
   ["onhashchange", "onhashchange"],
   ["onlanguagechange", "onlanguagechange"],
-  ["onload", "onload"],
   ["onmessage", "onmessage"],
   ["onmessageerror", "onmessageerror"],
   ["onoffline", "onoffline"],
@@ -22,14 +22,20 @@ const FRAME_SET_HANDLER_PROPERTY_TABLE_ROWS = [
   ["onpageshow", "onpageshow"],
   ["onpopstate", "onpopstate"],
   ["onrejectionhandled", "onrejectionhandled"],
-  ["onresize", "onresize"],
-  ["onscroll", "onscroll"],
   ["onstorage", "onstorage"],
   ["onunhandledrejection", "onunhandledrejection"],
   ["onunload", "onunload"],
+  ["ongamepadconnected", "ongamepadconnected"],
 ];
 
-export const frameSetHandlerPropertyTable = FRAME_SET_HANDLER_PROPERTY_TABLE_ROWS.map(
+export const frameSetHandlerPropertyPart1Table = FRAME_SET_HANDLER_PROPERTY_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, frameSetHandlerProperty(...args)],
 );
 
+const FRAME_SET_HANDLER_PROPERTY_PART2_TABLE_ROWS = [
+  ["ongamepaddisconnected", "ongamepaddisconnected"],
+];
+
+export const frameSetHandlerPropertyPart2Table = FRAME_SET_HANDLER_PROPERTY_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, frameSetHandlerProperty(...args)],
+);

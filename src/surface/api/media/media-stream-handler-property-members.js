@@ -3,13 +3,12 @@
 import { mediaStreamHandlerProperty } from "./media-stream-handler-property.js";
 
 const MEDIA_STREAM_HANDLER_PROPERTY_TABLE_ROWS = [
-  ["onactive", "onactive"],
   ["onaddtrack", "onaddtrack"],
-  ["oninactive", "oninactive"],
   ["onremovetrack", "onremovetrack"],
+  ["onactive", "onactive"],
+  ["oninactive", "oninactive"],
 ];
 
 export const mediaStreamHandlerPropertyTable = MEDIA_STREAM_HANDLER_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, mediaStreamHandlerProperty(...args)],
 );
-

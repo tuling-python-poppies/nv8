@@ -2,21 +2,27 @@
 
 import { animationProperty } from "./animation-property.js";
 
-const ANIMATION_PROPERTY_TABLE_ROWS = [
-  ["currentTime", "currentTime"],
+const ANIMATION_PROPERTY_PART1_TABLE_ROWS = [
   ["effect", "effect"],
-  ["id", "id"],
-  ["oncancel", "oncancel"],
-  ["onfinish", "onfinish"],
-  ["onremove", "onremove"],
-  ["playbackRate", "playbackRate"],
-  ["rangeEnd", "rangeEnd"],
-  ["rangeStart", "rangeStart"],
-  ["startTime", "startTime"],
   ["timeline", "timeline"],
+  ["startTime", "startTime"],
+  ["currentTime", "currentTime"],
+  ["playbackRate", "playbackRate"],
+  ["rangeStart", "rangeStart"],
+  ["rangeEnd", "rangeEnd"],
 ];
 
-export const animationPropertyTable = ANIMATION_PROPERTY_TABLE_ROWS.map(
+export const animationPropertyPart1Table = ANIMATION_PROPERTY_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, animationProperty(...args)],
 );
 
+const ANIMATION_PROPERTY_PART2_TABLE_ROWS = [
+  ["id", "id"],
+  ["onfinish", "onfinish"],
+  ["oncancel", "oncancel"],
+  ["onremove", "onremove"],
+];
+
+export const animationPropertyPart2Table = ANIMATION_PROPERTY_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, animationProperty(...args)],
+);

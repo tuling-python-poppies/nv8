@@ -2,15 +2,21 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["behavior", "HTMLMarqueeElement", "behavior", "behavior"],
   ["bgColor", "HTMLMarqueeElement", "bgColor", "bgcolor"],
   ["direction", "HTMLMarqueeElement", "direction", "direction"],
   ["height", "HTMLMarqueeElement", "height", "height"],
-  ["width", "HTMLMarqueeElement", "width", "width"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["width", "HTMLMarqueeElement", "width", "width"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

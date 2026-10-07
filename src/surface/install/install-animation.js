@@ -6,15 +6,19 @@ import { finished } from "../api/animation/animation-finished-getter.js";
 import { ready } from "../api/animation/animation-ready-getter.js";
 import { overallProgress } from "../api/animation/animation-overall-progress-getter.js";
 import { defineConstructorBacklink, definePrototypeAccessor, definePrototypeGetter, definePrototypeMethod, defineToStringTag } from "../../engine/webidl/descriptor.js";
-import { animationPropertyTable } from "../api/animation/animation-property-members.js";
+import {
+  animationPropertyPart1Table,
+  animationPropertyPart2Table,
+} from "../api/animation/animation-property-members.js";
 import { animationMethodTable } from "../api/animation/animation-method-members.js";
 
 export function installAnimation() {
   installAnimationConstructor();
-  for (const [name, entry] of animationPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of animationPropertyPart1Table) accessor(name, entry.get, entry.set);
   getter("playState", playState);
   getter("replaceState", replaceState);
   getter("pending", pending);
+  for (const [name, entry] of animationPropertyPart2Table) accessor(name, entry.get, entry.set);
   getter("finished", finished);
   getter("ready", ready);
   for (const [name, entry] of animationMethodTable) method(name, entry);

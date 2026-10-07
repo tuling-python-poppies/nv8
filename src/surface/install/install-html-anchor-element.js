@@ -22,15 +22,22 @@ import {
   setText,
 } from "../api/dom/html-anchor-element-text-property.js";
 import { toString } from "../api/dom/html-anchor-element-to-string.js";
+import {
+  stringReflectionPart1Table,
+  stringReflectionPart2Table,
+  stringReflectionPart3Table,
+  stringReflectionPart4Table,
+} from "../api/dom/string-reflection-html-anchor-element-members.js";
 import { anchorURLComponentPropertyTable } from "../api/dom/anchor-urlcomponent-property-members.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-html-anchor-element-members.js";
 import { urlReflectionTable } from "../api/dom/html-anchor-element-href-property.js";
 
 export function installHTMLAnchorElement() {
   installHTMLAnchorElementConstructor();
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart1Table) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLAnchorElement.prototype, "relList", relList);
+  for (const [name, entry] of stringReflectionPart2Table) accessor(name, entry.get, entry.set);
   accessor("text", text, setText);
+  for (const [name, entry] of stringReflectionPart3Table) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLAnchorElement.prototype, "origin", origin);
   for (const [name, entry] of anchorURLComponentPropertyTable) accessor(name, entry.get, entry.set);
   for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
@@ -44,6 +51,7 @@ export function installHTMLAnchorElement() {
     HTMLAnchorElement.prototype,
     HTMLAnchorElement,
   );
+  for (const [name, entry] of stringReflectionPart4Table) accessor(name, entry.get, entry.set);
   defineToStringTag(HTMLAnchorElement.prototype, "HTMLAnchorElement");
 }
 

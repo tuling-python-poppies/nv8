@@ -2,13 +2,26 @@
 
 import { linkTokenListProperty } from "./html-link-element-token-list.js";
 
-const LINK_TOKEN_LIST_PROPERTY_TABLE_ROWS = [
-  ["blocking", "blocking", "blocking"],
+const LINK_TOKEN_LIST_PROPERTY_PART1_TABLE_ROWS = [
   ["relList", "relList", "rel"],
-  ["sizes", "sizes", "sizes"],
 ];
 
-export const linkTokenListPropertyTable = LINK_TOKEN_LIST_PROPERTY_TABLE_ROWS.map(
+export const linkTokenListPropertyPart1Table = LINK_TOKEN_LIST_PROPERTY_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, linkTokenListProperty(...args)],
 );
 
+const LINK_TOKEN_LIST_PROPERTY_PART2_TABLE_ROWS = [
+  ["sizes", "sizes", "sizes"],
+];
+
+export const linkTokenListPropertyPart2Table = LINK_TOKEN_LIST_PROPERTY_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, linkTokenListProperty(...args)],
+);
+
+const LINK_TOKEN_LIST_PROPERTY_PART3_TABLE_ROWS = [
+  ["blocking", "blocking", "blocking"],
+];
+
+export const linkTokenListPropertyPart3Table = LINK_TOKEN_LIST_PROPERTY_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, linkTokenListProperty(...args)],
+);

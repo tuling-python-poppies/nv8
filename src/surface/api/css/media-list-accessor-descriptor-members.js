@@ -10,4 +10,3 @@ const MEDIA_LIST_ACCESSOR_DESCRIPTOR_TABLE_ROWS = [
 export const mediaListAccessorDescriptorTable = MEDIA_LIST_ACCESSOR_DESCRIPTOR_TABLE_ROWS.map(
   ([name, ...args]) => [name, mediaListAccessorDescriptor(...args)],
 );
-

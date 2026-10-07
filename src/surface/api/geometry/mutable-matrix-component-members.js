@@ -30,4 +30,3 @@ const MUTABLE_MATRIX_COMPONENT_TABLE_ROWS = [
 export const mutableMatrixComponentTable = MUTABLE_MATRIX_COMPONENT_TABLE_ROWS.map(
   ([name, ...args]) => [name, mutableMatrixComponent(...args)],
 );
-

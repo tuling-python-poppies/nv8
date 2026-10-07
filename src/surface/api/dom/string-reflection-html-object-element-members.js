@@ -2,23 +2,50 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
-  ["align", "HTMLObjectElement", "align", "align"],
-  ["archive", "HTMLObjectElement", "archive", "archive"],
-  ["border", "HTMLObjectElement", "border", "border"],
-  ["codeBase", "HTMLObjectElement", "codeBase", "codebase"],
-  ["code", "HTMLObjectElement", "code", "code"],
-  ["codeType", "HTMLObjectElement", "codeType", "codetype"],
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["data", "HTMLObjectElement", "data", "data"],
-  ["height", "HTMLObjectElement", "height", "height"],
-  ["name", "HTMLObjectElement", "name", "name"],
-  ["standby", "HTMLObjectElement", "standby", "standby"],
   ["type", "HTMLObjectElement", "type", "type"],
+  ["name", "HTMLObjectElement", "name", "name"],
   ["useMap", "HTMLObjectElement", "useMap", "usemap"],
-  ["width", "HTMLObjectElement", "width", "width"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["width", "HTMLObjectElement", "width", "width"],
+  ["height", "HTMLObjectElement", "height", "height"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART3_TABLE_ROWS = [
+  ["align", "HTMLObjectElement", "align", "align"],
+  ["archive", "HTMLObjectElement", "archive", "archive"],
+  ["code", "HTMLObjectElement", "code", "code"],
+];
+
+export const stringReflectionPart3Table = STRING_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART4_TABLE_ROWS = [
+  ["standby", "HTMLObjectElement", "standby", "standby"],
+];
+
+export const stringReflectionPart4Table = STRING_REFLECTION_PART4_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART5_TABLE_ROWS = [
+  ["codeBase", "HTMLObjectElement", "codeBase", "codebase"],
+  ["codeType", "HTMLObjectElement", "codeType", "codetype"],
+  ["border", "HTMLObjectElement", "border", "border"],
+];
+
+export const stringReflectionPart5Table = STRING_REFLECTION_PART5_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

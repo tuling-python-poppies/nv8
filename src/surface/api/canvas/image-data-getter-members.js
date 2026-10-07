@@ -13,4 +13,3 @@ const IMAGE_DATA_GETTER_TABLE_ROWS = [
 export const imageDataGetterTable = IMAGE_DATA_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, imageDataGetter(name, ...args)],
 );
-

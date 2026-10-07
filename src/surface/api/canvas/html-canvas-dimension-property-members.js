@@ -10,4 +10,3 @@ const HTML_CANVAS_DIMENSION_PROPERTY_TABLE_ROWS = [
 export const htmlCanvasDimensionPropertyTable = HTML_CANVAS_DIMENSION_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, htmlCanvasDimensionProperty(name, ...args)],
 );
-

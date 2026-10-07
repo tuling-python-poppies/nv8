@@ -41,6 +41,47 @@ async function collectFiles(dir) {
   return files;
 }
 
+export function lexicalBindings(masked) {
+  const root = { from: 0, to: masked.length, parent: null, names: new Set() };
+  const scopes = [root];
+  const stack = [root];
+  for (let index = 0; index < masked.length; index += 1) {
+    if (masked[index] === "{") {
+      const scope = { from: index + 1, to: masked.length, parent: stack.at(-1), names: new Set() };
+      scopes.push(scope);
+      stack.push(scope);
+    } else if (masked[index] === "}" && stack.length > 1) {
+      stack.pop().to = index;
+    }
+  }
+
+  const scopeAt = (position) => scopes
+    .filter((scope) => scope.from <= position && position < scope.to)
+    .sort((a, b) => b.from - a.from)[0] ?? root;
+  const bind = (name, position) => scopeAt(position).names.add(name);
+
+  for (const match of masked.matchAll(/import\s*\{([^}]*)\}/g)) {
+    for (const item of match[1].split(",")) {
+      const name = item.trim().split(/\s+as\s+/).at(-1);
+      if (/^[\w$]+$/.test(name)) bind(name, 0);
+    }
+  }
+  for (const match of masked.matchAll(/import\s*\*\s*as\s+([\w$]+)/g)) bind(match[1], 0);
+  for (const match of masked.matchAll(/\b(?:const|let|var|function|class)\s+([\w$]+)/g)) {
+    bind(match[1], match.index);
+  }
+
+  const hasBinding = (name, position) => {
+    let scope = scopeAt(position);
+    while (scope !== null) {
+      if (scope.names.has(name)) return true;
+      scope = scope.parent;
+    }
+    return false;
+  };
+  return { hasBinding };
+}
+
 async function main() {
   const files = await collectFiles(SRC);
   const idleLoops = [];
@@ -68,16 +109,14 @@ async function main() {
       }
     }
 
-    // 规则 4：`of xxxTable)` 里的名字必须有绑定（否则运行时 ReferenceError）
-    const bound = new Set();
-    for (const match of masked.matchAll(/import\s*\{([^}]*)\}\s*from/g)) {
-      for (const name of match[1].split(',').map((value) => value.trim()).filter(Boolean)) bound.add(name);
-    }
-    for (const match of masked.matchAll(/import\s*\*\s*as\s+([\w$]+)/g)) bound.add(match[1]);
-    for (const match of masked.matchAll(/\b(?:const|let|var|function|class)\s+([\w$]+)/g)) bound.add(match[1]);
+    // 规则 4：引用必须在自己的词法作用域或其父作用域里有绑定。
+    // 仅按文件收集会把另一个函数里的同名表误当成当前函数可见，漏掉真实的 ReferenceError。
+    const bindings = lexicalBindings(masked);
     for (const match of masked.matchAll(/of\s+((?:[\w$]+\.)?[\w$]*Table)\s*\)/g)) {
       const base = match[1].includes('.') ? match[1].split('.')[0] : match[1];
-      if (!bound.has(base)) unboundTables.push({ file, reference: match[1] });
+      if (!bindings.hasBinding(base, match.index)) {
+        unboundTables.push({ file, reference: match[1] });
+      }
     }
   }
 

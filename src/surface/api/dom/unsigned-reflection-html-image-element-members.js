@@ -2,14 +2,20 @@
 
 import { unsignedReflection } from "./html-reflection.js";
 
-const UNSIGNED_REFLECTION_TABLE_ROWS = [
-  ["height", "HTMLImageElement", "height", "height"],
-  ["hspace", "HTMLImageElement", "hspace", "hspace"],
-  ["vspace", "HTMLImageElement", "vspace", "vspace"],
+const UNSIGNED_REFLECTION_PART1_TABLE_ROWS = [
   ["width", "HTMLImageElement", "width", "width"],
+  ["height", "HTMLImageElement", "height", "height"],
 ];
 
-export const unsignedReflectionTable = UNSIGNED_REFLECTION_TABLE_ROWS.map(
+export const unsignedReflectionPart1Table = UNSIGNED_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, unsignedReflection(...args)],
 );
 
+const UNSIGNED_REFLECTION_PART2_TABLE_ROWS = [
+  ["hspace", "HTMLImageElement", "hspace", "hspace"],
+  ["vspace", "HTMLImageElement", "vspace", "vspace"],
+];
+
+export const unsignedReflectionPart2Table = UNSIGNED_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, unsignedReflection(...args)],
+);

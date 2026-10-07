@@ -2,19 +2,32 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["alt", "HTMLAreaElement", "alt", "alt"],
-  ["attributionSrc", "HTMLAreaElement", "attributionSrc", "attributionsrc"],
   ["coords", "HTMLAreaElement", "coords", "coords"],
   ["download", "HTMLAreaElement", "download", "download"],
-  ["ping", "HTMLAreaElement", "ping", "ping"],
-  ["referrerPolicy", "HTMLAreaElement", "referrerPolicy", "referrerpolicy"],
-  ["rel", "HTMLAreaElement", "rel", "rel"],
   ["shape", "HTMLAreaElement", "shape", "shape"],
   ["target", "HTMLAreaElement", "target", "target"],
+  ["ping", "HTMLAreaElement", "ping", "ping"],
+  ["rel", "HTMLAreaElement", "rel", "rel"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["referrerPolicy", "HTMLAreaElement", "referrerPolicy", "referrerpolicy"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART3_TABLE_ROWS = [
+  ["attributionSrc", "HTMLAreaElement", "attributionSrc", "attributionsrc"],
+];
+
+export const stringReflectionPart3Table = STRING_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

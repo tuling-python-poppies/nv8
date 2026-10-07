@@ -11,4 +11,3 @@ const OFFSCREEN_CANVAS_PROPERTY_TABLE_ROWS = [
 export const offscreenCanvasPropertyTable = OFFSCREEN_CANVAS_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, offscreenCanvasProperty(...args)],
 );
-

@@ -2,12 +2,18 @@
 
 import { booleanReflection } from "./html-reflection.js";
 
-const BOOLEAN_REFLECTION_TABLE_ROWS = [
-  ["defer", "HTMLScriptElement", "defer", "defer"],
+const BOOLEAN_REFLECTION_PART1_TABLE_ROWS = [
   ["noModule", "HTMLScriptElement", "noModule", "nomodule"],
 ];
 
-export const booleanReflectionTable = BOOLEAN_REFLECTION_TABLE_ROWS.map(
+export const booleanReflectionPart1Table = BOOLEAN_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, booleanReflection(...args)],
 );
 
+const BOOLEAN_REFLECTION_PART2_TABLE_ROWS = [
+  ["defer", "HTMLScriptElement", "defer", "defer"],
+];
+
+export const booleanReflectionPart2Table = BOOLEAN_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, booleanReflection(...args)],
+);

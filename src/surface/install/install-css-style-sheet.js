@@ -13,7 +13,10 @@ import { cssRules } from "../api/css/css-style-sheet-css-rules-getter.js";
 import { rules } from "../api/css/css-style-sheet-rules-getter.js";
 import { addRule } from "../api/css/css-style-sheet-add-rule.js";
 import { replace } from "../api/css/css-style-sheet-replace.js";
-import { cssStyleSheetMethodTable } from "../api/css/css-style-sheet-method-members.js";
+import {
+  cssStyleSheetMethodPart1Table,
+  cssStyleSheetMethodPart2Table,
+} from "../api/css/css-style-sheet-method-members.js";
 
 export function installCSSStyleSheet() {
   installCSSStyleSheetConstructor();
@@ -21,8 +24,9 @@ export function installCSSStyleSheet() {
   definePrototypeGetter(CSSStyleSheet.prototype, "cssRules", cssRules);
   definePrototypeGetter(CSSStyleSheet.prototype, "rules", rules);
   definePrototypeMethod(CSSStyleSheet.prototype, "addRule", addRule);
-  for (const [name, entry] of cssStyleSheetMethodTable) definePrototypeMethod(CSSStyleSheet.prototype, name, entry);
+  for (const [name, entry] of cssStyleSheetMethodPart1Table) definePrototypeMethod(CSSStyleSheet.prototype, name, entry);
   definePrototypeMethod(CSSStyleSheet.prototype, "replace", replace);
+  for (const [name, entry] of cssStyleSheetMethodPart2Table) definePrototypeMethod(CSSStyleSheet.prototype, name, entry);
   defineConstructorBacklink(CSSStyleSheet.prototype, CSSStyleSheet);
   defineToStringTag(CSSStyleSheet.prototype, "CSSStyleSheet");
 }

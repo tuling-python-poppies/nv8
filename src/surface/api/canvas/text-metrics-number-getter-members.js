@@ -10,4 +10,3 @@ const TEXT_METRICS_NUMBER_GETTER_TABLE_ROWS = [
 export const textMetricsNumberGetterTable = TEXT_METRICS_NUMBER_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, textMetricsNumberGetter(name, ...args)],
 );
-

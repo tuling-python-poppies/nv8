@@ -3,11 +3,10 @@
 import { videoReadonlyProperty } from "./html-video-element-property.js";
 
 const VIDEO_READONLY_PROPERTY_TABLE_ROWS = [
-  ["videoHeight", "videoHeight"],
   ["videoWidth", "videoWidth"],
+  ["videoHeight", "videoHeight"],
 ];
 
 export const videoReadonlyPropertyTable = VIDEO_READONLY_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, videoReadonlyProperty(...args)],
 );
-

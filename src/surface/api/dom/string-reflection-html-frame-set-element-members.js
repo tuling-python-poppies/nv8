@@ -10,4 +10,3 @@ const STRING_REFLECTION_TABLE_ROWS = [
 export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
-

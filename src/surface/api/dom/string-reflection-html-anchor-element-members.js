@@ -2,24 +2,44 @@
 
 import { stringReflection } from "./html-reflection.js";
 
-const STRING_REFLECTION_TABLE_ROWS = [
-  ["attributionSrc", "HTMLAnchorElement", "attributionSrc", "attributionsrc"],
-  ["charset", "HTMLAnchorElement", "charset", "charset"],
-  ["coords", "HTMLAnchorElement", "coords", "coords"],
-  ["download", "HTMLAnchorElement", "download", "download"],
-  ["hrefTranslate", "HTMLAnchorElement", "hrefTranslate", "hreftranslate"],
-  ["hreflang", "HTMLAnchorElement", "hreflang", "hreflang"],
-  ["name", "HTMLAnchorElement", "name", "name"],
-  ["ping", "HTMLAnchorElement", "ping", "ping"],
-  ["referrerPolicy", "HTMLAnchorElement", "referrerPolicy", "referrerpolicy"],
-  ["rel", "HTMLAnchorElement", "rel", "rel"],
-  ["rev", "HTMLAnchorElement", "rev", "rev"],
-  ["shape", "HTMLAnchorElement", "shape", "shape"],
+const STRING_REFLECTION_PART1_TABLE_ROWS = [
   ["target", "HTMLAnchorElement", "target", "target"],
-  ["type", "HTMLAnchorElement", "type", "type"],
+  ["download", "HTMLAnchorElement", "download", "download"],
+  ["ping", "HTMLAnchorElement", "ping", "ping"],
+  ["rel", "HTMLAnchorElement", "rel", "rel"],
 ];
 
-export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
+export const stringReflectionPart1Table = STRING_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
 
+const STRING_REFLECTION_PART2_TABLE_ROWS = [
+  ["hreflang", "HTMLAnchorElement", "hreflang", "hreflang"],
+  ["type", "HTMLAnchorElement", "type", "type"],
+  ["referrerPolicy", "HTMLAnchorElement", "referrerPolicy", "referrerpolicy"],
+];
+
+export const stringReflectionPart2Table = STRING_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART3_TABLE_ROWS = [
+  ["coords", "HTMLAnchorElement", "coords", "coords"],
+  ["charset", "HTMLAnchorElement", "charset", "charset"],
+  ["name", "HTMLAnchorElement", "name", "name"],
+  ["rev", "HTMLAnchorElement", "rev", "rev"],
+  ["shape", "HTMLAnchorElement", "shape", "shape"],
+];
+
+export const stringReflectionPart3Table = STRING_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);
+
+const STRING_REFLECTION_PART4_TABLE_ROWS = [
+  ["hrefTranslate", "HTMLAnchorElement", "hrefTranslate", "hreftranslate"],
+  ["attributionSrc", "HTMLAnchorElement", "attributionSrc", "attributionsrc"],
+];
+
+export const stringReflectionPart4Table = STRING_REFLECTION_PART4_TABLE_ROWS.map(
+  ([name, ...args]) => [name, stringReflection(...args)],
+);

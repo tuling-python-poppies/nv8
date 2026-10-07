@@ -27,16 +27,34 @@ import { validationMessage } from "../api/dom/html-text-area-element-validation-
 import { validity } from "../api/dom/html-text-area-element-validity-getter.js";
 import { value, setValue } from "../api/dom/html-text-area-element-value-property.js";
 import { willValidate } from "../api/dom/html-text-area-element-will-validate-getter.js";
-import { textAreaNumberReflectionTable } from "../api/dom/text-area-number-reflection-members.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-html-text-area-element-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-html-text-area-element-members.js";
+import {
+  stringReflectionPart1Table,
+  stringReflectionPart2Table,
+  stringReflectionPart3Table,
+  stringReflectionPart4Table,
+} from "../api/dom/string-reflection-html-text-area-element-members.js";
+import {
+  textAreaNumberReflectionPart1Table,
+  textAreaNumberReflectionPart2Table,
+  textAreaNumberReflectionPart3Table,
+} from "../api/dom/text-area-number-reflection-members.js";
+import {
+  booleanReflectionPart1Table,
+  booleanReflectionPart2Table,
+} from "../api/dom/boolean-reflection-html-text-area-element-members.js";
 
 export function installHTMLTextAreaElement() {
   installHTMLTextAreaElementConstructor();
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of textAreaNumberReflectionTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of textAreaNumberReflectionPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart1Table) accessor(name, entry.get, entry.set);
   getter("form", form);
+  for (const [name, entry] of textAreaNumberReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart3Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of textAreaNumberReflectionPart3Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart4Table) accessor(name, entry.get, entry.set);
   getter("type", type);
   accessor("defaultValue", defaultValue, setDefaultValue);
   accessor("value", value, setValue);

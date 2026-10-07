@@ -18,7 +18,10 @@ import {
 import {
   sheet,
 } from "../api/dom/html-style-element-sheet-getter.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-html-style-element-members.js";
+import {
+  stringReflectionPart1Table,
+  stringReflectionPart2Table,
+} from "../api/dom/string-reflection-html-style-element-members.js";
 
 export function installHTMLStyleElement() {
   installHTMLStyleElementConstructor();
@@ -28,7 +31,8 @@ export function installHTMLStyleElement() {
     disabled,
     setDisabled,
   );
-  for (const [name, entry] of stringReflectionTable) definePrototypeAccessor( HTMLStyleElement.prototype, name, entry.get, entry.set, );
+  for (const [name, entry] of stringReflectionPart1Table) definePrototypeAccessor( HTMLStyleElement.prototype, name, entry.get, entry.set, );
+  for (const [name, entry] of stringReflectionPart2Table) definePrototypeAccessor(HTMLStyleElement.prototype, name, entry.get, entry.set);
   definePrototypeGetter(HTMLStyleElement.prototype, "sheet", sheet);
   definePrototypeGetter(HTMLStyleElement.prototype, "blocking", blocking);
   defineConstructorBacklink(HTMLStyleElement.prototype, HTMLStyleElement);

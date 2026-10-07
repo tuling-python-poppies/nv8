@@ -42,31 +42,65 @@ import { valueAsNumber, setValueAsNumber } from "../api/dom/html-input-element-v
 import { value, setValue } from "../api/dom/html-input-element-value-property.js";
 import { webkitEntries } from "../api/dom/html-input-element-webkit-entries-getter.js";
 import { willValidate } from "../api/dom/html-input-element-will-validate-getter.js";
-import { inputNumberReflectionTable } from "../api/dom/input-number-reflection-members.js";
-import { stringReflectionTable } from "../api/dom/string-reflection-html-input-element-members.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-html-input-element-members.js";
+import {
+  stringReflectionPart1Table,
+  stringReflectionPart2Table,
+  stringReflectionPart3Table,
+  stringReflectionPart4Table,
+  stringReflectionPart5Table,
+  stringReflectionPart6Table,
+  stringReflectionPart7Table,
+  stringReflectionPart8Table,
+} from "../api/dom/string-reflection-html-input-element-members.js";
+import {
+  booleanReflectionPart1Table,
+  booleanReflectionPart2Table,
+  booleanReflectionPart3Table,
+  booleanReflectionPart4Table,
+  booleanReflectionPart5Table,
+} from "../api/dom/boolean-reflection-html-input-element-members.js";
+import {
+  inputNumberReflectionPart1Table,
+  inputNumberReflectionPart2Table,
+  inputNumberReflectionPart3Table,
+  inputNumberReflectionPart4Table,
+  inputNumberReflectionPart5Table,
+} from "../api/dom/input-number-reflection-members.js";
 import { urlReflectionTable } from "../api/dom/html-input-element-src-property.js";
 
 export function installHTMLInputElement() {
   installHTMLInputElementConstructor();
-  for (const [name, entry] of stringReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart1Table) accessor(name, entry.get, entry.set);
   accessor("defaultChecked", defaultChecked, setDefaultChecked);
   accessor("checked", checked, setChecked);
-  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart1Table) accessor(name, entry.get, entry.set);
   getter("form", form);
   accessor("files", files, setFiles);
   accessor("formAction", formAction, setFormAction);
   accessor("formEnctype", formEnctype, setFormEnctype);
   accessor("formMethod", formMethod, setFormMethod);
-  for (const [name, entry] of inputNumberReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart3Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of inputNumberReflectionPart1Table) accessor(name, entry.get, entry.set);
   accessor("indeterminate", indeterminate, setIndeterminate);
   getter("list", list);
+  for (const [name, entry] of stringReflectionPart4Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of inputNumberReflectionPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart5Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of inputNumberReflectionPart3Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart3Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart6Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart4Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of inputNumberReflectionPart4Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of urlReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of stringReflectionPart7Table) accessor(name, entry.get, entry.set);
   accessor("type", type, setType);
   accessor("defaultValue", defaultValue, setDefaultValue);
   accessor("value", value, setValue);
   accessor("valueAsDate", valueAsDate, setValueAsDate);
   accessor("valueAsNumber", valueAsNumber, setValueAsNumber);
+  for (const [name, entry] of inputNumberReflectionPart5Table) accessor(name, entry.get, entry.set);
   getter("willValidate", willValidate);
   getter("validity", validity);
   getter("validationMessage", validationMessage);
@@ -74,6 +108,8 @@ export function installHTMLInputElement() {
   accessor("selectionStart", selectionStart, setSelectionStart);
   accessor("selectionEnd", selectionEnd, setSelectionEnd);
   accessor("selectionDirection", selectionDirection, setSelectionDirection);
+  for (const [name, entry] of stringReflectionPart8Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart5Table) accessor(name, entry.get, entry.set);
   accessor("popoverTargetElement", popoverTargetElement, setPopoverTargetElement);
   accessor("popoverTargetAction", popoverTargetAction, setPopoverTargetAction);
   method("checkValidity", checkValidity);

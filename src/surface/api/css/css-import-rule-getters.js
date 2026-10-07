@@ -13,4 +13,3 @@ const CSS_IMPORT_RULE_GETTER_TABLE_ROWS = [
 export const cssImportRuleGetterTable = CSS_IMPORT_RULE_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, cssImportRuleGetter(...args)],
 );
-

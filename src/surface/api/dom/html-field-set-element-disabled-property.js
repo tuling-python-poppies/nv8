@@ -9,4 +9,3 @@ const BOOLEAN_REFLECTION_TABLE_ROWS = [
 export const booleanReflectionTable = BOOLEAN_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, booleanReflection(...args)],
 );
-

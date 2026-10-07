@@ -3,18 +3,17 @@
 import { anchorURLComponentProperty } from "./html-anchor-element-url-state.js";
 
 const ANCHOR_URLCOMPONENT_PROPERTY_TABLE_ROWS = [
-  ["hash", "hash"],
+  ["protocol", "protocol"],
+  ["username", "username"],
+  ["password", "password"],
   ["host", "host"],
   ["hostname", "hostname"],
-  ["password", "password"],
-  ["pathname", "pathname"],
   ["port", "port"],
-  ["protocol", "protocol"],
+  ["pathname", "pathname"],
   ["search", "search"],
-  ["username", "username"],
+  ["hash", "hash"],
 ];
 
 export const anchorURLComponentPropertyTable = ANCHOR_URLCOMPONENT_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, anchorURLComponentProperty(...args)],
 );
-

@@ -5,9 +5,6 @@ import { htmlBooleanDescriptor } from "./html-element-property.js";
 const HTML_BOOLEAN_DESCRIPTOR_PART1_TABLE_ROWS = [
   ["hidden", "hidden", false],
   ["inert", "inert", false],
-  ["draggable", "draggable", false],
-  ["spellcheck", "spellcheck", true],
-  ["autofocus", "autofocus", false],
 ];
 
 export const htmlBooleanDescriptorPart1Table = HTML_BOOLEAN_DESCRIPTOR_PART1_TABLE_ROWS.map(
@@ -15,9 +12,26 @@ export const htmlBooleanDescriptorPart1Table = HTML_BOOLEAN_DESCRIPTOR_PART1_TAB
 );
 
 const HTML_BOOLEAN_DESCRIPTOR_PART2_TABLE_ROWS = [
-  ["autofocus", "autofocus", false],
+  ["draggable", "draggable", false],
+  ["spellcheck", "spellcheck", true],
 ];
 
 export const htmlBooleanDescriptorPart2Table = HTML_BOOLEAN_DESCRIPTOR_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, htmlBooleanDescriptor(...args)],
+);
+
+const HTML_BOOLEAN_DESCRIPTOR_PART3_TABLE_ROWS = [
+  ["autofocus", "autofocus", false],
+];
+
+export const htmlBooleanDescriptorPart3Table = HTML_BOOLEAN_DESCRIPTOR_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, htmlBooleanDescriptor(...args)],
+);
+
+const HTML_BOOLEAN_DESCRIPTOR_PART4_TABLE_ROWS = [
+  ["autofocus", "autofocus", false],
+];
+
+export const htmlBooleanDescriptorPart4Table = HTML_BOOLEAN_DESCRIPTOR_PART4_TABLE_ROWS.map(
   ([name, ...args]) => [name, htmlBooleanDescriptor(...args)],
 );

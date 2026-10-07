@@ -10,4 +10,3 @@ const MATRIX_BOOLEAN_GETTER_TABLE_ROWS = [
 export const matrixBooleanGetterTable = MATRIX_BOOLEAN_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, matrixBooleanGetter(...args)],
 );
-

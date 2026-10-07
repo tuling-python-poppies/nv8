@@ -10,4 +10,3 @@ const DIMENSION_PROPERTY_TABLE_ROWS = [
 export const dimensionPropertyTable = DIMENSION_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, dimensionProperty(name, ...args)],
 );
-

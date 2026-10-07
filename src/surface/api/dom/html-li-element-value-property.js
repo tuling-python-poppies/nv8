@@ -9,4 +9,3 @@ const LONG_REFLECTION_TABLE_ROWS = [
 export const longReflectionTable = LONG_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, longReflection(...args)],
 );
-

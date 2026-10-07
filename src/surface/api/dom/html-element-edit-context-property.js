@@ -12,4 +12,3 @@ const HTML_STATE_DESCRIPTOR_TABLE_ROWS = [
 export const htmlStateDescriptorTable = HTML_STATE_DESCRIPTOR_TABLE_ROWS.map(
   ([name, ...args]) => [name, htmlStateDescriptor(...args)],
 );
-

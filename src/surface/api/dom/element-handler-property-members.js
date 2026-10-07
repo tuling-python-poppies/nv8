@@ -2,18 +2,31 @@
 
 import { elementHandlerProperty } from "./element-extended-property.js";
 
-const ELEMENT_HANDLER_PROPERTY_TABLE_ROWS = [
+const ELEMENT_HANDLER_PROPERTY_PART1_TABLE_ROWS = [
   ["onbeforecopy", "onbeforecopy"],
   ["onbeforecut", "onbeforecut"],
   ["onbeforepaste", "onbeforepaste"],
+  ["onsearch", "onsearch"],
+];
+
+export const elementHandlerPropertyPart1Table = ELEMENT_HANDLER_PROPERTY_PART1_TABLE_ROWS.map(
+  ([name, ...args]) => [name, elementHandlerProperty(...args)],
+);
+
+const ELEMENT_HANDLER_PROPERTY_PART2_TABLE_ROWS = [
   ["onfullscreenchange", "onfullscreenchange"],
   ["onfullscreenerror", "onfullscreenerror"],
-  ["onsearch", "onsearch"],
+];
+
+export const elementHandlerPropertyPart2Table = ELEMENT_HANDLER_PROPERTY_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, elementHandlerProperty(...args)],
+);
+
+const ELEMENT_HANDLER_PROPERTY_PART3_TABLE_ROWS = [
   ["onwebkitfullscreenchange", "onwebkitfullscreenchange"],
   ["onwebkitfullscreenerror", "onwebkitfullscreenerror"],
 ];
 
-export const elementHandlerPropertyTable = ELEMENT_HANDLER_PROPERTY_TABLE_ROWS.map(
+export const elementHandlerPropertyPart3Table = ELEMENT_HANDLER_PROPERTY_PART3_TABLE_ROWS.map(
   ([name, ...args]) => [name, elementHandlerProperty(...args)],
 );
-

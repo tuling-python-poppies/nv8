@@ -9,4 +9,3 @@ const NULLABLE_STRING_REFLECTION_TABLE_ROWS = [
 export const nullableStringReflectionTable = NULLABLE_STRING_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, nullableStringReflection(...args)],
 );
-

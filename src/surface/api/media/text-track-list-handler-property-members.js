@@ -3,12 +3,11 @@
 import { textTrackListHandlerProperty } from "./text-track-list-handler-property.js";
 
 const TEXT_TRACK_LIST_HANDLER_PROPERTY_TABLE_ROWS = [
-  ["onaddtrack", "onaddtrack"],
   ["onchange", "onchange"],
+  ["onaddtrack", "onaddtrack"],
   ["onremovetrack", "onremovetrack"],
 ];
 
 export const textTrackListHandlerPropertyTable = TEXT_TRACK_LIST_HANDLER_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, textTrackListHandlerProperty(...args)],
 );
-

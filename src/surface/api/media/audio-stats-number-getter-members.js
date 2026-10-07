@@ -3,17 +3,16 @@
 import { audioStatsNumberGetter } from "./media-stream-track-audio-stats-number-getter.js";
 
 const AUDIO_STATS_NUMBER_GETTER_TABLE_ROWS = [
-  ["averageLatency", "averageLatency"],
   ["deliveredFrames", "deliveredFrames"],
   ["deliveredFramesDuration", "deliveredFramesDuration"],
-  ["latency", "latency"],
-  ["maximumLatency", "maximumLatency"],
-  ["minimumLatency", "minimumLatency"],
   ["totalFrames", "totalFrames"],
   ["totalFramesDuration", "totalFramesDuration"],
+  ["latency", "latency"],
+  ["averageLatency", "averageLatency"],
+  ["minimumLatency", "minimumLatency"],
+  ["maximumLatency", "maximumLatency"],
 ];
 
 export const audioStatsNumberGetterTable = AUDIO_STATS_NUMBER_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, audioStatsNumberGetter(...args)],
 );
-

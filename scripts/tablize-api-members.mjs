@@ -60,10 +60,9 @@
  *
  * ### 4. 已经解决的：过装
  *
- * 表按安装作用域切之后（一个 (文件, 外层函数) 一张表，表里正好是那段语句装的成员），
- * 整表循环与原语句严格等价，过装从原理上不可能再发生——这也是为什么
- * `finalizePrototypeSurfaceOrder()` 不再需要承担「裁剪」职责（它本来也不裁）
- * 这个假设可以彻底丢掉了。
+ * 每个连续安装段独立成表，表里正好是那段语句装的成员；整表循环与原语句严格等价，
+ * 过装从原理上不可能再发生——这也是为什么 `finalizePrototypeSurfaceOrder()` 不再需要
+ * 承担「裁剪」职责（它本来也不裁）。这个假设可以彻底丢掉了。
  *
  * ## 验证时务必先删掉本机缓存
  *
@@ -323,7 +322,7 @@ async function targetReusesMembers(targetFile, members) {
  * 行只存「名字 + 额外字面量参数」，工厂调用在 map 里统一发生，所以 `animationProperty`、
  * `documentMethod` 这类签名不同的工厂可以共用同一形状。
  */
-function buildTable(tableName, members) {
+export function buildTable(tableName, members) {
   const rowsName = `${tableName.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_ROWS`;
   const rows = members
     .map((member) => `  ["${member.name}", ${member.argsList.join(', ')}],`)
@@ -606,13 +605,6 @@ function enclosingFunction(source, offset) {
   const before = source.slice(0, offset);
   const matches = [...before.matchAll(/^[ \t]*(?:export\s+)?(?:async\s+)?function\s+[\w$]*/gm)];
   return matches.length === 0 ? -1 : matches[matches.length - 1].index;
-}
-
-/** 语句所在函数的函数名（用于给「按作用域切」的表起名），取不到返回 null。 */
-function enclosingFunctionName(source, offset) {
-  const before = source.slice(0, offset);
-  const matches = [...before.matchAll(/^[ \t]*(?:export\s+)?(?:async\s+)?function\s+([\w$]+)/gm)];
-  return matches.length === 0 ? null : matches[matches.length - 1][1];
 }
 
 /** 折叠空白，但不动字符串/模板内容。 */
@@ -977,41 +969,24 @@ async function main() {
 
   if (!write) return;
 
-  const tablesByPlan = new Map();
   const tableNameByLoop = new Map();
   const handledTargets = new Set();
 
   for (const plan of perPlan.keys()) {
-    // 按安装作用域切表：一个（文件, 外层函数）= 一张表，表里正好是那段语句装的那些成员。
-    // 「循环装整张表」于是与原来的逐条语句严格等价，过装从原理上不可能发生。
+    // 每个连续安装段独立成表。按整个函数合并会把中间隔开的段重复安装，
+    // 也会让不同箭头函数误共享同一张表；这里直接沿用 findLoops 的段边界。
     const tables = [];
-    const byScope = new Map();
     for (const [file, loops] of perPlan.get(plan)) {
-      const source = installSources.get(file);
       for (const loop of loops) {
-        const key = `${file}\u0000${enclosingFunction(source, loop.startOffset)}`;
-        if (!byScope.has(key)) {
-          byScope.set(key, { members: [] });
-        }
-        const table = byScope.get(key);
-        for (const member of loop.covered ?? []) {
-          if (!table.members.includes(member)) table.members.push(member);
-        }
-        // 键必须是稳定字符串：写入路径遍历的是 `{...loop, plan}` 副本，
-        // 用对象作键会查不到，于是退回家族级表名（模块里并不存在这个名字）。
+        const table = { members: [...(loop.covered ?? [])] };
+        tables.push(table);
         tableNameByLoop.set(`${plan.factory}|${file}|${loop.startOffset}`, table);
       }
     }
-    const scopeTables = [...byScope.values()];
-    // 表名必须带**家族**名：用外层函数名会让同一安装函数里的两个家族撞名
-    // （`htmlStringDescriptor` 与 `htmlBooleanDescriptor` 都由 `installHTMLElement` 装），
-    // 撞名后消费者 import 到的是另一族的表 → 静默漏装/过装。
     const stem = plan.tableName.replace(/Table$/, '');
-    scopeTables.forEach((table, index) => {
-      table.name = scopeTables.length === 1 ? plan.tableName : `${stem}Part${index + 1}Table`;
+    tables.forEach((table, index) => {
+      table.name = tables.length === 1 ? plan.tableName : `${stem}Part${index + 1}Table`;
     });
-    tables.push(...scopeTables);
-    tablesByPlan.set(plan, tables);
 
     const coveredMembers = new Set(tables.flatMap((table) => table.members));
     const declaredByFile = new Map();
@@ -1047,10 +1022,16 @@ async function main() {
     const lookup = `new Map([${tables.map((table) => `...${table.name}`).join(', ')}])`;
     const compatLines = compat === undefined ? '' : [...compat]
       .map((name) => {
+        const member = plan.members.find((entry) => entry.exports.some((exported) => exported.name === name));
+        if (member === undefined) return null;
+        if (!coveredMembers.has(member)) {
+          return `export const ${name} = ${member.factory}(${member.argsList.join(', ')});`;
+        }
         const slot = plan.slotByName?.get(name) ?? null;
         const access = slot === null || slot === undefined ? '' : `.${slot}`;
         return `export const ${name} = ${lookup}.get(${JSON.stringify(name)})${access};`;
       })
+      .filter((line) => line !== null)
       .join('\n');
     const parts = [
       stripped.replace(/\s+$/, '') || `// ${path.basename(plan.dir)} 的成员表：名字就能描述实现，不再一个成员一个文件。`,

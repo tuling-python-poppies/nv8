@@ -28,24 +28,41 @@ import { blur } from "../api/dom/html-element-blur.js";
 import { click } from "../api/dom/html-element-click.js";
 import { focus } from "../api/dom/html-element-focus.js";
 import { togglePopover } from "../api/dom/html-element-toggle-popover.js";
+import {
+  htmlStringDescriptorPart1Table,
+  htmlStringDescriptorPart2Table,
+  htmlStringDescriptorPart3Table,
+  htmlStringDescriptorPart4Table,
+  htmlStringDescriptorPart5Table,
+  htmlStringDescriptorPart6Table,
+  htmlStringDescriptorPart7Table,
+  htmlStringDescriptorPart8Table,
+  htmlStringDescriptorPart9Table,
+} from "../api/dom/html-string-descriptor-members.js";
+import {
+  htmlBooleanDescriptorPart1Table,
+  htmlBooleanDescriptorPart2Table,
+  htmlBooleanDescriptorPart3Table,
+} from "../api/dom/html-boolean-descriptor-members.js";
 import { htmlStateDescriptorTable } from "../api/dom/html-element-edit-context-property.js";
-import { htmlElementMethodTable } from "../api/dom/html-element-method-members.js";
-import { htmlStringDescriptorPart1Table } from "../api/dom/html-string-descriptor-members.js";
-import { htmlBooleanDescriptorPart1Table } from "../api/dom/html-boolean-descriptor-members.js";
+import {
+  htmlElementMethodPart1Table,
+  htmlElementMethodPart2Table,
+} from "../api/dom/html-element-method-members.js";
 
 export function installHTMLElement() {
   installHTMLElementConstructor();
   for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
   accessor("translate", translate, setTranslate);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart2Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of htmlBooleanDescriptorPart1Table) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlBooleanDescriptorPart1Table) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart3Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlBooleanDescriptorPart2Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart4Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of htmlStateDescriptorTable) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart5Table) accessor(name, entry.get, entry.set);
   getter("isContentEditable", isContentEditable);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart6Table) accessor(name, entry.get, entry.set);
   getter("offsetParent", offsetParent);
   getter("offsetTop", offsetTop);
   getter("offsetLeft", offsetLeft);
@@ -54,21 +71,22 @@ export function installHTMLElement() {
   accessor("popover", popover, setPopover);
   accessor("innerText", innerText, setInnerText);
   accessor("outerText", outerText, setOuterText);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart7Table) accessor(name, entry.get, entry.set);
   installHTMLElementEarlyEventMembers(accessor);
   getter("dataset", dataset);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of htmlBooleanDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart8Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlBooleanDescriptorPart3Table) accessor(name, entry.get, entry.set);
   accessor("tabIndex", tabIndex, setTabIndex);
   getter("style", style);
   getter("attributeStyleMap", attributeStyleMap);
-  for (const [name, entry] of htmlElementMethodTable) method(name, entry);
+  for (const [name, entry] of htmlElementMethodPart1Table) method(name, entry);
   method("blur", blur);
   method("click", click);
   method("focus", focus);
+  for (const [name, entry] of htmlElementMethodPart2Table) method(name, entry);
   method("togglePopover", togglePopover);
   installHTMLElementLateEventMembers(accessor);
-  for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of htmlStringDescriptorPart9Table) accessor(name, entry.get, entry.set);
   finishHTMLElementConstructor();
   installHTMLElementAfterConstructorEventMembers(accessor);
   finishHTMLElementToStringTag();

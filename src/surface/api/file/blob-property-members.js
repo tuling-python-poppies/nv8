@@ -10,4 +10,3 @@ const BLOB_PROPERTY_TABLE_ROWS = [
 export const blobPropertyTable = BLOB_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, blobProperty(...args)],
 );
-

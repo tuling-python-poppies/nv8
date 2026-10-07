@@ -30,4 +30,3 @@ const MATRIX_COMPONENT_GETTER_TABLE_ROWS = [
 export const matrixComponentGetterTable = MATRIX_COMPONENT_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, matrixComponentGetter(...args)],
 );
-

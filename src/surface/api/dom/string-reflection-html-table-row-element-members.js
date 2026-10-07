@@ -4,13 +4,12 @@ import { stringReflection } from "./html-reflection.js";
 
 const STRING_REFLECTION_TABLE_ROWS = [
   ["align", "HTMLTableRowElement", "align", "align"],
-  ["bgColor", "HTMLTableRowElement", "bgColor", "bgcolor"],
-  ["chOff", "HTMLTableRowElement", "chOff", "charoff"],
   ["ch", "HTMLTableRowElement", "ch", "char"],
+  ["chOff", "HTMLTableRowElement", "chOff", "charoff"],
   ["vAlign", "HTMLTableRowElement", "vAlign", "valign"],
+  ["bgColor", "HTMLTableRowElement", "bgColor", "bgcolor"],
 ];
 
 export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
-

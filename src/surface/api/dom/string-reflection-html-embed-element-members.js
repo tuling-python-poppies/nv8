@@ -3,14 +3,13 @@
 import { stringReflection } from "./html-reflection.js";
 
 const STRING_REFLECTION_TABLE_ROWS = [
-  ["align", "HTMLEmbedElement", "align", "align"],
-  ["height", "HTMLEmbedElement", "height", "height"],
-  ["name", "HTMLEmbedElement", "name", "name"],
   ["type", "HTMLEmbedElement", "type", "type"],
   ["width", "HTMLEmbedElement", "width", "width"],
+  ["height", "HTMLEmbedElement", "height", "height"],
+  ["align", "HTMLEmbedElement", "align", "align"],
+  ["name", "HTMLEmbedElement", "name", "name"],
 ];
 
 export const stringReflectionTable = STRING_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, stringReflection(...args)],
 );
-

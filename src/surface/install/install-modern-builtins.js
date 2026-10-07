@@ -122,7 +122,6 @@ function installMissingEngineGlobals() {
     class DisposableStack {
       #disposed = false;
       #stack = [];
-      get disposed() { return this.#disposed; }
       use(value) {
         if (this.#disposed) throw new ReferenceError("DisposableStack already disposed");
         if (value != null) {
@@ -130,6 +129,22 @@ function installMissingEngineGlobals() {
           if (typeof dispose === "function") this.#stack.push({ value, dispose });
         }
         return value;
+      }
+      dispose() {
+        if (this.#disposed) return;
+        this.#disposed = true;
+        let suppressed = null;
+        for (let i = this.#stack.length - 1; i >= 0; i--) {
+          try {
+            this.#stack[i].dispose.call(this.#stack[i].value);
+          } catch (error) {
+            suppressed = suppressed === null
+              ? error
+              : new SuppressedError(error, suppressed, "An error was suppressed during disposal.");
+          }
+        }
+        this.#stack = [];
+        if (suppressed !== null) throw suppressed;
       }
       adopt(value, onDispose) {
         if (this.#disposed) throw new ReferenceError("DisposableStack already disposed");
@@ -150,22 +165,7 @@ function installMissingEngineGlobals() {
         this.#disposed = true;
         return moved;
       }
-      dispose() {
-        if (this.#disposed) return;
-        this.#disposed = true;
-        let suppressed = null;
-        for (let i = this.#stack.length - 1; i >= 0; i--) {
-          try {
-            this.#stack[i].dispose.call(this.#stack[i].value);
-          } catch (error) {
-            suppressed = suppressed === null
-              ? error
-              : new SuppressedError(error, suppressed, "An error was suppressed during disposal.");
-          }
-        }
-        this.#stack = [];
-        if (suppressed !== null) throw suppressed;
-      }
+      get disposed() { return this.#disposed; }
     }
     // 真实 DisposableStack.prototype 有 7 个字符串成员与 **2 个符号成员**
     // （`Symbol.dispose` 与 `Symbol.toStringTag`）。少了 toStringTag 会让
@@ -184,7 +184,6 @@ function installMissingEngineGlobals() {
     class AsyncDisposableStack {
       #disposed = false;
       #stack = [];
-      get disposed() { return this.#disposed; }
       use(value) {
         if (this.#disposed) throw new ReferenceError("AsyncDisposableStack already disposed");
         if (value != null) {
@@ -192,6 +191,22 @@ function installMissingEngineGlobals() {
           if (typeof dispose === "function") this.#stack.push({ value, dispose });
         }
         return value;
+      }
+      async disposeAsync() {
+        if (this.#disposed) return;
+        this.#disposed = true;
+        let suppressed = null;
+        for (let i = this.#stack.length - 1; i >= 0; i--) {
+          try {
+            await this.#stack[i].dispose.call(this.#stack[i].value);
+          } catch (error) {
+            suppressed = suppressed === null
+              ? error
+              : new SuppressedError(error, suppressed, "An error was suppressed during disposal.");
+          }
+        }
+        this.#stack = [];
+        if (suppressed !== null) throw suppressed;
       }
       adopt(value, onDispose) {
         if (this.#disposed) throw new ReferenceError("AsyncDisposableStack already disposed");
@@ -212,22 +227,7 @@ function installMissingEngineGlobals() {
         this.#disposed = true;
         return moved;
       }
-      async disposeAsync() {
-        if (this.#disposed) return;
-        this.#disposed = true;
-        let suppressed = null;
-        for (let i = this.#stack.length - 1; i >= 0; i--) {
-          try {
-            await this.#stack[i].dispose.call(this.#stack[i].value);
-          } catch (error) {
-            suppressed = suppressed === null
-              ? error
-              : new SuppressedError(error, suppressed, "An error was suppressed during disposal.");
-          }
-        }
-        this.#stack = [];
-        if (suppressed !== null) throw suppressed;
-      }
+      get disposed() { return this.#disposed; }
     }
     defineSymbolTag(AsyncDisposableStack.prototype, "AsyncDisposableStack");
     registerShimPrototype(AsyncDisposableStack.prototype);

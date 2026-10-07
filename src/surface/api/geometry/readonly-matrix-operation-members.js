@@ -14,11 +14,18 @@ import {
   translationMatrix,
 } from "./dom-matrix-state.js";
 
-const READONLY_MATRIX_OPERATION_TABLE_ROWS = [
+const READONLY_MATRIX_OPERATION_PART1_TABLE_ROWS = [
   ["flipX", "flipX", matrix => multiplyMatrices(matrix, scalingMatrix(-1, 1, 1))],
   ["flipY", "flipY", matrix => multiplyMatrices(matrix, scalingMatrix(1, -1, 1))],
   ["inverse", "inverse", invertMatrix],
   ["multiply", "multiply", (matrix, args) => multiplyMatrices(matrix, matrixFromValue(args[0]))],
+];
+
+export const readonlyMatrixOperationPart1Table = READONLY_MATRIX_OPERATION_PART1_TABLE_ROWS.map(
+  ([name, ...args]) => [name, readonlyMatrixOperation(...args)],
+);
+
+const READONLY_MATRIX_OPERATION_PART2_TABLE_ROWS = [
   ["rotateAxisAngle", "rotateAxisAngle", (matrix, args) => multiplyMatrices(matrix, axisRotationMatrix(
     optionalNumber(args, 0, 0),
     optionalNumber(args, 1, 0),
@@ -32,6 +39,13 @@ const READONLY_MATRIX_OPERATION_TABLE_ROWS = [
       optionalNumber(args, 0, 0),
     ) * 180 / Math.PI),
   )],
+];
+
+export const readonlyMatrixOperationPart2Table = READONLY_MATRIX_OPERATION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, readonlyMatrixOperation(...args)],
+);
+
+const READONLY_MATRIX_OPERATION_PART3_TABLE_ROWS = [
   ["scaleNonUniform", "scaleNonUniform", (matrix, args) => multiplyMatrices(
     matrix,
     scalingMatrix(
@@ -40,6 +54,13 @@ const READONLY_MATRIX_OPERATION_TABLE_ROWS = [
       1,
     ),
   )],
+];
+
+export const readonlyMatrixOperationPart3Table = READONLY_MATRIX_OPERATION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, readonlyMatrixOperation(...args)],
+);
+
+const READONLY_MATRIX_OPERATION_PART4_TABLE_ROWS = [
   ["translate", "translate", (matrix, args) => multiplyMatrices(matrix, translationMatrix(
     optionalNumber(args, 0, 0),
     optionalNumber(args, 1, 0),
@@ -47,7 +68,6 @@ const READONLY_MATRIX_OPERATION_TABLE_ROWS = [
   ))],
 ];
 
-export const readonlyMatrixOperationTable = READONLY_MATRIX_OPERATION_TABLE_ROWS.map(
+export const readonlyMatrixOperationPart4Table = READONLY_MATRIX_OPERATION_PART4_TABLE_ROWS.map(
   ([name, ...args]) => [name, readonlyMatrixOperation(...args)],
 );
-

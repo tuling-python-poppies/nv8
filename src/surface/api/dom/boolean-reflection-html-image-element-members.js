@@ -2,13 +2,26 @@
 
 import { booleanReflection } from "./html-reflection.js";
 
-const BOOLEAN_REFLECTION_TABLE_ROWS = [
-  ["browsingTopics", "HTMLImageElement", "browsingTopics", "browsingtopics"],
+const BOOLEAN_REFLECTION_PART1_TABLE_ROWS = [
   ["isMap", "HTMLImageElement", "isMap", "ismap"],
-  ["sharedStorageWritable", "HTMLImageElement", "sharedStorageWritable", "sharedstoragewritable"],
 ];
 
-export const booleanReflectionTable = BOOLEAN_REFLECTION_TABLE_ROWS.map(
+export const booleanReflectionPart1Table = BOOLEAN_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, booleanReflection(...args)],
 );
 
+const BOOLEAN_REFLECTION_PART2_TABLE_ROWS = [
+  ["browsingTopics", "HTMLImageElement", "browsingTopics", "browsingtopics"],
+];
+
+export const booleanReflectionPart2Table = BOOLEAN_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, booleanReflection(...args)],
+);
+
+const BOOLEAN_REFLECTION_PART3_TABLE_ROWS = [
+  ["sharedStorageWritable", "HTMLImageElement", "sharedStorageWritable", "sharedstoragewritable"],
+];
+
+export const booleanReflectionPart3Table = BOOLEAN_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, booleanReflection(...args)],
+);

@@ -10,4 +10,3 @@ const MEDIA_HANDLER_PROPERTY_TABLE_ROWS = [
 export const mediaHandlerPropertyTable = MEDIA_HANDLER_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, mediaHandlerProperty(...args)],
 );
-

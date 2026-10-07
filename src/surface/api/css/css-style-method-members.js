@@ -16,4 +16,3 @@ const CSS_STYLE_METHOD_TABLE_ROWS = [
 export const cssStyleMethodTable = CSS_STYLE_METHOD_TABLE_ROWS.map(
   ([name, ...args]) => [name, cssStyleMethod(...args)],
 );
-

@@ -27,4 +27,3 @@ const PATH_COMMAND_TABLE_ROWS = [
 export const pathCommandTable = PATH_COMMAND_TABLE_ROWS.map(
   ([name, ...args]) => [name, pathCommand(name, ...args)],
 );
-

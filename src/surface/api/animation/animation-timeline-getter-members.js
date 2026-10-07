@@ -10,4 +10,3 @@ const ANIMATION_TIMELINE_GETTER_TABLE_ROWS = [
 export const animationTimelineGetterTable = ANIMATION_TIMELINE_GETTER_TABLE_ROWS.map(
   ([name, ...args]) => [name, animationTimelineGetter(...args)],
 );
-

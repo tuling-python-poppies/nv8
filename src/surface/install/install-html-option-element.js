@@ -14,13 +14,17 @@ import { label, setLabel } from "../api/dom/html-option-element-label-property.j
 import { selected, setSelected } from "../api/dom/html-option-element-selected-property.js";
 import { setText, text } from "../api/dom/html-option-element-text-property.js";
 import { setValue, value } from "../api/dom/html-option-element-value-property.js";
-import { booleanReflectionTable } from "../api/dom/boolean-reflection-html-option-element-members.js";
+import {
+  booleanReflectionPart1Table,
+  booleanReflectionPart2Table,
+} from "../api/dom/boolean-reflection-html-option-element-members.js";
 
 export function installHTMLOptionElement() {
   installHTMLOptionElementConstructor();
-  for (const [name, entry] of booleanReflectionTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of booleanReflectionPart1Table) accessor(name, entry.get, entry.set);
   definePrototypeGetter(HTMLOptionElement.prototype, "form", form);
   accessor("label", label, setLabel);
+  for (const [name, entry] of booleanReflectionPart2Table) accessor(name, entry.get, entry.set);
   accessor("selected", selected, setSelected);
   accessor("value", value, setValue);
   accessor("text", text, setText);

@@ -11,14 +11,18 @@ import {
   installHTMLFrameElementConstructor,
 } from "../api/dom/html-frame-element-constructor.js";
 import { noResize, setNoResize } from "../api/dom/html-frame-element-no-resize-property.js";
-import { frameStringPropertyTable } from "../api/dom/frame-string-property-members.js";
+import {
+  frameStringPropertyPart1Table,
+  frameStringPropertyPart2Table,
+} from "../api/dom/frame-string-property-members.js";
 
 export function installHTMLFrameElement() {
   installHTMLFrameElementConstructor();
-  for (const [name, entry] of frameStringPropertyTable) accessor(name, entry.get, entry.set);
+  for (const [name, entry] of frameStringPropertyPart1Table) accessor(name, entry.get, entry.set);
   accessor("noResize", noResize, setNoResize);
   definePrototypeGetter(HTMLFrameElement.prototype, "contentDocument", contentDocument);
   definePrototypeGetter(HTMLFrameElement.prototype, "contentWindow", contentWindow);
+  for (const [name, entry] of frameStringPropertyPart2Table) accessor(name, entry.get, entry.set);
   defineConstructorBacklink(HTMLFrameElement.prototype, HTMLFrameElement);
   defineToStringTag(HTMLFrameElement.prototype, "HTMLFrameElement");
 }

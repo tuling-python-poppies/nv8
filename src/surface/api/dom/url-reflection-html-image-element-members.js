@@ -2,14 +2,28 @@
 
 import { urlReflection } from "./html-reflection.js";
 
-const URL_REFLECTION_TABLE_ROWS = [
+const URL_REFLECTION_PART1_TABLE_ROWS = [
   ["src", "HTMLImageElement", "src", "src"],
-  ["lowsrc", "HTMLImageElement", "lowsrc", "lowsrc"],
-  ["longDesc", "HTMLImageElement", "longDesc", "longdesc"],
 ];
 
-export const urlReflectionTable = URL_REFLECTION_TABLE_ROWS.map(
+export const urlReflectionPart1Table = URL_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, urlReflection(...args)],
 );
 
-export const src = new Map([...urlReflectionTable]).get("src").get;
+const URL_REFLECTION_PART2_TABLE_ROWS = [
+  ["lowsrc", "HTMLImageElement", "lowsrc", "lowsrc"],
+];
+
+export const urlReflectionPart2Table = URL_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, urlReflection(...args)],
+);
+
+const URL_REFLECTION_PART3_TABLE_ROWS = [
+  ["longDesc", "HTMLImageElement", "longDesc", "longdesc"],
+];
+
+export const urlReflectionPart3Table = URL_REFLECTION_PART3_TABLE_ROWS.map(
+  ([name, ...args]) => [name, urlReflection(...args)],
+);
+
+export const src = new Map([...urlReflectionPart1Table, ...urlReflectionPart2Table, ...urlReflectionPart3Table]).get("src").get;

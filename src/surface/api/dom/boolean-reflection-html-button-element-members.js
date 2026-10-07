@@ -2,12 +2,18 @@
 
 import { booleanReflection } from "./html-reflection.js";
 
-const BOOLEAN_REFLECTION_TABLE_ROWS = [
+const BOOLEAN_REFLECTION_PART1_TABLE_ROWS = [
   ["disabled", "HTMLButtonElement", "disabled", "disabled"],
-  ["formNoValidate", "HTMLButtonElement", "formNoValidate", "formnovalidate"],
 ];
 
-export const booleanReflectionTable = BOOLEAN_REFLECTION_TABLE_ROWS.map(
+export const booleanReflectionPart1Table = BOOLEAN_REFLECTION_PART1_TABLE_ROWS.map(
   ([name, ...args]) => [name, booleanReflection(...args)],
 );
 
+const BOOLEAN_REFLECTION_PART2_TABLE_ROWS = [
+  ["formNoValidate", "HTMLButtonElement", "formNoValidate", "formnovalidate"],
+];
+
+export const booleanReflectionPart2Table = BOOLEAN_REFLECTION_PART2_TABLE_ROWS.map(
+  ([name, ...args]) => [name, booleanReflection(...args)],
+);

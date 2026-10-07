@@ -3,11 +3,10 @@
 import { unsignedReflection } from "./html-reflection.js";
 
 const UNSIGNED_REFLECTION_TABLE_ROWS = [
-  ["height", "HTMLSourceElement", "height", "height"],
   ["width", "HTMLSourceElement", "width", "width"],
+  ["height", "HTMLSourceElement", "height", "height"],
 ];
 
 export const unsignedReflectionTable = UNSIGNED_REFLECTION_TABLE_ROWS.map(
   ([name, ...args]) => [name, unsignedReflection(...args)],
 );
-

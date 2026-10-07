@@ -10,4 +10,3 @@ const VIDEO_HANDLER_PROPERTY_TABLE_ROWS = [
 export const videoHandlerPropertyTable = VIDEO_HANDLER_PROPERTY_TABLE_ROWS.map(
   ([name, ...args]) => [name, videoHandlerProperty(...args)],
 );
-
