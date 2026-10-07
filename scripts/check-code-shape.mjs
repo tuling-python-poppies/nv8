@@ -14,6 +14,9 @@
  * 4. `for (const [name, entry] of xxxTable)` 里的 xxxTable 在本文件里没有绑定
  *    ——运行时才 ReferenceError，`node --check` 与基线都发现不了
  *
+ * 5. 同一个函数不能重复遍历同一张 `*Table` —— 成员表必须按连续安装段拆分，
+ *    否则会重复创建 wrapper 并改变安装阶段语义。
+ *
  * 用法：`node scripts/check-code-shape.mjs`（不一致时非零退出）
  */
 
@@ -22,7 +25,12 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { countIdleLoops, findIndexedLiterals, maskSource } from './source-shape.mjs';
+import {
+  countIdleLoops,
+  findIndexedLiterals,
+  maskSource,
+  matchBracket,
+} from './source-shape.mjs';
 import { existsSync } from 'node:fs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -82,12 +90,46 @@ export function lexicalBindings(masked) {
   return { hasBinding };
 }
 
+export function repeatedTableLoops(masked) {
+  const bodies = [];
+  for (const match of masked.matchAll(/\bfunction\b/g)) {
+    const openParen = masked.indexOf('(', match.index + match[0].length);
+    if (openParen === -1) continue;
+    const closeParen = matchBracket(masked, openParen, '(', ')');
+    if (closeParen === -1) continue;
+    let openBrace = closeParen + 1;
+    while (/\s/.test(masked[openBrace] ?? '')) openBrace += 1;
+    if (masked[openBrace] !== '{') continue;
+    const closeBrace = matchBracket(masked, openBrace);
+    if (closeBrace !== -1) bodies.push({ from: openBrace, to: closeBrace });
+  }
+  for (const match of masked.matchAll(/=>\s*\{/g)) {
+    const openBrace = masked.indexOf('{', match.index);
+    const closeBrace = matchBracket(masked, openBrace);
+    if (closeBrace !== -1) bodies.push({ from: openBrace, to: closeBrace });
+  }
+
+  const counts = new Map();
+  for (const match of masked.matchAll(/of\s+((?:[\w$]+\.)?[\w$]*Table)\s*\)/g)) {
+    const body = bodies
+      .filter(({ from, to }) => from < match.index && match.index < to)
+      .sort((a, b) => (a.to - a.from) - (b.to - b.from))[0];
+    if (body === undefined) continue;
+    const key = `${body.from}:${body.to}:${match[1]}`;
+    const current = counts.get(key) ?? { table: match[1], count: 0, index: match.index };
+    current.count += 1;
+    counts.set(key, current);
+  }
+  return [...counts.values()].filter((entry) => entry.count > 1);
+}
+
 async function main() {
   const files = await collectFiles(SRC);
   const idleLoops = [];
   const indexedLiterals = [];
   const danglingImports = [];
   const unboundTables = [];
+  const repeatedTables = [];
 
   for (const file of files) {
     const original = await readFile(file, 'utf8');
@@ -96,6 +138,11 @@ async function main() {
     if (loops > 0) idleLoops.push({ file, count: loops });
     const indexed = findIndexedLiterals(masked);
     if (indexed.length > 0) indexedLiterals.push({ file, count: indexed.length });
+
+    const repeated = repeatedTableLoops(masked);
+    for (const entry of repeated) {
+      repeatedTables.push({ file, ...entry });
+    }
 
     // 规则 3：相对 import / re-export 的目标必须存在（ESM 链接期才报，静态检查看不见）。
     // 必须在**原文**上找：挖空后的文本把字符串内容抹掉了，路径本身就没法看见了。
@@ -156,9 +203,23 @@ async function main() {
     }
   }
 
+  if (repeatedTables.length > 0) {
+    failed = true;
+    console.error(`\n同一函数重复遍历同一成员表：${repeatedTables.length} 处`);
+    for (const entry of repeatedTables.slice(0, REPORT_LIMIT)) {
+      const line = entry.file.slice(0, entry.index).split('\n').length;
+      console.error(`  ${path.relative(ROOT, entry.file)}:${line}  ${entry.table}（${entry.count} 次）`);
+    }
+  }
+
   if (failed) {
-    console.error('\n把重复的数组字面量提成 const，把 do{…}while(false) 还原成普通语句或循环。');
-    console.error('批量还原：node scripts/deflatten-install-surface.mjs --write');
+    if (idleLoops.length > 0 || indexedLiterals.length > 0) {
+      console.error('\n把重复的数组字面量提成 const，把 do{…}while(false) 还原成普通语句或循环。');
+      console.error('批量还原：node scripts/deflatten-install-surface.mjs --write');
+    }
+    if (repeatedTables.length > 0) {
+      console.error('同一安装函数中的同一成员表只能遍历一次；需要分段时请拆成 Part<N>Table。');
+    }
     process.exit(1);
   }
 

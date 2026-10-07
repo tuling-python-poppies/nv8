@@ -15,18 +15,21 @@ import {
 import { fontBoundingBoxAscent } from "../api/canvas/text-metrics-font-bounding-box-ascent-getter.js";
 import { fontBoundingBoxDescent } from "../api/canvas/text-metrics-font-bounding-box-descent-getter.js";
 import { ideographicBaseline } from "../api/canvas/text-metrics-ideographic-baseline-getter.js";
-import { textMetricsNumberGetterTable } from "../api/canvas/text-metrics-number-getter-members.js";
+import {
+  textMetricsNumberGetterPart1Table,
+  textMetricsNumberGetterPart2Table,
+} from "../api/canvas/text-metrics-number-getter-members.js";
 
 export function installTextMetrics() {
   installTextMetricsConstructor();
-  for (const [name, entry] of textMetricsNumberGetterTable) getter(name, entry);
+  for (const [name, entry] of textMetricsNumberGetterPart1Table) getter(name, entry);
   getter("actualBoundingBoxLeft", actualBoundingBoxLeft);
   getter("actualBoundingBoxRight", actualBoundingBoxRight);
   getter("fontBoundingBoxAscent", fontBoundingBoxAscent);
   getter("fontBoundingBoxDescent", fontBoundingBoxDescent);
   getter("actualBoundingBoxAscent", actualBoundingBoxAscent);
   getter("actualBoundingBoxDescent", actualBoundingBoxDescent);
-  for (const [name, entry] of textMetricsNumberGetterTable) getter(name, entry);
+  for (const [name, entry] of textMetricsNumberGetterPart2Table) getter(name, entry);
   getter("alphabeticBaseline", alphabeticBaseline);
   getter("ideographicBaseline", ideographicBaseline);
   defineConstructorBacklink(TextMetrics.prototype, TextMetrics);

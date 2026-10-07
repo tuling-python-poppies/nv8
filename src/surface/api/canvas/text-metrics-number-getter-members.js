@@ -2,11 +2,18 @@
 
 import { textMetricsNumberGetter } from "./text-metrics-number-getter.js";
 
-const TEXT_METRICS_NUMBER_GETTER_TABLE_ROWS = [
-  ["hangingBaseline"],
+const TEXT_METRICS_NUMBER_GETTER_PART1_TABLE_ROWS = [
   ["width"],
 ];
 
-export const textMetricsNumberGetterTable = TEXT_METRICS_NUMBER_GETTER_TABLE_ROWS.map(
+export const textMetricsNumberGetterPart1Table = TEXT_METRICS_NUMBER_GETTER_PART1_TABLE_ROWS.map(
+  ([name, ...args]) => [name, textMetricsNumberGetter(name, ...args)],
+);
+
+const TEXT_METRICS_NUMBER_GETTER_PART2_TABLE_ROWS = [
+  ["hangingBaseline"],
+];
+
+export const textMetricsNumberGetterPart2Table = TEXT_METRICS_NUMBER_GETTER_PART2_TABLE_ROWS.map(
   ([name, ...args]) => [name, textMetricsNumberGetter(name, ...args)],
 );

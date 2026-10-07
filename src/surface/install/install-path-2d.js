@@ -11,17 +11,21 @@ import {
   installPath2DConstructor,
 } from "../api/canvas/path-2d-constructor.js";
 import { ellipse } from "../api/canvas/path-2d-ellipse.js";
-import { pathCommandTable } from "../api/canvas/path-command-members.js";
+import {
+  pathCommandPart1Table,
+  pathCommandPart2Table,
+  pathCommandPart3Table,
+} from "../api/canvas/path-command-members.js";
 
 export function installPath2D() {
   installPath2DConstructor();
   method("addPath", addPath);
-  for (const [name, entry] of pathCommandTable) method(name, entry);
+  for (const [name, entry] of pathCommandPart1Table) method(name, entry);
   method("arc", arc);
   method("arcTo", arcTo);
-  for (const [name, entry] of pathCommandTable) method(name, entry);
+  for (const [name, entry] of pathCommandPart2Table) method(name, entry);
   method("ellipse", ellipse);
-  for (const [name, entry] of pathCommandTable) method(name, entry);
+  for (const [name, entry] of pathCommandPart3Table) method(name, entry);
   defineConstructorBacklink(Path2D.prototype, Path2D);
   defineToStringTag(Path2D.prototype, "Path2D");
 }
