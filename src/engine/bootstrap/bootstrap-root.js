@@ -643,6 +643,9 @@ import {
   installHTMLUserMediaElement,
 } from "../../surface/install/install-html-user-media-element.js";
 import {
+  installHTMLCaptureElements,
+} from "../../surface/install/install-html-capture-elements.js";
+import {
   installFencedFrameConfig,
 } from "../../surface/install/install-fenced-frame-config.js";
 import {
@@ -953,7 +956,7 @@ export function bootstrapRoot(
   configureMessagePortRegistry(messagePortRegistry);
   installNativeFunctionToString();
   installErrorStackGuard(browserMajorVersion >= 151);
-  installModernBuiltins();
+  installModernBuiltins(browserMajorVersion);
   installDateProfile();
   installIntlV8BreakIterator(browserMajorVersion >= 151);
   configureTrace(traceEnabled, maxTraceEntries);
@@ -1103,7 +1106,7 @@ export function bootstrapRoot(
   /** Element / HTML 元素构造器。 */
   function stageHtmlSurfaceInstalls() {
     installElement();
-    installHTMLElement();
+    installHTMLElement(browserMajorVersion);
     installHTMLUnknownElement();
     installHTMLHtmlElement();
     installHTMLHeadElement();
@@ -1114,10 +1117,11 @@ export function bootstrapRoot(
     installHTMLMarqueeElement();
     installHTMLGeolocationElement();
     if (browserMajorVersion >= 151) installHTMLUserMediaElement();
-    installFencedFrameConfig();
+    if (browserMajorVersion >= 154) installHTMLCaptureElements();
+    installFencedFrameConfig(browserMajorVersion >= 154);
     installHTMLFencedFrameElement();
     installHTMLFrameElement();
-    installHTMLIFrameElement();
+    installHTMLIFrameElement(browserMajorVersion >= 154);
     installTextTrackCue();
     installVTTCue();
     installTextTrackCueList();
@@ -1181,7 +1185,7 @@ export function bootstrapRoot(
     installHTMLSpanElement();
     installHTMLParagraphElement();
     installHTMLHeadingElement();
-    installHTMLImageElement();
+    installHTMLImageElement(browserMajorVersion >= 154);
     installImageConstructor();
     installHTMLScriptElement();
     installHTMLPictureElement();
@@ -1241,7 +1245,7 @@ export function bootstrapRoot(
     installSVGCircleElement();
     installSVGPathElement();
     installSVGSVGElement();
-    installReconstructedSVGFactories();
+    installReconstructedSVGFactories(browserMajorVersion);
     installHTMLAllCollection();
     installHTMLSlotElement();
     installShadowRoot();
@@ -1255,7 +1259,7 @@ export function bootstrapRoot(
     installHTMLDocument();
     installXMLDocument();
     installDOMImplementation();
-    installDocument();
+    installDocument(browserMajorVersion >= 154);
     installAbstractRange(browserMajorVersion >= 152);
     if (browserMajorVersion >= 152) installEdge152Ranges();
     installRange(browserMajorVersion >= 152);
@@ -1272,7 +1276,7 @@ export function bootstrapRoot(
 
   /** 媒体、设备、权限与长尾平台 API。 */
   function stagePlatformSurfaceInstalls() {
-    installAudio();
+    installAudio(browserMajorVersion);
     installMediaSource();
     installCodecs();
     installSpeech();
@@ -1309,12 +1313,12 @@ export function bootstrapRoot(
     installPressure();
     installServiceWorkerManagers();
     installBackgroundFetch();
-    installSharedStorage();
+    installSharedStorage(browserMajorVersion);
     installTimelineTrigger();
     installWebTransport();
     installScreenDetails();
     installLocalLanguage();
-    installLocalFonts({ exposeGlobal: browserMajorVersion >= 151 });
+    installLocalFonts({ exposeGlobal: browserMajorVersion >= 151, browserMajorVersion });
     installUserInteraction();
     installIdentityServices();
     installLaunchHandling();
@@ -1388,7 +1392,7 @@ export function bootstrapRoot(
     configureDocument(pageReferrer, pageContentType);
 
     parsePageHTML(pageHtml);
-    installEdgeStaticFunctions();
+    installEdgeStaticFunctions(browserMajorVersion);
     installEdgeAccessorSemantics();
     finalizePrototypeSurfaceOrder(browserMajorVersion);
     finalizeWindowSurfaceOrder(browserMajorVersion);

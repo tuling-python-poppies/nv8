@@ -1,14 +1,37 @@
-/**
- * 真实 Edge 151 的 CSS 属性名清单（745 个），顺序即
- * `Object.getOwnPropertyNames(div.style)` 的真实枚举顺序。
- *
- * 由 `scripts/collect-edge-css-properties.mjs` 采集，
- * fixture 在 `fixtures/fingerprint/edge-css-properties.json`。
- * 这里生成成模块是因为 Realm 内没有文件系统。
- *
- * 顺序不要排序——枚举顺序本身就是可观测的。
- */
-export const CSS_PROPERTY_NAMES = Object.freeze([
+{
+ "collectedAt": "2026-10-07T10:32:42.849Z",
+ "count": 748,
+ "descriptorSample": {
+  "accentColor": {
+   "getter": false,
+   "setter": false,
+   "enumerable": true,
+   "configurable": true,
+   "unsetValue": "\"\""
+  },
+  "additiveSymbols": {
+   "getter": false,
+   "setter": false,
+   "enumerable": true,
+   "configurable": true,
+   "unsetValue": "\"\""
+  },
+  "alignContent": {
+   "getter": false,
+   "setter": false,
+   "enumerable": true,
+   "configurable": true,
+   "unsetValue": "\"\""
+  },
+  "alignItems": {
+   "getter": false,
+   "setter": false,
+   "enumerable": true,
+   "configurable": true,
+   "unsetValue": "\"\""
+  }
+ },
+ "names": [
   "accentColor",
   "additiveSymbols",
   "alignContent",
@@ -756,5 +779,6 @@ export const CSS_PROPERTY_NAMES = Object.freeze([
   "x",
   "y",
   "zIndex",
-  "zoom",
-]);
+  "zoom"
+ ]
+}

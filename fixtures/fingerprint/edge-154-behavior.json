@@ -1,0 +1,888 @@
+{
+  "collectedAt": "2026-10-07T10:32:26.447Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
+  "probeCount": 211,
+  "results": {
+    "toString/addEventListener": {
+      "threw": false,
+      "value": "function addEventListener() { [native code] }"
+    },
+    "toString/documentGetElementById": {
+      "threw": false,
+      "value": "function getElementById() { [native code] }"
+    },
+    "toString/getter-document-readyState": {
+      "threw": false,
+      "value": "function get readyState() { [native code] }"
+    },
+    "toString/Event-constructor": {
+      "threw": false,
+      "value": "function Event() { [native code] }"
+    },
+    "toString/functionToString-itself": {
+      "threw": false,
+      "value": "function toString() { [native code] }"
+    },
+    "toString/name-of-getter": {
+      "threw": false,
+      "value": "get readyState"
+    },
+    "toString/length-of-addEventListener": {
+      "threw": false,
+      "value": "2"
+    },
+    "illegal/document-readyState-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/node-nodeType-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/addEventListener-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/event-type-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/blob-size-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "illegal/getElementById-on-object": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "args/addEventListener-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 0 present."
+    },
+    "args/addEventListener-one": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only 1 present."
+    },
+    "args/getElementById-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'getElementById' on 'Document': 1 argument required, but only 0 present."
+    },
+    "args/createElement-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'createElement' on 'Document': 1 argument required, but only 0 present."
+    },
+    "args/dispatchEvent-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'dispatchEvent' on 'EventTarget': 1 argument required, but only 0 present."
+    },
+    "args/dispatchEvent-wrong-type": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'."
+    },
+    "args/setAttribute-one": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'setAttribute' on 'Element': 2 arguments required, but only 1 present."
+    },
+    "ctor/Event-without-new": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Event': Please use the 'new' operator, this DOM object constructor cannot be called as a function."
+    },
+    "ctor/Event-no-args": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Event': 1 argument required, but only 0 present."
+    },
+    "ctor/Blob-without-new": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Blob': Please use the 'new' operator, this DOM object constructor cannot be called as a function."
+    },
+    "ctor/Node-illegal": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Node': Illegal constructor"
+    },
+    "ctor/Document-allowed": {
+      "threw": false,
+      "value": "true"
+    },
+    "args/querySelector-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'querySelector' on 'Document': 1 argument required, but only 0 present."
+    },
+    "args/appendChild-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'appendChild' on 'Node': 1 argument required, but only 0 present."
+    },
+    "args/insertBefore-one": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'insertBefore' on 'Node': 2 arguments required, but only 1 present."
+    },
+    "args/getAttribute-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'getAttribute' on 'Element': 1 argument required, but only 0 present."
+    },
+    "args/attachShadow-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'attachShadow' on 'Element': 1 argument required, but only 0 present."
+    },
+    "args/urlSearchParams-get-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'get' on 'URLSearchParams': 1 argument required, but only 0 present."
+    },
+    "args/headers-forEach-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'forEach' on 'Headers': 1 argument required, but only 0 present."
+    },
+    "args/domTokenList-forEach-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "undefined is not a function"
+    },
+    "args/atob-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'atob' on 'Window': 1 argument required, but only 0 present."
+    },
+    "args/btoa-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'btoa' on 'Window': 1 argument required, but only 0 present."
+    },
+    "args/structuredClone-zero": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to execute 'structuredClone' on 'Window': 1 argument required, but only 0 present."
+    },
+    "args/scrollTo-zero-allowed": {
+      "threw": false,
+      "value": "no-throw"
+    },
+    "arity/addEventListener": {
+      "threw": false,
+      "value": "2"
+    },
+    "arity/insertBefore": {
+      "threw": false,
+      "value": "2"
+    },
+    "arity/querySelector": {
+      "threw": false,
+      "value": "1"
+    },
+    "arity/Event-constructor": {
+      "threw": false,
+      "value": "1"
+    },
+    "arity/Blob-constructor": {
+      "threw": false,
+      "value": "0"
+    },
+    "arity/atob": {
+      "threw": false,
+      "value": "1"
+    },
+    "arity/nonConstructible-PictureInPictureEvent": {
+      "threw": false,
+      "value": "2"
+    },
+    "stack/error-first-line": {
+      "threw": false,
+      "value": "Error: probe"
+    },
+    "stack/typeerror-name": {
+      "threw": false,
+      "value": "TypeError"
+    },
+    "stack/domexception-name": {
+      "threw": false,
+      "value": "no-throw"
+    },
+    "stack/error-toString": {
+      "threw": false,
+      "value": "TypeError: probe"
+    },
+    "iter/nodeList-iterable": {
+      "threw": false,
+      "value": "function"
+    },
+    "iter/nodeList-tag": {
+      "threw": false,
+      "value": "[object NodeList]"
+    },
+    "iter/htmlCollection-not-iterable": {
+      "threw": false,
+      "value": "function"
+    },
+    "iter/classList-tag": {
+      "threw": false,
+      "value": "[object DOMTokenList]"
+    },
+    "iter/nodeList-entries-type": {
+      "threw": false,
+      "value": "function"
+    },
+    "iter/urlSearchParams-toStringTag": {
+      "threw": false,
+      "value": "[object URLSearchParams]"
+    },
+    "worker/constructor-no-args": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Worker': 1 argument required, but only 0 present."
+    },
+    "worker/invalid-type": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Worker': Failed to read the 'type' property from 'WorkerOptions': The provided value 'classic-module' is not a valid enum value of type WorkerType."
+    },
+    "worker/invalid-credentials": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'Worker': Failed to read the 'credentials' property from 'WorkerOptions': The provided value 'same-site' is not a valid enum value of type RequestCredentials."
+    },
+    "worker/unsupported-scheme": {
+      "threw": false,
+      "value": "SecurityError"
+    },
+    "worker/cross-origin": {
+      "threw": false,
+      "value": "SecurityError"
+    },
+    "worker/instance-tag": {
+      "threw": false,
+      "value": "[object Worker]"
+    },
+    "worker/terminate-idempotent": {
+      "threw": false,
+      "value": "undefined|undefined"
+    },
+    "worker/terminate-illegal-receiver": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "cssom/div-display": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/span-display": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/div-position": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/div-visibility": {
+      "threw": false,
+      "value": ""
+    },
+    "cssom/computed-tag": {
+      "threw": false,
+      "value": "[object CSSStyleDeclaration]"
+    },
+    "cssom/inline-style-tag": {
+      "threw": false,
+      "value": "[object CSSStyleDeclaration]"
+    },
+    "cssom/inline-style-length-empty": {
+      "threw": false,
+      "value": "0"
+    },
+    "cssom/inline-style-roundtrip": {
+      "threw": false,
+      "value": "color: red;"
+    },
+    "cssom/setProperty-then-item": {
+      "threw": false,
+      "value": "z-index=3"
+    },
+    "cssom/computed-readonly-setter": {
+      "threw": true,
+      "name": "NoModificationAllowedError",
+      "message": "Failed to set a named property 'color' on 'CSSStyleDeclaration': These styles are computed, and therefore the 'color' property is read-only."
+    },
+    "cssom/attached-div-display": {
+      "threw": false,
+      "value": "block"
+    },
+    "cssom/attached-span-display": {
+      "threw": false,
+      "value": "inline"
+    },
+    "cssom/attached-li-display": {
+      "threw": false,
+      "value": "list-item"
+    },
+    "cssom/attached-script-display": {
+      "threw": false,
+      "value": "none"
+    },
+    "cssom/attached-default-color": {
+      "threw": false,
+      "value": "rgb(0, 0, 0)"
+    },
+    "cssom/attached-default-background": {
+      "threw": false,
+      "value": "rgba(0, 0, 0, 0)"
+    },
+    "cssom/attached-button-background": {
+      "threw": false,
+      "value": "rgb(240, 240, 240)"
+    },
+    "cssom/inline-color-serialized": {
+      "threw": false,
+      "value": "rgb(255, 0, 0)"
+    },
+    "cssom/inline-hex-color-serialized": {
+      "threw": false,
+      "value": "rgb(0, 255, 136)"
+    },
+    "cssom/inline-rgba-color-serialized": {
+      "threw": false,
+      "value": "rgba(1, 2, 3, 0.5)"
+    },
+    "cssom/attached-p-margin": {
+      "threw": false,
+      "value": "16px"
+    },
+    "cssom/attached-table-display": {
+      "threw": false,
+      "value": "table|border-box"
+    },
+    "canvas/context-tag": {
+      "threw": false,
+      "value": "[object CanvasRenderingContext2D]"
+    },
+    "canvas/default-size": {
+      "threw": false,
+      "value": "300x150"
+    },
+    "canvas/dataurl-prefix": {
+      "threw": false,
+      "value": "data:image/png;base64,"
+    },
+    "canvas/dataurl-unsupported-type": {
+      "threw": false,
+      "value": "data:image/png;base64,"
+    },
+    "canvas/textmetrics-tag": {
+      "threw": false,
+      "value": "[object TextMetrics]"
+    },
+    "canvas/textmetrics-members": {
+      "threw": false,
+      "value": "actualBoundingBoxAscent,actualBoundingBoxDescent,actualBoundingBoxLeft,actualBoundingBoxRight,alphabeticBaseline,constructor,fontBoundingBoxAscent,fontBoundingBoxDescent,hangingBaseline,ideographicBaseline,width"
+    },
+    "canvas/unknown-context": {
+      "threw": false,
+      "value": "null"
+    },
+    "canvas/default-fillStyle": {
+      "threw": false,
+      "value": "#000000"
+    },
+    "canvas/default-font": {
+      "threw": false,
+      "value": "10px sans-serif"
+    },
+    "font/invalid-font-keeps-default": {
+      "threw": false,
+      "value": "10px sans-serif|10px sans-serif"
+    },
+    "font/font-shorthand-roundtrip": {
+      "threw": false,
+      "value": "italic bold 12px serif"
+    },
+    "font/empty-text-metrics": {
+      "threw": false,
+      "value": "0|0|0|true|true|[object TextMetrics]"
+    },
+    "font/metrics-finite-shape": {
+      "threw": false,
+      "value": "true|true|0"
+    },
+    "font/monospace-width-linearity": {
+      "threw": false,
+      "value": "true|true"
+    },
+    "dom/range-initial-state": {
+      "threw": false,
+      "value": "true|true|0|0|true|true|"
+    },
+    "dom/range-select-node-contents": {
+      "threw": false,
+      "value": "true|true|0|3|alphaomega|alphaomega|3"
+    },
+    "dom/range-text-boundaries": {
+      "threw": false,
+      "value": "bcd|true|true|1|4|false"
+    },
+    "dom/range-invalid-boundary": {
+      "threw": false,
+      "value": "IndexSizeError: Failed to execute 'setStart' on 'Range': The offset 4 is larger than the node's length (3)."
+    },
+    "dom/selection-initial-state": {
+      "threw": false,
+      "value": "[object Selection]|0|None|true|true|true|"
+    },
+    "storage/empty-state-and-tag": {
+      "threw": false,
+      "value": "[object Storage]|0||"
+    },
+    "storage/string-coercion-and-lifecycle": {
+      "threw": false,
+      "value": "null|undefined|1||name"
+    },
+    "storage/clear-and-illegal-receiver": {
+      "threw": false,
+      "value": "0|null|TypeError:Illegal invocation"
+    },
+    "storage/missing-argument-error": {
+      "threw": false,
+      "value": "TypeError:Failed to execute 'setItem' on 'Storage': 2 arguments required, but only 1 present."
+    },
+    "fetch/request-defaults": {
+      "threw": false,
+      "value": "[object Request]|GET|/api/items|cors|same-origin|follow|about:client|false|true"
+    },
+    "fetch/request-body-normalization": {
+      "threw": false,
+      "value": "POST|text/plain;charset=UTF-8|true|false"
+    },
+    "fetch/response-defaults": {
+      "threw": false,
+      "value": "[object Response]|200|true|default||false|true|false"
+    },
+    "fetch/get-body-rejected": {
+      "threw": false,
+      "value": "TypeError:Failed to construct 'Request': Request with GET/HEAD method cannot have body."
+    },
+    "crypto/object-shape": {
+      "threw": false,
+      "value": "[object Crypto]|[object SubtleCrypto]|true|function|function"
+    },
+    "crypto/random-values-identity": {
+      "threw": false,
+      "value": "true|8|true"
+    },
+    "crypto/random-values-type-error": {
+      "threw": false,
+      "value": "TypeMismatchError:Failed to execute 'getRandomValues' on 'Crypto': The provided ArrayBufferView is of type 'DataView', which is not an integer array type."
+    },
+    "crypto/random-values-limit-error": {
+      "threw": false,
+      "value": "QuotaExceededError:Failed to execute 'getRandomValues' on 'Crypto': The ArrayBufferView's byte length (65537) exceeds the number of bytes of entropy available via this API (65536)."
+    },
+    "xhr/initial-state": {
+      "threw": false,
+      "value": "[object XMLHttpRequest]|0|0||||false|0|[object XMLHttpRequestUpload]"
+    },
+    "xhr/open-normalizes-request": {
+      "threw": false,
+      "value": "1|||1"
+    },
+    "xhr/send-before-open-error": {
+      "threw": false,
+      "value": "InvalidStateError:Failed to execute 'send' on 'XMLHttpRequest': The object's state must be OPENED."
+    },
+    "xhr/header-before-open-error": {
+      "threw": false,
+      "value": "InvalidStateError:Failed to execute 'setRequestHeader' on 'XMLHttpRequest': The object's state must be OPENED."
+    },
+    "websocket/initial-state": {
+      "threw": false,
+      "value": "[object WebSocket]|ws://example.test/chat|0|||0|blob"
+    },
+    "websocket/send-before-open-error": {
+      "threw": false,
+      "value": "InvalidStateError:Failed to execute 'send' on 'WebSocket': Still in CONNECTING state."
+    },
+    "websocket/https-scheme-normalization": {
+      "threw": false,
+      "value": "wss://example.test/chat"
+    },
+    "websocket/invalid-close-code-error": {
+      "threw": false,
+      "value": "InvalidAccessError:Failed to execute 'close' on 'WebSocket': The close code must be either 1000, or between 3000 and 4999. 1001 is neither."
+    },
+    "indexeddb/factory-shape": {
+      "threw": false,
+      "value": "[object IDBFactory]|true|function|function|function|[object Function]"
+    },
+    "indexeddb/key-range-bound": {
+      "threw": false,
+      "value": "[object IDBKeyRange]|1|10|true|false|false|true"
+    },
+    "indexeddb/key-range-only": {
+      "threw": false,
+      "value": "key|key|false|false|true"
+    },
+    "indexeddb/invalid-key-error": {
+      "threw": false,
+      "value": "DataError:Failed to execute 'cmp' on 'IDBFactory': The parameter is not a valid key."
+    },
+    "audio/offline-context-shape": {
+      "threw": false,
+      "value": "44100|44100|1|1|explicit|speakers|suspended|[object OfflineAudioContext]"
+    },
+    "audio/offline-context-invalid-length": {
+      "threw": false,
+      "value": "NotSupportedError: Failed to construct 'OfflineAudioContext': The number of frames provided (0) is less than the minimum bound (1)."
+    },
+    "audio/offline-context-invalid-rate": {
+      "threw": false,
+      "value": "NotSupportedError: Failed to construct 'OfflineAudioContext': The sampleRate provided (1) is outside the range [3000, 768000]."
+    },
+    "audio/offline-context-arity": {
+      "threw": false,
+      "value": "TypeError: Failed to construct 'OfflineAudioContext': The provided value is not of type 'OfflineAudioContextOptions'."
+    },
+    "audio/oscillator-defaults": {
+      "threw": false,
+      "value": "sine|440|-22050|22050|0|-153600|153600|0|1|[object OscillatorNode]|[object AudioParam]"
+    },
+    "audio/analyser-defaults": {
+      "threw": false,
+      "value": "2048|1024|-100|-30|0.8"
+    },
+    "audio/analyser-invalid-fftsize": {
+      "threw": false,
+      "value": "IndexSizeError: Failed to set the 'fftSize' property on 'AnalyserNode': The value provided (100) is not a power of two."
+    },
+    "audio/compressor-defaults": {
+      "threw": false,
+      "value": "-24|30|12|0.003000000026077032|0.25|0"
+    },
+    "audio/gain-defaults": {
+      "threw": false,
+      "value": "1|-3.4028234663852886e+38|3.4028234663852886e+38|2|max"
+    },
+    "audio/buffer-shape": {
+      "threw": false,
+      "value": "2|100|22050|0.0045351473922902496|100|[object AudioBuffer]|[object Float32Array]"
+    },
+    "audio/buffer-invalid-channel": {
+      "threw": false,
+      "value": "IndexSizeError: Failed to execute 'getChannelData' on 'AudioBuffer': channel index (5) exceeds number of channels (1)"
+    },
+    "audio/cross-context-connect": {
+      "threw": false,
+      "value": "InvalidAccessError: Failed to execute 'connect' on 'AudioNode': cannot connect to an AudioNode belonging to a different audio context."
+    },
+    "audio/param-illegal-receiver": {
+      "threw": false,
+      "value": "TypeError: Illegal invocation"
+    },
+    "audio/context-constructor-guard": {
+      "threw": false,
+      "value": "TypeError: Failed to construct 'OfflineAudioContext': Please use the 'new' operator, this DOM object constructor cannot be called as a function."
+    },
+    "intl/namespace-members": {
+      "threw": false,
+      "value": "Collator,DateTimeFormat,DisplayNames,ListFormat,Locale,NumberFormat,PluralRules,RelativeTimeFormat,Segmenter,getCanonicalLocales,supportedValuesOf,v8BreakIterator"
+    },
+    "intl/datetimeformat-resolved-keys": {
+      "threw": false,
+      "value": "calendar,day,locale,month,numberingSystem,timeZone,year"
+    },
+    "intl/numberformat": {
+      "threw": false,
+      "value": "1,234,567.891|1,234,567.891|1.234.567,891|$12.50"
+    },
+    "intl/listformat": {
+      "threw": false,
+      "value": "a, b, and c|a、b和c"
+    },
+    "intl/relativetimeformat": {
+      "threw": false,
+      "value": "1 day ago|1天前"
+    },
+    "intl/collator-order": {
+      "threw": false,
+      "value": "a,A,ä,b,B"
+    },
+    "intl/displaynames": {
+      "threw": false,
+      "value": "China|美国|Chinese (Traditional)"
+    },
+    "intl/pluralrules": {
+      "threw": false,
+      "value": "one|other|other"
+    },
+    "intl/segmenter-resolved": {
+      "threw": false,
+      "value": "zh-CN|word"
+    },
+    "intl/invalid-locale": {
+      "threw": false,
+      "value": "RangeError: Invalid language tag: !!"
+    },
+    "intl/invalid-timezone": {
+      "threw": false,
+      "value": "RangeError: Invalid time zone specified: Not/AZone"
+    },
+    "intl/date-tostring-shape": {
+      "threw": false,
+      "value": "matches=true|headSegments=6"
+    },
+    "intl/date-toutcstring": {
+      "threw": false,
+      "value": "Thu, 01 Jan 1970 00:00:00 GMT|1970-01-01T00:00:00.000Z|1970-01-01T00:00:00.000Z"
+    },
+    "perf/now-type-and-origin": {
+      "threw": false,
+      "value": "number|number|[object Performance]|function"
+    },
+    "perf/now-clamped-to-100us": {
+      "threw": false,
+      "value": "clamped=true|monotonic=true"
+    },
+    "perf/mark-missing-argument": {
+      "threw": false,
+      "value": "TypeError: Failed to execute 'mark' on 'Performance': 1 argument required, but only 0 present."
+    },
+    "perf/measure-unknown-mark": {
+      "threw": false,
+      "value": "SyntaxError: Failed to execute 'measure' on 'Performance': The mark 'nv8-nonexistent-mark' does not exist."
+    },
+    "perf/entry-shape": {
+      "threw": false,
+      "value": "[object PerformanceMark]|mark|nv8-probe|0|1|[object Array]"
+    },
+    "event/phase-order": {
+      "threw": false,
+      "value": "capture:1|target:2|bubble:3"
+    },
+    "event/stopPropagation-blocks-bubble": {
+      "threw": false,
+      "value": "child"
+    },
+    "event/stopImmediatePropagation": {
+      "threw": false,
+      "value": "first"
+    },
+    "event/once-runs-once": {
+      "threw": false,
+      "value": "1"
+    },
+    "event/duplicate-listener-ignored": {
+      "threw": false,
+      "value": "1"
+    },
+    "event/phase-after-dispatch": {
+      "threw": false,
+      "value": "0|null|true"
+    },
+    "event/preventDefault-non-cancelable": {
+      "threw": false,
+      "value": "false"
+    },
+    "event/dispatch-returns-false-when-cancelled": {
+      "threw": false,
+      "value": "false"
+    },
+    "event/redispatch-while-dispatching": {
+      "threw": false,
+      "value": "InvalidStateError"
+    },
+    "realm/identity-bundle": {
+      "threw": false,
+      "value": "[object Window] | [object HTMLDocument] | docMatches=true | arrayDiffers=true | instanceofAcross=false | isArrayForeign=true | foreignInstanceofLocal=false | [object HTMLDivElement] | elementInstanceofLocal=false | elementInstanceofForeign=true | errorInstanceofLocal=false | [object Error] | selfRef=true,true | parentIsUs=true | topMatches=true | frameElementMatches=true | href=about:blank"
+    },
+    "realm/foreign-native-toString": {
+      "threw": false,
+      "value": "function addEventListener() { [native code] }"
+    },
+    "url/malformed-percent": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/malformed-bracket": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/empty-host": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/multiple-colons-in-authority": {
+      "threw": false,
+      "value": "THROWS TypeError"
+    },
+    "url/space-in-host-encoded": {
+      "threw": false,
+      "value": "https://a%20b/"
+    },
+    "url/unknown-scheme-normalization": {
+      "threw": false,
+      "value": "nv8-unknown://x"
+    },
+    "url/scheme-relative": {
+      "threw": false,
+      "value": "https://x/"
+    },
+    "url/valid-passthrough": {
+      "threw": false,
+      "value": "https://ok.test/p?q=1#h"
+    },
+    "tag/window": {
+      "threw": false,
+      "value": "[object Window]"
+    },
+    "tag/document": {
+      "threw": false,
+      "value": "[object HTMLDocument]"
+    },
+    "tag/div": {
+      "threw": false,
+      "value": "[object HTMLDivElement]"
+    },
+    "tag/unknown-element": {
+      "threw": false,
+      "value": "[object HTMLElement]"
+    },
+    "tag/event": {
+      "threw": false,
+      "value": "[object Event]"
+    },
+    "tag/navigator": {
+      "threw": false,
+      "value": "[object Navigator]"
+    },
+    "tag/location": {
+      "threw": false,
+      "value": "[object Location]"
+    },
+    "tag/documentPrototype": {
+      "threw": false,
+      "value": "[object Document]"
+    },
+    "svg/element-namespace-and-tag": {
+      "threw": false,
+      "value": "http://www.w3.org/2000/svg|svg|[object SVGSVGElement]"
+    },
+    "svg/element-interface-shape": {
+      "threw": false,
+      "value": "function|function|true|[object SVGRectElement]"
+    },
+    "svg/viewbox-animated-rect": {
+      "threw": false,
+      "value": "[object SVGAnimatedRect]|[object SVGRect]|0|0|false"
+    },
+    "svg/point-default-and-mutation": {
+      "threw": false,
+      "value": "0|0|3|-4|[object SVGPoint]"
+    },
+    "svg/length-constructor-guard": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Failed to construct 'SVGLength': Illegal constructor"
+    },
+    "observers/mutation-shape": {
+      "threw": false,
+      "value": "[object MutationObserver]|function|function|function"
+    },
+    "observers/mutation-empty-records": {
+      "threw": false,
+      "value": "true|0|[object Array]"
+    },
+    "observers/resize-shape": {
+      "threw": false,
+      "value": "[object ResizeObserver]|function|function|function"
+    },
+    "observers/intersection-shape": {
+      "threw": false,
+      "value": "[object IntersectionObserver]|function|function|function|"
+    },
+    "observers/mutation-illegal-disconnect": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "animations/element-empty-list": {
+      "threw": false,
+      "value": "true|0|[object Array]"
+    },
+    "animations/default-animation-state": {
+      "threw": false,
+      "value": "[object Animation]|idle|false||1"
+    },
+    "animations/prototype-method-shape": {
+      "threw": false,
+      "value": "function|function|function|function|0|0"
+    },
+    "animations/keyframe-effect-defaults": {
+      "threw": false,
+      "value": "[object KeyframeEffect]|auto|0|1|replace"
+    },
+    "animations/animation-illegal-cancel": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "storage/insertion-order-and-removal": {
+      "threw": false,
+      "value": "2|a|b|1|a|"
+    },
+    "storage-property-access-coercion": {
+      "threw": false,
+      "value": "42||true"
+    },
+    "fetch/request-header-normalization": {
+      "threw": false,
+      "value": "POST|value|false|same-origin"
+    },
+    "fetch/response-header-and-clone": {
+      "threw": false,
+      "value": "201|true|value|true|false"
+    },
+    "crypto/random-values-view": {
+      "threw": false,
+      "value": "true|4|2|[object Uint16Array]"
+    },
+    "crypto/random-values-illegal-receiver": {
+      "threw": true,
+      "name": "TypeError",
+      "message": "Illegal invocation"
+    },
+    "xhr/initial-state-deep": {
+      "threw": false,
+      "value": "0||false|0|[object XMLHttpRequest]"
+    },
+    "xhr/response-type-validation": {
+      "threw": false,
+      "value": "no-throw"
+    },
+    "indexedDB/key-order-comparison": {
+      "threw": false,
+      "value": "-1|0|-1"
+    },
+    "indexedDB/key-range-shape": {
+      "threw": false,
+      "value": "1|5|true|false|true"
+    }
+  }
+}

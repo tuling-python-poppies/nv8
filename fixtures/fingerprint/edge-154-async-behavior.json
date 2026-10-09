@@ -1,0 +1,27 @@
+{
+  "collectedAt": "2026-10-07T10:32:27.739Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
+  "probeCount": 5,
+  "results": {
+    "worker/message-roundtrip": {
+      "threw": false,
+      "value": "ready||true"
+    },
+    "worker/terminate-suppresses-message": {
+      "threw": false,
+      "value": "false"
+    },
+    "service-worker/registration-metadata": {
+      "threw": false,
+      "value": "/app/|none|/sw.js|activating|true"
+    },
+    "service-worker/controller-claim": {
+      "threw": false,
+      "value": "true|/sw.js|activated"
+    },
+    "service-worker/message-roundtrip": {
+      "threw": false,
+      "value": "reply|7|true|true"
+    }
+  }
+}

@@ -1,0 +1,323 @@
+{
+  "collectedAt": "2026-10-09T08:58:41.510Z",
+  "browser": "Edg/154.0.4258.62",
+  "results": {
+    "autocorrect": {
+      "attributes": [
+        [
+          null,
+          true
+        ],
+        [
+          "",
+          true
+        ],
+        [
+          "on",
+          true
+        ],
+        [
+          "off",
+          false
+        ],
+        [
+          "ON",
+          true
+        ],
+        [
+          "OFF",
+          false
+        ],
+        [
+          "foo",
+          true
+        ]
+      ],
+      "inherited": true,
+      "assignments": [
+        [
+          "false",
+          false,
+          "off"
+        ],
+        [
+          "true",
+          true,
+          "on"
+        ],
+        [
+          "off",
+          true,
+          "on"
+        ],
+        [
+          "",
+          false,
+          "off"
+        ],
+        [
+          "null",
+          false,
+          "off"
+        ],
+        [
+          "undefined",
+          false,
+          "off"
+        ],
+        [
+          "0",
+          false,
+          "off"
+        ],
+        [
+          "1",
+          true,
+          "on"
+        ]
+      ]
+    },
+    "fonts": {
+      "widths": [
+        [
+          "normal",
+          {
+            "value": "normal"
+          }
+        ],
+        [
+          "expanded",
+          {
+            "value": "expanded"
+          }
+        ],
+        [
+          "condensed",
+          {
+            "value": "condensed"
+          }
+        ],
+        [
+          "50%",
+          {
+            "value": "50%"
+          }
+        ],
+        [
+          "invalid",
+          {
+            "name": "SyntaxError",
+            "message": "Failed to set the 'width' property on 'FontFace': Failed to set 'invalid' as a property value."
+          }
+        ],
+        [
+          "EXpanded",
+          {
+            "value": "expanded"
+          }
+        ],
+        [
+          "75% 125%",
+          {
+            "value": "75% 125%"
+          }
+        ],
+        [
+          "0%",
+          {
+            "value": "0%"
+          }
+        ],
+        [
+          "-1%",
+          {
+            "name": "SyntaxError",
+            "message": "Failed to set the 'width' property on 'FontFace': Failed to set '-1%' as a property value."
+          }
+        ],
+        [
+          "+5.5%",
+          {
+            "value": "5.5%"
+          }
+        ],
+        [
+          "100.00%",
+          {
+            "value": "100%"
+          }
+        ],
+        [
+          "1e2%",
+          {
+            "value": "100%"
+          }
+        ],
+        [
+          "100% 50%",
+          {
+            "value": "100% 50%"
+          }
+        ],
+        [
+          "ultra-expanded",
+          {
+            "value": "ultra-expanded"
+          }
+        ],
+        [
+          "semi-expanded",
+          {
+            "value": "semi-expanded"
+          }
+        ],
+        [
+          "normal condensed",
+          {
+            "name": "SyntaxError",
+            "message": "Failed to set the 'width' property on 'FontFace': Failed to set 'normal condensed' as a property value."
+          }
+        ],
+        [
+          "inherit",
+          {
+            "name": "SyntaxError",
+            "message": "Failed to set the 'width' property on 'FontFace': Failed to set 'inherit' as a property value."
+          }
+        ],
+        [
+          "  Expanded  ",
+          {
+            "value": "expanded"
+          }
+        ]
+      ],
+      "constructors": [
+        [
+          "invalid",
+          "normal",
+          "error"
+        ],
+        [
+          "expanded",
+          "expanded",
+          "unloaded"
+        ],
+        [
+          "75% 125%",
+          "75% 125%",
+          "unloaded"
+        ]
+      ],
+      "alias": [
+        "expanded",
+        "expanded",
+        "condensed",
+        "condensed"
+      ]
+    },
+    "iterator": {
+      "includes": true,
+      "closed": 1,
+      "joined": "a",
+      "nextReads": 1,
+      "valueReads": 1,
+      "abrupt": {
+        "name": "Error",
+        "message": "original"
+      },
+      "returnCalls": 1,
+      "steps": {
+        "join": {
+          "next": {
+            "result": {
+              "name": "Error",
+              "message": "next"
+            },
+            "returns": 0
+          },
+          "done": {
+            "result": {
+              "name": "Error",
+              "message": "done"
+            },
+            "returns": 0
+          },
+          "value": {
+            "result": {
+              "name": "Error",
+              "message": "value"
+            },
+            "returns": 0
+          }
+        },
+        "includes": {
+          "next": {
+            "result": {
+              "name": "Error",
+              "message": "next"
+            },
+            "returns": 0
+          },
+          "done": {
+            "result": {
+              "name": "Error",
+              "message": "done"
+            },
+            "returns": 0
+          },
+          "value": {
+            "result": {
+              "name": "Error",
+              "message": "value"
+            },
+            "returns": 0
+          }
+        }
+      },
+      "separator": {
+        "name": "Error",
+        "message": "separator"
+      },
+      "separatorReturns": 1,
+      "sameValueZero": true,
+      "nullValues": "||1"
+    },
+    "capture": {
+      "camera": {
+        "events": [
+          [
+            "replacement",
+            "track",
+            true
+          ],
+          [
+            "listener"
+          ],
+          [
+            "listener"
+          ]
+        ],
+        "error": null,
+        "track": null
+      },
+      "microphone": {
+        "events": [
+          [
+            "replacement",
+            "track",
+            true
+          ],
+          [
+            "listener"
+          ],
+          [
+            "listener"
+          ]
+        ],
+        "error": null,
+        "track": null
+      }
+    }
+  }
+}

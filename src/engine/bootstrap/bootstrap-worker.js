@@ -252,7 +252,7 @@ export function bootstrapWorker(
   establishNativeFunctionContext();
   installNativeFunctionToString();
   installErrorStackGuard(browserMajorVersion >= 151);
-  installModernBuiltins();
+  installModernBuiltins(browserMajorVersion);
   installDateProfile();
   installIntlV8BreakIterator(browserMajorVersion >= 151);
   // Worker Realm 与 root 对齐：Intl 默认 locale 跟随 navigator.language
@@ -358,7 +358,7 @@ export function bootstrapWorker(
   installServiceWorkerManagers();
   installBackgroundFetch();
   installWebTransport();
-  installLocalFonts({ exposeGlobal: browserMajorVersion >= 151 });
+  installLocalFonts({ exposeGlobal: browserMajorVersion >= 151, browserMajorVersion });
   installOrigin();
   installErrorObjects();
   installCaptureTargets();

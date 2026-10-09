@@ -10,6 +10,9 @@
  */
 
 import { createProfile } from './profile-factory.js';
+import { edge151Fingerprint } from '../../infra/fingerprint/edge-151.js';
+import { edge152Fingerprint } from '../../infra/fingerprint/edge-152.js';
+import { edge154Fingerprint } from '../../infra/fingerprint/edge-154.js';
 import {
   webidlPlugin,
   errorsPlugin,
@@ -335,6 +338,36 @@ export const browserProfileForEdgeVersion150 = createProfile({
   },
 });
 
+function createEdgeProfile(major, fingerprint) {
+  return createProfile({
+    id: `browser-profile-edge-v${major}`,
+    version: '1.0.0',
+    name: `Microsoft Edge ${major}`,
+    description: `Browser environment for Microsoft Edge version ${major}`,
+    metadata: {
+      browserFamily: 'edge',
+      browserVersion: major,
+      platform: 'windows',
+    },
+    plugins: browserProfileForEdgeVersion150.plugins,
+    config: {
+      ...browserProfileForEdgeVersion150.config,
+      navigator: fingerprint.navigator,
+      screen: fingerprint.screen,
+      rendering: fingerprint.rendering,
+      timing: fingerprint.timing,
+      capabilities: fingerprint.capabilities,
+    },
+    browserMajorVersion: major,
+    nodeSupport: browserProfileForEdgeVersion150.nodeSupport,
+  });
+}
+
+export const browserProfileForEdgeVersion151 = createEdgeProfile(151, edge151Fingerprint);
+export const browserProfileForEdgeVersion152 = createEdgeProfile(152, edge152Fingerprint);
+
+export const browserProfileForEdgeVersion154 = createEdgeProfile(154, edge154Fingerprint);
+
 /**
  * 注册所有内置 Profile 到全局注册表
  * 这样 profile-factory.js 可以同步访问它们，避免循环依赖
@@ -348,3 +381,6 @@ globalThis.__NV8_PROFILE_REGISTRY__['minimal-fetch'] = minimalFetchProfile;
 globalThis.__NV8_PROFILE_REGISTRY__['dom-replay'] = domReplayProfile;
 globalThis.__NV8_PROFILE_REGISTRY__['legacy-full'] = legacyFullProfile;
 globalThis.__NV8_PROFILE_REGISTRY__['browser-profile-edge-v150'] = browserProfileForEdgeVersion150;
+globalThis.__NV8_PROFILE_REGISTRY__['browser-profile-edge-v151'] = browserProfileForEdgeVersion151;
+globalThis.__NV8_PROFILE_REGISTRY__['browser-profile-edge-v152'] = browserProfileForEdgeVersion152;
+globalThis.__NV8_PROFILE_REGISTRY__['browser-profile-edge-v154'] = browserProfileForEdgeVersion154;

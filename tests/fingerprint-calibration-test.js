@@ -20,6 +20,8 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
+import { edge152Fingerprint } from '../src/infra/fingerprint/edge-152.js';
+import { edge154Fingerprint } from '../src/infra/fingerprint/edge-154.js';
 
 const REAL_FIXTURE_URL = new URL('../fixtures/fingerprint/edge-real.json', import.meta.url);
 const hasRealFixture = existsSync(REAL_FIXTURE_URL);
@@ -39,6 +41,8 @@ function edgeMajor(userAgent) {
 
 const PROFILES = [
   ['edge-150', edge150Fingerprint],
+  ['edge-152', edge152Fingerprint],
+  ['edge-154', edge154Fingerprint],
 ];
 
 // ------------------------------------------------------------- 自洽性
@@ -211,6 +215,33 @@ test('the registered build number matches the real browser', async () => {
     realFull,
     `build number for Edge ${realMajor} must come from the collected fixture, not a guess`
   );
+});
+
+test('Edge 154 profile matches its independent real fixture', async () => {
+  const fixture = JSON.parse(await readFile(
+    new URL('../fixtures/fingerprint/edge-154-real.json', import.meta.url),
+    'utf8',
+  ));
+  assert.equal(edge154Fingerprint.browserMajorVersion, 154);
+  assert.equal(edge154Fingerprint.navigator.userAgent, fixture.navigator.userAgent);
+  assert.equal(
+    edge154Fingerprint.navigator.userAgentData.uaFullVersion,
+    fixture.userAgentData.highEntropy.uaFullVersion,
+  );
+  assert.deepEqual(
+    edge154Fingerprint.navigator.userAgentData.formFactors,
+    fixture.userAgentData.highEntropy.formFactors,
+  );
+  const { configureNavigatorProfile } = await import('../src/surface/api/navigator/navigator-state.js');
+  const { highEntropyUaData } = await import('../src/surface/api/navigator/navigator-ua-data-state.js');
+  configureNavigatorProfile(
+    fixture.navigator.userAgent, 'Win32', '5:zh-CN2:zh', 'zh-CN', 16, 8,
+    null, edge154Fingerprint.navigator,
+  );
+  const high = highEntropyUaData(['uaFullVersion', 'fullVersionList']);
+  assert.deepEqual(high.brands, fixture.userAgentData.brands);
+  assert.deepEqual(high.fullVersionList, fixture.userAgentData.highEntropy.fullVersionList);
+  assert.equal(high.uaFullVersion, fixture.userAgentData.highEntropy.uaFullVersion);
 });
 
 test('machine-specific values are deliberately not copied from the fixture', () => {

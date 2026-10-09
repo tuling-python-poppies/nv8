@@ -1,4 +1,5 @@
 import { CSS_PROPERTY_NAMES } from "./css-property-names.js";
+import { createRealmSlot } from "../../../engine/core/state-scope.js";
 import {
   parseCSSDeclarations,
   readCSSDeclarations,
@@ -58,7 +59,15 @@ import {
  * 真要支持多套属性表，正确做法是按 Realm 传参而不是模块级赋值，
  * 否则同进程内混用 edge-150 / edge-151 profile 时后写者会覆盖前者。
  */
-const propertyNames = CSS_PROPERTY_NAMES;
+const edge154Properties = new Set(["frameSizing", "scrollAxisLock", "windowDrag"]);
+const legacyPropertyNames = Object.freeze(
+  CSS_PROPERTY_NAMES.filter(name => !edge154Properties.has(name)),
+);
+const propertyNames = createRealmSlot(() => legacyPropertyNames, "css-property-names");
+
+export function configureCSSPropertyNames(browserMajorVersion) {
+  propertyNames.set(globalThis, browserMajorVersion >= 154 ? CSS_PROPERTY_NAMES : legacyPropertyNames);
+}
 
 /**
  * 当前生效的属性名清单。
@@ -66,7 +75,7 @@ const propertyNames = CSS_PROPERTY_NAMES;
  * @returns {readonly string[]}
  */
 function cssPropertyNames() {
-  return propertyNames;
+  return propertyNames.get(globalThis);
 }
 
 /**

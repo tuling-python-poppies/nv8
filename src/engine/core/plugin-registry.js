@@ -287,6 +287,7 @@ export function normalizePlugin(plugin) {
 
 function createLegacySandboxContext(context) {
   return {
+    ...context,
     id: context.sandboxId,
     realm: context.realm || null,
     state: context.state,

@@ -4,8 +4,8 @@
     "root": {
       "file": "bootstrap/bootstrap-root.js",
       "function": "bootstrapRoot",
-      "callCount": 347,
-      "callSequenceSha256": "336184334a142b2e8d4086e80465dd6623990ad31d0d04463a40ff1f9541add5",
+      "callCount": 348,
+      "callSequenceSha256": "d1180418939c19a6eb7c9e3195747ddef0f02f381189daa6d9d52c778dc73328",
       "firstCall": "hideNodeGlobals",
       "lastCall": "finalizeWindowSurfaceOrder",
       "sequence": [
@@ -116,6 +116,7 @@
         "install:installHTMLMarqueeElement",
         "install:installHTMLGeolocationElement",
         "install:installHTMLUserMediaElement",
+        "install:installHTMLCaptureElements",
         "install:installFencedFrameConfig",
         "install:installHTMLFencedFrameElement",
         "install:installHTMLFrameElement",
@@ -358,9 +359,9 @@
         "finalize:finalizeWindowSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "ad182b112807e0c4fb8809f7387a241f663eb928ea11cc05caddba1b7a52fee1",
-        "functionStartLine": 856,
-        "functionEndLine": 1386
+        "sourceSha256": "b54fc312ef17088a3b913bb06ff1f7a408f816e66ab19e130b5d728abecd8259",
+        "functionStartLine": 864,
+        "functionEndLine": 1400
       }
     },
     "worker": {
@@ -485,9 +486,9 @@
         "finalize:finalizeWorkerSurfaceOrder"
       ],
       "informational": {
-        "sourceSha256": "8644e9bc5f62033f9a9b376125b168e7307fbef6c86fe72594991ddeb8cfd992",
+        "sourceSha256": "a252512397364518df7acb1d0b51f6f5c1f559f0d129cb778098c8848f4cca63",
         "functionStartLine": 208,
-        "functionEndLine": 396
+        "functionEndLine": 401
       }
     },
     "worklet": {
@@ -514,9 +515,9 @@
         "install:installRegistration"
       ],
       "informational": {
-        "sourceSha256": "f61d06ddecdadb8ab298eae642d863b67ffbf306bf1be113e32ea883be37524f",
+        "sourceSha256": "70debc5d629c72b021e1cdaca176dd20771c15d80742ff11745b67ed5ceead37",
         "functionStartLine": 34,
-        "functionEndLine": 81
+        "functionEndLine": 82
       }
     }
   }

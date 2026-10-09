@@ -41,7 +41,7 @@ import {
   urlReflectionPart3Table,
 } from "../api/dom/url-reflection-html-image-element-members.js";
 
-export function installHTMLImageElement() {
+export function installHTMLImageElement(edge154Surface = false) {
   installHTMLImageElementConstructor();
   for (const [name, entry] of stringReflectionPart1Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of urlReflectionPart1Table) accessor(name, entry.get, entry.set);
@@ -66,7 +66,9 @@ export function installHTMLImageElement() {
   defineConstructorBacklink(HTMLImageElement.prototype, HTMLImageElement);
   for (const [name, entry] of booleanReflectionPart2Table) accessor(name, entry.get, entry.set);
   for (const [name, entry] of stringReflectionPart7Table) accessor(name, entry.get, entry.set);
-  for (const [name, entry] of booleanReflectionPart3Table) accessor( name, entry.get, entry.set, );
+  if (!edge154Surface) {
+    for (const [name, entry] of booleanReflectionPart3Table) accessor(name, entry.get, entry.set);
+  }
   defineToStringTag(HTMLImageElement.prototype, "HTMLImageElement");
 }
 

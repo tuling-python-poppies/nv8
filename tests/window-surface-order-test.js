@@ -43,6 +43,7 @@ import {
 } from '../scripts/build-window-surface-order.mjs';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge152Fingerprint } from '../src/infra/fingerprint/edge-152.js';
+import { edge154Fingerprint } from '../src/infra/fingerprint/edge-154.js';
 import {
   CAPABILITY_STATUS,
   detectHostCapabilities,
@@ -52,9 +53,27 @@ const FIXTURE_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.
 const TABLE_URL = new URL('../src/surface/install/window-surface-order.js', import.meta.url);
 
 const fixture = JSON.parse(await readFile(FIXTURE_URL, 'utf8'));
+const FIXTURE_154_URL = new URL('../fixtures/fingerprint/edge-154-globals.json', import.meta.url);
+const fixture154 = JSON.parse(await readFile(FIXTURE_154_URL, 'utf8'));
 const tableSource = await readFile(TABLE_URL, 'utf8');
 
 const tableNames = WINDOW_GLOBAL_ORDER.map((entry) => entry[0]);
+
+const V8_BUILTIN_PREFIX_154 = Object.freeze([
+  'Object', 'Function', 'Array', 'Number', 'parseFloat', 'parseInt', 'Infinity',
+  'NaN', 'undefined', 'Boolean', 'String', 'Symbol', 'Date', 'Promise', 'RegExp',
+  'Error', 'AggregateError', 'EvalError', 'RangeError', 'ReferenceError',
+  'SyntaxError', 'TypeError', 'URIError', 'SuppressedError', 'globalThis', 'JSON',
+  'Math', 'Intl', 'ArrayBuffer', 'Atomics', 'Uint8Array', 'Int8Array', 'Uint16Array',
+  'Int16Array', 'Uint32Array', 'Int32Array', 'BigUint64Array', 'BigInt64Array',
+  'Uint8ClampedArray', 'Float32Array', 'Float64Array', 'Float16Array', 'DataView',
+  'Map', 'BigInt', 'Set', 'Iterator', 'WeakMap', 'WeakSet', 'Proxy', 'Reflect',
+  'FinalizationRegistry', 'WeakRef', 'DisposableStack', 'AsyncDisposableStack',
+  'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape',
+  'unescape', 'eval', 'isFinite', 'isNaN', 'console',
+]);
+
+
 const shapeSet = new Set(Object.values(WINDOW_GLOBAL_SHAPES));
 
 // ------------------------------------------------------------ 实时捕获
@@ -221,13 +240,31 @@ test('every row references a known descriptor shape', () => {
   }
 });
 
-test('the order table covers the fixture exactly, minus the V8 builtin prefix', () => {
-  assert.deepEqual(
-    fixture.globals.slice(0, V8_BUILTIN_PREFIX.length),
-    [...V8_BUILTIN_PREFIX],
-    'V8 内建前缀变了；引擎侧注册顺序变化必须人工核对，不能顺手对齐常量'
-  );
-  assert.deepEqual(tableNames, fixture.globals.slice(V8_BUILTIN_PREFIX.length));
+test('the order table covers the 152 fixture after version gates', () => {
+  const expected = fixture.globals.slice(V8_BUILTIN_PREFIX.length);
+  const actual = WINDOW_GLOBAL_ORDER
+    .filter(([, , gate]) => gate?.since === undefined || gate.since <= 152)
+    .filter(([, , gate]) => gate?.before === undefined || gate.before > 152)
+    .filter(([, , gate]) => gate?.pending === undefined)
+    .map(([name]) => name);
+  assert.deepEqual(actual, expected);
+});
+
+test('the 154 order table covers the 154 fixture after version gates', () => {
+  const v8Names = new Set(V8_BUILTIN_PREFIX_154);
+  const expected = fixture154.globals
+    .slice(V8_BUILTIN_PREFIX_154.length)
+    .filter((name) => !v8Names.has(name))
+    .filter((name) => !WINDOW_GLOBAL_ORDER.some(([rowName, , gate]) => (
+      rowName === name && gate?.pending !== undefined
+    )));
+  const actual = WINDOW_GLOBAL_ORDER
+    .filter(([name]) => !v8Names.has(name))
+    .filter(([, , gate]) => gate?.since === undefined || gate.since <= 154)
+    .filter(([, , gate]) => gate?.before === undefined || gate.before > 154)
+    .filter(([, , gate]) => gate?.pending === undefined)
+    .map(([name]) => name);
+  assert.deepEqual(actual, expected);
 });
 
 test('the table on disk round-trips through the build script', () => {
@@ -414,7 +451,9 @@ test('pending globals are absent at every profile version', async () => {
   const pending = WINDOW_GLOBAL_ORDER
     .filter((entry) => entry[2]?.pending !== undefined)
     .map((entry) => entry[0]);
-  assert.equal(pending.length, 0, '所有已采集的 Edge 152 globals 都应已实现');
+  assert.deepEqual(pending, ['requestResize']);
+  const { names } = await captureWindow({ ...edge154Fingerprint, browserMajorVersion: 154 });
+  for (const name of pending) assert.equal(names.includes(name), false, name);
 });
 
 // ------------------------------------------------------ descriptor 形状

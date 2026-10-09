@@ -1,4 +1,7 @@
 import { edge150Fingerprint } from "../infra/fingerprint/edge-150.js";
+import { edge151Fingerprint } from "../infra/fingerprint/edge-151.js";
+import { edge152Fingerprint } from "../infra/fingerprint/edge-152.js";
+import { edge154Fingerprint } from "../infra/fingerprint/edge-154.js";
 import {
   TRUSTED_SCRIPT_POLICY,
   TRUSTED_SCRIPT_POLICY_ALIASES,
@@ -413,10 +416,10 @@ function normalizeExternalDevicesFields(bluetooth, hid, serial, usb, fallbackExt
   });
 }
 
-function normalizeCapabilityProfile(value) {
-  const fallback = edge150Fingerprint.capabilities;
+function normalizeCapabilityProfile(value, baseline = edge150Fingerprint) {
+  const fallback = baseline.capabilities;
   const input = objectOption(
-    value ?? fallback,
+    value,
     fallback,
     "fingerprint.capabilities",
   );
@@ -881,8 +884,8 @@ function normalizeNavigatorMetadata(navigator, fallback, userAgent) {
   });
 }
 
-function normalizeTimingProfile(value) {
-  const fallback = edge150Fingerprint.timing;
+function normalizeTimingProfile(value, baseline = edge150Fingerprint) {
+  const fallback = baseline.timing;
   const input = objectOption(value, fallback, "fingerprint.timing");
   const timeOriginMs = input.timeOriginMs === null || input.timeOriginMs === undefined
     ? null
@@ -959,13 +962,13 @@ function normalizeTimingProfile(value) {
  * @returns {{webgpu: object, webgpuFeatures: string[], normalizedWebgpuLimits: object,
  *   subgroupMinSize: number, subgroupMaxSize: number}}
  */
-function normalizeWebgpuConfig(rendering) {
-  const baseline = edge150Fingerprint.rendering.webgpu;
-  const webgpu = rendering.webgpu ?? baseline;
+function normalizeWebgpuConfig(rendering, baseline = edge150Fingerprint) {
+  const webgpuBaseline = baseline.rendering.webgpu;
+  const webgpu = rendering.webgpu ?? webgpuBaseline;
   if (webgpu === null || typeof webgpu !== "object" || Array.isArray(webgpu)) {
     throw new TypeError("fingerprint.rendering.webgpu must be an object");
   }
-  const webgpuFeatures = webgpu.features ?? baseline.features;
+  const webgpuFeatures = webgpu.features ?? webgpuBaseline.features;
   if (
     !Array.isArray(webgpuFeatures)
     || webgpuFeatures.some(value => typeof value !== "string")
@@ -982,7 +985,7 @@ function normalizeWebgpuConfig(rendering) {
   ) {
     throw new TypeError("fingerprint.rendering.webgpu.limits must be an object");
   }
-  const supportedLimitNames = Object.keys(baseline.limits);
+  const supportedLimitNames = Object.keys(webgpuBaseline.limits);
   for (const name of Object.keys(webgpuLimits)) {
     if (!supportedLimitNames.includes(name)) {
       throw new TypeError(`Unsupported WebGPU limit in fingerprint: ${name}`);
@@ -993,7 +996,7 @@ function normalizeWebgpuConfig(rendering) {
       name,
       finiteInteger(
         webgpuLimits[name],
-        baseline.limits[name],
+        webgpuBaseline.limits[name],
         `fingerprint.rendering.webgpu.limits.${name}`,
         0,
         Number.MAX_SAFE_INTEGER,
@@ -1002,14 +1005,14 @@ function normalizeWebgpuConfig(rendering) {
   );
   const subgroupMinSize = finiteInteger(
     webgpu.subgroupMinSize,
-    baseline.subgroupMinSize,
+    webgpuBaseline.subgroupMinSize,
     "fingerprint.rendering.webgpu.subgroupMinSize",
     1,
     1024,
   );
   const subgroupMaxSize = finiteInteger(
     webgpu.subgroupMaxSize,
-    baseline.subgroupMaxSize,
+    webgpuBaseline.subgroupMaxSize,
     "fingerprint.rendering.webgpu.subgroupMaxSize",
     1,
     1024,
@@ -1027,14 +1030,14 @@ function normalizeWebgpuConfig(rendering) {
  * 的 `colorDepth`（旧实现引用未处理的 `screen.colorDepth`，用户只传
  * width/height 时会抛 RangeError）。
  */
-function normalizeScreenBase(screen) {
-  const baseline = edge150Fingerprint.screen;
+function normalizeScreenBase(screen, baseline = edge150Fingerprint) {
+  const screenBaseline = baseline.screen;
   return {
-    width: finiteInteger(screen.width, baseline.width, "fingerprint.screen.width", 1, 100_000),
-    height: finiteInteger(screen.height, baseline.height, "fingerprint.screen.height", 1, 100_000),
+    width: finiteInteger(screen.width, screenBaseline.width, "fingerprint.screen.width", 1, 100_000),
+    height: finiteInteger(screen.height, screenBaseline.height, "fingerprint.screen.height", 1, 100_000),
     colorDepth: finiteInteger(
       screen.colorDepth,
-      baseline.colorDepth,
+      screenBaseline.colorDepth,
       "fingerprint.screen.colorDepth",
       1,
       128,
@@ -1055,10 +1058,11 @@ function normalizeNavigatorFields(
   navigatorProvided,
   explicitLocale,
   navigatorMetadata,
+  baseline = edge150Fingerprint,
 ) {
   return Object.freeze({
     userAgent,
-    platform: stringOption(navigator.platform, "Win32", "fingerprint.navigator.platform", 1024),
+    platform: stringOption(navigator.platform, baseline.navigator.platform, "fingerprint.navigator.platform", 1024),
     languages: Object.freeze([...languages]),
     language: stringOption(
       navigatorProvided
@@ -1070,14 +1074,14 @@ function normalizeNavigatorFields(
     ),
     hardwareConcurrency: finiteInteger(
       navigator.hardwareConcurrency,
-      16,
+      baseline.navigator.hardwareConcurrency,
       "fingerprint.navigator.hardwareConcurrency",
       1,
       1024,
     ),
     deviceMemory: finiteInteger(
       navigator.deviceMemory,
-      8,
+      baseline.navigator.deviceMemory,
       "fingerprint.navigator.deviceMemory",
       1,
       1024,
@@ -1093,21 +1097,21 @@ function normalizeNavigatorFields(
  * 基线 availHeight=1040（任务栏）而 height=1080，跟随 width/height 会
  * 在缺省时也偏离基线。
  */
-function normalizeScreenFields(screenWidth, screenHeight, screenColorDepth, screen) {
-  const baseline = edge150Fingerprint.screen;
+function normalizeScreenFields(screenWidth, screenHeight, screenColorDepth, screen, baseline = edge150Fingerprint) {
+  const screenBaseline = baseline.screen;
   return Object.freeze({
     width: screenWidth,
     height: screenHeight,
     availWidth: finiteInteger(
       screen.availWidth,
-      baseline.availWidth,
+      screenBaseline.availWidth,
       "fingerprint.screen.availWidth",
       1,
       100_000,
     ),
     availHeight: finiteInteger(
       screen.availHeight,
-      baseline.availHeight,
+      screenBaseline.availHeight,
       "fingerprint.screen.availHeight",
       1,
       100_000,
@@ -1150,7 +1154,7 @@ function normalizeScreenFields(screenWidth, screenHeight, screenColorDepth, scre
 }
 
 /** 构造 `fingerprint.rendering`（含 WebGPU 字面量，校验顺序不变）。 */
-function normalizeRenderingFields(rendering, webgpuConfig) {
+function normalizeRenderingFields(rendering, webgpuConfig, baseline = edge150Fingerprint) {
   const {
     webgpu,
     webgpuFeatures,
@@ -1161,38 +1165,38 @@ function normalizeRenderingFields(rendering, webgpuConfig) {
   return Object.freeze({
     webglVendor: stringOption(
       rendering.webglVendor,
-      edge150Fingerprint.rendering.webglVendor,
+      baseline.rendering.webglVendor,
       "fingerprint.rendering.webglVendor",
       16 * 1024,
     ),
     webglRenderer: stringOption(
       rendering.webglRenderer,
-      edge150Fingerprint.rendering.webglRenderer,
+      baseline.rendering.webglRenderer,
       "fingerprint.rendering.webglRenderer",
       16 * 1024,
     ),
     webgpu: Object.freeze({
       vendor: stringOption(
         webgpu.vendor,
-        edge150Fingerprint.rendering.webgpu.vendor,
+        baseline.rendering.webgpu.vendor,
         "fingerprint.rendering.webgpu.vendor",
         16 * 1024,
       ),
       architecture: stringOption(
         webgpu.architecture,
-        edge150Fingerprint.rendering.webgpu.architecture,
+        baseline.rendering.webgpu.architecture,
         "fingerprint.rendering.webgpu.architecture",
         16 * 1024,
       ),
       device: stringOption(
         webgpu.device,
-        edge150Fingerprint.rendering.webgpu.device,
+        baseline.rendering.webgpu.device,
         "fingerprint.rendering.webgpu.device",
         16 * 1024,
       ),
       description: stringOption(
         webgpu.description,
-        edge150Fingerprint.rendering.webgpu.description,
+        baseline.rendering.webgpu.description,
         "fingerprint.rendering.webgpu.description",
         16 * 1024,
       ),
@@ -1210,15 +1214,46 @@ function normalizeRenderingFields(rendering, webgpuConfig) {
   });
 }
 
+function fingerprintBaseline(major) {
+  return {
+    150: edge150Fingerprint,
+    151: edge151Fingerprint,
+    152: edge152Fingerprint,
+    153: edge152Fingerprint,
+    154: edge154Fingerprint,
+  }[major] ?? edge150Fingerprint;
+}
+
+function selectFingerprintBaseline(fingerprint) {
+  const major = Number(fingerprint?.browserMajorVersion ?? 150);
+  const baseline = fingerprintBaseline(major);
+  if (fingerprint === undefined || fingerprint === null) return baseline;
+  const merged = { ...baseline, ...fingerprint };
+  for (const key of ["navigator", "screen", "rendering", "timing", "capabilities"]) {
+    if (fingerprint[key] !== undefined && fingerprint[key] !== null) {
+      merged[key] = { ...baseline[key], ...fingerprint[key] };
+    }
+  }
+  return merged;
+}
+
 function normalizeFingerprint(fingerprint) {
-  const input = fingerprint ?? edge150Fingerprint;
+  const input = selectFingerprintBaseline(fingerprint);
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
     throw new TypeError("fingerprint must be a JavaScript object");
   }
   assertKnownNestedKeys(input, "fingerprint");
-  const navigator = input.navigator ?? edge150Fingerprint.navigator;
-  const screen = input.screen ?? edge150Fingerprint.screen;
-  const rendering = input.rendering ?? edge150Fingerprint.rendering;
+  const browserMajorVersion = finiteInteger(
+    input.browserMajorVersion,
+    150,
+    "fingerprint.browserMajorVersion",
+    150,
+    154,
+  );
+  const baseline = fingerprintBaseline(browserMajorVersion);
+  const navigator = input.navigator ?? baseline.navigator;
+  const screen = input.screen ?? baseline.screen;
+  const rendering = input.rendering ?? baseline.rendering;
   if (navigator === null || typeof navigator !== "object") {
     throw new TypeError("fingerprint.navigator must be an object");
   }
@@ -1234,20 +1269,13 @@ function normalizeFingerprint(fingerprint) {
     normalizedWebgpuLimits,
     subgroupMinSize,
     subgroupMaxSize,
-  } = normalizeWebgpuConfig(rendering);
-  const browserMajorVersion = finiteInteger(
-    input.browserMajorVersion,
-    150,
-    "fingerprint.browserMajorVersion",
-    150,
-    154,
-  );
-  // `navigator` 是局部覆盖与基线的合并入口：只要调用方没有整体提供 navigator，
+  } = normalizeWebgpuConfig(rendering, baseline);
+  // `navigator` 是局部覆盖与基线的合并入口：只要调用方没有整体提供 navigator,
   // `fingerprint.locale` 就驱动 `navigator.language` / `navigator.languages`，
   // 而不是让它们停在基线值上（此前 `locale` 归一化后被完全忽略）。
   // 显式提供的 navigator 永远优先，避免两处语言声明互相打架。
-  const navigatorProvided = input.navigator !== undefined && input.navigator !== null;
-  const explicitLocale = input.locale;
+  const navigatorProvided = fingerprint?.navigator !== undefined && fingerprint?.navigator !== null;
+  const explicitLocale = fingerprint?.locale;
   const languages = !navigatorProvided && explicitLocale !== undefined
     ? [explicitLocale]
     : navigator.languages;
@@ -1258,17 +1286,17 @@ function normalizeFingerprint(fingerprint) {
   // 只覆盖 locale / screen / timezone 就会把 Edge 身份退化成裸 Chrome 串，
   // 与 `userAgentData.brands` 声明的 Microsoft Edge 自相矛盾。
   const userAgent = stringOption(
-    navigator.userAgent ?? edge150Fingerprint.navigator.userAgent,
+    navigator.userAgent ?? baseline.navigator.userAgent,
     undefined,
     "fingerprint.navigator.userAgent",
     16 * 1024,
   );
   const navigatorMetadata = normalizeNavigatorMetadata(
     navigator,
-    edge150Fingerprint.navigator,
+    baseline.navigator,
     userAgent,
   );
-  const timing = normalizeTimingProfile(input.timing);
+  const timing = normalizeTimingProfile(input.timing, baseline);
   // UA 校验分两条。
   //
   // 此前这里要求 UA **不能**含 `Edg/`，但同一个项目里 `src/profiles/` 的
@@ -1296,13 +1324,13 @@ function normalizeFingerprint(fingerprint) {
     width: screenWidth,
     height: screenHeight,
     colorDepth: screenColorDepth,
-  } = normalizeScreenBase(screen);
+  } = normalizeScreenBase(screen, baseline);
   return Object.freeze({
     browserMajorVersion,
     locale: stringOption(input.locale, "zh-CN", "fingerprint.locale", 1024),
     timezone: timeZoneOption(
       input.timezone,
-      edge150Fingerprint.timezone,
+      baseline.timezone,
       "fingerprint.timezone",
     ),
     navigator: normalizeNavigatorFields(
@@ -1312,12 +1340,14 @@ function normalizeFingerprint(fingerprint) {
       navigatorProvided,
       explicitLocale,
       navigatorMetadata,
+      baseline,
     ),
     screen: normalizeScreenFields(
       screenWidth,
       screenHeight,
       screenColorDepth,
       screen,
+      baseline,
     ),
     rendering: normalizeRenderingFields(rendering, {
       webgpu,
@@ -1325,9 +1355,9 @@ function normalizeFingerprint(fingerprint) {
       normalizedWebgpuLimits,
       subgroupMinSize,
       subgroupMaxSize,
-    }),
+    }, baseline),
     timing,
-    capabilities: normalizeCapabilityProfile(input.capabilities),
+    capabilities: normalizeCapabilityProfile(input.capabilities, baseline),
   });
 }
 

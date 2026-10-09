@@ -368,7 +368,7 @@ export async function createSandbox(config) {
   const sandboxId = `sandbox-${++sandboxIdCounter}`;
   const {
     appId,
-    profile,
+    profile: inputProfile,
     plugins: pluginDefinitions,
     stateRegistry,
     trace,
@@ -377,6 +377,18 @@ export async function createSandbox(config) {
     runtime = {},
     limits = {},
   } = config;
+  const sourceProfile = inputProfile ?? {};
+  const profile = {
+    ...sourceProfile,
+    navigator: sourceProfile.navigator ?? sourceProfile.config?.navigator ?? {},
+    screen: sourceProfile.screen ?? sourceProfile.config?.screen ?? {},
+    rendering: sourceProfile.rendering ?? sourceProfile.config?.rendering ?? null,
+    timing: sourceProfile.timing ?? sourceProfile.config?.timing ?? null,
+    capabilities: sourceProfile.capabilities ?? sourceProfile.config?.capabilities ?? null,
+  };
+  const browserMajorVersion = Number(
+    runtime.browserMajorVersion ?? profile.browserMajorVersion ?? profile.metadata?.browserVersion ?? 150,
+  );
   // 安装状态属于 Sandbox，不能复用调用方插件上的 _installed 标志。
   const plugins = pluginDefinitions.map(plugin => ({ ...plugin, _installed: false, _exports: null }));
   
@@ -506,6 +518,7 @@ export async function createSandbox(config) {
   const workerFactories = createWorkerRealmFactories({
     sandboxId,
     profile,
+    browserMajorVersion,
     pluginInstances,
     stateRegistry,
     globals,
@@ -535,6 +548,7 @@ export async function createSandbox(config) {
   const windowFactories = createWindowRealmFactories({
     sandboxId,
     profile,
+    browserMajorVersion,
     pluginInstances,
     stateRegistry,
     globals,
@@ -673,6 +687,7 @@ export async function createSandbox(config) {
         pageHtml,
         replay: options.replay ?? replay,
         navigatorProfile: options.navigatorProfile ?? profile.navigator ?? {},
+        browserMajorVersion,
         timingProfile: options.timingProfile ?? profile.timing ?? null,
         limits,
         runtime: {
@@ -1696,6 +1711,7 @@ function createSurfaceRegistry() {
 function createWorkerRealmFactories({
   sandboxId,
   profile,
+  browserMajorVersion,
   pluginInstances,
   stateRegistry,
   globals,
@@ -1770,6 +1786,7 @@ function createWorkerRealmFactories({
         pageHtml: '',
         replay,
         navigatorProfile: workerNavigatorProfile,
+        browserMajorVersion,
         timingProfile: profile.timing || null,
         workerDepth: reservation.depth,
         runtime: {
@@ -1875,6 +1892,7 @@ function createWorkerRealmFactories({
         pageHtml: '',
         replay,
         navigatorProfile: workerNavigatorProfile,
+        browserMajorVersion,
         timingProfile: profile.timing || null,
         workerDepth: reservation.depth,
         runtime: {
@@ -2117,6 +2135,7 @@ function createWorkerRealmFactories({
         pageHtml: '',
         replay,
         navigatorProfile: workerNavigatorProfile,
+        browserMajorVersion,
         timingProfile: profile.timing || null,
         workerDepth: reservation.depth,
         runtime: {
@@ -2222,6 +2241,7 @@ function createWorkerRealmFactories({
             traceEnabled: trace,
             maxTraceEntries: 100_000,
             objectURLRegistry: null,
+            browserMajorVersion,
           });
           if (lifecycleState.closed || generation !== lifecycleState.generation) {
             destroyWorkletRealm(workletRealm);
@@ -2313,6 +2333,7 @@ function createWorkerRealmFactories({
 function createWindowRealmFactories({
   sandboxId,
   profile,
+  browserMajorVersion,
   pluginInstances,
   stateRegistry,
   globals,
@@ -2386,6 +2407,7 @@ function createWindowRealmFactories({
       pageHtml,
       replay: options.replay ?? replay,
       navigatorProfile: options.navigatorProfile ?? profile.navigator ?? {},
+      browserMajorVersion,
       timingProfile: options.timingProfile ?? profile.timing ?? null,
       limits,
       runtime: {
@@ -2553,6 +2575,7 @@ function createWindowRealmFactories({
       pageHtml,
       replay: originalOptions.replay ?? replay,
       navigatorProfile: originalOptions.navigatorProfile ?? profile.navigator ?? {},
+      browserMajorVersion,
       timingProfile: originalOptions.timingProfile ?? profile.timing ?? null,
       limits,
       runtime: {

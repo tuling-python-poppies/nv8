@@ -7,13 +7,14 @@ import {
 const base64Alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-export function installModernBuiltins() {
+export function installModernBuiltins(browserMajorVersion = 150) {
   installMissingEngineGlobals();
   installFloat16DataViewMethods();
   installFunctionPrototypeOrder();
   installDateTemporalMethod();
   installUint8ArrayEncodingMethods();
   installMapInsertionMethods();
+  if (browserMajorVersion >= 154) installEdge154IteratorMethods();
 }
 
 /**
@@ -511,6 +512,92 @@ function installMapInsertionMethods() {
     "getOrInsertComputed",
     weakMapGetOrInsertComputed,
   );
+}
+
+function installEdge154IteratorMethods() {
+  const prototype = globalThis.Iterator?.prototype;
+  if (prototype === undefined) return;
+
+  const join = {
+    join(separator) {
+      requireIteratorObject(this);
+      let separatorText;
+      try {
+        separatorText = separator === undefined ? "," : `${separator}`;
+      } catch (error) {
+        closeIteratorAbruptly(this, error);
+      }
+      const iterator = requireIterator(this);
+      let result = "";
+      let first = true;
+      while (true) {
+        const step = iteratorStep(iterator);
+        if (step.done) return result;
+        if (!first) result += separatorText;
+        first = false;
+        try {
+          if (step.value !== null && step.value !== undefined) result += `${step.value}`;
+        } catch (error) {
+          closeIteratorAbruptly(this, error);
+        }
+      }
+    },
+  }.join;
+  const includes = {
+    includes(searchElement) {
+      const iterator = requireIterator(this);
+      while (true) {
+        const step = iteratorStep(iterator);
+        if (step.done) return false;
+        if (sameValueZero(step.value, searchElement)) {
+          closeIterator(this);
+          return true;
+        }
+      }
+    },
+  }.includes;
+  registerNativeFunction(join, "join");
+  registerNativeFunction(includes, "includes");
+  defineBuiltinMethod(prototype, "join", join);
+  defineBuiltinMethod(prototype, "includes", includes);
+}
+
+function requireIteratorObject(value) {
+  if (value === null || (typeof value !== "object" && typeof value !== "function")) {
+    throw new TypeError("%Iterator.prototype% requires that 'this' be an object");
+  }
+}
+
+function requireIterator(value) {
+  requireIteratorObject(value);
+  const next = value.next;
+  if (typeof next !== "function") {
+    throw new TypeError("The iterator does not provide a 'next' method");
+  }
+  return { iterator: value, next };
+}
+
+function iteratorStep(record) {
+  const result = Reflect.apply(record.next, record.iterator, []);
+  requireIteratorObject(result);
+  if (result.done) return { done: true };
+  return { done: false, value: result.value };
+}
+
+function closeIterator(iterator) {
+  const returnMethod = iterator.return;
+  if (returnMethod === null || returnMethod === undefined) return;
+  requireIteratorObject(Reflect.apply(returnMethod, iterator, []));
+}
+
+function closeIteratorAbruptly(iterator, error) {
+  // IteratorClose preserves the original abrupt completion, including if return throws.
+  try { closeIterator(iterator); } catch { /* original error takes precedence */ }
+  throw error;
+}
+
+function sameValueZero(left, right) {
+  return left === right || (left !== left && right !== right);
 }
 
 function defineBuiltinMethod(prototype, name, callback) {

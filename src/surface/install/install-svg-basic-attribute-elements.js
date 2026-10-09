@@ -339,7 +339,7 @@ const definitions = [
   ]],
 ];
 
-export function installSVGBasicAttributeElementMembers() {
+export function installSVGBasicAttributeElementMembers(browserMajorVersion = 150) {
 
     reopenPrototype(definitions[0][0]);
 
@@ -3025,7 +3025,7 @@ export function installSVGBasicAttributeElementMembers() {
         ),
       );
 
-    installConstants(definitions[31][0]);
+    installConstants(definitions[31][0], browserMajorVersion);
     installSpecialMethods(definitions[31][0]);
     closePrototype(definitions[31][0]);
 
@@ -3301,7 +3301,7 @@ export function installSVGBasicAttributeElementMembers() {
         ),
       );
 
-    installConstants(definitions[35][0]);
+    installConstants(definitions[35][0], browserMajorVersion);
     installSpecialMethods(definitions[35][0]);
     closePrototype(definitions[35][0]);
 
@@ -3984,7 +3984,7 @@ function closePrototype(constructor) {
   defineToStringTag(constructor.prototype, constructor.name);
 }
 
-function installConstants(constructor) {
+function installConstants(constructor, browserMajorVersion = 150) {
   const constants = {
     SVGGradientElement: [
       "SVG_SPREADMETHOD_UNKNOWN",
@@ -4081,6 +4081,9 @@ function installConstants(constructor) {
       "TEXTPATH_SPACINGTYPE_UNKNOWN",
       "TEXTPATH_SPACINGTYPE_AUTO",
       "TEXTPATH_SPACINGTYPE_EXACT",
+      "TEXTPATH_SIDETYPE_UNKNOWN",
+      "TEXTPATH_SIDETYPE_LEFT",
+      "TEXTPATH_SIDETYPE_RIGHT",
     ],
     SVGTextContentElement: [
       "LENGTHADJUST_UNKNOWN",
@@ -4088,15 +4091,19 @@ function installConstants(constructor) {
       "LENGTHADJUST_SPACINGANDGLYPHS",
     ],
   }[constructor.name] ?? [];
-  constants.forEach((name, index) => {
+  const filteredConstants = constants.filter(name => (
+    !name.startsWith("TEXTPATH_SIDETYPE_") || browserMajorVersion >= 154
+  ));
+  filteredConstants.forEach((name, index) => {
+    const value = name.startsWith("TEXTPATH_SIDETYPE_") ? index - 6 : index;
     Object.defineProperty(constructor, name, {
-      value: index,
+      value,
       enumerable: true,
       configurable: false,
       writable: false,
     });
     Object.defineProperty(constructor.prototype, name, {
-      value: index,
+      value,
       enumerable: true,
       configurable: false,
       writable: false,

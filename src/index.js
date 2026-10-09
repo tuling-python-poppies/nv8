@@ -154,6 +154,7 @@ export async function createNv8(options = {}) {
     evidenceSource,
     runtime: {
       ...runtime,
+      browserMajorVersion: effectiveProfile.browserMajorVersion ?? effectiveProfile.metadata?.browserVersion ?? 150,
       scriptPolicy: scriptPolicy ?? effectiveProfile.scriptPolicy ?? runtime.scriptPolicy,
     },
   });
@@ -501,11 +502,12 @@ export { createSandbox } from './public/create-sandbox.js';
 export { createAgentSession, validateEnvironmentPatch } from './public/agent-session.js';
 
 /**
- * 冻结浏览器指纹（Edge 150/151/152），与 `nv8/fingerprint/*` 子路径同源。
+ * 冻结浏览器指纹（Edge 150/151/152/154），与 `nv8/fingerprint/*` 子路径同源。
  */
 export { edge150Fingerprint } from './infra/fingerprint/edge-150.js';
 export { edge151Fingerprint } from './infra/fingerprint/edge-151.js';
 export { edge152Fingerprint } from './infra/fingerprint/edge-152.js';
+export { edge154Fingerprint } from './infra/fingerprint/edge-154.js';
 
 /**
  * TypeScript 类型定义

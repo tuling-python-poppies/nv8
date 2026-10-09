@@ -37,6 +37,7 @@ export function bootstrapWorklet(
   maxTraceEntries,
   objectURLRegistry,
   messagePortRegistry = null,
+  browserMajorVersion = 150,
 ) {
   hideNodeGlobals();
   configureObjectURLRegistry(objectURLRegistry);
@@ -45,8 +46,8 @@ export function bootstrapWorklet(
   // 必须自行 establish（IKF39V(c)）。
   establishNativeFunctionContext();
   installNativeFunctionToString();
-  installErrorStackGuard();
-  installModernBuiltins();
+  installErrorStackGuard(browserMajorVersion >= 151);
+  installModernBuiltins(browserMajorVersion);
   configureTrace(traceEnabled, maxTraceEntries);
   installConsole();
   installDOMException();

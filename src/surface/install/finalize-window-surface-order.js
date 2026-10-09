@@ -29,6 +29,12 @@ import {
 } from "./window-surface-order.js";
 
 const SHAPE_SET = new Set(Object.values(WINDOW_GLOBAL_SHAPES));
+const EDGE_154_V8_GLOBALS = new Set([
+  "SuppressedError",
+  "DisposableStack",
+  "AsyncDisposableStack",
+  "Float16Array",
+]);
 
 /**
  * 门控是否放行。
@@ -64,6 +70,10 @@ function planSurface(browserMajorVersion) {
     const gate = entry[2];
     if (gate !== undefined && !gateAllows(gate, browserMajorVersion)) {
       if (Object.getOwnPropertyDescriptor(globalThis, name) !== undefined) {
+        const isEdge154HostBuiltin = browserMajorVersion >= 154
+          && EDGE_154_V8_GLOBALS.has(name)
+          && gate.before === 154;
+        if (isEdge154HostBuiltin) continue;
         throw new Error(
           "Window global " + name + " is "
           + (gate.pending === undefined

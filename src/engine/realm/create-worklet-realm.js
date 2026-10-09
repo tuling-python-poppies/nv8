@@ -10,6 +10,7 @@ export async function createWorkletRealm({
   maxTraceEntries = 100_000,
   objectURLRegistry = null,
   messagePortRegistry = null,
+  browserMajorVersion = 150,
 }) {
   const context = vm.createContext(Object.create(null), {
     name: label,
@@ -31,6 +32,7 @@ export async function createWorkletRealm({
     maxTraceEntries,
     objectURLRegistry,
     messagePortRegistry,
+    browserMajorVersion,
   );
   return {
     context,

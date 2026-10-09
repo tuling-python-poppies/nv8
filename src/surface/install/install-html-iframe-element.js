@@ -5,7 +5,7 @@ import {
   installHTMLIFrameElementMembers,
 } from "../api/dom/html-iframe-element-members.js";
 
-export function installHTMLIFrameElement() {
+export function installHTMLIFrameElement(edge154Surface = false) {
   installHTMLIFrameElementFactory();
-  installHTMLIFrameElementMembers();
+  installHTMLIFrameElementMembers(edge154Surface);
 }

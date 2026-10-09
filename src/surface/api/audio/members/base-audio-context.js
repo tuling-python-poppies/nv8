@@ -267,6 +267,16 @@ export function installOwnedMember25() {
   );
 }
 
+export function installOwnedMember26() {
+  installDispatchedAccessor(
+    BaseAudioContext,
+    "renderQuantumSize",
+    runtime.audioProperty,
+    null,
+    false,
+  );
+}
+
 export function installTag() {
   installDispatchedTag(BaseAudioContext);
 }

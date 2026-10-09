@@ -68,7 +68,7 @@ export const builtinsPlugin = {
     if (typeof installBuiltins !== 'function') {
       throw new Error('Realm module loader cannot install modern builtins');
     }
-    installBuiltins();
+    installBuiltins(browserMajorVersion);
 
     const dateModule = await loader.importUrlAsync(DATE_PROFILE_URL);
     const installDate = dateModule?.namespace?.installDateProfile;

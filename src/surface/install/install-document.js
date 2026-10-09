@@ -136,7 +136,7 @@ import {
   installDocumentURL,
 } from "../api/dom/document-url-getter.js";
 
-export function installDocument() {
+export function installDocument(edge154Surface = false) {
   installDocumentConstructor();
   installDocumentImplementation();
   installDocumentURL();
@@ -245,7 +245,10 @@ export function installDocument() {
   for (const [name, entry] of methods.documentMethodPart8Table) method(name, entry);
   installDocumentQuerySelector();
   installDocumentQuerySelectorAll();
-  for (const [name, entry] of methods.documentMethodPart9Table) method(name, entry);
+  for (const [name, entry] of methods.documentMethodPart9Table) {
+    if (edge154Surface && name === "requestStorageAccessFor") continue;
+    method(name, entry);
+  }
   finishDocumentConstructor();
   getter("fragmentDirective", extended.fragmentDirective);
   installDocumentPostConstructorEventMembers(accessor);

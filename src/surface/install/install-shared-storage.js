@@ -21,7 +21,14 @@ const constructors = Object.freeze(Object.fromEntries(
   ]),
 ));
 
-export function installSharedStorage() {
+export function installSharedStorage(browserMajorVersion = 150) {
+  if (browserMajorVersion >= 154) {
+    delete globalThis.sharedStorage;
+    for (const Constructor of runtime.sharedStorageConstructors) {
+      delete globalThis[Constructor.name];
+    }
+    return;
+  }
   runtime.resetSharedStorage();
 
     delete runtime.sharedStorageConstructors[0].prototype.constructor;

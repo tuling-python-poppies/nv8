@@ -1,6 +1,12 @@
 import { DOMException } from "../event/dom-exception-constructor.js";
 import { createBlob } from "../file/blob-state.js";
 import { registerNativeFunction } from "../../../engine/webidl/native-function.js";
+import { createRealmSlot } from "../../../engine/core/state-scope.js";
+
+const profile = createRealmSlot(() => 150, "local-fonts-version");
+export function configureLocalFontsVersion(browserMajorVersion) {
+  profile.set(globalThis, browserMajorVersion);
+}
 
 const state = new WeakMap();
 
@@ -21,15 +27,21 @@ export function FontFace(family, source) {
   const binarySource = source instanceof ArrayBuffer
     || ArrayBuffer.isView(source);
   let resolveLoaded;
-  const loaded = new Promise(resolve => {
+  let rejectLoaded;
+  const loaded = new Promise((resolve, reject) => {
     resolveLoaded = resolve;
+    rejectLoaded = reject;
   });
+  const edge154Surface = profile.get(globalThis) >= 154;
+  const widthInput = edge154Surface && descriptors.width !== undefined
+    ? `${descriptors.width}` : option(descriptors, "stretch", "normal");
+  const width = edge154Surface ? normalizeFontWidth(widthInput) : widthInput;
   const record = {
     kind: "face",
     family: normalizedFamily,
     style: option(descriptors, "style", "normal"),
     weight: option(descriptors, "weight", "normal"),
-    stretch: option(descriptors, "stretch", "normal"),
+    stretch: width ?? "normal",
     unicodeRange: option(descriptors, "unicodeRange", "U+0-10FFFF"),
     variant: option(descriptors, "variant", "normal"),
     featureSettings: option(descriptors, "featureSettings", "normal"),
@@ -39,12 +51,15 @@ export function FontFace(family, source) {
     lineGapOverride: option(descriptors, "lineGapOverride", "normal"),
     sizeAdjust: option(descriptors, "sizeAdjust", "100%"),
     variationSettings: option(descriptors, "variationSettings", "normal"),
-    status: binarySource ? "loaded" : "unloaded",
+    status: width === null ? "error" : binarySource ? "loaded" : "unloaded",
     loaded,
     resolveLoaded,
   };
   state.set(this, record);
-  if (binarySource) resolveLoaded(this);
+  if (width === null) {
+    loaded.catch(() => {});
+    rejectLoaded(new DOMException(`Failed to set '${widthInput}' as a property value.`, "SyntaxError"));
+  } else if (binarySource) resolveLoaded(this);
 }
 
 export function FontData() {
@@ -70,7 +85,7 @@ export function queryLocalFonts() {
 registerNativeFunction(queryLocalFonts, "queryLocalFonts");
 
 export function localFontsProperty(value, name) {
-  return requireRecord(value)[name];
+  return requireRecord(value)[name === "width" ? "stretch" : name];
 }
 
 export function setLocalFontsProperty(value, name, input) {
@@ -78,7 +93,19 @@ export function setLocalFontsProperty(value, name, input) {
   if (record.kind !== "face" || !fontFaceSettable.has(name)) {
     throw new TypeError("Illegal invocation");
   }
-  record[name] = `${input}`;
+  const text = `${input}`;
+  if (profile.get(globalThis) >= 154 && (name === "width" || name === "stretch")) {
+    const normalized = normalizeFontWidth(text);
+    if (normalized === null) {
+      throw new DOMException(
+        `Failed to set the '${name}' property on 'FontFace': Failed to set '${text}' as a property value.`,
+        "SyntaxError",
+      );
+    }
+    record.stretch = normalized;
+  } else {
+    record[name] = text;
+  }
 }
 
 export function localFontsOperation(value, name) {
@@ -100,6 +127,7 @@ export const fontFaceSettable = new Set([
   "family",
   "style",
   "weight",
+  "width",
   "stretch",
   "unicodeRange",
   "variant",
@@ -111,6 +139,23 @@ export const fontFaceSettable = new Set([
   "sizeAdjust",
   "variationSettings",
 ]);
+
+const widthKeywords = new Set([
+  "normal", "ultra-condensed", "extra-condensed", "condensed", "semi-condensed",
+  "semi-expanded", "expanded", "extra-expanded", "ultra-expanded",
+]);
+
+function normalizeFontWidth(input) {
+  const text = input.trim().toLowerCase();
+  if (widthKeywords.has(text)) return text;
+  const values = text.split(/\s+/u);
+  // ponytail: CSS math functions need a shared CSS numeric parser before width can accept them.
+  if (values.length > 2 || !values.every(value => (
+    /^[+\-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+\-]?\d+)?%$/u.test(value)
+    && Number.isFinite(Number(value.slice(0, -1))) && Number(value.slice(0, -1)) >= 0
+  ))) return null;
+  return values.map(value => `${Number(value.slice(0, -1))}%`).join(" ");
+}
 
 function option(value, name, fallback) {
   return value[name] === undefined ? fallback : `${value[name]}`;

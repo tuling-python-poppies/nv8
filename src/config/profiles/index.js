@@ -12,14 +12,19 @@ import {
   domReplayProfile,
   legacyFullProfile,
   browserProfileForEdgeVersion150,
+  browserProfileForEdgeVersion151,
+  browserProfileForEdgeVersion152,
+  browserProfileForEdgeVersion154,
 } from './built-in-profiles.js';
-
 export {
   minimalProfile,
   minimalFetchProfile,
   domReplayProfile,
   legacyFullProfile,
   browserProfileForEdgeVersion150,
+  browserProfileForEdgeVersion151,
+  browserProfileForEdgeVersion152,
+  browserProfileForEdgeVersion154,
 };
 
 /**
@@ -31,4 +36,7 @@ export const profiles = {
   'dom-replay': domReplayProfile,
   'legacy-full': legacyFullProfile,
   'browser-profile-edge-v150': browserProfileForEdgeVersion150,
+  'browser-profile-edge-v151': browserProfileForEdgeVersion151,
+  'browser-profile-edge-v152': browserProfileForEdgeVersion152,
+  'browser-profile-edge-v154': browserProfileForEdgeVersion154,
 };

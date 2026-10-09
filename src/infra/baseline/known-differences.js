@@ -113,6 +113,16 @@ export const NODE_VERSION_DEPENDENT_MEMBERS = Object.freeze([
       + '宿主侧需要时按 HAS_NATIVE_ARRAY_BUFFER_TRANSFER 分支',
   }),
   Object.freeze({
+    prototype: 'Iterator',
+    members: Object.freeze([]),
+    symbols: Object.freeze(['Symbol.dispose']),
+    minimumNodeMajor: 24,
+    reason: 'Iterator.prototype[Symbol.dispose] 需要 Node 24+（实测 Node 22 无、24 有）',
+    owner: 'core-runtime',
+    severity: SEVERITY.ENVIRONMENTAL,
+    expectation: 'Node 22 上缺失；这是 V8 内建 symbol，不能由 NV8 伪造',
+  }),
+  Object.freeze({
     prototype: 'Set',
     members: Object.freeze([
       'difference',
@@ -205,6 +215,29 @@ export function expectedMissingMemberForNode(
   )) ?? null;
 }
 
+export function expectedMissingSymbolForNode(
+  prototype,
+  symbol,
+  nodeVersion = process.versions.node,
+) {
+  const major = Number(/^(\d+)/.exec(nodeVersion)?.[1] ?? 0);
+  return NODE_VERSION_DEPENDENT_MEMBERS.find((entry) => (
+    entry.prototype === prototype
+    && entry.symbols?.includes(symbol)
+    && major < entry.minimumNodeMajor
+  )) ?? null;
+}
+
+export function expectedMissingSymbolCountForNode(
+  prototype,
+  nodeVersion = process.versions.node,
+) {
+  const major = Number(/^(\d+)/.exec(nodeVersion)?.[1] ?? 0);
+  return NODE_VERSION_DEPENDENT_MEMBERS
+    .filter((entry) => entry.prototype === prototype && major < entry.minimumNodeMajor)
+    .reduce((count, entry) => count + (entry.symbols?.length ?? 0), 0);
+}
+
 /**
  * 汇总阻塞项。只要非空，就不允许把默认模式切到 plugin。
  *
@@ -258,9 +291,14 @@ export function validateDifferenceRegistry() {
     if (!Number.isInteger(entry.minimumNodeMajor)) {
       problems.push(`node-dependent member ${entry.prototype} needs minimumNodeMajor`);
     }
-    // 空成员表会静默豁免整个原型——空壳条目正是这套登记机制要防的东西
     if (!Array.isArray(entry.members) || entry.members.length === 0) {
-      problems.push(`node-dependent member ${entry.prototype} needs a non-empty members list`);
+      if (!Array.isArray(entry.symbols) || entry.symbols.length === 0) {
+        problems.push(`node-dependent member ${entry.prototype} needs a non-empty members or symbols list`);
+      }
+    }
+    if (entry.symbols !== undefined && (!Array.isArray(entry.symbols)
+      || entry.symbols.some((symbol) => typeof symbol !== 'string' || symbol.length === 0))) {
+      problems.push(`node-dependent member ${entry.prototype} has invalid symbols`);
     }
     if (!Object.values(SEVERITY).includes(entry.severity)) {
       problems.push(`node-dependent member ${entry.prototype} has invalid severity`);

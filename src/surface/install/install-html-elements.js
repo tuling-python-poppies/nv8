@@ -19,8 +19,8 @@ import { installHTMLOptionElement } from './install-html-option-element.js';
 import { installHTMLIFrameElement } from './install-html-iframe-element.js';
 import { installHTMLCanvasElement } from './install-html-canvas-element.js';
 
-export function installHTMLElementFamily() {
-  installHTMLElement();
+export function installHTMLElementFamily(browserMajorVersion = 150) {
+  installHTMLElement(browserMajorVersion);
   installHTMLUnknownElement();
   installHTMLDivElement();
   installHTMLSpanElement();
@@ -33,8 +33,8 @@ export function installHTMLElementFamily() {
   installHTMLTextAreaElement();
   installHTMLSelectElement();
   installHTMLOptionElement();
-  installHTMLImageElement();
-  installHTMLIFrameElement();
+  installHTMLImageElement(browserMajorVersion >= 154);
+  installHTMLIFrameElement(browserMajorVersion >= 154);
   installHTMLCanvasElement();
   installHTMLScriptElement();
   installHTMLLinkElement();

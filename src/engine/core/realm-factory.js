@@ -211,6 +211,7 @@ export async function createRealm(config) {
     pageHtml = '<!doctype html><html><head></head><body></body></html>',
     replay = [],
     navigatorProfile = {},
+    browserMajorVersion = 150,
     timingProfile = null,
     runtime: runtimeInput = {},
     limits = {},
@@ -239,7 +240,7 @@ export async function createRealm(config) {
   let disposal = null;
   let closed = false;
   const children = new Set();
-  const runtime = { ...runtimeInput };
+  const runtime = { ...runtimeInput, browserMajorVersion };
   for (const name of ['childRealmFactory', 'workerFactory', 'sharedWorkerFactory', 'workletFactory']) {
     const factory = runtimeInput[name];
     if (typeof factory !== 'function') continue;

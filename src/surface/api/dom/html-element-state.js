@@ -50,6 +50,15 @@ export function setHTMLStringProperty(element, name, value) {
   setAttributeValue(element, reflectedAttribute(name), `${value}`);
 }
 
+export function htmlAutocorrect(element) {
+  requireHTMLElement(element);
+  return (getAttributeValue(element, "autocorrect") ?? "").toLowerCase() !== "off";
+}
+
+export function setHTMLAutocorrect(element, value) {
+  setHTMLStringProperty(element, "autocorrect", Boolean(value) ? "on" : "off");
+}
+
 export function htmlBooleanProperty(element, name, defaultValue = false) {
   requireHTMLElement(element);
   const attribute = getAttributeValue(element, reflectedAttribute(name));

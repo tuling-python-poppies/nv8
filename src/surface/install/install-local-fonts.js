@@ -24,7 +24,8 @@ const constructors = Object.freeze({
   FontData: runtime.FontData,
 });
 
-export function installLocalFonts({ exposeGlobal = false } = {}) {
+export function installLocalFonts({ exposeGlobal = false, browserMajorVersion = 150 } = {}) {
+  runtime.configureLocalFontsVersion(browserMajorVersion);
   if (exposeGlobal) {
     installFontFaceSetConstructor({ edge151Surface: true });
   }
@@ -47,6 +48,10 @@ export function installLocalFonts({ exposeGlobal = false } = {}) {
 
     {
       installAccessor(constructors["FontFace"], "weight");
+    }
+
+    if (browserMajorVersion >= 154) {
+      installAccessor(constructors["FontFace"], "width");
     }
 
     {

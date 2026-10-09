@@ -34,7 +34,7 @@ import * as install_script_processor_node from "../api/audio/members/script-proc
 import * as install_stereo_panner_node from "../api/audio/members/stereo-panner-node.js";
 import * as install_wave_shaper_node from "../api/audio/members/wave-shaper-node.js";
 
-export function installAudio() {
+export function installAudio(browserMajorVersion = 150) {
   install_base_audio_context.installGlobal();
   install_audio_context.installGlobal();
   install_offline_audio_context.installGlobal();
@@ -129,6 +129,7 @@ export function installAudio() {
   install_base_audio_context.installOwnedMember23();
   install_base_audio_context.installOwnedMember24();
   install_base_audio_context.installConstructorBacklink();
+  if (browserMajorVersion >= 154) install_base_audio_context.installOwnedMember26();
   install_base_audio_context.installOwnedMember25();
   install_base_audio_context.installTag();
   install_audio_context.installOwnedMember0();

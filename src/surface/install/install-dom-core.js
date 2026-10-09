@@ -8,7 +8,7 @@ import { installNode } from './install-node.js';
 import { installShadowRoot } from './install-shadow-root.js';
 import { installText } from './install-text.js';
 
-export function installDOMCore() {
+export function installDOMCore(browserMajorVersion = 150) {
   installNode();
   installCharacterData();
   installText();
@@ -17,5 +17,5 @@ export function installDOMCore() {
   installElement();
   installDocumentFragment();
   installShadowRoot();
-  installDocument();
+  installDocument(browserMajorVersion >= 154);
 }

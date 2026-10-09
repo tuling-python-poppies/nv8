@@ -66,7 +66,7 @@ import { installSVGTSpanElementFactory } from "../api/dom/svgtspan-element-facto
 import { installReconstructedSVGShapeMembers } from "./install-svg-shape-elements.js";
 import { installSVGBasicAttributeElementMembers } from "./install-svg-basic-attribute-elements.js";
 
-export function installReconstructedSVGFactories() {
+export function installReconstructedSVGFactories(browserMajorVersion = 150) {
   installSVGAElementFactory();
   installSVGClipPathElementFactory();
   installSVGDefsElementFactory();
@@ -133,5 +133,5 @@ export function installReconstructedSVGFactories() {
   installSVGTextElementFactory();
   installSVGTSpanElementFactory();
   installReconstructedSVGShapeMembers();
-  installSVGBasicAttributeElementMembers();
+  installSVGBasicAttributeElementMembers(browserMajorVersion);
 }

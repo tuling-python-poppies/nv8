@@ -28,7 +28,7 @@ import {
 const sandboxLists = new WeakMap();
 const featurePolicies = new WeakMap();
 
-export function installHTMLIFrameElementMembers() {
+export function installHTMLIFrameElementMembers(edge154Surface = false) {
   for (const name of ["src", "srcdoc", "name"]) installString(name);
   definePrototypeGetter(
     HTMLIFrameElement.prototype,
@@ -84,7 +84,7 @@ export function installHTMLIFrameElementMembers() {
   installString("privateToken");
   installBoolean("browsingTopics");
   installBoolean("adAuctionHeaders");
-  installBoolean("sharedStorageWritable");
+  if (!edge154Surface) installBoolean("sharedStorageWritable");
   defineToStringTag(HTMLIFrameElement.prototype, "HTMLIFrameElement");
 }
 

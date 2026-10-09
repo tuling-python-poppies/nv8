@@ -20,6 +20,8 @@ import {
   installHTMLElementEarlyEventMembers,
   installHTMLElementLateEventMembers,
 } from "../api/dom/html-element-event-members.js";
+import { configureCSSPropertyNames } from "../api/css/css-style-declaration-properties.js";
+import { htmlAutocorrect, setHTMLAutocorrect } from "../api/dom/html-element-state.js";
 import { dataset } from "../api/dom/html-element-dataset-getter.js";
 import { tabIndex, setTabIndex } from "../api/dom/html-element-tab-index-property.js";
 import { style } from "../api/dom/html-element-style-getter.js";
@@ -50,7 +52,8 @@ import {
   htmlElementMethodPart2Table,
 } from "../api/dom/html-element-method-members.js";
 
-export function installHTMLElement() {
+export function installHTMLElement(browserMajorVersion = 150) {
+  configureCSSPropertyNames(browserMajorVersion);
   installHTMLElementConstructor();
   for (const [name, entry] of htmlStringDescriptorPart1Table) accessor(name, entry.get, entry.set);
   accessor("translate", translate, setTranslate);
@@ -85,6 +88,13 @@ export function installHTMLElement() {
   method("focus", focus);
   for (const [name, entry] of htmlElementMethodPart2Table) method(name, entry);
   method("togglePopover", togglePopover);
+  if (browserMajorVersion >= 154) {
+    accessor(
+      "autocorrect",
+      function getAutocorrect() { return htmlAutocorrect(this); },
+      function setAutocorrect(value) { setHTMLAutocorrect(this, value); },
+    );
+  }
   installHTMLElementLateEventMembers(accessor);
   for (const [name, entry] of htmlStringDescriptorPart9Table) accessor(name, entry.get, entry.set);
   finishHTMLElementConstructor();
@@ -95,6 +105,7 @@ export function installHTMLElement() {
 function accessor(name, get, set) {
   definePrototypeAccessor(HTMLElement.prototype, name, get, set);
 }
+
 function getter(name, get) {
   definePrototypeGetter(HTMLElement.prototype, name, get);
 }

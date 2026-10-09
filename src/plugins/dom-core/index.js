@@ -61,7 +61,7 @@ export const domCorePlugin = {
     if (!module?.namespace?.installDOMCore) {
       throw new Error('Realm module loader cannot install DOM Core');
     }
-    module.namespace.installDOMCore();
+    module.namespace.installDOMCore(Number(context.runtime?.browserMajorVersion ?? 150));
     context.exports.domCore = true;
   },
   

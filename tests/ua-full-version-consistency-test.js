@@ -3,7 +3,7 @@
  *
  * 运行时的 `getHighEntropyValues(['uaFullVersion'])` 走
  * `navigator-ua-data-state.js` 的 build 版本表；profile 导出走
- * `edge-150.js` / `edge-151.js` / `edge-152.js` 的
+ * `edge-150.js` / `edge-151.js` / `edge-152.js` / `edge-154.js` 的
  * `userAgentData.uaFullVersion`。两处曾经矛盾：edge-151 声明
  * 151.0.7849.46，运行时给 151.0.4129.101。
  *
@@ -18,6 +18,7 @@ import assert from 'node:assert/strict';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge151Fingerprint } from '../src/infra/fingerprint/edge-151.js';
 import { edge152Fingerprint } from '../src/infra/fingerprint/edge-152.js';
+import { edge154Fingerprint } from '../src/infra/fingerprint/edge-154.js';
 
 const PAGE_HTML = '<!doctype html><html><head></head><body></body></html>';
 
@@ -44,6 +45,7 @@ for (const [name, fingerprint] of [
   ['edge-150', edge150Fingerprint],
   ['edge-151', edge151Fingerprint],
   ['edge-152', edge152Fingerprint],
+  ['edge-154', edge154Fingerprint],
 ]) {
   test(`${name} profile uaFullVersion matches the sandbox output`, async () => {
     const declared = fingerprint.navigator.userAgentData.uaFullVersion;

@@ -4,6 +4,10 @@ const NAVIGATOR_INSTALLER_URL = new URL(
   "../../surface/install/install-navigator.js",
   import.meta.url,
 );
+const NAVIGATOR_UA_DATA_INSTALLER_URL = new URL(
+  "../../surface/install/install-navigator-ua-data.js",
+  import.meta.url,
+);
 
 /**
  * @nv8/plugin-navigator
@@ -24,6 +28,7 @@ export const navigatorPlugin = {
     installNavigator();
     
     // 注册全局表面
+    registry.reserveGlobalSurface(this.id, "NavigatorUAData");
     registry.reserveGlobalSurface(this.id, "Navigator");
     registry.reserveGlobalSurface(this.id, "navigator");
   },
@@ -34,6 +39,13 @@ export const navigatorPlugin = {
       throw new Error('Realm module loader cannot install Navigator');
     }
     module.namespace.installNavigator();
+    const uaDataModule = await context.moduleLoader?.importUrlAsync(
+      NAVIGATOR_UA_DATA_INSTALLER_URL,
+    );
+    if (!uaDataModule?.namespace?.installNavigatorUAData) {
+      throw new Error('Realm module loader cannot install NavigatorUAData');
+    }
+    uaDataModule.namespace.installNavigatorUAData();
     context.exports.navigator = true;
   },
   

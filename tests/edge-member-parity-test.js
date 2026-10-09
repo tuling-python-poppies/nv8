@@ -36,6 +36,7 @@ import {
   NODE_VERSION_DEPENDENT_MEMBERS,
   expectedMissingForNode,
   expectedMissingMemberForNode,
+  expectedMissingSymbolForNode,
 } from '../src/infra/baseline/known-differences.js';
 import { WINDOW_GLOBAL_ORDER } from '../src/surface/install/window-surface-order.js';
 
@@ -493,6 +494,27 @@ test('the Node-version member registry has no dead entries', () => {
     for (const member of entry.members) {
       if (!realNames.has(member)) {
         dead.push(`${entry.prototype}.${member} does not exist in real Edge either`);
+      }
+    }
+    for (const symbol of entry.symbols ?? []) {
+      if ((realPrototypes[entry.prototype].symbolCount ?? 0) < (entry.symbols?.length ?? 0)) {
+        dead.push(`${entry.prototype}.${symbol} exceeds the real Edge symbol count`);
+      }
+      const Constructor = globalThis[entry.prototype];
+      if (typeof Constructor !== 'function' || !Constructor.prototype) {
+        if (expectedMissingForNode(entry.prototype) === null) {
+          dead.push(`${entry.prototype}.${symbol} has no host prototype to explain it`);
+        }
+        continue;
+      }
+      const symbolName = /^Symbol\.(.+)$/.exec(symbol)?.[1];
+      const key = symbolName === undefined ? undefined : Symbol[symbolName];
+      const present = key !== undefined && Reflect.ownKeys(Constructor.prototype).includes(key);
+      if (expectedMissingSymbolForNode(entry.prototype, symbol) === null && !present) {
+        dead.push(`${entry.prototype}.${symbol} is not missing on the current Node`);
+      }
+      if (expectedMissingSymbolForNode(entry.prototype, symbol) !== null && present) {
+        dead.push(`${entry.prototype}.${symbol} is present despite its Node-version gate`);
       }
     }
   }

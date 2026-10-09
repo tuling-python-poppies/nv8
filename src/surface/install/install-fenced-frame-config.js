@@ -9,9 +9,9 @@ import {
 } from "../api/dom/fenced-frame-config-constructor.js";
 import { setSharedStorageContext } from "../api/dom/fenced-frame-config-set-shared-storage-context.js";
 
-export function installFencedFrameConfig() {
+export function installFencedFrameConfig(edge154Surface = false) {
   installFencedFrameConfigConstructor();
-  definePrototypeMethod(
+  if (!edge154Surface) definePrototypeMethod(
     FencedFrameConfig.prototype,
     "setSharedStorageContext",
     setSharedStorageContext,

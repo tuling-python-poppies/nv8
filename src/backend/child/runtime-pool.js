@@ -1158,6 +1158,7 @@ export class RuntimePool {
         maxTraceEntries: this.options.proxyTrace.maxEntries,
         objectURLRegistry: this.objectURLRegistry,
         messagePortRegistry: this.messagePortRegistry,
+        browserMajorVersion: this.options.fingerprint.browserMajorVersion,
       });
     } finally {
       this.pendingRealmCreations -= 1;

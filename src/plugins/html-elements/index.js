@@ -27,6 +27,10 @@ const IFRAME_REALMS_INSTALLER_URL = new URL(
   "../../surface/install/install-iframe-realms.js",
   import.meta.url,
 );
+const HTML_CAPTURE_INSTALLER_URL = new URL(
+  "../../surface/install/install-html-capture-elements.js",
+  import.meta.url,
+);
 
 /**
  * @nv8/plugin-html-elements
@@ -104,7 +108,9 @@ export const htmlElementsPlugin = {
     if (!module?.namespace?.installHTMLElementFamily) {
       throw new Error('Realm module loader cannot install HTML elements');
     }
-    module.namespace.installHTMLElementFamily();
+    module.namespace.installHTMLElementFamily(
+      Number(context.runtime?.browserMajorVersion ?? 150),
+    );
     const iframeInstaller = await context.moduleLoader?.importUrlAsync(
       IFRAME_REALMS_INSTALLER_URL,
     );
@@ -112,6 +118,15 @@ export const htmlElementsPlugin = {
       context.runtime?.childRealmFactory ?? null,
       context.runtime?.documentBaseUrl ?? context.pageUrl,
     );
+    if (Number(context.runtime?.browserMajorVersion ?? 150) >= 154) {
+      const captureInstaller = await context.moduleLoader?.importUrlAsync(
+        HTML_CAPTURE_INSTALLER_URL,
+      );
+      if (!captureInstaller?.namespace?.installHTMLCaptureElements) {
+        throw new Error('Realm module loader cannot install HTML capture elements');
+      }
+      captureInstaller.namespace.installHTMLCaptureElements();
+    }
     context.exports.htmlElements = true;
   },
   

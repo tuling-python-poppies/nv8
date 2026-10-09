@@ -328,6 +328,7 @@ function initializeAudioContext(context, options, offline) {
     baseLatency: 128 / sampleRate,
     outputLatency: 256 / sampleRate,
     sinkId: "default",
+    renderQuantumSize: 128,
     playbackStats: null,
     closed: false,
     nodes: new Set(),

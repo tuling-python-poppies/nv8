@@ -26,12 +26,14 @@ import { WINDOW_GLOBAL_ORDER } from '../src/surface/install/window-surface-order
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 
 const REAL_GLOBALS_URL = new URL('../fixtures/fingerprint/edge-globals.json', import.meta.url);
+const REAL_GLOBALS_154_URL = new URL('../fixtures/fingerprint/edge-154-globals.json', import.meta.url);
 const SURFACE_URL = new URL('../fixtures/baseline/full-surface.json', import.meta.url);
 
 const hasRealGlobals = existsSync(REAL_GLOBALS_URL);
 const realGlobals = hasRealGlobals
   ? new Set(JSON.parse(await readFile(REAL_GLOBALS_URL, 'utf8')).globals)
   : null;
+const realGlobals154 = new Set(JSON.parse(await readFile(REAL_GLOBALS_154_URL, 'utf8')).globals);
 const surface = JSON.parse(await readFile(SURFACE_URL, 'utf8'));
 
 function surfaceTier() {
@@ -176,7 +178,7 @@ test('registered gaps name globals that real Edge actually has', () => {
   // 登记一个真实 Edge 都没有的名字意味着登记过时或拼错，而它看上去就像
   // 「已知缺口」，会一直赖在账上。
   for (const name of [...PENDING_GLOBALS.keys(), ...VERSION_GATED_GLOBALS]) {
-    assert.ok(realGlobals.has(name), `${name} 不在采集结果里，这条登记已过时`);
+    assert.ok(realGlobals.has(name) || realGlobals154.has(name), `${name} 不在采集结果里，这条登记已过时`);
   }
 });
 
