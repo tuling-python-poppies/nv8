@@ -51,8 +51,18 @@ export const stream = Object.getOwnPropertyDescriptor({
 }, "stream").get;
 registerNativeGetter(stream, "stream");
 
+export function validateSetConstraints(value, interfaceName, dictionaryName) {
+  if (value === null || value === undefined
+    || typeof value === "object" || typeof value === "function") return;
+  throw new TypeError(
+    `Failed to execute 'setConstraints' on '${interfaceName}': `
+    + `The provided value is not of type '${dictionaryName}'.`,
+  );
+}
+
 export function setConstraints() {
   requireUserMediaElement(this);
+  validateSetConstraints(arguments[0], "HTMLUserMediaElement", "HTMLMediaStreamConstraints");
   return undefined;
 }
 registerNativeFunction(setConstraints, "setConstraints");

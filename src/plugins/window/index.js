@@ -4,6 +4,10 @@ const WINDOW_INSTALLER_URL = new URL(
   "../../surface/install/install-window.js",
   import.meta.url,
 );
+const EDGE_STATIC_FUNCTIONS_URL = new URL(
+  "../../surface/install/install-edge-static-functions.js",
+  import.meta.url,
+);
 
 /**
  * @nv8/plugin-window
@@ -37,6 +41,13 @@ export const windowPlugin = {
       throw new Error('Realm module loader cannot install Window');
     }
     installer.namespace.installWindow();
+    if ((context.runtime?.browserMajorVersion ?? 150) >= 154) {
+      const edgeStatic = await context.moduleLoader?.importUrlAsync(EDGE_STATIC_FUNCTIONS_URL);
+      if (!edgeStatic?.namespace?.installRequestResize) {
+        throw new Error('Realm module loader cannot install requestResize');
+      }
+      edgeStatic.namespace.installRequestResize();
+    }
     context.exports.window = true;
   },
 

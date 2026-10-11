@@ -1,3 +1,6 @@
+import {
+  getAttributeValue,
+} from "./element-state.js";
 import { assignEventHandler } from "../event/event-handler-attribute.js";
 import { currentHref } from "../../../infra/navigation/navigation-state.js";
 import { initializeEventTarget } from "../event/event-target-state.js";
@@ -157,6 +160,46 @@ export function configureDocument(referrer, contentType) {
   const state = requireDocument(document);
   state.referrer = `${referrer}`;
   state.contentType = `${contentType}`;
+}
+
+export function responsiveEmbeddedSizingForDocument(document) {
+  const state = requireDocument(document);
+  if (state.contentType !== "text/html") return null;
+  const meta = documentElements(document).find(element => (
+    element.localName === "meta"
+    && `${getAttributeValue(element, "name") ?? ""}`.trim().toLowerCase()
+      === "responsive-embedded-sizing"
+  ));
+  if (meta === undefined) return null;
+  const content = `${getAttributeValue(meta, "content") ?? ""}`.trim();
+  const token = content.split(/\s+/u).find(value => (
+    value.toLowerCase().startsWith("allow-origins=")
+  ));
+  if (token === undefined) return null;
+  const value = token.slice(token.indexOf("=") + 1).trim();
+  if (value === "") return null;
+  return {
+    allowOrigins: value === "*" ? ["*"] : value.split(",").map(origin => origin.trim()).filter(Boolean),
+  };
+}
+
+export function isResponsiveEmbeddedSizingAllowed(document, origin) {
+  const configuration = responsiveEmbeddedSizingForDocument(document);
+  if (configuration === null) return false;
+  if (configuration.allowOrigins.includes("*")) return true;
+  let candidate;
+  try {
+    candidate = new URL(`${origin}`).origin;
+  } catch {
+    return false;
+  }
+  return configuration.allowOrigins.some(value => {
+    try {
+      return new URL(value).origin === candidate;
+    } catch {
+      return false;
+    }
+  });
 }
 
 export function setCurrentScript(document, script) {

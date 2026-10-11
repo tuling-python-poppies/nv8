@@ -35,6 +35,19 @@ export function configureIFrameRealms(factory, pageUrl) {
   scope.parentPageUrl = `${pageUrl}`;
 }
 
+export function iframeResponsiveSize(element) {
+  return state.get(element)?.responsiveSize ?? null;
+}
+
+export function setIframeResponsiveSize(element, width, height) {
+  const record = state.get(element);
+  if (record === undefined) return false;
+  record.responsiveSize = {
+    width: Math.max(0, Number(width) || 0),
+    height: Math.max(0, Number(height) || 0),
+  };
+  return true;
+}
 export function iframeContentWindow(element) {
   requireIFrame(element);
   const record = ensureRecord(element);
@@ -153,6 +166,7 @@ function navigate(element) {
     loading: null,
     clientId: null,
     createInitialWindow: null,
+    responsiveSize: null,
   };
   const version = current.version + 1;
   const srcdoc = getAttributeValue(element, "srcdoc");
@@ -209,6 +223,7 @@ function navigate(element) {
   current.handle?.close();
   current.handle = null;
   current.pendingWindow = null;
+  current.responsiveSize = null;
   clearFacadeFrameIndices(current.facade);
   state.set(element, current);
   current.sameOrigin = parentOrigin === childOrigin;
@@ -277,6 +292,10 @@ function navigate(element) {
     registerIncumbentSource(() => incumbentSource);
     return incumbentSource;
   };
+  parentPostMessage.requestResize = function requestResize(width, height) {
+    return setIframeResponsiveSize(element, width, height);
+  };
+  parentPostMessage.requestResize.parentOrigin = parentOrigin;
   const scope = iframeScope();
   const createChildRealm = () => scope.createChildRealm({
     pageUrl: documentUrl,

@@ -6,6 +6,25 @@ import {
 import { descendants, ELEMENT_NODE, requireNode, TEXT_NODE } from "./node-state.js";
 import { htmlStyleRecord } from "./html-element-state.js";
 import { measureText } from "../../../infra/fingerprint/font-metrics.js";
+import { iframeResponsiveSize } from "./html-iframe-element-realm-state.js";
+
+export function documentScrollingArea(document) {
+  const root = document.documentElement;
+  if (root === null) return { width: 0, height: 0 };
+  let width = 0;
+  let height = 0;
+  for (const descendant of descendants(root)) {
+    try {
+      if (descendant === root || descendant === document.body) continue;
+      const rect = elementLayoutRect(descendant);
+      width = Math.max(width, rect.x + rect.width);
+      height = Math.max(height, rect.y + rect.height);
+    } catch {
+      // Non-element descendants do not contribute a layout box.
+    }
+  }
+  return { width: Math.ceil(width), height: Math.ceil(height) };
+}
 
 export function elementLayoutRect(element) {
   // 视口盒：documentElement / body 的 client/offset 尺寸来自视口（真机为
@@ -147,6 +166,17 @@ function explicitLayout(element) {
     ?? attributeDimension(element, "height");
 
   if (state.localName === "iframe") {
+    const responsive = iframeResponsiveSize(element);
+    const responsiveWidth = responsive?.width;
+    const responsiveHeight = responsive?.height;
+    if (responsive !== null && (width === null || height === null)) {
+      return {
+        x: cssPixels(style.left) ?? 0,
+        y: cssPixels(style.top) ?? 0,
+        width: width ?? responsiveWidth,
+        height: height ?? responsiveHeight,
+      };
+    }
     width ??= 300;
     height ??= 150;
   }

@@ -1280,7 +1280,7 @@ export const WINDOW_GLOBAL_ORDER = Object.freeze([
 ["webkitSpeechRecognition", VALUE_HIDDEN],
 ["webkitSpeechRecognitionError", VALUE_HIDDEN],
 ["webkitSpeechRecognitionEvent", VALUE_HIDDEN],
-["requestResize", VALUE_ENUMERABLE, { pending: "success conditions and context semantics are not verified" }],
+["requestResize", VALUE_ENUMERABLE, { since: 154 }],
 ["webkitRequestFileSystem", VALUE_ENUMERABLE],
 ["webkitResolveLocalFileSystemURL", VALUE_ENUMERABLE],
 ]);

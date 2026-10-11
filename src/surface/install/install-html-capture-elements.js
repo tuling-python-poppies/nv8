@@ -14,6 +14,15 @@ import {
 import { HTML_NAMESPACE, initializeElement } from "../api/dom/element-state.js";
 import { assignEventHandler } from "../api/event/event-handler-attribute.js";
 
+function validateSetConstraints(value, interfaceName, dictionaryName) {
+  if (value === null || value === undefined
+    || typeof value === "object" || typeof value === "function") return;
+  throw new TypeError(
+    `Failed to execute 'setConstraints' on '${interfaceName}': `
+    + `The provided value is not of type '${dictionaryName}'.`,
+  );
+}
+
 const states = new WeakMap();
 
 function createCaptureElement(Constructor, tagName, ownerDocument) {
@@ -75,6 +84,9 @@ function installCaptureElement(name, tagName) {
   definePrototypeGetter(Constructor.prototype, "track", track);
   const setConstraints = function () {
     captureState(this);
+    validateSetConstraints(arguments[0], name, name === "HTMLUserMediaElement"
+      ? "HTMLMediaStreamConstraints"
+      : "MediaTrackConstraintSet");
     return undefined;
   };
   registerNativeFunction(setConstraints, "setConstraints");

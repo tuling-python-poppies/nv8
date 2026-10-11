@@ -95,12 +95,13 @@ for (const major of [152, 154]) {
   });
 }
 
-test("Edge 154 global fixture has only the documented pending API", async () => {
+test("Edge 154 global fixture has no unimplemented globals", async () => {
   const observed = Object.keys((await capture()).globals);
   const missing = [...globals].filter(name => !observed.includes(name))
     .filter(name => expectedMissingForNode(name) === null);
   assert.deepEqual(observed.filter(name => !globals.has(name)), []);
-  assert.deepEqual(missing, ["requestResize"]);
+  assert.deepEqual(missing, []);
+  assert.equal(observed.includes("requestResize"), true);
 });
 
 test("Edge 154 independent members and descriptors match", async () => {

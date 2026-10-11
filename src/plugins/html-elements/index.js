@@ -31,6 +31,10 @@ const HTML_CAPTURE_INSTALLER_URL = new URL(
   "../../surface/install/install-html-capture-elements.js",
   import.meta.url,
 );
+const HTML_USER_MEDIA_INSTALLER_URL = new URL(
+  "../../surface/install/install-html-user-media-element.js",
+  import.meta.url,
+);
 
 /**
  * @nv8/plugin-html-elements
@@ -118,6 +122,15 @@ export const htmlElementsPlugin = {
       context.runtime?.childRealmFactory ?? null,
       context.runtime?.documentBaseUrl ?? context.pageUrl,
     );
+    if (Number(context.runtime?.browserMajorVersion ?? 150) >= 151) {
+      const userMediaInstaller = await context.moduleLoader?.importUrlAsync(
+        HTML_USER_MEDIA_INSTALLER_URL,
+      );
+      if (!userMediaInstaller?.namespace?.installHTMLUserMediaElement) {
+        throw new Error('Realm module loader cannot install HTML user media element');
+      }
+      userMediaInstaller.namespace.installHTMLUserMediaElement();
+    }
     if (Number(context.runtime?.browserMajorVersion ?? 150) >= 154) {
       const captureInstaller = await context.moduleLoader?.importUrlAsync(
         HTML_CAPTURE_INSTALLER_URL,

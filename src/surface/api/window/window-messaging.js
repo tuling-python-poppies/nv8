@@ -8,6 +8,7 @@ import {
   registerNativeGetter,
 } from "../../../engine/webidl/native-function.js";
 import { createRealmSlot } from "../../../engine/core/state-scope.js";
+import { configureRequestResize } from "./request-resize-state.js";
 
 const facadeState = new WeakMap();
 
@@ -127,6 +128,7 @@ export function configureWindowMessaging(
   state.parentPostMessage = typeof parentPostMessage === "function"
     ? parentPostMessage
     : null;
+  configureRequestResize(state.parentPostMessage?.requestResize ?? null);
   if (parentWindow === null || typeof parentPostMessage !== "function") {
     state.parentFacade = globalThis;
     state.topFacade = globalThis;

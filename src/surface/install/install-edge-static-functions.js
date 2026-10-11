@@ -2,6 +2,11 @@ import {
   createNativeFunction,
   registerNativeGetter,
 } from "../../engine/webidl/native-function.js";
+import { defineGlobalFunction } from "../../engine/webidl/descriptor.js";
+import { currentDocument } from "../api/dom/document-state.js";
+import { documentScrollingArea } from "../api/dom/element-layout.js";
+import { requestResizeCallback } from "../api/window/request-resize-state.js";
+import { isResponsiveEmbeddedSizingAllowed } from "../api/dom/document-record.js";
 
 function defineStatic(
   owner,
@@ -198,7 +203,31 @@ function sumPrecise(values) {
   return sum;
 }
 
-export function installEdgeStaticFunctions() {
+function requestResize() {
+  const document = currentDocument();
+  const resize = requestResizeCallback();
+  if (document === null || resize === null
+    || !isResponsiveEmbeddedSizingAllowed(document, resize.parentOrigin ?? "")) {
+    throw new DOMException(
+      "Failed to execute 'requestResize' on 'Window': Requesting resize is allowed only from HTML documents with `responsive-embedded-sizing` meta tags.",
+      "NotAllowedError",
+    );
+  }
+  const { width, height } = documentScrollingArea(document);
+  if (resize(width, height) !== true) {
+    throw new DOMException(
+      "Failed to execute 'requestResize' on 'Window': Requesting resize is allowed only from HTML documents with `responsive-embedded-sizing` meta tags.",
+      "NotAllowedError",
+    );
+  }
+}
+
+export function installRequestResize() {
+  return defineGlobalFunction("requestResize", requestResize);
+}
+
+export function installEdgeStaticFunctions(browserMajorVersion = 150) {
+  if (browserMajorVersion >= 154) installRequestResize();
   defineStatic(
     globalThis.Credential,
     "isConditionalMediationAvailable",

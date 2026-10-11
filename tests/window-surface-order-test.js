@@ -445,15 +445,13 @@ test('a since-gated global is absent below its version', async () => {
   assert.equal(names.includes('FontFaceSet'), false);
 });
 
-// ------------------------------------------------------------ pending 登记
+// ------------------------------------------------------------ version-gated requestResize
 
-test('pending globals are absent at every profile version', async () => {
-  const pending = WINDOW_GLOBAL_ORDER
-    .filter((entry) => entry[2]?.pending !== undefined)
-    .map((entry) => entry[0]);
-  assert.deepEqual(pending, ['requestResize']);
-  const { names } = await captureWindow({ ...edge154Fingerprint, browserMajorVersion: 154 });
-  for (const name of pending) assert.equal(names.includes(name), false, name);
+test('requestResize is absent below Edge 154 and present at Edge 154', async () => {
+  const legacy = await captureWindow({ ...edge152Fingerprint, browserMajorVersion: 152 });
+  const modern = await captureWindow({ ...edge154Fingerprint, browserMajorVersion: 154 });
+  assert.equal(legacy.names.includes('requestResize'), false);
+  assert.equal(modern.names.includes('requestResize'), true);
 });
 
 // ------------------------------------------------------ descriptor 形状
