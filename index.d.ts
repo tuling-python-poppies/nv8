@@ -111,6 +111,8 @@ export function createNv8(options?: Nv8Options): Promise<{
 export function nv8Eval<T = unknown>(code: string, options?: Nv8Options): Promise<T>;
 export function createProfile(profile: string | ProfileManifest): Profile;
 export const profiles: Record<string, Profile>;
+export function resolveProfileCapabilities(profile: ProfileManifest, hostCapabilities: unknown, options?: Record<string, unknown>): unknown;
+export const PROFILE_CAPABILITY_POLICIES: Record<string, string>;
 
 export const minimalPreset: object[];
 export const basicPreset: object[];
@@ -119,7 +121,39 @@ export const networkPreset: object[];
 export const fullPreset: object[];
 export const defaultPreset: object[];
 
-export function createAgentSession(options?: Record<string, unknown>): Promise<import("./agent").AgentSession>;
+export const webidlPlugin: object;
+export const errorsPlugin: object;
+export const builtinsPlugin: object;
+export const consolePlugin: object;
+export const eventsPlugin: object;
+export const abortPlugin: object;
+export const domExceptionPlugin: object;
+export const domCorePlugin: object;
+export const domCollectionsPlugin: object;
+export const domPlugin: object;
+export const htmlPlugin: object;
+export const htmlElementsPlugin: object;
+export const canvasPlugin: object;
+export const streamsPlugin: object;
+export const timersPlugin: object;
+export const storagePlugin: object;
+export const fetchPlugin: object;
+export const xhrPlugin: object;
+export const websocketPlugin: object;
+export const windowPlugin: object;
+export const navigatorPlugin: object;
+export const locationPlugin: object;
+export const historyPlugin: object;
+export const performancePlugin: object;
+export const encodingPlugin: object;
+export const urlPlugin: object;
+export const cryptoPlugin: object;
+export const messagingPlugin: object;
+export const workerPlugin: object;
+export const workletPlugin: object;
+export const serviceWorkerPlugin: object;
+
+export function createAgentSession(options?: Record<string, unknown>): Promise<import("./agent.js").AgentSession>;
 export function validateEnvironmentPatch(patch: unknown): unknown;
 
 export const edge150Fingerprint: Readonly<Fingerprint>;
@@ -127,5 +161,5 @@ export const edge151Fingerprint: Readonly<Fingerprint>;
 export const edge152Fingerprint: Readonly<Fingerprint>;
 export const edge154Fingerprint: Readonly<Fingerprint>;
 
-export * as protocol from "./protocol";
-export * as collector from "./collector";
+export * as protocol from "./protocol.js";
+export * as collector from "./collector.js";

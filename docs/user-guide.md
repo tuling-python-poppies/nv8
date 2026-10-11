@@ -774,12 +774,13 @@ Edge 150 是默认值；版本特定的 profile 应与对应 UA 一起使用：
 ```js
 import { edge151Fingerprint } from "nv8/fingerprint/edge-151";
 import { edge152Fingerprint } from "nv8/fingerprint/edge-152";
+import { edge154Fingerprint } from "nv8/fingerprint/edge-154";
 
 const sandbox = await EdgeSandbox.create({ fingerprint: edge151Fingerprint });
 // Edge 152: { fingerprint: edge152Fingerprint }
 ```
 
-当前 `browserMajorVersion` 接受 `150` 到 `154`（`154` 的 UA-CH 品牌串按真机实测校准；冻结指纹导出仍是 `nv8/fingerprint/edge-150`、`edge-151`、`edge-152`）。如果自定义 UA，必须满足：
+当前 `browserMajorVersion` 接受 `150` 到 `154`（`154` 的 UA-CH 品牌串按真机实测校准；冻结指纹导出是 `nv8/fingerprint/edge-150`、`edge-151`、`edge-152`、`edge-154`）。如果自定义 UA，必须满足：
 
 - 包含对应版本的 `Chrome/<major>.`；
 - 如果包含 `Edg/<major>`，其主版本必须与 `Chrome/<major>` 一致；

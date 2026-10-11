@@ -308,7 +308,8 @@ nativeToString       function addEventListener() { [native code] }
    池、同步读取拿到 null（挑战的干净窗口 `eval` 直接 TypeError）。现放宽为任意
    父页 origin：池位由 `reparentRealm` 重配 documentUrl/origin，账目与清理规则不变。
 
-测试：`tests/iframe-prewarm-pool-test.js`（池位语义）与 iframe 身份/消息套件覆盖新语义；全量 1321 项在 Node 18/20/22/24 四档全绿（18/20 另有 2 项按版本分支跳过）。
+测试：`tests/iframe-prewarm-pool-test.js`（池位语义）与 iframe 身份/消息套件覆盖新语义；
+当前全量套件在 Node 22/24 为 1348 项且全绿，Node 18/20 的宿主版本差异由测试门控处理。
 
 ## 附：复现
 

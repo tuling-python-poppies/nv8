@@ -4,6 +4,10 @@
 实际导出的 API。内部模块路径不是稳定公共入口；需要扩展运行时的调用方应优先使用
 Profile、插件、Protocol、Agent Session 和 Collector 的公开对象，而不是直接操作 `src/engine/`。
 
+包根和四个公开子路径同时提供 TypeScript 声明（`index.d.ts`、`agent.d.ts`、
+`protocol.d.ts`、`collector.d.ts`）。声明覆盖公开入口和常用构造器；运行时求值结果、
+诊断快照和部分扩展配置保留为泛型或结构化对象，以适应目标脚本和插件的动态形状。
+
 ## 设计边界
 
 NV8 分为两个相互配合但权限不同的部分：
