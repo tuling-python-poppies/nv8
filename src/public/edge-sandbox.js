@@ -4,6 +4,7 @@ import {
   normalizeSource,
 } from "./edge-runtime-options.js";
 import { toPublicEvaluationResult } from "./evaluation-result.js";
+import { collectReverseEvidence } from "./target-evidence.js";
 import { Buffer } from "node:buffer";
 
 export class EdgeSandbox {
@@ -129,6 +130,10 @@ export class EdgeSandbox {
 
   resources() {
     return this.controller.readResources();
+  }
+
+  runtimeEvidence(options = {}) {
+    return collectReverseEvidence({ sandbox: this, ...options });
   }
 
   /**

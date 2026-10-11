@@ -213,6 +213,18 @@ sandbox.clearNetworkRequests();
 
 `networkRequests()` 返回冻结快照，按请求到达沙箱离线网络边界的顺序排列。
 
+`runtimeEvidence()` 把环境摘要、Trace、网络请求、资源和调用方因果记录收拢为可落盘
+JSON。默认脱敏 URL 敏感 query、Authorization/Cookie/token 类 header 和请求 body；只有
+明确传入 `includeSensitive: true` 才保留原始敏感字段。
+
+```js
+const evidence = await sandbox.runtimeEvidence({
+  targetId: "target-script-v1",
+  sourceSha256: "...",
+  acceptance: { level: "verified" },
+});
+```
+
 ### 3.6 API Trace
 
 ```js

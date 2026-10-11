@@ -83,6 +83,9 @@ NV8 走第四条：**在 Node 里按声明的 Edge profile、Node 版本和 pari
   裁剪，见[三条使用路径](#三条使用路径)。
 - **协议恢复工具链**：`networkRequests()` 取出脚本发起的全部请求，`trace()` /
   `watchApis()` / `openInspector()` 把签名入口定位出来并下断点。
+- **逆向证据链**：`runtimeEvidence()` 统一收集环境、Trace、网络、资源和因果记录；
+  `createTargetArtifactManifest()` 绑定目标脚本 hash 与补丁，`diff:evidence` 对两次运行
+  做可定位差分，默认脱敏敏感请求材料。
 - **Agent 会话层**：面向 LLM Agent 的宿主侧控制面——声明式 `EnvironmentPatch`
   （仅 `page` / `fingerprint` / `replay`）、版本化 + 回滚 + 审计，
   `compareEnvironment()` 在隔离 Sandbox 里先验证假设再落地；附 stdio JSON-RPC 桥

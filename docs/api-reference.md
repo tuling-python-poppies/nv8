@@ -182,6 +182,14 @@ try {
 
 `compareEnvironment(source, patch)` 是逆向侦察阶段推荐的验证入口：它在两个新鲜 Sandbox 中执行相同脚本，返回 `before`、`after` 和 `diff`，比较求值结果、Trace、网络请求和资源摘要。它不会推进当前会话的 `environmentVersion`，也不会把当前 Realm 的 Cookie/Storage 带入比较；确认假设后再调用 `applyEnvironmentPatch()`。
 
+`runtimeEvidence(options?)` 可把一次运行的环境摘要、Trace、网络、资源和调用方因果记录
+收拢为可落盘 JSON。默认脱敏 URL 敏感 query、Authorization/Cookie/token 类 header 和
+请求 body；只有明确传入 `includeSensitive: true` 才保留原始敏感字段。
+
+目标工件可以用 `createTargetArtifactManifest()` 绑定 source hash 与声明式补丁，使用
+`applyTargetPatches()` 后再调用 `collectReverseEvidence()`。两次结果可用
+`createReverseEvidenceDiff()` 比较，也可运行 `npm run diff:evidence -- before.json after.json`。
+
 补丁不能修改 `limits`、`execution`、Evidence、Collector 凭据、真实网络策略或脚本策略。页面变化复用 Realm reset；指纹和 replay 变化先创建新 Sandbox，成功后才关闭旧 Sandbox。版本冲突、未知字段和过期补丁都会 fail closed。
 
 ## Protocol API

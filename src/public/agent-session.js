@@ -1,6 +1,7 @@
 import { EdgeSandbox } from "./edge-sandbox.js";
 import { normalizeRuntimeOptions } from "./edge-runtime-options.js";
 import { Buffer } from "node:buffer";
+import { collectReverseEvidence } from "./target-evidence.js";
 
 const PATCHABLE_FIELDS = new Set(["page", "fingerprint", "replay"]);
 const TOP_LEVEL_WRAPPER_KEYS = new Set(["agent", "sandbox", "maxHistory"]);
@@ -199,11 +200,18 @@ class AgentSession {
         this.sandbox.networkRequests(),
         this.sandbox.resources(),
       ]);
+      const evidence = await collectReverseEvidence({
+        sandbox: this.sandbox,
+        environment: this.options,
+        targetId: this.options.evidence?.bundlePath ?? null,
+        causal: [],
+      });
       return toSerializable({
         environment: this.describe(),
         trace,
         requests,
         resources,
+        evidence,
       });
     });
   }

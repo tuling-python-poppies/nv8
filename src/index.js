@@ -500,6 +500,17 @@ export * as collector from './collection/collector/index.js';
 export { EdgeSandbox } from './public/edge-sandbox.js';
 export { createSandbox } from './public/create-sandbox.js';
 export { createAgentSession, validateEnvironmentPatch } from './public/agent-session.js';
+export {
+  TARGET_MANIFEST_SCHEMA,
+  REVERSE_EVIDENCE_SCHEMA,
+  sha256Text,
+  createTargetArtifactManifest,
+  validateTargetArtifactManifest,
+  applyTargetPatches,
+  collectReverseEvidence,
+  createReverseEvidenceDiff,
+  createCausalRecorder,
+} from './public/target-evidence.js';
 
 /**
  * 冻结浏览器指纹（Edge 150/151/152/154），与 `nv8/fingerprint/*` 子路径同源。

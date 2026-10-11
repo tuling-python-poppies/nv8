@@ -6,6 +6,7 @@
   "types": "./index.d.ts",
   "files": [
     "src",
+    "scripts",
     "*.d.ts",
     "LICENSE",
     "README.md"
@@ -28,6 +29,7 @@
     "check:generated": "node scripts/check-generated-artifacts.mjs",
     "check:surface-order": "node scripts/build-window-surface-order.mjs",
     "agent:bridge": "node scripts/nv8-agent-bridge.mjs",
+    "diff:evidence": "node scripts/diff-reverse-evidence.mjs",
     "ci": "npm test && npm run check:surface-order && npm run check:generated && npm run check:code-shape && npm run check:doc-drift && npm run build:bundle && npm run check:bundle && npm run audit:state",
     "fingerprint:behavior": "node scripts/collect-edge-behavior.mjs --out fixtures/fingerprint/edge-behavior.json",
     "fingerprint:async-behavior": "node scripts/collect-edge-async-behavior.mjs --out fixtures/fingerprint/edge-async-behavior.json",

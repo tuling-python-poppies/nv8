@@ -181,6 +181,10 @@ class Sandbox {
     return this._inner.resources();
   }
 
+  async runtimeEvidence(options = {}) {
+    return this._inner.runtimeEvidence(options);
+  }
+
   async networkRequests() {
     return this._inner.networkRequests();
   }
