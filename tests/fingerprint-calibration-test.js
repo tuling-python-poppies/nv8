@@ -22,6 +22,7 @@ import { existsSync } from 'node:fs';
 import { edge150Fingerprint } from '../src/infra/fingerprint/edge-150.js';
 import { edge152Fingerprint } from '../src/infra/fingerprint/edge-152.js';
 import { edge154Fingerprint } from '../src/infra/fingerprint/edge-154.js';
+import { neutralExternalDevices, neutralMediaDevices } from '../src/infra/fingerprint/neutral-device-capabilities.js';
 
 const REAL_FIXTURE_URL = new URL('../fixtures/fingerprint/edge-real.json', import.meta.url);
 const hasRealFixture = existsSync(REAL_FIXTURE_URL);
@@ -257,4 +258,26 @@ test('machine-specific values are deliberately not copied from the fixture', () 
     ['zh-CN', 'zh'],
     'languages stay a neutral default rather than the collector locale list'
   );
+});
+
+test('shipped profiles do not include collector machine device identities', async () => {
+  const { edge151Fingerprint } = await import('../src/infra/fingerprint/edge-151.js');
+  for (const [name, fingerprint] of [
+    ['edge-150', edge150Fingerprint],
+    ['edge-151', edge151Fingerprint],
+    ['edge-152', edge152Fingerprint],
+    ['edge-154', edge154Fingerprint],
+  ]) {
+    assert.equal(fingerprint.capabilities.media.devices, neutralMediaDevices, `${name} media devices`);
+    assert.equal(
+      fingerprint.capabilities.externalDevices,
+      neutralExternalDevices,
+      `${name} external devices`,
+    );
+    assert.deepEqual(fingerprint.capabilities.media.devices, []);
+    assert.deepEqual(fingerprint.capabilities.externalDevices.bluetooth.devices, []);
+    assert.deepEqual(fingerprint.capabilities.externalDevices.hid.devices, []);
+    assert.deepEqual(fingerprint.capabilities.externalDevices.serial.ports, []);
+    assert.deepEqual(fingerprint.capabilities.externalDevices.usb.devices, []);
+  }
 });

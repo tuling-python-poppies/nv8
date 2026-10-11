@@ -16,6 +16,7 @@ import {
   edge150Fingerprint,
   edge151Fingerprint,
   edge152Fingerprint,
+  edge154Fingerprint,
 } from 'nv8';
 import { EdgeSandbox as DirectEdgeSandbox } from '../src/public/edge-sandbox.js';
 import { createSandbox as directCreateSandbox } from '../src/public/create-sandbox.js';
@@ -32,6 +33,7 @@ test('package root re-exports the frozen Edge fingerprints', () => {
     ['edge150Fingerprint', edge150Fingerprint],
     ['edge151Fingerprint', edge151Fingerprint],
     ['edge152Fingerprint', edge152Fingerprint],
+    ['edge154Fingerprint', edge154Fingerprint],
   ]) {
     assert.equal(typeof fingerprint, 'object', `${name} must be exported`);
     assert.match(fingerprint.navigator.userAgent, /Edg\//u, `${name} must be an Edge profile`);
@@ -42,4 +44,6 @@ test('package root re-exports the frozen Edge fingerprints', () => {
 test('the fingerprint subpath stays aligned with the root export', async () => {
   const subpath = await import('nv8/fingerprint/edge-152');
   assert.equal(subpath.edge152Fingerprint, edge152Fingerprint);
+  const edge154 = await import('nv8/fingerprint/edge-154');
+  assert.equal(edge154.edge154Fingerprint, edge154Fingerprint);
 });

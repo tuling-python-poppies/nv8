@@ -138,7 +138,11 @@ Root 导出 `minimalPreset`、`basicPreset`、`domPreset`、`networkPreset`、
 - `dom-replay`：DOM、Storage、Fetch/XHR 离线回放；
 - `legacy-full`：迁移期全量兼容入口，保持 experimental，只接受 bugfix/parity
   维护，不是 plugin 覆盖率目标；
-- `browser-profile-edge-v150`：Edge 150 指纹 Profile。
+- `browser-profile-edge-v150`、`browser-profile-edge-v151`、
+  `browser-profile-edge-v152`、`browser-profile-edge-v154`：对应 Edge 指纹 Profile。
+
+Profile 字符串必须是已注册的内置 ID。未知字符串会抛出 `PROFILE_NOT_FOUND`；自定义
+Profile 请传入 manifest 对象，不会被静默转换成空插件 Profile。
 
 Profile 的 required 能力缺失会启动失败；optional 能力默认记录显式 degradation，
 不会伪造成可用。`legacy-full` 还必须通过其兼容插件和 baseline 维护策略校验。

@@ -25,14 +25,11 @@ export function createProfile(manifestOrId) {
     if (builtIn) {
       return builtIn;
     }
-    
-    // 如果找不到，创建一个简化的 profile
-    return createProfile({
-      id: manifestOrId,
-      version: '0.0.0',
-      name: manifestOrId,
-      plugins: [],
-    });
+    const error = new Error(`Profile "${manifestOrId}" not found`);
+    error.code = 'PROFILE_NOT_FOUND';
+    error.profileId = manifestOrId;
+    error.suggestions = ['Pass a known built-in profile id or a profile manifest object'];
+    throw error;
   }
   
   // 处理 base 继承

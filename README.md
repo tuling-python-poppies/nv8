@@ -2,14 +2,14 @@
 
 [![图灵课堂](https://img.shields.io/badge/Training%20institution-%E5%9B%BE%E7%81%B5%E8%AF%BE%E5%A0%82-blue)](https://gitee.com/tuling-python)
 [![node](https://img.shields.io/badge/node-%3E%3D18.18.0-339933?logo=nodedotjs&logoColor=white)](#环境要求)
-[![Edge](https://img.shields.io/badge/Edge-150%20%7C%20151%20%7C%20152-0078D7?logo=microsoftedge&logoColor=white)](#三层对齐)
+[![Edge](https://img.shields.io/badge/Edge-150%20%7C%20151%20%7C%20152%20%7C%20154-0078D7?logo=microsoftedge&logoColor=white)](#三层对齐)
 ![dependencies](https://img.shields.io/badge/dependencies-%E9%9B%B6%E4%BE%9D%E8%B5%96-brightgreen)
 ![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
 [![license](https://img.shields.io/badge/license-MulanPSL--2.0-blue)](LICENSE)
 [![Gitee](https://img.shields.io/badge/Gitee-nv8-c71d23?logo=gitee&logoColor=white)](https://gitee.com/tuling-python/nv8)
 [![GitHub](https://img.shields.io/badge/GitHub-mirror-181717?logo=github&logoColor=white)](https://github.com/tuling-python-poppies/nv8)
 
-NV8 是一个零依赖的运行时：它在 Node 进程里重建一个与真实 Microsoft Edge 无法区分的
+NV8 是一个零依赖的运行时：它在 Node 进程里重建一个面向协议逆向的高保真 Edge-like
 JavaScript 执行环境，用来运行目标站点的前端代码，从中恢复请求签名、令牌与协议行为；
 同时提供一套完整的采集调度层，把恢复出来的协议变成可持续运行的数据采集。
 
@@ -57,8 +57,9 @@ Node 里直接跑必然失败；在真实浏览器里跑则很难规模化、难
 | 抠出 JS 片段用 jsdom 跑 | 环境残缺，稍微认真的检测立刻发现 |
 | 纯手工翻译成 Python/Go | 一次性成本极高，目标一改就重做 |
 
-NV8 走第四条：**在 Node 里把浏览器环境补到「检测不出来」的程度，然后原样运行目标
-的原始脚本。** 不翻译、不改写、不注入痕迹。
+NV8 走第四条：**在 Node 里按声明的 Edge profile、Node 版本和 parity 范围补齐浏览器
+环境，然后原样运行目标脚本。** 不翻译、不改写、不注入痕迹。它不是 Chromium renderer，
+也不承诺对任意站点或任意浏览器检测做到无条件等价。
 
 补到什么程度是可以量化的，见[三层对齐](#三层对齐)。
 
@@ -313,6 +314,10 @@ const session = await createAgentSession({
   sandbox: { page: { url: 'https://target.test/' }, proxyTrace: { enabled: true } },
 });
 ```
+
+`createApp()` 仍保留在内部 Core API 中，用于需要注册多个插件/Profile 并管理多个
+Sandbox 的兼容编排场景；它不是 package root 的稳定导出。新代码优先使用
+`EdgeSandbox`、`createSandbox` 或 `createNv8`，避免同时维护两套插件解析入口。
 
 ---
 
@@ -710,9 +715,13 @@ const collector = createCollector({
 **Profile** 描述「要一个什么样的浏览器」：版本、指纹字段、启用哪些插件、资源上限。
 
 内置：`minimal`、`minimal-fetch`、`dom-replay`、`legacy-full`、
-`browser-profile-edge-v150`。Edge 150/151/152 的冻结指纹从对应的
+`browser-profile-edge-v150`、`browser-profile-edge-v151`、`browser-profile-edge-v152`、
+`browser-profile-edge-v154`。Edge 150/151/152/154 的冻结指纹从对应的
 `nv8/fingerprint/edge-150`、`nv8/fingerprint/edge-151`、
-`nv8/fingerprint/edge-152` 子路径读取。
+`nv8/fingerprint/edge-152`、`nv8/fingerprint/edge-154` 子路径读取。
+
+Profile 字符串只接受已注册的内置 ID。未知 ID 会抛出 `PROFILE_NOT_FOUND`；需要自定义
+Profile 时传入 manifest 对象，避免拼写错误静默启动空运行时。
 
 ```js
 import { createProfile } from 'nv8';

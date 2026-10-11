@@ -31,7 +31,7 @@ const valueState = new WeakMap();
  */
 const defaultProfile = Object.freeze({
   webglVendor: "Google Inc. (NVIDIA)",
-  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
 });
 
 export function WebGLRenderingContext() { illegalConstructor("WebGLRenderingContext", new.target); }

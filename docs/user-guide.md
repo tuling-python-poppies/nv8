@@ -426,9 +426,13 @@ Profile 只用于 `createNv8({ profile })` 的进程内插件装配，不是 `Ed
 | `dom-replay` | DOM、Storage、Fetch/XHR 离线回放 |
 | `legacy-full` | 迁移期完整兼容入口，experimental |
 | `browser-profile-edge-v150` | Edge 150 浏览器 Profile |
+| `browser-profile-edge-v151` | Edge 151 浏览器 Profile |
+| `browser-profile-edge-v152` | Edge 152 浏览器 Profile |
+| `browser-profile-edge-v154` | Edge 154 浏览器 Profile |
 
 `createNv8` 的 `runtimeMode: "plugin"` 按 Profile 和插件裁剪表面；`legacy` 是兼容装配
 路径，实际表面取决于所选 Profile 或 preset。需要子进程安全边界时使用 `EdgeSandbox`。
+未知 Profile ID 会以 `PROFILE_NOT_FOUND` 失败；自定义 Profile 请传入 manifest 对象。
 
 ## 6. 页面、Realm 和 Worker
 

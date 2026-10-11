@@ -84,3 +84,13 @@ masked 参数上。
 - `tests/fingerprint-calibration-test.js` —— 断言机器特征与采集机器不同
 - `tests/webgl-parity-test.js` —— 断言 masked 参数不泄漏 GPU 信息
 - `docs/edge-parity.md` —— 「机器相关字段不能照抄」一节
+
+## 2026-10 更新：媒体与外部设备同样必须中性
+
+Edge 154 扩展采集暴露了新的泄漏面：音频设备、蓝牙、HID、串口和 USB 的名称、ID、
+驱动设备名都会把采集机器带进通用 Profile。`edge-150`、`edge-151`、`edge-152` 和
+`edge-154` 的通用指纹现在统一使用空设备列表与 `available: false` 的蓝牙状态；需要
+复现特定机器时，调用方必须显式覆盖 `fingerprint.capabilities`，不能修改通用冻结 Profile。
+
+GPU 也不直接照抄采集机：通用 Profile 从 `gpu-profiles.js` 的可选真实组合中选择一套
+自洽身份，WebGL/WebGPU 字段由同一组合派生。

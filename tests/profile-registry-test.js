@@ -38,3 +38,11 @@ test('createNv8 accepts a profile id', async () => {
     await nv8.destroy();
   }
 });
+
+test('unknown profile ids fail closed instead of creating an empty profile', () => {
+  assert.throws(
+    () => createProfile('definitely-not-a-profile'),
+    error => error.code === 'PROFILE_NOT_FOUND'
+      && error.profileId === 'definitely-not-a-profile',
+  );
+});

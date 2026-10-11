@@ -1,5 +1,13 @@
 // Edge 154 (Chromium 154) fingerprint
 // UA build: 154.0.4258.53 — matches the local Edge 154 release channel
+import { GPU_IDENTITIES } from "./gpu-profiles.js";
+import {
+  neutralExternalDevices,
+  neutralMediaDevices,
+} from "./neutral-device-capabilities.js";
+
+// Use a plausible shipped GPU identity, not the collector machine's exact GPU.
+const selectedGpu = GPU_IDENTITIES[1];
 
 const navigatorProfile = Object.freeze({
   userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
@@ -57,16 +65,10 @@ const screenProfile = Object.freeze({
 });
 
 const renderingProfile = Object.freeze({
-  webglVendor: "Google Inc. (NVIDIA)",
-  webglRenderer: "ANGLE (NVIDIA, NVIDIA GeForce RTX 5060 (0x00002D05) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  webglVendor: selectedGpu.webglVendor,
+  webglRenderer: selectedGpu.webglRenderer,
   webgpu: Object.freeze({
-    vendor: "nvidia",
-    architecture: "",
-    device: "NVIDIA GeForce RTX 5060",
-    description: "NVIDIA driver 32.0.15.8097",
-    subgroupMinSize: 32,
-    subgroupMaxSize: 32,
-    isFallbackAdapter: false,
+    ...selectedGpu.webgpu,
     features: Object.freeze([
       "depth-clip-control",
       "texture-compression-bc",
@@ -165,38 +167,7 @@ const capabilityProfile = Object.freeze({
     ]),
     powerEfficient: true,
     captureEnabled: false,
-    devices: Object.freeze([
-      Object.freeze({
-        deviceId: "host-audio-output-1",
-        kind: "audiooutput",
-        label: "扬声器 (网易虚拟音频设备)",
-        groupId: "host-audio-output",
-      }),
-      Object.freeze({
-        deviceId: "host-audio-output-2",
-        kind: "audiooutput",
-        label: "扬声器 (ToDesk Virtual Audio)",
-        groupId: "host-audio-output",
-      }),
-      Object.freeze({
-        deviceId: "host-audio-output-3",
-        kind: "audiooutput",
-        label: "VX2479-4K-HD (NVIDIA High Definition Audio)",
-        groupId: "host-audio-output",
-      }),
-      Object.freeze({
-        deviceId: "host-audio-input-1",
-        kind: "audioinput",
-        label: "麦克风 (ToDesk Virtual Audio)",
-        groupId: "host-audio-input",
-      }),
-      Object.freeze({
-        deviceId: "host-audio-input-2",
-        kind: "audioinput",
-        label: "麦克风阵列 (网易虚拟音频设备)",
-        groupId: "host-audio-input",
-      }),
-    ]),
+    devices: neutralMediaDevices,
   }),
   sensors: Object.freeze({
     accelerometer: null,
@@ -206,46 +177,7 @@ const capabilityProfile = Object.freeze({
     absoluteOrientationSensor: null,
     relativeOrientationSensor: null,
   }),
-  externalDevices: Object.freeze({
-    bluetooth: Object.freeze({
-      available: true,
-      devices: Object.freeze([
-        Object.freeze({
-          id: "host-bluetooth-1",
-          name: "iQOO TWS Air3 Pro",
-        }),
-      ]),
-    }),
-    hid: Object.freeze({
-      devices: Object.freeze([
-        Object.freeze({
-          vendorId: 0,
-          productId: 1,
-          productName: "USB 输入设备",
-        }),
-      ]),
-    }),
-    serial: Object.freeze({
-      ports: Object.freeze([
-        Object.freeze({
-          usbVendorId: 0,
-          usbProductId: 1,
-          label: "通信端口 (COM1)",
-        }),
-      ]),
-    }),
-    usb: Object.freeze({
-      devices: Object.freeze([
-        Object.freeze({
-          vendorId: 0x8086,
-          productId: 0,
-          manufacturerName: "Intel",
-          productName: "USB 3.20 可扩展主机控制器",
-          serialNumber: "",
-        }),
-      ]),
-    }),
-  }),
+  externalDevices: neutralExternalDevices,
 });
 
 export const edge154Fingerprint = Object.freeze({

@@ -63,13 +63,13 @@ test('no built-in identity is a fallback (software) adapter', () => {
 
 // ------------------------------------------------- 与 profile 对齐
 
-test('the default identity matches the edge-150 rendering profile', async () => {
+test('the selected neutral identity matches the edge-150 rendering profile', async () => {
   const { edge150Fingerprint } = await import('../src/infra/fingerprint/edge-150.js');
   const rendering = edge150Fingerprint.rendering;
 
-  assert.equal(GPU_IDENTITIES[0].webglVendor, rendering.webglVendor);
-  assert.equal(GPU_IDENTITIES[0].webglRenderer, rendering.webglRenderer);
-  assert.equal(GPU_IDENTITIES[0].webgpu.device, rendering.webgpu.device);
+  assert.equal(GPU_IDENTITIES[1].webglVendor, rendering.webglVendor);
+  assert.equal(GPU_IDENTITIES[1].webglRenderer, rendering.webglRenderer);
+  assert.equal(GPU_IDENTITIES[1].webgpu.device, rendering.webgpu.device);
 });
 
 test('shipped fingerprint profiles are internally consistent', async () => {
